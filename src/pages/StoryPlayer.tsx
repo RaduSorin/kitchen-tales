@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { deleteStory, downloadStory, getOfflineAudio, getStory, removeOfflineAudio } from '../lib/db'
+import { deleteStory, downloadStory, getOfflineAudio, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile } from '../lib/db'
+import { saveCover } from '../lib/offline'
+import { resizeImage } from '../lib/resizeImage'
+import CoverSearch from '../components/CoverSearch'
 import type { Story } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
 import { useFileUrl } from '../lib/useFileUrl'
@@ -46,6 +49,8 @@ export default function StoryPlayer() {
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [msg, setMsg] = useState('')
+  const [coverOpen, setCoverOpen] = useState(false)
+  const [coverBusy, setCoverBusy] = useState(false)
   const offlineIds = useOfflineIds()
   const online = useOnline()
   const isSaved = !!id && offlineIds.has(id)
@@ -86,6 +91,21 @@ export default function StoryPlayer() {
   const toggle = () => { const a = audio.current!; if (a.paused) a.play(); else a.pause() }
   const skip = (d: number) => { const a = audio.current!; a.currentTime = Math.max(0, Math.min(a.duration || 0, a.currentTime + d)) }
   const chooseSleep = (v: Sleep) => { sleepLeft.current = v === 'end' ? 0 : v * 60000; sleepReset.current = playing && sleep !== 'end'; setSleep(v) }
+  const changeCover = async (make: () => Promise<string>) => {
+    setCoverBusy(true); setMsg('')
+    try {
+      const coverKey = await make()
+      await setStoryCover(s, coverKey)
+      setS({ ...s, coverKey }); setCoverOpen(false)
+    } catch { setMsg('Nu am putut schimba coperta. Încearcă din nou.') }
+    setCoverBusy(false)
+  }
+  const coverFromPhoto = (f: File) => changeCover(async () => {
+    const small = await resizeImage(f, 800, 0.85)
+    const key = await uploadFile('story-covers', small, 'jpg')
+    saveCover(key, small).catch(() => {})
+    return key
+  })
   const restart = () => { setEnded(false); setDim(false); const a = audio.current!; a.currentTime = 0; a.play() }
 
   if (ended) {
@@ -167,6 +187,21 @@ export default function StoryPlayer() {
               </span>
             ) : <button className="btn danger small" onClick={() => setConfirmDelete(true)}>Șterge povestea</button>)}
           </div>
+          {online && (coverOpen ? (
+            <div className="cover-change">
+              {coverBusy ? <p className="importing"><span className="spinner" /> Salvez coperta…</p> : (
+                <>
+                  <CoverSearch title={s.title} auto onPick={(c) => changeCover(() => saveFoundCover(c.url))} />
+                  <div className="row">
+                    <label className="btn small file-btn">Alege o poză
+                      <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) coverFromPhoto(f) }} />
+                    </label>
+                    <button className="btn small" onClick={() => setCoverOpen(false)}>Renunță</button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>)}
           {isSaved && <small>Salvată pe acest dispozitiv, merge și fără internet.</small>}
           {msg && <p className="error">{msg}</p>}
         </div>

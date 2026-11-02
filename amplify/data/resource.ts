@@ -1,6 +1,7 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend'
 import { importRecipe } from '../functions/import-recipe/resource'
 import { generateStory } from '../functions/generate-story/resource'
+import { findCover } from '../functions/find-cover/resource'
 
 // Every signed-in family member can read and edit everything.
 const schema = a.schema({
@@ -72,6 +73,28 @@ const schema = a.schema({
     .returns(a.ref('GeneratedStory'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(generateStory)),
+
+  CoverCandidate: a.customType({
+    url: a.string().required(),
+    source: a.string().required(),
+    label: a.string(),
+  }),
+
+  // Looks for story covers by title in the iTunes catalog and on Wikipedia.
+  findCovers: a
+    .query()
+    .arguments({ title: a.string().required(), artist: a.string() })
+    .returns(a.ref('CoverCandidate').array())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(findCover)),
+
+  // Copies a found cover into the app's storage and returns its path.
+  saveCover: a
+    .mutation()
+    .arguments({ url: a.string().required() })
+    .returns(a.string())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(findCover)),
 })
 
 export type Schema = ClientSchema<typeof schema>

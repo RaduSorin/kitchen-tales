@@ -2,12 +2,13 @@ import { defineBackend } from '@aws-amplify/backend'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
 import { importRecipe } from './functions/import-recipe/resource'
 import { generateStory } from './functions/generate-story/resource'
+import { findCover } from './functions/find-cover/resource'
 import { MODEL_ID } from './shared/model'
 import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { storage } from './storage/resource'
 
-const backend = defineBackend({ auth, data, storage, importRecipe, generateStory })
+const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover })
 
 // Invite-only: nobody can create an account from the app.
 // Family accounts are created by the owner in the Cognito console.

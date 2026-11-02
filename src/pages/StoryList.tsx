@@ -24,6 +24,11 @@ export default function StoryList() {
   const location = useLocation()
   const nav = useNavigate()
   const offline = useOfflineIds()
+  // The "Caută" tab opens the shelf with ?cauta=1 and puts the cursor in the search box.
+  const wantsSearch = params.has('cauta')
+  // The "Favorite" tab opens the shelf with ?favorite=1.
+  const favMode = params.has('favorite')
+  useEffect(() => { if (wantsSearch) document.getElementById('story-search')?.focus() }, [wantsSearch, loading])
   const online = useOnline()
   const { child } = useSettings()
   useEffect(() => {
@@ -65,7 +70,12 @@ export default function StoryList() {
   return (
     <section className="shelf">
       <div className="shelf-head">
-        {inFolder ? (
+        {favMode ? (
+          <div>
+            <h1>Favorite</h1>
+            <p className="shelf-sub">Poveștile preferate{child.name ? ` ale lui ${child.name}` : ''}</p>
+          </div>
+        ) : inFolder ? (
           <div className="folder-head">
             <button type="button" className="night-btn" aria-label="Înapoi la foldere" onClick={() => {
               // Step back in history when we opened the folder from the shelf, so Back doesn't loop.
@@ -85,17 +95,17 @@ export default function StoryList() {
             <p className="shelf-sub">Ce poveste ascultăm?</p>
           </div>
         )}
-        {online && <Link to="/povesti/adauga" className="night-btn" aria-label="Adaugă o poveste">+</Link>}
+        {online && <Link to="/povesti/adauga" className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
 
-      {available.length > 0 && (
+      {available.length > 0 && !favMode && (
         <label className="search-box night-search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-          <input type="search" aria-label="Caută povești" placeholder={inFolder ? `Caută în ${open.name}` : 'Caută o poveste'} value={q} onChange={(e) => setQ(e.target.value)} />
+          <input type="search" id="story-search" aria-label="Caută povești" placeholder={inFolder ? `Caută în ${open.name}` : 'Caută o poveste'} value={q} onChange={(e) => setQ(e.target.value)} />
         </label>
       )}
 
-      {last && !inFolder && !searching && (
+      {last && !inFolder && !searching && !favMode && (
         <Link to={`/povesti/${last.id}`} className="continue">
           <StoryCover story={last} />
           <span className="continue-text">
@@ -109,7 +119,22 @@ export default function StoryList() {
       )}
 
       {error && <p className="error">{error}</p>}
-      {loading ? <p className="empty">Se încarcă…</p> : available.length === 0 ? (
+      {favMode ? (loading ? <p className="empty">Se încarcă…</p> : (() => {
+        const favs = available.filter((s) => s.favorite).sort((a, b) => a.title.localeCompare(b.title, 'ro'))
+        return favs.length ? (
+          <div className="covers">
+            {favs.map((s) => (
+              <div key={s.id} className="cover-slot">
+                <Link to={`/povesti/${s.id}`} className="cover-card">
+                  <StoryCover story={s} />
+                  <span className="cover-title">{s.title}</span>
+                  {s.durationSec ? <small className="cover-meta">{Math.max(1, Math.round(s.durationSec / 60))} min</small> : null}
+                </Link>
+              </div>
+            ))}
+          </div>
+        ) : <p className="empty fav-empty">Nicio poveste preferată încă.<br />Deschide o poveste și apasă inimioara ♥ de sus.</p>
+      })()) : loading ? <p className="empty">Se încarcă…</p> : available.length === 0 ? (
         <p className="empty">{online ? 'Nicio poveste încă. Apasă + ca să adaugi una.' : 'Nicio poveste salvată pe acest dispozitiv.'}</p>
       ) : searching && shown.length === 0 ? (
         <p className="empty">Nicio poveste găsită pentru „{q.trim()}”.</p>
@@ -152,7 +177,7 @@ export default function StoryList() {
         </div>
       )}
 
-      {online && stories.length > 0 && (
+      {online && stories.length > 0 && !favMode && (
         <div className="offline-bar">
           {missing.length === 0
             ? <span>{inFolder ? 'Poveștile din acest folder merg și fără internet.' : 'Toate poveștile merg și fără internet.'}</span>

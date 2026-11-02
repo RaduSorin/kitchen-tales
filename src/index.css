@@ -309,6 +309,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Stories: always the night palette */
 :root[data-area="night"] {
+  --glass-bg: rgb(36 31 92 / .62); --glass-edge: rgb(255 255 255 / .16); --glass-shine: rgb(255 255 255 / .22); --glass-shadow: rgb(0 0 0 / .45);
+  --glass-pill: rgb(255 215 106 / .16);
   --bg: #171a45; --surface: rgb(255 255 255 / .08); --surface-2: rgb(255 255 255 / .12); --text: #fff6d6; --muted: rgb(255 246 214 / .68);
   --border: rgb(255 255 255 / .14); --accent: #ffd76a; --accent-soft: rgb(255 215 106 / .16); --on-accent: #171a45; --danger: #ff8fa3;
   --night: #ffd76a; --night-soft: rgb(255 255 255 / .1); --track: rgb(255 255 255 / .2); --knob: #fff6d6;
@@ -543,6 +545,26 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   :root[data-tabbar] .mini-spacer { height: 76px; }
   :root[data-tabbar] main { padding-bottom: 16px; }
 }
+/* Stories: night glass, the big moon-yellow Bibliotecă button in the middle, and Noapte bună. */
+@media (max-width: 759px) {
+  .night-tabbar { font-family: var(--f-kids); overflow: visible; }
+  .night-tabbar .tab { border: 0; background: none; font: inherit; cursor: pointer; color: var(--text); }
+  .night-tabbar .tab.active:not(.tab-center) { color: var(--moon); background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 0 0 1px var(--glass-edge); }
+  .night-tabbar .tab-label { font-size: .74rem; font-weight: 700; }
+  .tab-center .tab-icon { width: 60px; height: 60px; margin-top: -26px; border-radius: 50%; background: #ffd76a; color: #171a45;
+    box-shadow: 0 6px 18px rgb(0 0 0 / .35), inset 0 2px 0 rgb(255 255 255 / .55); border: 3px solid rgb(23 26 69 / .9); }
+  .night-tabbar .tab-center.active { background: none; box-shadow: none; }
+  .tab-center.active .tab-label { color: var(--moon); }
+  .tab-center:not(.active) .tab-icon { background: #e9d28f; }
+  .wide-add { display: none !important; }
+}
+.fav-btn.on { color: #ff8fa3; }
+.fav-btn:disabled { opacity: .5; }
+.player-top { justify-content: space-between !important; }
+.fav-empty { line-height: 1.6; }
+:root[data-area="night"] .sheet { font-family: var(--f-kids); }
+:root[data-area="night"] .sheet h2 { font-family: var(--f-kids); font-weight: 800; }
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .tabbar { background: var(--surface); }
 }

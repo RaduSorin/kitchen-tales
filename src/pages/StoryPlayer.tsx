@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile } from '../lib/db'
+import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile, setStoryFavorite } from '../lib/db'
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
@@ -48,6 +48,14 @@ function StoryPlayer() {
   const autoplay = !!(location.state as { autoplay?: boolean } | null)?.autoplay
   const { load } = player
   useEffect(() => { if (s) load(s, { autoplay }) }, [s, load, autoplay])
+  const toggleFavorite = async () => {
+    if (!s) return
+    const favorite = !s.favorite
+    const next = { ...s, favorite }
+    setS(next)
+    player.update(next)
+    try { await setStoryFavorite(s, favorite) } catch { setS(s); setMsg('Nu am putut salva la favorite.') }
+  }
   const current = !!s && player.story?.id === s.id
   const playing = current && player.playing
   const t = current ? player.t : 0
@@ -116,6 +124,10 @@ function StoryPlayer() {
       <div className="player-top">
         <button type="button" className="night-btn" aria-label={`Înapoi la ${folderOf(s)}`} onClick={back}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
+        <button type="button" className={`night-btn fav-btn${s.favorite ? ' on' : ''}`} aria-pressed={!!s.favorite}
+          aria-label={s.favorite ? 'Scoate din favorite' : 'Pune la favorite'} disabled={!online} onClick={toggleFavorite}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill={s.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" /></svg>
         </button>
       </div>
       <StoryCover story={s} round className={playing ? 'playing' : ''} />

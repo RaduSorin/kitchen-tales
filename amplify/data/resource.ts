@@ -34,6 +34,8 @@ const schema = a.schema({
       audioKey: a.string().required(),
       durationSec: a.float(),
       text: a.string(),
+      // The child's favourite stories (the "Favorite" tab); shared by the family.
+      favorite: a.boolean(),
     })
     .authorization((allow) => [allow.authenticated()]),
 

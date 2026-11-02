@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useSyncedList } from '../lib/synced'
 import { shoppingStore } from '../lib/plan'
 
@@ -15,13 +15,48 @@ const TABS: { to: string; label: string; full?: string; end?: boolean; icon: str
   { to: '/cumparaturi', label: 'Cumpărături', icon: 'M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01' },
 ]
 
-/** Where the bottom tab bar is hidden: the kids' stories area and full-screen cooking. */
-const hidesTabBar = (path: string) => path.startsWith('/povesti') || path.endsWith('/gateste')
+const HOME = TABS[0].icon
+const SEARCH = TABS[1].icon
+const SHELF = 'M4 4h4v16H4zM10 4h4v16h-4zM15.5 5.2l3.8-1 3.7 15.5-3.8 1z'
+const PLUS = 'M12 5v14M5 12h14'
+const HEART = 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z'
 
-/** Phone-style navigation for the recipes side. On wide screens the same links are in the top bar. */
+/** Hidden in full-screen cooking and on the story player, which has its own big controls. */
+const hidesTabBar = (path: string) => path.endsWith('/gateste') || (/^\/povesti\/[^/]+$/.test(path) && path !== '/povesti/adauga')
+
+/** The stories side: Acasă, Caută, Bibliotecă (big, in the middle), Adaugă, Favorite. */
+function StoryTabs() {
+  const { pathname, search } = useLocation()
+  const q = new URLSearchParams(search)
+  const onShelf = pathname === '/povesti'
+  const searching = onShelf && q.has('cauta')
+  const favorites = onShelf && q.has('favorite')
+  const shelf = onShelf && !searching && !favorites
+  return (
+    <>
+      <div className="tabbar-spacer" aria-hidden="true" />
+      <nav className="tabbar night-tabbar" aria-label="Meniu povești">
+        <NavLink to="/" end className="tab"><span className="tab-icon"><I d={HOME} /></span><span className="tab-label">Acasă</span></NavLink>
+        <Link to="/povesti?cauta=1" className={`tab${searching ? ' active' : ''}`} aria-current={searching ? 'page' : undefined}>
+          <span className="tab-icon"><I d={SEARCH} /></span><span className="tab-label">Caută</span>
+        </Link>
+        <Link to="/povesti" className={`tab tab-center${shelf ? ' active' : ''}`} aria-current={shelf ? 'page' : undefined}>
+          <span className="tab-icon"><I d={SHELF} /></span><span className="tab-label">Bibliotecă</span>
+        </Link>
+        <NavLink to="/povesti/adauga" className="tab"><span className="tab-icon"><I d={PLUS} /></span><span className="tab-label">Adaugă</span></NavLink>
+        <Link to="/povesti?favorite=1" className={`tab${favorites ? ' active' : ''}`} aria-current={favorites ? 'page' : undefined}>
+          <span className="tab-icon"><I d={HEART} /></span><span className="tab-label">Favorite</span>
+        </Link>
+      </nav>
+    </>
+  )
+}
+
+/** Phone-style navigation. On wide screens the same links are in the top bar. */
 export default function TabBar() {
   const { pathname } = useLocation()
   const hidden = hidesTabBar(pathname)
+  const stories = pathname.startsWith('/povesti')
   const shopping = useSyncedList(shoppingStore)
   const toBuy = shopping.filter((s) => !s.checked).length
   useEffect(() => {
@@ -29,6 +64,7 @@ export default function TabBar() {
     else document.documentElement.dataset.tabbar = ''
   }, [hidden])
   if (hidden) return null
+  if (stories) return <StoryTabs />
   return (
     <>
       <div className="tabbar-spacer" aria-hidden="true" />

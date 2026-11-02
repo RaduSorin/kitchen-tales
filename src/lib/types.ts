@@ -28,6 +28,8 @@ export interface Story {
   audioKey: string
   durationSec?: number
   text?: string
+  /** One of the child's favourites (the "Favorite" tab). */
+  favorite?: boolean
   createdAt?: string
 }
 

@@ -8,13 +8,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'] },
       manifest: {
         name: 'Kitchen Tales',
         short_name: 'Kitchen Tales',
         description: 'Rețetele familiei și povești audio pentru copii',
         lang: 'ro',
-        theme_color: '#c2410c',
-        background_color: '#fff7ed',
+        theme_color: '#3e6a51',
+        background_color: '#f2f3ee',
         display: 'standalone',
         start_url: '/',
         icons: [

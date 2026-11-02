@@ -5,10 +5,23 @@ import { I18n } from 'aws-amplify/utils'
 import { Authenticator, ThemeProvider, createTheme } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
 import outputs from '../amplify_outputs.json'
+import '@fontsource/figtree/400.css'
+import '@fontsource/figtree/500.css'
+import '@fontsource/figtree/600.css'
+import '@fontsource/figtree/700.css'
+import '@fontsource/young-serif/400.css'
+import '@fontsource/baloo-2/latin-500.css'
+import '@fontsource/baloo-2/latin-ext-500.css'
+import '@fontsource/baloo-2/latin-700.css'
+import '@fontsource/baloo-2/latin-ext-700.css'
+import '@fontsource/baloo-2/latin-800.css'
+import '@fontsource/baloo-2/latin-ext-800.css'
 import './index.css'
+import { applyTheme } from './lib/settings'
 import App from './App.tsx'
 
 Amplify.configure(outputs)
+applyTheme()
 
 I18n.putVocabulariesForLanguage('ro', {
   'Sign In': 'Intră în cont',
@@ -42,8 +55,8 @@ const theme = createTheme({
   tokens: {
     colors: {
       primary: {
-        10: '#fff7ed', 20: '#ffedd5', 40: '#fdba74', 60: '#ea580c',
-        80: '#c2410c', 90: '#9a3412', 100: '#7c2d12',
+        10: '#f2f3ee', 20: '#e3e7de', 40: '#9cbfa9', 60: '#5a8a6e',
+        80: '#3e6a51', 90: '#2f5240', 100: '#1f2a24',
       },
     },
     radii: { small: '10px', medium: '12px', large: '16px' },
@@ -53,7 +66,7 @@ const theme = createTheme({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
-      <Authenticator hideSignUp components={{ Header: () => <h1 className="auth-brand">🍲 Kitchen Tales</h1> }}>
+      <Authenticator hideSignUp components={{ Header: () => <h1 className="auth-brand">Kitchen Tales</h1> }}>
         <App />
       </Authenticator>
     </ThemeProvider>

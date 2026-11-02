@@ -170,7 +170,7 @@ export async function deleteStory(s: Story) {
 
 export type ImportedRecipe = NonNullable<Awaited<ReturnType<typeof client.queries.importRecipe>>['data']>
 
-async function runImport(args: { url?: string; photoKey?: string }) {
+async function runImport(args: { url?: string; photoKey?: string; idea?: string; tools?: string[]; servings?: number }) {
   const res = await client.queries.importRecipe(args)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data?.title) throw new Error('Nu am găsit o rețetă aici.')
@@ -178,6 +178,9 @@ async function runImport(args: { url?: string; photoKey?: string }) {
 }
 
 export const importRecipeFromUrl = (url: string) => runImport({ url })
+
+/** Asks Claude for a new recipe from an idea, using only the given kitchen tools. */
+export const generateRecipe = (idea: string, tools: string[], servings?: number) => runImport({ idea, tools, servings })
 
 export async function importRecipeFromPhoto(photo: Blob) {
   const photoKey = await uploadFile('recipe-photos', photo, 'jpg')

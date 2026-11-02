@@ -1,9 +1,48 @@
+import { useState } from 'react'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
+import { PRESET_TOOLS } from '../lib/kitchenTools'
 
 const THEMES: [ThemeChoice, string][] = [['auto', 'Automat'], ['light', 'Luminos'], ['dark', 'Întunecat']]
 const MIN_AGE = 1
 const MAX_AGE = 12
+
+function KitchenTools() {
+  const { kitchenTools } = useSettings()
+  const [custom, setCustom] = useState('')
+  const has = (t: string) => kitchenTools.some((x) => x.toLowerCase() === t.toLowerCase())
+  const toggle = (t: string) => updateSettings({
+    kitchenTools: has(t) ? kitchenTools.filter((x) => x.toLowerCase() !== t.toLowerCase()) : [...kitchenTools, t],
+  })
+  const add = () => {
+    const t = custom.trim()
+    if (t && !has(t)) updateSettings({ kitchenTools: [...kitchenTools, t] })
+    setCustom('')
+  }
+  const extra = kitchenTools.filter((t) => !PRESET_TOOLS.some((p) => p.toLowerCase() === t.toLowerCase()))
+
+  return (
+    <div className="set-group">
+      <h2 className="set-label">Bucătăria mea</h2>
+      <div className="set-box">
+        <div className="set-row stack">
+          <span id="tools-label">Aparate pe care le am</span>
+          <div className="tool-chips" role="group" aria-labelledby="tools-label">
+            {[...PRESET_TOOLS, ...extra].map((t) => (
+              <button type="button" key={t} className={`chip${has(t) ? ' on' : ''}`} aria-pressed={has(t)} onClick={() => toggle(t)}>{t}</button>
+            ))}
+          </div>
+        </div>
+        <div className="set-row">
+          <input type="text" className="tool-add" value={custom} placeholder="Alt aparat…" aria-label="Alt aparat" autoComplete="off"
+            onChange={(e) => setCustom(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') add() }} />
+          <button type="button" className="btn small" onClick={add} disabled={!custom.trim()}>Adaugă</button>
+        </div>
+      </div>
+      <p className="set-hint">Când generezi o rețetă, folosim doar aceste aparate, plus aragazul și cuptorul. Se salvează pe acest dispozitiv.</p>
+    </div>
+  )
+}
 
 export default function Settings() {
   const { theme, child } = useSettings()
@@ -47,6 +86,8 @@ export default function Settings() {
         </div>
         <p className="set-hint">Folosim prenumele și vârsta când creăm povești noi. Se salvează pe acest dispozitiv.</p>
       </div>
+
+      <KitchenTools />
 
       <div className="set-group">
         <h2 className="set-label">Aspect</h2>

@@ -43,10 +43,17 @@ const schema = a.schema({
     photoKey: a.string(),
   }),
 
-  // Reads a recipe from a web page link or from an uploaded photo.
+  // Reads a recipe from a web page link or from an uploaded photo,
+  // or writes a new one from an idea, using only the kitchen tools given.
   importRecipe: a
     .query()
-    .arguments({ url: a.string(), photoKey: a.string() })
+    .arguments({
+      url: a.string(),
+      photoKey: a.string(),
+      idea: a.string(),
+      tools: a.string().array(),
+      servings: a.integer(),
+    })
     .returns(a.ref('ImportedRecipe'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(importRecipe)),

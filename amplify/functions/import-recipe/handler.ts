@@ -55,10 +55,10 @@ const TOOL = {
   },
 }
 
-async function askModel(content: ContentBlock[]): Promise<Imported> {
+async function askModel(content: ContentBlock[], system = SYSTEM): Promise<Imported> {
   const res = await bedrock.send(new ConverseCommand({
     modelId: MODEL_ID,
-    system: [{ text: SYSTEM }],
+    system: [{ text: system }],
     messages: [{ role: 'user', content }],
     toolConfig: { tools: [TOOL], toolChoice: { tool: { name: 'save_recipe' } } },
     inferenceConfig: { maxTokens: 4000 },
@@ -182,9 +182,38 @@ async function fromPhoto(key: string): Promise<Imported> {
   ])
 }
 
+// ---- generation ----
+
+const GENERATE_SYSTEM = `Ești un bucătar care scrie rețete de casă pentru o familie din România.
+Răspunde întotdeauna apelând unealta save_recipe.
+Reguli:
+- Scrie totul în limba română, cu diacritice.
+- Rețeta trebuie să fie reală, gustoasă și verificată ca proporții și timpi.
+- Un ingredient pe element, cu cantitate metrică la început, de forma „500 g făină”. Un pas pe element, fără numerotare.
+- Scrie timpii explicit în pași („fierbi 10 minute”), ca aplicația să poată porni un cronometru.
+- Categoria trebuie să fie una dintre: ${CATEGORIES.join(', ')}.
+- Folosește DOAR ustensilele de bază (aragaz, cuptor, cratițe, tigaie, cuțite, castroane, tel) și aparatele din lista familiei.
+  Nu cere niciun alt aparat. Dacă un aparat din listă ajută, folosește-l și dă setările lui (de exemplu la Thermomix: timp / temperatură / viteză; la oala sub presiune: presiune și timp).
+- În notes scrie pe scurt ce aparat folosește rețeta și, dacă e cazul, cum se face fără el.
+- Dacă cererea nu e despre mâncare, pune title = "" și listele goale.`
+
+const MAX_IDEA_CHARS = 1000
+const MAX_TOOLS = 30
+
+function generate(idea: string, tools: string[], servings?: number | null): Promise<Imported> {
+  const list = tools.map((t) => t.trim().slice(0, 60)).filter(Boolean).slice(0, MAX_TOOLS)
+  const text = [
+    `Cererea: ${idea.trim().slice(0, MAX_IDEA_CHARS)}`,
+    `Aparatele familiei: ${list.length ? list.join(', ') : 'doar ustensilele de bază'}.`,
+    servings ? `Porții: ${servings}.` : '',
+  ].filter(Boolean).join('\n')
+  return askModel([{ text }], GENERATE_SYSTEM)
+}
+
 export const handler: Schema['importRecipe']['functionHandler'] = async (event) => {
-  const { url, photoKey } = event.arguments
+  const { url, photoKey, idea, tools, servings } = event.arguments
   if (url) return fromUrl(url)
   if (photoKey) return fromPhoto(photoKey)
-  throw new Error('Trimite un link sau o poză.')
+  if (idea?.trim()) return generate(idea, (tools ?? []).filter((t): t is string => !!t), servings)
+  throw new Error('Trimite un link, o poză sau o idee de rețetă.')
 }

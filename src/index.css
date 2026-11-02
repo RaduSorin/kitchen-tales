@@ -43,13 +43,6 @@ h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.3rem; margin:
 .empty { color: var(--muted); text-align: center; padding: 48px 0; }
 .error { color: var(--danger); }
 
-.home { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 16px; }
-.tile { display: flex; flex-direction: column; gap: 6px; padding: 28px; border-radius: 20px; text-decoration: none; min-height: 200px; justify-content: flex-end; }
-.tile-recipes { background: var(--accent-soft); color: var(--accent); }
-.tile-stories { background: var(--night-soft); color: var(--night); }
-.tile-emoji { font-size: 3.5rem; }
-.tile-title { font-size: 1.8rem; font-weight: 800; }
-.tile-sub { opacity: .8; }
 
 .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; }
 .chip { flex: none; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
@@ -390,3 +383,32 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .finish-audio { display: grid; gap: 8px; background: var(--surface); border-radius: 22px; padding: 14px; }
 .finish-audio > span { font-weight: 700; overflow-wrap: anywhere; }
 .finish-audio audio { width: 100%; }
+
+/* Home (Acasă): greeting, tonight's story (on top in the evening), unfinished cooking, recent recipes */
+.home { display: grid; gap: 16px; max-width: 640px; margin: 0 auto; }
+.home-hi h1 { margin: 12px 0 0; }
+.home-hi small { color: var(--muted); }
+.home-night { position: relative; overflow: hidden; display: grid; gap: 6px; padding: 18px; border-radius: 26px; background: linear-gradient(160deg, #171a45, #2c2368); color: #fff6d6; font-family: var(--f-kids); text-decoration: none; }
+.home-night small { opacity: .75; position: relative; }
+.home-night > b, .home-night-title b { font-size: 1.5rem; font-weight: 800; line-height: 1.05; position: relative; }
+.home-night-title { position: relative; display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; padding-right: 48px; }
+.home-night-title .story-cover { border-radius: 16px; }
+.home-night-title .story-cover > span { font-size: 1.8rem; }
+.home-night-btn { position: relative; justify-self: start; margin-top: 6px; background: #ffd76a; color: #171a45; font-weight: 800; border-radius: 999px; padding: 6px 16px 5px; }
+.home-moon { position: absolute; right: -14px; top: -14px; }
+.home-continue { display: grid; grid-template-columns: 60px 1fr 40px; gap: 12px; align-items: center; background: var(--surface); border-radius: 20px; padding: 10px; color: var(--text); text-decoration: none; }
+.home-continue-thumb { width: 60px; height: 60px; border-radius: 14px; overflow: hidden; }
+.home-continue-thumb > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-continue-text { display: grid; min-width: 0; }
+.home-continue-text small { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+.home-continue-text b { font-family: var(--f-display); font-weight: 400; font-size: 1.1rem; line-height: 1.2; }
+.home-continue-go { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
+.home-sec-head { display: flex; justify-content: space-between; align-items: baseline; }
+.home-sec-head h2 { margin: 4px 0 10px; }
+.home-sec-head a { font-weight: 600; text-decoration: none; }
+.home-recipes { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px 12px; }
+.home-recipe { display: grid; gap: 6px; color: var(--text); text-decoration: none; font-family: var(--f-display); line-height: 1.2; }
+.home-recipe-img { aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: var(--surface-2); }
+.home-recipe-img > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-empty { display: block; padding: 18px; border-radius: 18px; border: 1px dashed var(--border); color: var(--muted); text-decoration: none; }
+.home-empty b { color: var(--accent); }

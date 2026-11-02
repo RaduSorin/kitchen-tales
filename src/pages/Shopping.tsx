@@ -23,6 +23,7 @@ export default function Shopping() {
   const items = useSyncedList(shoppingStore)
   const [text, setText] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [clearingAll, setClearingAll] = useState(false)
   const sorted = items.slice().sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
   const open = sorted.filter((s) => !s.checked)
   const done = sorted.filter((s) => s.checked)
@@ -83,6 +84,17 @@ export default function Shopping() {
               <ul className="checklist">{done.map((s) => <Item key={s.id} s={s} />)}</ul>
             </section>
           )}
+          <div className="shop-clear-all">
+            {clearingAll ? (
+              <span className="confirm">
+                Ștergi toate cele {items.length} produse?
+                <button type="button" className="btn danger small" onClick={() => { items.forEach((s) => shoppingStore.remove(s.id)); setClearingAll(false) }}>Da, golește tot</button>
+                <button type="button" className="btn small" onClick={() => setClearingAll(false)}>Nu</button>
+              </span>
+            ) : (
+              <button type="button" className="btn danger" onClick={() => setClearingAll(true)}>Golește toată lista</button>
+            )}
+          </div>
         </>
       )}
     </section>

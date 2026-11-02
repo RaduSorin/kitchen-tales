@@ -40,7 +40,7 @@ export default function RecipeList() {
     <section className="recipes">
       <div className="recipes-head">
         <h1>Rețetele mele</h1>
-        <Link to="/retete/noua" className="btn primary">+ Rețetă nouă</Link>
+        <Link to="/retete/noua" className="btn primary new-recipe" aria-label="Rețetă nouă" title="Rețetă nouă"><span aria-hidden="true">+</span><span className="new-recipe-text" aria-hidden="true"> Rețetă nouă</span></Link>
       </div>
       <label className="search-box">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { NavLink, useParams } from 'react-router-dom'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import FamilySection from './FamilySection'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
@@ -45,15 +46,14 @@ function KitchenTools() {
   )
 }
 
-export default function Settings() {
-  const { theme, child } = useSettings()
-  const { user, signOut } = useAuthenticator((c) => [c.user])
+type Tab = 'povesti' | 'retete' | 'general'
+const TABS: [Tab, string, string][] = [['povesti', 'Povești', '/setari/povesti'], ['retete', 'Rețete', '/setari/retete'], ['general', 'General', '/setari']]
+
+function StorySettings() {
+  const { child } = useSettings()
   const age = childAge(child)
-
   return (
-    <section className="settings">
-      <h1>Setări</h1>
-
+    <>
       <div className="set-group">
         <h2 className="set-label">Copilul</h2>
         <div className="set-box">
@@ -85,9 +85,15 @@ export default function Settings() {
         </div>
         <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează pe acest dispozitiv.</p>
       </div>
+    </>
+  )
+}
 
-      <KitchenTools />
-
+function GeneralSettings() {
+  const { theme } = useSettings()
+  const { user, signOut } = useAuthenticator((c) => [c.user])
+  return (
+    <>
       <div className="set-group">
         <h2 className="set-label">Aspect</h2>
         <div className="set-box">
@@ -114,6 +120,24 @@ export default function Settings() {
           </div>
         </div>
       </div>
+    </>
+  )
+}
+
+export default function Settings() {
+  const { tab: param } = useParams()
+  const tab: Tab = param === 'povesti' || param === 'retete' ? param : 'general'
+  return (
+    <section className="settings">
+      <h1>Setări</h1>
+      <nav className="seg set-tabs" aria-label="Secțiuni setări">
+        {TABS.map(([k, label, to]) => (
+          <NavLink key={k} to={to} end replace aria-current={tab === k ? 'page' : undefined}>{label}</NavLink>
+        ))}
+      </nav>
+      {tab === 'povesti' && <StorySettings />}
+      {tab === 'retete' && <KitchenTools />}
+      {tab === 'general' && <GeneralSettings />}
     </section>
   )
 }

@@ -181,6 +181,15 @@ async function runImport(args: { url?: string; photoKey?: string; idea?: string;
 
 export const importRecipeFromUrl = (url: string) => runImport({ url })
 
+export type RecipeIdea = { title: string; description?: string | null; tools?: (string | null)[] | null; missing?: (string | null)[] | null; minutes?: number | null }
+
+/** Asks Claude for a few dishes that can be made from what is in the fridge. */
+export async function suggestRecipes(ingredients: string, tools: string[]): Promise<RecipeIdea[]> {
+  const res = await client.queries.suggestRecipes({ ingredients, tools })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  return (res.data ?? []).filter((x): x is NonNullable<typeof x> => !!x)
+}
+
 /** Asks Claude for a new recipe from an idea, using only the given kitchen tools. */
 export const generateRecipe = (idea: string, tools: string[], servings?: number) => runImport({ idea, tools, servings })
 

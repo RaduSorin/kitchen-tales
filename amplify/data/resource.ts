@@ -62,6 +62,22 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(importRecipe)),
 
+  RecipeIdea: a.customType({
+    title: a.string().required(),
+    description: a.string(),
+    tools: a.string().array(),
+    missing: a.string().array(),
+    minutes: a.integer(),
+  }),
+
+  // Suggests a few dishes from what is in the fridge, using only the kitchen tools given.
+  suggestRecipes: a
+    .query()
+    .arguments({ ingredients: a.string().required(), tools: a.string().array() })
+    .returns(a.ref('RecipeIdea').array())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(importRecipe)),
+
   GeneratedStory: a.customType({
     text: a.string().required(),
     audioKey: a.string().required(),

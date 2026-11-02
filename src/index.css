@@ -248,6 +248,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .add-panel label { font-weight: 600; }
 .gen-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; }
 .gen-label { font-weight: 600; }
+.ideas { display: grid; gap: 10px; }
+.idea { display: grid; gap: 4px; text-align: left; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; font: inherit; cursor: pointer; }
+.idea:hover { outline: 2px solid var(--accent); }
+.idea b { font-size: 1.05rem; }
+.idea small { color: var(--muted); }
+.idea .idea-missing { color: var(--accent); }
 .add-panel input, .add-panel textarea, .editor input:not([type=file]), .editor textarea { width: 100%; padding: 11px 13px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; }
 
 /* Recipe editor */

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { generateRecipe, getRecipe, importRecipeFromPhoto, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
+import { generateRecipe, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhoto, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
 import { parseRecipeText } from '../lib/parseRecipe'
 import { resizeImage } from '../lib/resizeImage'
 import type { Recipe } from '../lib/types'
@@ -15,7 +15,7 @@ import { useSettings } from '../lib/settings'
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 
 type Step = { uid: string; text: string; photoKey?: string; photoBlob?: Blob }
-type Mode = 'choose' | 'link' | 'text' | 'generate' | 'edit'
+type Mode = 'choose' | 'link' | 'text' | 'generate' | 'fridge' | 'edit'
 
 const empty = (): Recipe => ({ id: newId(), title: '', category: '', ingredients: [], steps: [] })
 const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
@@ -84,6 +84,8 @@ export default function RecipeEdit() {
   const [genServings, setGenServings] = useState(4)
   // Tools left out for this one recipe (all of the family's tools are used by default).
   const [skipTools, setSkipTools] = useState<string[]>([])
+  const [fridge, setFridge] = useState('')
+  const [ideas, setIdeas] = useState<RecipeIdea[]>()
 
   useEffect(() => {
     if (!id) { setR(empty()); return }
@@ -134,6 +136,50 @@ export default function RecipeEdit() {
   const runGenerate = () => {
     if (idea.trim()) doImport('Scriu rețeta…', () => generateRecipe(idea.trim(), useTools, genServings))
   }
+  const runSuggest = async () => {
+    if (!fridge.trim()) return
+    setImporting('Mă uit ce se poate găti…'); setError('')
+    try {
+      const xs = await suggestRecipes(fridge.trim(), useTools)
+      if (!xs.length) setError('Nu am găsit nicio idee. Adaugă mai multe ingrediente.')
+      setIdeas(xs)
+    } catch (err) { setError(`Nu am putut propune rețete: ${(err as Error).message}`) }
+    setImporting('')
+  }
+  const pickIdea = (x: RecipeIdea) => {
+    const brief = `${x.title}${x.description ? ` (${x.description})` : ''}. ` +
+      `Folosește ce am în frigider: ${fridge.trim()}. Pe lângă asta am doar sare, piper, ulei, apă, zahăr și făină` +
+      (x.missing?.length ? `, iar pot cumpăra: ${x.missing.join(', ')}.` : '.')
+    doImport(`Scriu rețeta „${x.title}”…`, () => generateRecipe(brief, useTools, genServings))
+  }
+
+  const genOptions = (
+    <>
+    <div className="gen-row">
+      <span id="gen-serv-label">Porții</span>
+      <div className="stepper" role="group" aria-labelledby="gen-serv-label">
+        <button type="button" aria-label="Mai puține" disabled={genServings <= 1} onClick={() => setGenServings(genServings - 1)}>−</button>
+        <output>{genServings}</output>
+        <button type="button" aria-label="Mai multe" disabled={genServings >= 20} onClick={() => setGenServings(genServings + 1)}>+</button>
+      </div>
+    </div>
+    <span id="gen-tools-label" className="gen-label">Aparate folosite</span>
+    {kitchenTools.length ? (
+      <div className="tool-chips" role="group" aria-labelledby="gen-tools-label">
+        {kitchenTools.map((t) => {
+          const on = !skipTools.includes(t)
+          return <button type="button" key={t} className={`chip${on ? ' on' : ''}`} aria-pressed={on}
+            onClick={() => setSkipTools(on ? [...skipTools, t] : skipTools.filter((x) => x !== t))}>{t}</button>
+        })}
+      </div>
+    ) : null}
+    <p className="set-hint">
+      {kitchenTools.length ? 'Atinge un aparat ca să nu fie folosit la această rețetă. ' : 'Doar aragaz și cuptor. '}
+      <Link to="/setari">{kitchenTools.length ? 'Schimbă lista în Setări' : 'Adaugă aparatele tale în Setări'}</Link>
+    </p>
+    </>
+  )
+
   const importText = () => { const p = parseRecipeText(paste); fill(p.title, p.ingredients, p.steps) }
 
   const updateStep = (k: number, s: Step) => setSteps((xs) => xs.map((x, j) => (j === k ? s : x)))
@@ -187,30 +233,38 @@ export default function RecipeEdit() {
             <label htmlFor="gen-idea">Ce ai vrea să gătești?</label>
             <textarea id="gen-idea" rows={4} autoFocus value={idea} onChange={(e) => setIdea(e.target.value)}
               placeholder="De exemplu: o ciorbă de pui rapidă, ceva cu dovlecei și brânză, un desert fără zahăr pentru copii" />
-            <div className="gen-row">
-              <span id="gen-serv-label">Porții</span>
-              <div className="stepper" role="group" aria-labelledby="gen-serv-label">
-                <button type="button" aria-label="Mai puține" disabled={genServings <= 1} onClick={() => setGenServings(genServings - 1)}>−</button>
-                <output>{genServings}</output>
-                <button type="button" aria-label="Mai multe" disabled={genServings >= 20} onClick={() => setGenServings(genServings + 1)}>+</button>
-              </div>
-            </div>
-            <span id="gen-tools-label" className="gen-label">Aparate folosite</span>
-            {kitchenTools.length ? (
-              <div className="tool-chips" role="group" aria-labelledby="gen-tools-label">
-                {kitchenTools.map((t) => {
-                  const on = !skipTools.includes(t)
-                  return <button type="button" key={t} className={`chip${on ? ' on' : ''}`} aria-pressed={on}
-                    onClick={() => setSkipTools(on ? [...skipTools, t] : skipTools.filter((x) => x !== t))}>{t}</button>
-                })}
-              </div>
-            ) : null}
-            <p className="set-hint">
-              {kitchenTools.length ? 'Atinge un aparat ca să nu fie folosit la această rețetă. ' : 'Doar aragaz și cuptor. '}
-              <Link to="/setari">{kitchenTools.length ? 'Schimbă lista în Setări' : 'Adaugă aparatele tale în Setări'}</Link>
-            </p>
+            {genOptions}
             <button type="button" className="btn primary big" onClick={runGenerate} disabled={!idea.trim()}>Generează rețeta</button>
           </div>
+        ) : mode === 'fridge' ? (
+          ideas?.length ? (
+            <div className="add-panel">
+              <span className="gen-label">Alege ce gătești</span>
+              <div className="ideas">
+                {ideas.map((x) => (
+                  <button type="button" key={x.title} className="idea" onClick={() => pickIdea(x)}>
+                    <b>{x.title}</b>
+                    {x.description && <span>{x.description}</span>}
+                    <small>
+                      {[x.minutes ? formatMinutes(x.minutes) : '', ...(x.tools ?? []).filter((t): t is string => !!t)].filter(Boolean).join(' · ')}
+                    </small>
+                    {x.missing?.length ? <small className="idea-missing">Îți mai trebuie: {x.missing.join(', ')}</small> : null}
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="btn ghost" onClick={() => setIdeas(undefined)}>Schimbă ingredientele</button>
+              <button type="button" className="btn ghost" onClick={runSuggest}>Alte idei</button>
+            </div>
+          ) : (
+            <div className="add-panel">
+              <label htmlFor="fridge">Ce ai în frigider?</label>
+              <textarea id="fridge" rows={5} autoFocus value={fridge} onChange={(e) => setFridge(e.target.value)}
+                placeholder="De exemplu: piept de pui, 2 dovlecei, smântână, ouă, o ceapă, orez" />
+              <p className="set-hint">Sarea, piperul, uleiul, zahărul și făina le considerăm deja în casă.</p>
+              {genOptions}
+              <button type="button" className="btn primary big" onClick={runSuggest} disabled={!fridge.trim()}>Propune rețete</button>
+            </div>
+          )
         ) : mode === 'text' ? (
           <div className="add-panel">
             <label htmlFor="import-text">Lipește textul rețetei, cu titlul pe primul rând</label>
@@ -233,6 +287,10 @@ export default function RecipeEdit() {
               <span><b>Din poză</b><small>O pagină din carte sau din caiet</small></span>
               <input type="file" accept="image/*" hidden onChange={(e) => importPhoto(e.target.files?.[0])} />
             </label>
+            <button type="button" className="way" onClick={() => setMode('fridge')}>
+              <span className="way-ic"><Icon d="M6 2h12a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM5 10h14M9 5v2M9 13v3" /></span>
+              <span><b>Din frigider</b><small>Scrii ce ai, primești idei de rețete</small></span>
+            </button>
             <button type="button" className="way" onClick={() => setMode('generate')}>
               <span className="way-ic"><Icon d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9zM5 15l.6 1.4L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6z" /></span>
               <span><b>Generează</b><small>Spui ce ai chef, ținem cont de aparatele tale</small></span>

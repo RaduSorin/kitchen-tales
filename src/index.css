@@ -95,6 +95,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .set-row.stack { flex-direction: column; align-items: stretch; }
 .set-row input[type=text] { flex: 1; min-width: 0; max-width: 220px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; text-align: right; }
 .set-hint { color: var(--muted); font-size: .85rem; margin: 0; padding: 0 4px; }
+.set-hint.error { color: var(--danger); }
+.set-row .muted { color: var(--muted); font-weight: 400; }
+.member { display: grid; min-width: 0; }
+.member-email { overflow-wrap: anywhere; }
+.member small { color: var(--muted); font-size: .8rem; font-weight: 400; }
+.invite-row input { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; }
 .stepper { display: inline-flex; align-items: center; border-radius: 12px; background: var(--surface-2); overflow: hidden; }
 .stepper button { width: 40px; height: 40px; border: 0; background: none; color: var(--text); font: inherit; font-size: 1.2rem; cursor: pointer; }
 .stepper button:disabled { opacity: .35; cursor: default; }

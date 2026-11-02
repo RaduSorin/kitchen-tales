@@ -6,6 +6,7 @@ import { useFileUrl } from '../lib/useFileUrl'
 import { detectDuration, formatClock, getProgress, ingredientsForStep, setProgress } from '../lib/cooking'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { ringAlarm, unlockAlarm } from '../lib/alarm'
+import { canGoBack } from '../lib/back'
 
 type Timer = { total: number; left: number; running: boolean }
 
@@ -54,13 +55,15 @@ export default function CookMode() {
   const touch = useRef<{ x: number; y: number }>(null)
   useWakeLock()
 
-  useEffect(() => {
+  const [failed, setFailed] = useState(false)
+  const load = useCallback(() => {
     getRecipe(id!).then((x) => {
       setR(x ?? null)
       const saved = getProgress(id!)
       if (x && saved != null && saved < x.steps.length) setI(saved)
-    })
+    }).catch(() => setFailed(true))
   }, [id])
+  useEffect(load, [load])
 
   const count = r?.steps.length ?? 0
   const go = useCallback((d: number) => {
@@ -107,8 +110,20 @@ export default function CookMode() {
     return () => clearInterval(h)
   }, [anyRunning])
 
-  if (r === undefined) return <div className="cook" />
-  if (r === null || count === 0) return <p className="empty">Rețeta nu are pași de urmat.</p>
+  // Cooking mode hides the tab bar, so every dead end here needs its own way out.
+  if (failed || r === null || (r && count === 0)) {
+    const leave = () => (r && canGoBack() ? nav(-1) : nav(r ? `/retete/${r.id}` : '/retete', { replace: true }))
+    return (
+      <div className="cook">
+        <div className="cook-empty" role="alert">
+          <p>{failed ? 'Nu am putut deschide rețeta. Verifică internetul.' : r ? 'Rețeta nu are pași de urmat.' : 'Rețeta nu a fost găsită.'}</p>
+          {failed && <button className="btn big" onClick={() => { setFailed(false); load() }}>Încearcă din nou</button>}
+          <button className="btn" onClick={leave}>{r ? 'Înapoi la rețetă' : 'Rețetele mele'}</button>
+        </div>
+      </div>
+    )
+  }
+  if (r === undefined) return <div className="cook"><div className="cook-empty"><span className="spinner" aria-label="Se încarcă" /></div></div>
 
   const step = r.steps[i]
   const duration = detectDuration(step)

@@ -13,8 +13,9 @@ export default function Search() {
   const setQ = (v: string) => setParams(v ? { q: v } : {}, { replace: true })
   const [recipes, setRecipes] = useState<Recipe[]>()
   const [stories, setStories] = useState<Story[]>([])
+  const [failed, setFailed] = useState(false)
   useEffect(() => {
-    listRecipes().then(setRecipes).catch(() => setRecipes([]))
+    listRecipes().then(setRecipes).catch(() => { setRecipes([]); setFailed(true) })
     listStories().then(setStories).catch(() => {})
   }, [])
 
@@ -47,7 +48,7 @@ export default function Search() {
           </Link>
         </>
       ) : recipes === undefined ? <p className="empty">Se încarcă…</p> : !foundRecipes.length && !foundStories.length ? (
-        <p className="empty">Nimic nu se potrivește cu „{q}”.</p>
+        <p className="empty">{failed ? 'Nu am putut încărca rețetele. Verifică internetul.' : <>Nimic nu se potrivește cu „{q}”.</>}</p>
       ) : (
         <>
           {foundRecipes.length > 0 && (

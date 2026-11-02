@@ -11,6 +11,8 @@ import { parseQuantity } from '../lib/scale'
 import { formatMinutes } from '../lib/format'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { useSettings } from '../lib/settings'
+import { useBack } from '../lib/back'
+import { LoadError, Loading } from '../components/LoadState'
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 
@@ -92,18 +94,29 @@ export default function RecipeEdit() {
   const aiJob = useRef<Promise<string | undefined>>(undefined)
   const aiUnsaved = useRef<string>(undefined)
 
-  useEffect(() => {
+  const back = useBack(id ? `/retete/${id}` : '/retete')
+  const [loadFailed, setLoadFailed] = useState<'error' | 'missing'>()
+  const load = () => {
     if (!id) { setR(empty()); return }
     getRecipe(id).then((x) => {
-      const rec = x ?? empty()
-      setR(rec); setOriginal(rec)
-      setIng(rec.ingredients.join('\n')); setSteps(toSteps(rec.steps, rec.stepPhotoKeys))
-    })
-  }, [id])
+      if (!x) { setLoadFailed('missing'); return }
+      setR(x); setOriginal(x)
+      setIng(x.ingredients.join('\n')); setSteps(toSteps(x.steps, x.stepPhotoKeys))
+    }).catch(() => setLoadFailed('error'))
+  }
+  useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   const newPhotoUrl = useBlobUrl(photo)
   const savedPhotoUrl = useFileUrl(photo ? undefined : r?.photoKey)
   const img = newPhotoUrl ?? savedPhotoUrl
-  if (!r) return null
+  if (loadFailed === 'error') return <LoadError text="Nu am putut deschide rețeta. Verifică internetul." onRetry={() => { setLoadFailed(undefined); load() }} />
+  if (loadFailed === 'missing') return (
+    <div className="not-found">
+      <h1>Rețeta nu a fost găsită</h1>
+      <p>Poate a fost ștearsă.</p>
+      <Link to="/retete" className="btn primary">Rețetele mele</Link>
+    </div>
+  )
+  if (!r) return <Loading />
 
   const set = <K extends keyof Recipe>(k: K, v: Recipe[K]) => setR({ ...r, [k]: v })
 
@@ -246,7 +259,7 @@ export default function RecipeEdit() {
   if (mode !== 'edit') {
     return (
       <section className="add-recipe">
-        <button type="button" className="link-btn" onClick={() => (mode === 'choose' ? nav(-1) : setMode('choose'))}>{mode === 'choose' ? 'Renunță' : 'Înapoi'}</button>
+        <button type="button" className="link-btn" onClick={() => (mode === 'choose' ? back() : setMode('choose'))}>{mode === 'choose' ? 'Renunță' : 'Înapoi'}</button>
         <h1>Rețetă nouă</h1>
         {importing ? (
           <p className="importing"><span className="spinner" /> {importing}</p>
@@ -338,7 +351,7 @@ export default function RecipeEdit() {
   return (
     <form className="editor" onSubmit={save}>
       <div className="editor-bar">
-        <button type="button" className="link-btn" onClick={() => nav(-1)}>Renunță</button>
+        <button type="button" className="link-btn" onClick={back}>Renunță</button>
         <span className="editor-bar-title">{id ? 'Editează' : 'Rețetă nouă'}</span>
         <button type="submit" className="btn primary small" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
       </div>

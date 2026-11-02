@@ -10,6 +10,7 @@ import { dayKey, planStore, today } from '../lib/plan'
 import { useFileUrl } from '../lib/useFileUrl'
 import StoryCover from '../components/StoryCover'
 import PlatePlaceholder from '../components/PlatePlaceholder'
+import { LoadError, Loading } from '../components/LoadState'
 
 const Play = () => <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>
 
@@ -56,10 +57,12 @@ export default function StoriesHome() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const plan = useSyncedList(planStore)
   const [{ hour, day }] = useState(() => ({ hour: new Date().getHours(), day: Math.floor(Date.now() / 86400000) }))
-  useEffect(() => {
-    listStories().then(setStories).catch(() => setStories([]))
+  const [failed, setFailed] = useState(false)
+  const load = () => {
+    listStories().then(setStories).catch(() => setFailed(true))
     listRecipes().then(setRecipes).catch(() => {})
-  }, [])
+  }
+  useEffect(load, [])
 
   const available = (stories ?? []).filter((s) => online || offline.has(s.id))
   const last = available.find((s) => s.id === getLastStoryId())
@@ -80,7 +83,8 @@ export default function StoriesHome() {
         </div>
       </div>
 
-      {stories === undefined ? <p className="empty">Se încarcă…</p> : !available.length ? (
+      {failed && !stories ? <LoadError text="Nu am putut încărca poveștile. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
+        : stories === undefined ? <Loading /> : !available.length ? (
         <Link to="/povesti/adauga" className="continue sh-empty">
           <span className="continue-text"><b>Nicio poveste încă</b><small>Adaugă prima poveste: încarci, înregistrezi sau o creăm împreună</small></span>
           <span className="continue-play" aria-hidden="true">+</span>

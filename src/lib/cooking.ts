@@ -59,12 +59,21 @@ export function formatClock(sec: number) {
 
 // Remembers the step you stopped at, per recipe, on this device.
 const progressKey = (id: string) => `kt-cook-${id}`
+const LAST_COOK = 'kt-last-cook'
 export function getProgress(id: string): number | undefined {
   try { const v = localStorage.getItem(progressKey(id)); return v == null ? undefined : +v } catch { return undefined }
 }
 export function setProgress(id: string, step: number | undefined) {
   try {
     if (step == null) localStorage.removeItem(progressKey(id))
-    else localStorage.setItem(progressKey(id), String(step))
+    else { localStorage.setItem(progressKey(id), String(step)); localStorage.setItem(LAST_COOK, id) }
   } catch { /* storage unavailable */ }
+}
+/** The recipe last cooked step by step on this device, if it isn't finished yet. */
+export function getLastCook() {
+  try {
+    const id = localStorage.getItem(LAST_COOK) ?? undefined
+    const step = id ? getProgress(id) : undefined
+    return id && step != null ? { id, step } : undefined
+  } catch { return undefined }
 }

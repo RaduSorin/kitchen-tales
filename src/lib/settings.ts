@@ -13,11 +13,13 @@ export interface ChildProfile {
 export interface Settings {
   theme: ThemeChoice
   child: ChildProfile
+  /** Appliances the family has, used when generating recipes. */
+  kitchenTools: string[]
 }
 
 const KEY = 'kt-settings'
 const LEGACY_BRIEF_KEY = 'kt-story-brief'
-const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false } }
+const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [] }
 
 // Earlier versions stored the age; turn it into a birth year once.
 function migrateChild(c: ChildProfile & { age?: number }): ChildProfile {

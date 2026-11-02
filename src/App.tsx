@@ -1,6 +1,7 @@
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
+import { useOnline } from './lib/useOffline'
 import RecipeList from './pages/RecipeList'
 import RecipeView from './pages/RecipeView'
 import RecipeEdit from './pages/RecipeEdit'
@@ -10,6 +11,7 @@ import StoryAdd from './pages/StoryAdd'
 
 export default function App() {
   const { signOut } = useAuthenticator((c) => [c.user])
+  const online = useOnline()
   return (
     <BrowserRouter>
       <header className="topbar">
@@ -20,6 +22,7 @@ export default function App() {
           <button className="signout" onClick={signOut} aria-label="Ieși din cont" title="Ieși din cont">⎋</button>
         </nav>
       </header>
+      {!online && <div className="offline-banner">Ești offline. Vezi rețetele și poveștile salvate pe acest dispozitiv.</div>}
       <main>
         <Routes>
           <Route path="/" element={<Home />} />

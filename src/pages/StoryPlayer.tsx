@@ -38,6 +38,7 @@ export default function StoryPlayer() {
         <button aria-label={playing ? 'Pauză' : 'Pornește'} className="play" onClick={toggle}>{playing ? '⏸' : '▶'}</button>
         <button aria-label="Înainte 15 secunde" onClick={() => skip(15)}>⏩</button>
       </div>
+      {s.text && <details className="story-text"><summary>Citește povestea</summary><p>{s.text}</p></details>}
       <button className="btn danger small" onClick={async () => {
         if (confirm(`Ștergi povestea „${s.title}”?`)) { await deleteStory(s); nav('/povesti') }
       }}>Șterge povestea</button>

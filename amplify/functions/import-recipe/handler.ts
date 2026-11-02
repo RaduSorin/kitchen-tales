@@ -4,7 +4,7 @@ import type { Schema } from '../../data/resource'
 
 const bedrock = new BedrockRuntimeClient({})
 const s3 = new S3Client({})
-const BUCKET = process.env.kitchenTalesFiles_BUCKET_NAME!
+const BUCKET = process.env.KITCHEN_TALES_FILES_BUCKET_NAME!
 const MODEL_ID = process.env.MODEL_ID!
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']

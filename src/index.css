@@ -186,7 +186,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Recipe page */
 .recipe { margin: -16px -16px 0; }
-.recipe-hero { height: clamp(220px, 42vw, 380px); background: var(--surface-2); }
+.recipe-hero { position: relative; height: clamp(220px, 42vw, 380px); background: var(--surface-2); }
 .recipe-hero img, .recipe-hero svg { width: 100%; height: 100%; object-fit: cover; display: block; }
 :root[data-theme="dark"] .recipe-hero img, :root[data-theme="dark"] .recipe-hero svg, :root[data-theme="dark"] .recipe-thumb svg { filter: brightness(.82); }
 .recipe-sheet { position: relative; margin-top: -28px; background: var(--bg); border-radius: 28px 28px 0 0; padding: 22px 16px 8px; display: grid; gap: 14px; }
@@ -714,3 +714,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width: 759px) {
   :is(input:not([type=checkbox], [type=radio], [type=range], [type=file], [type=button], [type=submit]), textarea, select):not(.editor-title) { font-size: max(16px, 1em) !important; }
 }
+/* Recipe options (edit / delete) live behind a round glass "⋯" button on the photo. */
+.hero-more { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid rgb(255 255 255 / .35); background: rgb(20 26 22 / .45); color: #fff; box-shadow: 0 4px 14px rgb(0 0 0 / .25);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
+.hero-more:active { transform: scale(.94); }
+.menu-list { display: grid; gap: 10px; }
+.menu-list > .btn { justify-content: flex-start; gap: 10px; min-height: 52px; padding: 12px 16px; }
+.menu-confirm { display: grid; gap: 8px; }
+.menu-confirm p { margin: 4px 0; }

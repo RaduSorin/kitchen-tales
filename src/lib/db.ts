@@ -33,6 +33,7 @@ const toStory = (s: StoryRow): Story => ({
   title: s.title,
   emoji: s.emoji ?? '⭐',
   coverKey: s.coverKey ?? undefined,
+  collection: s.collection ?? undefined,
   source: (s.source ?? 'upload') as StorySource,
   audioKey: s.audioKey,
   durationSec: s.durationSec ?? undefined,

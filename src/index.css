@@ -723,3 +723,5 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .menu-list > .btn { justify-content: flex-start; gap: 10px; min-height: 52px; padding: 12px 16px; }
 .menu-confirm { display: grid; gap: 8px; }
 .menu-confirm p { margin: 4px 0; }
+/* Under a line merged from several recipes: which recipes need it. */
+.shop-sources { display: block; color: var(--muted); font-size: .8rem; font-weight: 400; margin-top: 2px; }

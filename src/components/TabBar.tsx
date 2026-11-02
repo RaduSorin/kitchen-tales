@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useSyncedList } from '../lib/synced'
 import { shoppingStore } from '../lib/plan'
 import { useArea } from '../lib/area'
+import { mergeShopping } from '../lib/merge'
 
 const I = ({ d }: { d: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
@@ -86,7 +87,7 @@ export default function TabBar() {
   const hidden = hidesTabBar(pathname)
   const stories = useArea() === 'night'
   const shopping = useSyncedList(shoppingStore)
-  const toBuy = shopping.filter((s) => !s.checked).length
+  const toBuy = mergeShopping(shopping.filter((s) => !s.checked)).length
   useTypingFlag()
   useEffect(() => {
     if (hidden) delete document.documentElement.dataset.tabbar

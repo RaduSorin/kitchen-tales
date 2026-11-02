@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { deleteStory, downloadStory, getOfflineAudio, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile } from '../lib/db'
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
@@ -9,31 +9,22 @@ import { useBlobUrl } from '../lib/useBlobUrl'
 import { useFileUrl } from '../lib/useFileUrl'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { fmtTime, getPosition, SOURCE_LABEL, setPosition } from '../lib/stories'
+import { fmtTime, folderOf, getPosition, SOURCE_LABEL, setPosition } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
+import { useCoverUrl } from '../lib/useCoverUrl'
+import { storyArtwork } from '../lib/artwork'
 
 type Sleep = 'end' | 15 | 30
-const HOLD_MS = 1500
-
-/** A lock button that leaves the player only after being held down, so a small child can't exit by accident. */
-function HoldToExit({ onExit }: { onExit: () => void }) {
-  const [holding, setHolding] = useState(false)
-  const timer = useRef<number>(undefined)
-  const start = () => { setHolding(true); timer.current = window.setTimeout(onExit, HOLD_MS) }
-  const stop = () => { setHolding(false); clearTimeout(timer.current) }
-  return (
-    <button className={holding ? 'hold-exit holding' : 'hold-exit'} aria-label="Ține apăsat ca să ieși"
-      onPointerDown={start} onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop} onContextMenu={(e) => e.preventDefault()}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onExit() }}>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-      <span>{holding ? 'Ține apăsat…' : 'Ține apăsat ca să ieși'}</span>
-    </button>
-  )
-}
-
 export default function StoryPlayer() {
   const { id } = useParams()
   const nav = useNavigate()
+  const location = useLocation()
+  // Back goes to the story's folder: a real history step when we came from it, otherwise open the folder in place.
+  const back = () => {
+    if ((location.state as { fromFolder?: boolean } | null)?.fromFolder) nav(-1)
+    else if (s) nav(`/povesti?folder=${encodeURIComponent(folderOf(s))}`, { replace: true })
+    else nav('/povesti', { replace: true })
+  }
   const { child } = useSettings()
   const [s, setS] = useState<Story | null>()
   const [playing, setPlaying] = useState(false)
@@ -60,11 +51,20 @@ export default function StoryPlayer() {
   const remoteUrl = useFileUrl(localAudio ? undefined : s?.audioKey)
   const url = localUrl ?? remoteUrl
 
-  // Lock-screen / headphone controls.
+  // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
+  const coverUrl = useCoverUrl(s?.coverKey)
   useEffect(() => {
     if (!s || !('mediaSession' in navigator)) return
+    let live = true
     navigator.mediaSession.metadata = new MediaMetadata({ title: s.title, artist: 'Kitchen Tales' })
-  }, [s])
+    storyArtwork(s, coverUrl).then((src) => {
+      if (!live || !src) return
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: s.title, artist: 'Kitchen Tales', artwork: [{ src, sizes: '512x512', type: 'image/png' }],
+      })
+    }).catch(() => {})
+    return () => { live = false }
+  }, [s, coverUrl])
 
   // Sleep timer: stop after 15 or 30 minutes of listening (paused time doesn't count).
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function StoryPlayer() {
         <h1>Noapte bună{child.name ? `, ${child.name}` : ''}</h1>
         <p>Povestea s-a terminat.<br />Ne auzim data viitoare.</p>
         <div className="goodnight-actions">
-          <HoldToExit onExit={() => nav('/povesti')} />
+          <button className="btn small" onClick={(e) => { e.stopPropagation(); back() }}>Înapoi la povești</button>
           <button className="link-btn" onClick={restart}>Ascultă din nou</button>
         </div>
       </div>
@@ -125,7 +125,9 @@ export default function StoryPlayer() {
   return (
     <div className="night-player">
       <div className="player-top">
-        <HoldToExit onExit={() => nav('/povesti')} />
+        <button type="button" className="night-btn" aria-label={`Înapoi la ${folderOf(s)}`} onClick={back}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
       </div>
       <StoryCover story={s} round className={playing ? 'playing' : ''} />
       <div className="player-title">

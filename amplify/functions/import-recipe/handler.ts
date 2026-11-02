@@ -272,7 +272,8 @@ async function suggest(ingredients: string, tools: string[]): Promise<Idea[]> {
   return ideas.filter((i) => i?.title?.trim()).slice(0, 6)
 }
 
-type SuggestEvent = { info: { fieldName: string }; arguments: { ingredients: string; tools?: (string | null)[] | null } }
+// Amplify Gen2 sends fieldName at the top level of the event (no AppSync-style `info`).
+type SuggestEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: { ingredients: string; tools?: (string | null)[] | null } }
 
 const importHandler: Schema['importRecipe']['functionHandler'] = async (event) => {
   const { url, photoKey, idea, tools, servings } = event.arguments
@@ -284,7 +285,9 @@ const importHandler: Schema['importRecipe']['functionHandler'] = async (event) =
 
 // One function serves both importRecipe and suggestRecipes.
 export const handler = async (event: Parameters<typeof importHandler>[0] | SuggestEvent, ...rest: unknown[]) => {
-  if (event.info.fieldName === 'suggestRecipes') {
+  const e = event as SuggestEvent
+  const field = e.fieldName ?? e.info?.fieldName
+  if (field === 'suggestRecipes' || (!field && 'ingredients' in (e.arguments ?? {}))) {
     const { ingredients, tools } = (event as SuggestEvent).arguments
     if (!ingredients?.trim()) throw new Error('Scrie ce ai în frigider.')
     return suggest(ingredients, cleanTools(tools))

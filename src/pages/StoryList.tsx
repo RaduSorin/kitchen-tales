@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { downloadStory, listStories } from '../lib/db'
 import type { Story } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
@@ -14,6 +14,8 @@ export default function StoryList() {
   const [progress, setProgress] = useState<string>()
   const [saving, setSaving] = useState<Set<string>>(new Set())
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
+  const nav = useNavigate()
   const offline = useOfflineIds()
   const online = useOnline()
   const { child } = useSettings()
@@ -53,7 +55,11 @@ export default function StoryList() {
       <div className="shelf-head">
         {inFolder ? (
           <div className="folder-head">
-            <button type="button" className="night-btn" aria-label="Înapoi la foldere" onClick={() => setParams({})}>
+            <button type="button" className="night-btn" aria-label="Înapoi la foldere" onClick={() => {
+              // Step back in history when we opened the folder from the shelf, so Back doesn't loop.
+              if ((location.state as { fromShelf?: boolean } | null)?.fromShelf) nav(-1)
+              else setParams({}, { replace: true })
+            }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
             </button>
             <div>
@@ -89,7 +95,7 @@ export default function StoryList() {
       ) : !open ? (
         <div className="covers">
           {folders.map((f) => (
-            <button key={f.name} type="button" className="cover-card folder-card" onClick={() => setParams({ folder: f.name })}>
+            <button key={f.name} type="button" className="cover-card folder-card" onClick={() => setParams({ folder: f.name }, { state: { fromShelf: true } })}>
               <span className="folder-mosaic" aria-hidden="true">
                 {[...f.items.filter((s) => s.coverKey), ...f.items.filter((s) => !s.coverKey)].slice(0, 4).map((s) => <StoryCover key={s.id} story={s} />)}
               </span>
@@ -102,7 +108,7 @@ export default function StoryList() {
         <div className="covers">
           {shown.map((s) => (
             <div key={s.id} className="cover-slot">
-              <Link to={`/povesti/${s.id}`} className="cover-card">
+              <Link to={`/povesti/${s.id}`} state={{ fromFolder: true }} className="cover-card">
                 <StoryCover story={s} />
                 <span className="cover-title">{s.title}</span>
                 <small className="cover-meta">

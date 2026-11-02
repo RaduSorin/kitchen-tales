@@ -145,7 +145,15 @@ export async function importRecipeFromPhoto(photo: Blob) {
 
 // ---- story generation ----
 
-export async function generateStory(args: { title: string; prompt?: string; text?: string }) {
+export type StoryBrief = {
+  prompt?: string
+  childName?: string
+  gender?: 'boy' | 'girl'
+  age?: number
+  length?: 'short' | 'medium' | 'long'
+}
+
+export async function generateStory(args: { title: string; text?: string } & StoryBrief) {
   const res = await client.queries.generateStory(args)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data) throw new Error('Nu am putut crea povestea.')

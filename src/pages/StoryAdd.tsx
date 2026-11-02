@@ -1,8 +1,17 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createStory, fileUrl, generateStory, removeFile, uploadFile } from '../lib/db'
+import { createStory, fileUrl, generateStory, removeFile, uploadFile, type StoryBrief } from '../lib/db'
 import type { StorySource } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
+
+const BRIEF_KEY = 'kt-story-brief'
+const loadBrief = (): StoryBrief => {
+  try { return JSON.parse(localStorage.getItem(BRIEF_KEY) ?? '{}') } catch { return {} }
+}
+const saveBrief = (b: StoryBrief) => {
+  try { localStorage.setItem(BRIEF_KEY, JSON.stringify({ childName: b.childName, gender: b.gender, age: b.age, length: b.length })) } catch { /* ignore */ }
+}
+const AGES = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 const EMOJIS = ['🐻', '🦊', '🐰', '🦁', '🐉', '🧚', '👑', '🚀', '🌙', '⭐', '🐢', '🦄']
 
@@ -18,7 +27,8 @@ export default function StoryAdd() {
   const rec = useRef<MediaRecorder>(null)
   const localPreview = useBlobUrl(audio)
   const [mode, setMode] = useState<'audio' | 'generate'>('audio')
-  const [prompt, setPrompt] = useState('')
+  const [brief, setBrief] = useState<StoryBrief>(() => ({ length: 'medium', ...loadBrief() }))
+  const setB = <K extends keyof StoryBrief>(k: K, v: StoryBrief[K]) => setBrief((b) => ({ ...b, [k]: v }))
   const [ownText, setOwnText] = useState('')
   const [generating, setGenerating] = useState(false)
   const [generated, setGenerated] = useState<{ text: string; audioKey: string; url: string }>()
@@ -29,7 +39,8 @@ export default function StoryAdd() {
     setGenerating(true); setError('')
     try {
       if (generated) await removeFile(generated.audioKey)
-      const g = await generateStory({ title: title.trim(), ...(useOwnText ? { text: ownText } : { prompt }) })
+      if (!useOwnText) saveBrief(brief)
+      const g = await generateStory({ title: title.trim(), ...(useOwnText ? { text: ownText } : brief) })
       setGenerated({ ...g, url: await fileUrl(g.audioKey) })
       setAudio(undefined); setSource('generated')
     } catch (err) {
@@ -99,10 +110,38 @@ export default function StoryAdd() {
         <p className="importing"><span className="spinner" /> Scriu și înregistrez povestea… durează cam un minut.</p>
       ) : (
         <>
-          <label>Despre ce să fie povestea?
-            <textarea rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ex.: un arici care învață să înoate, pentru Ana, 4 ani" />
-          </label>
+          <div className="brief">
+            <label>Prenumele copilului (opțional)
+              <input value={brief.childName ?? ''} onChange={(e) => setB('childName', e.target.value)} placeholder="Ana" />
+            </label>
+            <div className="field">
+              <span>Pentru</span>
+              <div className="chips">
+                <button type="button" className={brief.gender === 'girl' ? 'chip on' : 'chip'} onClick={() => setB('gender', brief.gender === 'girl' ? undefined : 'girl')}>👧 Fetiță</button>
+                <button type="button" className={brief.gender === 'boy' ? 'chip on' : 'chip'} onClick={() => setB('gender', brief.gender === 'boy' ? undefined : 'boy')}>👦 Băiețel</button>
+              </div>
+            </div>
+            <div className="field">
+              <span>Vârsta</span>
+              <div className="chips">
+                {AGES.map((a) => (
+                  <button type="button" key={a} className={brief.age === a ? 'chip on' : 'chip'} onClick={() => setB('age', brief.age === a ? undefined : a)}>{a} ani</button>
+                ))}
+              </div>
+            </div>
+            <label>Cuvinte cheie sau o scurtă descriere
+              <textarea rows={3} value={brief.prompt ?? ''} onChange={(e) => setB('prompt', e.target.value)}
+                placeholder="Ex.: arici, lac, prietenie, prima zi de grădiniță" />
+            </label>
+            <div className="field">
+              <span>Lungime</span>
+              <div className="chips">
+                {([['short', 'Scurtă · 2 min'], ['medium', 'Medie · 4 min'], ['long', 'Lungă · 7 min']] as const).map(([k, l]) => (
+                  <button type="button" key={k} className={brief.length === k ? 'chip on' : 'chip'} onClick={() => setB('length', k)}>{l}</button>
+                ))}
+              </div>
+            </div>
+          </div>
           <button type="button" className="btn big" onClick={() => generate(false)}>✨ Scrie o poveste nouă</button>
           <div className="or">sau</div>
           <label>Am deja textul poveștii

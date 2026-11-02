@@ -57,7 +57,15 @@ const schema = a.schema({
   // Writes a story with AI (or uses the given text) and narrates it with Polly.
   generateStory: a
     .query()
-    .arguments({ title: a.string().required(), prompt: a.string(), text: a.string() })
+    .arguments({
+      title: a.string().required(),
+      prompt: a.string(),
+      childName: a.string(),
+      gender: a.string(),
+      age: a.integer(),
+      length: a.string(),
+      text: a.string(),
+    })
     .returns(a.ref('GeneratedStory'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(generateStory)),

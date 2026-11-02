@@ -110,3 +110,9 @@ h2 { font-size: 1.15rem; margin: 24px 0 8px; }
 .story-text { width: 100%; max-width: 560px; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
 .story-text summary { cursor: pointer; font-weight: 600; }
 .story-text p { white-space: pre-wrap; line-height: 1.6; }
+
+.brief { display: flex; flex-direction: column; gap: 14px; padding: 14px; border-radius: 14px; background: var(--night-soft); }
+.brief .field { display: flex; flex-direction: column; gap: 6px; }
+.brief .field > span { font-weight: 600; }
+.brief .chips { flex-wrap: wrap; overflow: visible; padding: 0; margin: 0; }
+.brief .chip.on { background: var(--night); border-color: var(--night); color: var(--bg); }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getRecipe, newId, removeFile, saveRecipe, uploadFile } from '../lib/db'
+import { getRecipe, importRecipeFromPhoto, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
 import { parseRecipeText } from '../lib/parseRecipe'
 import { resizeImage } from '../lib/resizeImage'
 import type { Recipe } from '../lib/types'
@@ -21,6 +21,9 @@ export default function RecipeEdit() {
   const [showPaste, setShowPaste] = useState(false)
   const [photo, setPhoto] = useState<Blob>()
   const [saving, setSaving] = useState(false)
+  const [importMode, setImportMode] = useState<'none' | 'link' | 'text'>('none')
+  const [link, setLink] = useState('')
+  const [importing, setImporting] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -45,6 +48,33 @@ export default function RecipeEdit() {
     setShowPaste(false); setPaste('')
   }
 
+  const applyImport = (x: ImportedRecipe) => {
+    const clean = (xs: (string | null)[]) => xs.filter((v): v is string => !!v)
+    setR({
+      ...r,
+      title: x.title,
+      category: x.category ?? r.category,
+      servings: x.servings ?? undefined,
+      minutes: x.minutes ?? undefined,
+      notes: x.notes ?? undefined,
+      sourceUrl: x.sourceUrl ?? undefined,
+      photoKey: x.photoKey ?? r.photoKey,
+    })
+    setIng(clean(x.ingredients).join('\n')); setSteps(clean(x.steps).join('\n'))
+    setImportMode('none'); setLink('')
+  }
+
+  const doImport = async (label: string, run: () => Promise<ImportedRecipe>) => {
+    setImporting(label); setError('')
+    try { applyImport(await run()) } catch (err) { setError(`Importul nu a reușit: ${(err as Error).message}`) }
+    setImporting('')
+  }
+
+  const importLink = () => { if (link.trim()) doImport('Citesc rețeta de pe site…', () => importRecipeFromUrl(link.trim())) }
+  const importPhoto = async (f?: File) => {
+    if (f) doImport('Citesc rețeta din poză…', async () => importRecipeFromPhoto(await resizeImage(f, 2000, 0.85)))
+  }
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!r.title.trim()) return
@@ -66,17 +96,37 @@ export default function RecipeEdit() {
       <h1>{id ? 'Editează rețeta' : 'Rețetă nouă'}</h1>
 
       {!id && (
-        showPaste ? (
-          <div className="paste">
-            <label>Lipește textul rețetei (titlul pe primul rând)</label>
-            <textarea rows={8} value={paste} onChange={(e) => setPaste(e.target.value)}
-              placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. ...'} />
-            <div className="row"><button type="button" className="btn primary" onClick={applyPaste}>Completează automat</button>
-              <button type="button" className="btn" onClick={() => setShowPaste(false)}>Renunță</button></div>
-          </div>
-        ) : (
-          <button type="button" className="btn ghost" onClick={() => setShowPaste(true)}>📋 Lipește o rețetă din text</button>
-        )
+        <div className="import">
+          {importing ? (
+            <p className="importing"><span className="spinner" /> {importing}</p>
+          ) : importMode === 'link' ? (
+            <div className="paste">
+              <label>Link către rețetă
+                <input type="url" inputMode="url" autoFocus value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
+              </label>
+              <div className="row">
+                <button type="button" className="btn primary" onClick={importLink} disabled={!link.trim()}>Importă</button>
+                <button type="button" className="btn" onClick={() => setImportMode('none')}>Renunță</button>
+              </div>
+            </div>
+          ) : showPaste ? (
+            <div className="paste">
+              <label>Lipește textul rețetei (titlul pe primul rând)</label>
+              <textarea rows={8} value={paste} onChange={(e) => setPaste(e.target.value)}
+                placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. ...'} />
+              <div className="row"><button type="button" className="btn primary" onClick={applyPaste}>Completează automat</button>
+                <button type="button" className="btn" onClick={() => setShowPaste(false)}>Renunță</button></div>
+            </div>
+          ) : (
+            <div className="import-buttons">
+              <button type="button" className="btn ghost" onClick={() => setImportMode('link')}>🔗 Din link</button>
+              <label className="btn ghost">📷 Din poză
+                <input type="file" accept="image/*" hidden onChange={(e) => importPhoto(e.target.files?.[0])} />
+              </label>
+              <button type="button" className="btn ghost" onClick={() => setShowPaste(true)}>📋 Din text</button>
+            </div>
+          )}
+        </div>
       )}
 
       <label>Titlu<input required value={r.title} onChange={(e) => set('title', e.target.value)} /></label>

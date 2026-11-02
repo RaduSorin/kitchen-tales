@@ -10,6 +10,8 @@ import StoryPlayer from './pages/StoryPlayer'
 import StoryAdd from './pages/StoryAdd'
 import Settings from './pages/Settings'
 import CookMode from './pages/CookMode'
+import MiniPlayer from './components/MiniPlayer'
+import { NowPlayingProvider } from './lib/nowPlaying'
 
 // The stories area always uses the night palette, whatever the app theme is.
 function NightArea() {
@@ -33,6 +35,7 @@ export default function App() {
   const online = useOnline()
   return (
     <BrowserRouter>
+      <NowPlayingProvider>
       <NightArea />
       <header className="topbar">
         <Link to="/" className="brand">Kitchen Tales</Link>
@@ -60,6 +63,8 @@ export default function App() {
           <Route path="/setari/:tab" element={<Settings />} />
         </Routes>
       </main>
+      <MiniPlayer />
+      </NowPlayingProvider>
     </BrowserRouter>
   )
 }

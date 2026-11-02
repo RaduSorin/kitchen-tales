@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useArea } from '../lib/area'
 
 /**
  * Two-way switch between the two halves of the app: recipes and stories.
@@ -7,7 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
  */
 export default function AreaSwitch() {
   const { pathname, search } = useLocation()
-  const night = pathname.startsWith('/povesti')
+  const night = useArea() === 'night'
   const nav = useNavigate()
   const last = useRef({ day: '/', night: '/povesti' })
   const go = (side: 'day' | 'night') => (e: React.MouseEvent) => {
@@ -19,7 +20,7 @@ export default function AreaSwitch() {
   useEffect(() => {
     // Settings and the story player are not good places to come back to.
     if (pathname.startsWith('/setari')) return
-    if (night) { if (!/^\/povesti\/(?!adauga)[^/]+$/.test(pathname)) last.current.night = pathname + search }
+    if (night) { if (pathname.startsWith('/povesti') && !/^\/povesti\/(?!adauga)[^/]+$/.test(pathname)) last.current.night = pathname + search }
     else last.current.day = pathname + search
   }, [pathname, search, night])
   return (

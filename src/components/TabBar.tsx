@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useSyncedList } from '../lib/synced'
 import { shoppingStore } from '../lib/plan'
+import { useArea } from '../lib/area'
 
 const I = ({ d }: { d: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
@@ -56,7 +57,7 @@ function StoryTabs() {
 export default function TabBar() {
   const { pathname } = useLocation()
   const hidden = hidesTabBar(pathname)
-  const stories = pathname.startsWith('/povesti')
+  const stories = useArea() === 'night'
   const shopping = useSyncedList(shoppingStore)
   const toBuy = shopping.filter((s) => !s.checked).length
   useEffect(() => {

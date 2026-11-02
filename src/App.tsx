@@ -15,14 +15,14 @@ import MiniPlayer from './components/MiniPlayer'
 import { NowPlayingProvider } from './lib/nowPlaying'
 import TabBar from './components/TabBar'
 import AreaSwitch from './components/AreaSwitch'
+import { useArea } from './lib/area'
 import Search from './pages/Search'
 import Week from './pages/Week'
 import Shopping from './pages/Shopping'
 
 // The stories area always uses the night palette, whatever the app theme is.
 function NightArea() {
-  const { pathname } = useLocation()
-  const night = pathname.startsWith('/povesti')
+  const night = useArea() === 'night'
   useEffect(() => {
     if (night) {
       document.documentElement.dataset.area = 'night'
@@ -39,7 +39,9 @@ function NightArea() {
 // The gear opens the settings that match where you are: stories, recipes, or general.
 function SettingsLink({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
-  const to = pathname.startsWith('/povesti') ? '/setari/povesti' : pathname.startsWith('/retete') ? '/setari/retete' : '/setari'
+  const night = useArea() === 'night'
+  // Inside settings the gear keeps you where you are.
+  const to = pathname.startsWith('/setari') ? pathname : night ? '/setari/povesti' : pathname.startsWith('/retete') ? '/setari/retete' : '/setari'
   return <NavLink to={to} className={() => (pathname.startsWith('/setari') ? 'icon-link active' : 'icon-link')} aria-label="Setări" title="Setări">{children}</NavLink>
 }
 

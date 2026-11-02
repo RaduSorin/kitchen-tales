@@ -1,20 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { downloadStory, listStories } from '../lib/db'
-import type { Story, StorySource } from '../lib/types'
+import type { Story } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { fmtTime, getLastStoryId, getPosition, greeting, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
+import { fmtTime, getLastStoryId, getPosition, greeting, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
-
-const FILTERS: [StorySource | '', string][] = [['', 'Toate'], ['recording', 'Vocea noastră'], ['generated', 'Povești noi'], ['upload', 'Fișiere']]
 
 export default function StoryList() {
   const [stories, setStories] = useState<Story[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [progress, setProgress] = useState<string>()
-  const [filter, setFilter] = useState<StorySource | ''>('')
+  const [params, setParams] = useSearchParams()
   const offline = useOfflineIds()
   const online = useOnline()
   const { child } = useSettings()
@@ -23,12 +21,15 @@ export default function StoryList() {
   }, [])
 
   const available = online ? stories : stories.filter((s) => offline.has(s.id))
-  const shown = available.filter((s) => !filter || s.source === filter)
-  const missing = stories.filter((s) => !offline.has(s.id))
+  const folders = groupFolders(available)
+  // The open folder lives in the address, so the browser's Back returns to the folders.
+  const open = folders.length > 1 ? folders.find((f) => f.name === params.get('folder')) : folders[0]
+  const inFolder = !!open && folders.length > 1
+  const shown = open?.items ?? []
+  const missing = (inFolder ? shown : stories).filter((s) => !offline.has(s.id))
   const lastId = getLastStoryId()
   const last = available.find((s) => s.id === lastId)
   const lastPos = last ? getPosition(last.id) : 0
-  const sources = new Set(available.map((s) => s.source))
 
   const downloadAll = async () => {
     setError('')
@@ -42,14 +43,26 @@ export default function StoryList() {
   return (
     <section className="shelf">
       <div className="shelf-head">
-        <div>
-          <h1>{greeting()}{child.name ? `, ${child.name}` : ''}</h1>
-          <p className="shelf-sub">Ce poveste ascultăm?</p>
-        </div>
+        {inFolder ? (
+          <div className="folder-head">
+            <button type="button" className="night-btn" aria-label="Înapoi la foldere" onClick={() => setParams({})}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+            </button>
+            <div>
+              <h1>{open.name}</h1>
+              <p className="shelf-sub">{open.items.length} {open.items.length === 1 ? 'poveste' : 'povești'}</p>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <h1>{greeting()}{child.name ? `, ${child.name}` : ''}</h1>
+            <p className="shelf-sub">Ce poveste ascultăm?</p>
+          </div>
+        )}
         {online && <Link to="/povesti/adauga" className="night-btn" aria-label="Adaugă o poveste">+</Link>}
       </div>
 
-      {last && (
+      {last && !inFolder && (
         <Link to={`/povesti/${last.id}`} className="continue">
           <StoryCover story={last} />
           <span className="continue-text">
@@ -62,19 +75,21 @@ export default function StoryList() {
         </Link>
       )}
 
-      {sources.size > 1 && (
-        <div className="who-chips" role="tablist" aria-label="Cine citește">
-          {FILTERS.filter(([k]) => !k || sources.has(k)).map(([k, label]) => (
-            <button key={k} role="tab" aria-selected={filter === k} onClick={() => setFilter(k)}>
-              {k && <i style={{ background: SOURCE_COLOR[k] }} />}{label}
+      {error && <p className="error">{error}</p>}
+      {loading ? <p className="empty">Se încarcă…</p> : available.length === 0 ? (
+        <p className="empty">{online ? 'Nicio poveste încă. Apasă + ca să adaugi una.' : 'Nicio poveste salvată pe acest dispozitiv.'}</p>
+      ) : !open ? (
+        <div className="covers">
+          {folders.map((f) => (
+            <button key={f.name} type="button" className="cover-card folder-card" onClick={() => setParams({ folder: f.name })}>
+              <span className="folder-mosaic" aria-hidden="true">
+                {[...f.items.filter((s) => s.coverKey), ...f.items.filter((s) => !s.coverKey)].slice(0, 4).map((s) => <StoryCover key={s.id} story={s} />)}
+              </span>
+              <span className="cover-title">{f.name}</span>
+              <small className="cover-meta">{f.items.length} {f.items.length === 1 ? 'poveste' : 'povești'}</small>
             </button>
           ))}
         </div>
-      )}
-
-      {error && <p className="error">{error}</p>}
-      {loading ? <p className="empty">Se încarcă…</p> : shown.length === 0 ? (
-        <p className="empty">{online ? 'Nicio poveste încă. Apasă + ca să adaugi una.' : 'Nicio poveste salvată pe acest dispozitiv.'}</p>
       ) : (
         <div className="covers">
           {shown.map((s) => (
@@ -82,7 +97,10 @@ export default function StoryList() {
               <StoryCover story={s} />
               {offline.has(s.id) && <span className="saved-dot" title="Salvată pe dispozitiv" aria-label="Salvată pe dispozitiv">✓</span>}
               <span className="cover-title">{s.title}</span>
-              <small className="cover-meta"><i style={{ background: SOURCE_COLOR[s.source] }} />{SOURCE_LABEL[s.source]}{s.durationSec ? ` · ${Math.max(1, Math.round(s.durationSec / 60))} min` : ''}</small>
+              <small className="cover-meta">
+                {!s.collection && <><i style={{ background: SOURCE_COLOR[s.source] }} />{SOURCE_LABEL[s.source]}</>}
+                {s.durationSec ? `${s.collection ? '' : ' · '}${Math.max(1, Math.round(s.durationSec / 60))} min` : ''}
+              </small>
             </Link>
           ))}
         </div>
@@ -91,10 +109,10 @@ export default function StoryList() {
       {online && stories.length > 0 && (
         <div className="offline-bar">
           {missing.length === 0
-            ? <span>Toate poveștile merg și fără internet.</span>
+            ? <span>{inFolder ? 'Poveștile din acest folder merg și fără internet.' : 'Toate poveștile merg și fără internet.'}</span>
             : progress
               ? <span><span className="spinner" /> {progress}</span>
-              : <button className="link-btn" onClick={downloadAll}>Salvează toate pentru drum ({missing.length})</button>}
+              : <button className="link-btn" onClick={downloadAll}>{inFolder ? 'Salvează folderul pentru drum' : 'Salvează toate pentru drum'} ({missing.length})</button>}
         </div>
       )}
     </section>

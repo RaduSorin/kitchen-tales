@@ -28,6 +28,8 @@ const schema = a.schema({
       title: a.string().required(),
       emoji: a.string(),
       coverKey: a.string(),
+      // Shelf folder for a set of stories added together (e.g. a bought collection).
+      collection: a.string(),
       source: a.enum(['upload', 'recording', 'generated']),
       audioKey: a.string().required(),
       durationSec: a.float(),

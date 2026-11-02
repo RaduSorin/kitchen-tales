@@ -1,5 +1,5 @@
 // Small helpers for the kids' stories area (night style).
-import type { StorySource } from './types'
+import type { Story, StorySource } from './types'
 
 const COVERS = ['#ff9fb8', '#74e0d0', '#ffd76a', '#9fb4ff', '#c7a6ff', '#ffb38a']
 
@@ -11,6 +11,19 @@ export function coverColor(title: string) {
 
 export const SOURCE_LABEL: Record<StorySource, string> = { recording: 'vocea noastră', generated: 'poveste nouă', upload: 'fișier audio' }
 export const SOURCE_COLOR: Record<StorySource, string> = { recording: '#74e0d0', generated: '#ffd76a', upload: '#ff9fb8' }
+
+// Shelf folder: the story's collection, otherwise how it was made.
+const SOURCE_FOLDER: Record<StorySource, string> = { generated: 'Povești create de noi', recording: 'Vocea noastră', upload: 'Fișierele mele' }
+export const folderOf = (s: Story) => s.collection || SOURCE_FOLDER[s.source]
+
+// Folders in shelf order (our own first, then collections), each with its stories.
+export function groupFolders(stories: Story[]) {
+  const map = new Map<string, Story[]>()
+  for (const s of stories) map.set(folderOf(s), [...(map.get(folderOf(s)) ?? []), s])
+  const own = new Set(Object.values(SOURCE_FOLDER))
+  return [...map].map(([name, items]) => ({ name, items }))
+    .sort((a, b) => Number(own.has(b.name)) - Number(own.has(a.name)) || a.name.localeCompare(b.name, 'ro'))
+}
 
 export function greeting(now = new Date()) {
   const h = now.getHours()

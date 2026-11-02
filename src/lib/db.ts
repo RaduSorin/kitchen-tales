@@ -32,6 +32,7 @@ const toStory = (s: StoryRow): Story => ({
   id: s.id,
   title: s.title,
   emoji: s.emoji ?? '⭐',
+  coverKey: s.coverKey ?? undefined,
   source: (s.source ?? 'upload') as StorySource,
   audioKey: s.audioKey,
   durationSec: s.durationSec ?? undefined,
@@ -62,7 +63,7 @@ const extFor = (blob: Blob, fallback: string) => {
   return t ? t.replace('mpeg', 'mp3').replace('x-m4a', 'm4a') : fallback
 }
 
-export async function uploadFile(prefix: 'recipe-photos' | 'stories', blob: Blob, fallbackExt: string) {
+export async function uploadFile(prefix: 'recipe-photos' | 'stories' | 'story-covers', blob: Blob, fallbackExt: string) {
   const path = `${prefix}/${newId()}.${extFor(blob, fallbackExt)}`
   await uploadData({ path, data: blob, options: { contentType: blob.type || undefined } }).result
   return path
@@ -163,6 +164,7 @@ export async function createStory(s: Omit<Story, 'id' | 'createdAt'>) {
 export async function deleteStory(s: Story) {
   await client.models.Story.delete({ id: s.id })
   await removeFile(s.audioKey)
+  await removeFile(s.coverKey)
   await removeAudio(s.id).catch(() => {})
 }
 
@@ -206,6 +208,30 @@ export async function generateStory(args: { title: string; text?: string } & Sto
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data) throw new Error('Nu am putut crea povestea.')
   return res.data
+}
+
+// ---- story covers ----
+
+export type CoverCandidate = { url: string; source: string; label?: string | null }
+
+/** Covers from the iTunes catalog and Wikipedia that match a story's title. */
+export async function findCovers(title: string, artist?: string): Promise<CoverCandidate[]> {
+  const res = await client.queries.findCovers({ title, artist })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  return (res.data ?? []).filter((c): c is CoverCandidate => !!c?.url)
+}
+
+/** Copies a found cover into our storage; returns its path. */
+export async function saveFoundCover(url: string) {
+  const res = await client.mutations.saveCover({ url })
+  if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') ?? 'Nu am putut salva coperta.')
+  return res.data
+}
+
+export async function setStoryCover(s: Story, coverKey: string) {
+  const res = await client.models.Story.update({ id: s.id, coverKey })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (s.coverKey && s.coverKey !== coverKey) await removeFile(s.coverKey)
 }
 
 // ---- family accounts ----

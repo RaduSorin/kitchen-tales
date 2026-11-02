@@ -20,6 +20,8 @@ export interface Story {
   id: string
   title: string
   emoji: string
+  /** Cover picture in S3 (from the audio file's tags or chosen by a parent); emoji is the fallback. */
+  coverKey?: string
   source: StorySource
   audioKey: string
   durationSec?: number

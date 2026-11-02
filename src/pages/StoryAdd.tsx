@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { createStory, fileUrl, generateStory, removeFile, uploadFile, type StoryBrief } from '../lib/db'
-import { saveAudio } from '../lib/offline'
+import { createStory, fileUrl, generateStory, removeFile, saveFoundCover, uploadFile, type StoryBrief } from '../lib/db'
+import { saveAudio, saveCover } from '../lib/offline'
+import { readAudioMeta } from '../lib/audioMeta'
+import { resizeImage } from '../lib/resizeImage'
 import type { StorySource } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
 import { childAge, useSettings } from '../lib/settings'
 import Recorder from '../components/Recorder'
+import StoryCover from '../components/StoryCover'
+import CoverSearch from '../components/CoverSearch'
 
 const BRIEF_KEY = 'kt-story-brief'
 const loadBrief = (): StoryBrief => {
@@ -43,6 +47,12 @@ export default function StoryAdd() {
   const known = { childName: child.name.trim() || undefined, age: childAge(child), gender: child.gender }
   const [title, setTitle] = useState('')
   const [emoji, setEmoji] = useState(EMOJIS[0])
+  // Cover picture: found inside the audio file, found online by title, or a photo the parent picked. The emoji is the fallback.
+  const [cover, setCover] = useState<{ blob?: Blob; url?: string; from: 'file' | 'photo' | 'web' }>()
+  const coverBlobUrl = useBlobUrl(cover?.blob)
+  const coverUrl = cover?.url ?? coverBlobUrl
+  const [artist, setArtist] = useState<string>()
+  const [autoSearch, setAutoSearch] = useState(false)
   const [audio, setAudio] = useState<Blob>()
   const [fileName, setFileName] = useState('')
   const [source, setSource] = useState<StorySource>('upload')
@@ -67,6 +77,24 @@ export default function StoryAdd() {
   const reset = () => {
     if (generated) removeFile(generated.audioKey).catch(() => {})
     setAudio(undefined); setGenerated(undefined); setSeconds(undefined); setFileName('')
+    setCover((c) => (c?.from === 'photo' ? c : undefined))
+    setArtist(undefined); setAutoSearch(false)
+  }
+
+  const pickFile = async (f: File) => {
+    reset(); setAudio(f); setFileName(f.name); setSource('upload')
+    const fromName = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim()
+    if (!title.trim()) setTitle(fromName)
+    const meta = await readAudioMeta(f)
+    // The title inside the file is usually nicer than the file name, so use it unless the parent typed one.
+    if (meta.title) setTitle((t) => (!t.trim() || t === fromName ? meta.title! : t))
+    setArtist(meta.artist)
+    if (meta.picture) setCover({ blob: meta.picture, from: 'file' })
+    else setAutoSearch(true) // no picture inside: look one up by title
+  }
+
+  const pickPhoto = async (f: File) => {
+    try { setCover({ blob: await resizeImage(f, 800, 0.85), from: 'photo' }) } catch { setError('Nu am putut citi poza.') }
   }
 
   const generate = async (useOwnText: boolean) => {
@@ -93,7 +121,14 @@ export default function StoryAdd() {
     setSaving(true); setError('')
     try {
       const audioKey = generated ? generated.audioKey : await uploadFile('stories', audio!, 'webm')
-      const id = await createStory({ title: title.trim(), emoji, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
+      let coverKey: string | undefined
+      if (cover?.url) coverKey = await saveFoundCover(cover.url).catch(() => undefined)
+      else if (cover?.blob) {
+        const small = await resizeImage(cover.blob, 800, 0.85).catch(() => cover.blob!)
+        coverKey = await uploadFile('story-covers', small, 'jpg')
+        saveCover(coverKey, small).catch(() => {})
+      }
+      const id = await createStory({ title: title.trim(), emoji, coverKey, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
       // Our own recordings and files are already on this device, so keep them for offline listening.
       if (audio) await saveAudio(id, audio).catch(() => {})
       nav(`/povesti/${id}`, { replace: true })
@@ -153,9 +188,7 @@ export default function StoryAdd() {
           <small>MP3, M4A sau WAV</small>
           <input type="file" accept="audio/*" onChange={(e) => {
             const f = e.target.files?.[0]
-            if (!f) return
-            reset(); setAudio(f); setFileName(f.name); setSource('upload')
-            if (!title.trim()) setTitle(f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '))
+            if (f) pickFile(f)
           }} />
         </label>
       )}
@@ -234,10 +267,26 @@ export default function StoryAdd() {
           </div>
           {generated && <details className="story-text"><summary>Textul poveștii</summary><p>{generated.text}</p></details>}
           <div className="night-field">
-            <span>Alege o imagine pentru copertă</span>
-            <div className="emoji-pick">
-              {EMOJIS.map((x) => <button type="button" key={x} className={x === emoji ? 'on' : ''} aria-pressed={x === emoji} onClick={() => setEmoji(x)}>{x}</button>)}
+            <span>Coperta</span>
+            <div className="cover-pick">
+              <StoryCover story={{ title: title || 'Poveste', emoji }} src={coverUrl} />
+              <div className="cover-pick-actions">
+                {cover && <small>{cover.from === 'file' ? 'Am găsit-o în fișier.' : cover.from === 'web' ? 'Găsită pe internet.' : 'Poza aleasă de tine.'}</small>}
+                <label className="link-btn file-btn">{cover ? 'Altă poză' : 'Alege o poză'}
+                  <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) pickPhoto(f); e.target.value = '' }} />
+                </label>
+                {cover && <button type="button" className="link-btn" onClick={() => setCover(undefined)}>Folosește un desen</button>}
+              </div>
             </div>
+            {cover?.from !== 'file' && cover?.from !== 'photo' && (
+              <CoverSearch key={`${source}-${fileName}`} title={title} artist={artist} auto={autoSearch} chosen={cover?.url}
+                onPick={(c) => setCover({ url: c.url, from: 'web' })} />
+            )}
+            {!cover && (
+              <div className="emoji-pick">
+                {EMOJIS.map((x) => <button type="button" key={x} className={x === emoji ? 'on' : ''} aria-pressed={x === emoji} onClick={() => setEmoji(x)}>{x}</button>)}
+              </div>
+            )}
           </div>
           <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? 'Se salvează…' : 'Pune pe raft'}</button>
           {source !== 'generated' && <p className="rec-hint">Se salvează și pe acest dispozitiv, merge și fără internet.</p>}

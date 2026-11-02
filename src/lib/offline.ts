@@ -6,12 +6,17 @@ import type { Recipe, Story } from './types'
 interface OfflineDB extends DBSchema {
   audio: { key: string; value: { storyId: string; blob: Blob; savedAt: number } }
   lists: { key: 'stories' | 'recipes'; value: Story[] | Recipe[] }
+  /** Story cover pictures, keyed by their S3 path. Small, so every cover seen once is kept. */
+  covers: { key: string; value: Blob }
 }
 
-const dbPromise = openDB<OfflineDB>('kitchen-tales-offline', 1, {
-  upgrade(db) {
-    db.createObjectStore('audio', { keyPath: 'storyId' })
-    db.createObjectStore('lists')
+const dbPromise = openDB<OfflineDB>('kitchen-tales-offline', 2, {
+  upgrade(db, oldVersion) {
+    if (oldVersion < 1) {
+      db.createObjectStore('audio', { keyPath: 'storyId' })
+      db.createObjectStore('lists')
+    }
+    if (oldVersion < 2) db.createObjectStore('covers')
   },
 })
 
@@ -49,4 +54,16 @@ export async function cachedList(name: 'stories'): Promise<Story[] | undefined>
 export async function cachedList(name: 'recipes'): Promise<Recipe[] | undefined>
 export async function cachedList(name: 'stories' | 'recipes') {
   return (await dbPromise).get('lists', name)
+}
+
+export async function getCover(key: string) {
+  return (await dbPromise).get('covers', key)
+}
+
+export async function saveCover(key: string, blob: Blob) {
+  await (await dbPromise).put('covers', blob, key)
+}
+
+export async function removeCover(key: string) {
+  await (await dbPromise).delete('covers', key)
 }

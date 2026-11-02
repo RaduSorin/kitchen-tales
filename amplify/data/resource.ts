@@ -37,6 +37,25 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // A recipe planned for a day in "Săptămâna mea". `day` is a local date, YYYY-MM-DD.
+  MealPlanEntry: a
+    .model({
+      day: a.string().required(),
+      recipeId: a.string().required(),
+      servings: a.integer(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
+  // One line of the family shopping list, optionally from a recipe.
+  ShoppingItem: a
+    .model({
+      text: a.string().required(),
+      checked: a.boolean(),
+      recipeId: a.string(),
+      recipeTitle: a.string(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   ImportedRecipe: a.customType({
     title: a.string().required(),
     category: a.string(),

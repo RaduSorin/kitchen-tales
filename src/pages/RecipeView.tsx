@@ -7,6 +7,33 @@ import { scaleIngredient } from '../lib/scale'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { formatMinutes } from '../lib/format'
 import { getProgress } from '../lib/cooking'
+import Sheet from '../components/Sheet'
+import { useSyncedList } from '../lib/synced'
+import { addDays, addToShopping, dayKey, dayName, planRecipe, planStore, shortDate, today } from '../lib/plan'
+
+/** Choose a day in the next two weeks; days that already have this recipe are marked. */
+function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; servings?: number; onDone: (msg: string) => void; onClose: () => void }) {
+  const plan = useSyncedList(planStore)
+  const days = Array.from({ length: 14 }, (_, i) => addDays(today(), i))
+  return (
+    <Sheet title="Când o gătești?" onClose={onClose}>
+      <ul className="pick-list day-pick">
+        {days.map((d, i) => {
+          const k = dayKey(d)
+          const planned = plan.some((e) => e.day === k && e.recipeId === r.id)
+          return (
+            <li key={k}>
+              <button type="button" onClick={() => { planRecipe(r, k, servings); onDone(`Adăugată ${i === 0 ? 'azi' : i === 1 ? 'mâine' : `${dayName(d).toLowerCase()}, ${shortDate(d)}`}.`) }}>
+                <span><b>{i === 0 ? 'Azi' : i === 1 ? 'Mâine' : dayName(d)}</b> <small>{shortDate(d)}</small></span>
+                {planned && <small className="day-pick-on">deja în plan</small>}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </Sheet>
+  )
+}
 
 export default function RecipeView() {
   const { id } = useParams()
@@ -16,6 +43,8 @@ export default function RecipeView() {
   const [done, setDone] = useState<Set<number>>(new Set())
   const [servings, setServings] = useState<number>()
   const [confirming, setConfirming] = useState(false)
+  const [planning, setPlanning] = useState(false)
+  const [note, setNote] = useState<{ text: string; to: string; link: string }>()
   useEffect(() => { getRecipe(id!).then((x) => { setR(x ?? null); setServings(x?.servings) }) }, [id])
   const img = useFileUrl(r?.photoKey)
   if (r === undefined) return null
@@ -42,6 +71,26 @@ export default function RecipeView() {
             </Link>
           )
         })()}
+
+        <div className="recipe-plan-actions">
+          <button type="button" className="btn" onClick={() => setPlanning(true)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 2v4M16 2v4" /></svg>
+            Adaugă în săptămână
+          </button>
+          {r.ingredients.length > 0 && (
+            <button type="button" className="btn" onClick={() => {
+              // Ingredients ticked as "I have it" stay off the list.
+              const need = r.ingredients.filter((_, i) => !have.has(i))
+              const n = addToShopping(r, servings, need)
+              setNote({ text: n ? `Am pus ${n} ${n === 1 ? 'ingredient' : 'ingrediente'} în listă.` : 'Sunt deja în listă.', to: '/cumparaturi', link: 'Vezi lista' })
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01" /></svg>
+              Pune în listă{have.size > 0 && r.ingredients.length > have.size ? ` (${r.ingredients.length - have.size})` : ''}
+            </button>
+          )}
+          {note && <p className="recipe-plan-note" role="status">{note.text} <Link to={note.to}>{note.link}</Link></p>}
+        </div>
+        {have.size > 0 && <small className="recipe-plan-hint">Ce ai bifat la ingrediente nu ajunge în lista de cumpărături.</small>}
 
         <div className="recipe-cols">
           <section>
@@ -98,6 +147,7 @@ export default function RecipeView() {
           )}
         </div>
       </div>
+      {planning && <DayPicker r={r} servings={servings} onClose={() => setPlanning(false)} onDone={(text) => { setPlanning(false); setNote({ text, to: '/saptamana', link: 'Vezi săptămâna' }) }} />}
     </article>
   )
 }

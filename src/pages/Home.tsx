@@ -9,6 +9,8 @@ import { getLastCook } from '../lib/cooking'
 import { getLastStoryId, getPosition, greeting } from '../lib/stories'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import StoryCover from '../components/StoryCover'
+import { useSyncedList } from '../lib/synced'
+import { dayKey, planStore, today } from '../lib/plan'
 
 const Arrow = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
@@ -75,6 +77,9 @@ export default function Home() {
   const lastCook = getLastCook()
   const cooking = lastCook && recipes?.find((r) => r.id === lastCook.id)
   const recent = (recipes ?? []).filter((r) => r.id !== cooking?.id).slice(0, 4)
+  const plan = useSyncedList(planStore)
+  const todayKey = dayKey(today())
+  const menu = (recipes ?? []).length ? plan.filter((e) => e.day === todayKey).map((e) => recipes!.find((r) => r.id === e.recipeId)).filter((r): r is Recipe => !!r) : []
   const playable = stories && (online ? stories : stories.filter((s) => offline.has(s.id)))
 
   const night = playable && <NightCard key={playable.length} stories={playable} evening={evening} />
@@ -95,6 +100,26 @@ export default function Home() {
           <span className="home-continue-go"><Arrow /></span>
         </Link>
       )}
+
+      <section className="home-sec">
+        <div className="home-sec-head">
+          <h2>Azi în meniu</h2>
+          <Link to="/saptamana">Săptămâna mea</Link>
+        </div>
+        {menu.length ? (
+          <div className="home-menu">
+            {menu.map((r, i) => (
+              <Link key={`${r.id}-${i}`} to={`/retete/${r.id}`} className="home-continue">
+                <span className="home-continue-thumb"><Thumb r={r} /></span>
+                <span className="home-continue-text"><b>{r.title}</b></span>
+                <span className="home-continue-go"><Arrow /></span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <Link to="/saptamana" className="home-empty">Nimic planificat pentru azi. <b>Planifică săptămâna</b></Link>
+        )}
+      </section>
 
       <section className="home-sec">
         <div className="home-sec-head">

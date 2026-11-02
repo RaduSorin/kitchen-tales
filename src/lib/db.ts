@@ -3,7 +3,7 @@
 import { generateClient } from 'aws-amplify/data'
 import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
-import type { Recipe, Story, StorySource } from './types'
+import type { PlanEntry, Recipe, ShoppingItem, Story, StorySource } from './types'
 import { cachedList, cacheList, getAudio, removeAudio, saveAudio } from './offline'
 
 const client = generateClient<Schema>()
@@ -268,4 +268,35 @@ export async function inviteFamilyMember(email: string, resend = false): Promise
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data) throw new Error('Nu am putut trimite invitația.')
   return res.data
+}
+
+// ---- meal plan ("Săptămâna mea") and shopping list ----
+
+type PlanRow = Schema['MealPlanEntry']['type']
+type ShoppingRow = Schema['ShoppingItem']['type']
+
+const check = (res: { errors?: { message: string }[] | null }) => {
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+}
+
+const toPlan = (p: PlanRow): PlanEntry => ({ id: p.id, day: p.day, recipeId: p.recipeId, servings: p.servings ?? undefined })
+const toShopping = (s: ShoppingRow): ShoppingItem => ({
+  id: s.id, text: s.text, checked: !!s.checked, recipeId: s.recipeId ?? undefined, recipeTitle: s.recipeTitle ?? undefined, createdAt: s.createdAt,
+})
+
+export const planApi = {
+  list: async () => (await listAll((nextToken) => client.models.MealPlanEntry.list({ nextToken, limit: 500 }))).map(toPlan),
+  create: async (p: PlanEntry) => check(await client.models.MealPlanEntry.create({ ...p, servings: p.servings ?? null })),
+  update: async (p: PlanEntry) => check(await client.models.MealPlanEntry.update({ ...p, servings: p.servings ?? null })),
+  remove: async (id: string) => check(await client.models.MealPlanEntry.delete({ id })),
+}
+
+export const shoppingApi = {
+  list: async () => (await listAll((nextToken) => client.models.ShoppingItem.list({ nextToken, limit: 500 }))).map(toShopping),
+  create: async (s: ShoppingItem) => {
+    const { createdAt: _, ...fields } = s
+    check(await client.models.ShoppingItem.create({ ...fields, recipeId: fields.recipeId ?? null, recipeTitle: fields.recipeTitle ?? null }))
+  },
+  update: async (s: ShoppingItem) => check(await client.models.ShoppingItem.update({ id: s.id, text: s.text, checked: s.checked })),
+  remove: async (id: string) => check(await client.models.ShoppingItem.delete({ id })),
 }

@@ -70,7 +70,7 @@ export default function TabBar() {
       <div className="tabbar-spacer" aria-hidden="true" />
       <nav className="tabbar" aria-label="Meniu">
         {TABS.map((t) => (
-          <NavLink key={t.to} to={t.to} end={t.end} className="tab" aria-label={t.full}>
+          <NavLink key={t.to} to={t.to} end={t.end} className={t.to === '/retete' ? 'tab tab-center' : 'tab'} aria-label={t.full}>
             <span className="tab-icon">
               <I d={t.icon} />
               {t.to === '/cumparaturi' && toBuy > 0 && <span className="tab-badge">{toBuy > 99 ? '99+' : toBuy}</span>}

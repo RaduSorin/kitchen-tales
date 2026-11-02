@@ -559,17 +559,25 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   :root[data-tabbar] .mini-spacer { height: 76px; }
   :root[data-tabbar] main { padding-bottom: 16px; }
 }
+/* The middle tab (Rețete / Bibliotecă) is a big raised round button: sage by day, moon-yellow at night. */
+@media (max-width: 759px) {
+  .tabbar { overflow: visible; }
+  .tab-center, .tab-center.active { background: none !important; box-shadow: none !important; }
+  .tab-center .tab-icon { width: 60px; height: 60px; margin-top: -26px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
+    box-shadow: 0 6px 18px rgb(0 0 0 / .3), inset 0 2px 0 rgb(255 255 255 / .35); border: 3px solid var(--bg); }
+  .tab-center:not(.active) .tab-icon { filter: saturate(.75) brightness(1.05); }
+  .tab-center.active .tab-label { color: var(--accent); }
+}
 /* Stories: night glass, the big moon-yellow Bibliotecă button in the middle, and Noapte bună. */
 @media (max-width: 759px) {
   .night-tabbar { font-family: var(--f-kids); overflow: visible; }
   .night-tabbar .tab { border: 0; background: none; font: inherit; cursor: pointer; color: var(--text); }
   .night-tabbar .tab.active:not(.tab-center) { color: var(--moon); background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 0 0 1px var(--glass-edge); }
   .night-tabbar .tab-label { font-size: .74rem; font-weight: 700; }
-  .tab-center .tab-icon { width: 60px; height: 60px; margin-top: -26px; border-radius: 50%; background: #ffd76a; color: #171a45;
-    box-shadow: 0 6px 18px rgb(0 0 0 / .35), inset 0 2px 0 rgb(255 255 255 / .55); border: 3px solid rgb(23 26 69 / .9); }
   .night-tabbar .tab-center.active { background: none; box-shadow: none; }
-  .tab-center.active .tab-label { color: var(--moon); }
-  .tab-center:not(.active) .tab-icon { background: #e9d28f; }
+  .night-tabbar .tab-center .tab-icon { background: #ffd76a; color: #171a45; border-color: rgb(23 26 69 / .9); }
+  .night-tabbar .tab-center:not(.active) .tab-icon { background: #e9d28f; filter: none; }
+  .night-tabbar .tab-center.active .tab-label { color: var(--moon); }
   .wide-add { display: none !important; }
 }
 .fav-btn.on { color: #ff8fa3; }

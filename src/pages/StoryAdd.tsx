@@ -1,9 +1,11 @@
-import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { createStory, fileUrl, generateStory, removeFile, uploadFile, type StoryBrief } from '../lib/db'
+import { saveAudio } from '../lib/offline'
 import type { StorySource } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
-import { getSettings } from '../lib/settings'
+import { getSettings, useSettings } from '../lib/settings'
+import Recorder from '../components/Recorder'
 
 const BRIEF_KEY = 'kt-story-brief'
 const loadBrief = (): StoryBrief => {
@@ -17,68 +19,82 @@ const saveBrief = (b: StoryBrief) => {
   try { localStorage.setItem(BRIEF_KEY, JSON.stringify({ childName: b.childName, gender: b.gender, age: b.age, length: b.length })) } catch { /* ignore */ }
 }
 const AGES = [2, 3, 4, 5, 6, 7, 8, 9, 10]
-
+const TOPICS = ['animale', 'prietenie', 'curaj', 'pădurea', 'marea', 'spațiu', 'dragoni', 'somn']
+const LENGTHS = [['short', '2 min'], ['medium', '4 min'], ['long', '7 min']] as const
 const EMOJIS = ['🐻', '🦊', '🐰', '🦁', '🐉', '🧚', '👑', '🚀', '🌙', '⭐', '🐢', '🦄']
+
+type Mode = 'record' | 'create' | 'upload'
+const MODE_OF: Record<StorySource, Mode> = { recording: 'record', generated: 'create', upload: 'upload' }
+const TITLES: Record<Mode, string> = { record: 'Citește tu', create: 'Creează o poveste', upload: 'Încarcă un fișier' }
+
+const Icon = ({ d }: { d: string }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#171a45" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
+)
+const OPTIONS: { mode: Mode; color: string; icon: string; text: string }[] = [
+  { mode: 'record', color: '#ff9fb8', icon: 'M9 6a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3', text: 'Înregistrează-ți vocea citind o carte' },
+  { mode: 'create', color: '#ffd76a', icon: 'M12 3l2.2 5.5L20 9l-4.5 3.8L17 19l-5-3.2L7 19l1.5-6.2L4 9l5.8-.5z', text: 'Spui eroul și tema, aplicația o scrie și o citește' },
+  { mode: 'upload', color: '#74e0d0', icon: 'M12 15V4M7 9l5-5 5 5M5 20h14', text: 'MP3 sau M4A de pe telefon sau calculator' },
+]
 
 export default function StoryAdd() {
   const nav = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const mode = (['record', 'create', 'upload'] as const).find((m) => m === params.get('mod'))
+  const { child } = useSettings()
   const [title, setTitle] = useState('')
   const [emoji, setEmoji] = useState(EMOJIS[0])
   const [audio, setAudio] = useState<Blob>()
+  const [fileName, setFileName] = useState('')
   const [source, setSource] = useState<StorySource>('upload')
-  const [recording, setRecording] = useState(false)
+  const [seconds, setSeconds] = useState<number>()
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
-  const rec = useRef<MediaRecorder>(null)
   const localPreview = useBlobUrl(audio)
-  const [mode, setMode] = useState<'audio' | 'generate'>('audio')
   const [brief, setBrief] = useState<StoryBrief>(() => ({ length: 'medium', ...loadBrief() }))
   const setB = <K extends keyof StoryBrief>(k: K, v: StoryBrief[K]) => setBrief((b) => ({ ...b, [k]: v }))
+  const [topics, setTopics] = useState<string[]>([])
   const [ownText, setOwnText] = useState('')
   const [generating, setGenerating] = useState(false)
   const [generated, setGenerated] = useState<{ text: string; audioKey: string; url: string }>()
   const preview = generated?.url ?? localPreview
+  // What's ready belongs to the screen that made it, so switching screens shows that screen's own start.
+  const ready = !!(audio || generated) && mode === MODE_OF[source]
+
+  const choose = (m?: Mode) => {
+    setError('')
+    setParams(m ? { mod: m } : {})
+  }
+  const reset = () => {
+    if (generated) removeFile(generated.audioKey).catch(() => {})
+    setAudio(undefined); setGenerated(undefined); setSeconds(undefined); setFileName('')
+  }
 
   const generate = async (useOwnText: boolean) => {
     if (!title.trim()) { setError('Scrie întâi un titlu.'); return }
     setGenerating(true); setError('')
     try {
       if (generated) await removeFile(generated.audioKey)
+      const prompt = [...topics, brief.prompt?.trim()].filter(Boolean).join(', ')
       if (!useOwnText) saveBrief(brief)
-      const g = await generateStory({ title: title.trim(), ...(useOwnText ? { text: ownText } : brief) })
+      const g = await generateStory({ title: title.trim(), ...(useOwnText ? { text: ownText } : { ...brief, prompt }) })
       setGenerated({ ...g, url: await fileUrl(g.audioKey) })
-      setAudio(undefined); setSource('generated')
+      setAudio(undefined); setSource('generated'); setSeconds(undefined)
     } catch (err) {
       setError(`Nu am putut crea povestea: ${(err as Error).message}`)
     }
     setGenerating(false)
   }
 
-  const startRec = async () => {
-    setError('')
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mr = new MediaRecorder(stream)
-      const chunks: Blob[] = []
-      mr.ondataavailable = (e) => chunks.push(e.data)
-      mr.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop())
-        setAudio(new Blob(chunks, { type: mr.mimeType })); setSource('recording')
-      }
-      mr.start(); rec.current = mr; setRecording(true)
-    } catch {
-      setError('Nu am acces la microfon. Verifică permisiunile browserului.')
-    }
-  }
-  const stopRec = () => { rec.current?.stop(); setRecording(false) }
-
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim() || (!audio && !generated)) return
+    if (!title.trim()) { setError('Scrie un titlu pentru poveste.'); return }
+    if (!ready) return
     setSaving(true); setError('')
     try {
       const audioKey = generated ? generated.audioKey : await uploadFile('stories', audio!, 'webm')
-      const id = await createStory({ title: title.trim(), emoji, source, audioKey, text: generated?.text })
+      const id = await createStory({ title: title.trim(), emoji, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
+      // Our own recordings and files are already on this device, so keep them for offline listening.
+      if (audio) await saveAudio(id, audio).catch(() => {})
       nav(`/povesti/${id}`, { replace: true })
     } catch (err) {
       setError(`Nu am putut salva povestea: ${(err as Error).message}`)
@@ -86,82 +102,129 @@ export default function StoryAdd() {
     }
   }
 
-  return (
-    <form className="form" onSubmit={save}>
-      <h1>Poveste nouă</h1>
-      <label>Titlu<input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ursulețul curajos" /></label>
-      <label>Alege o imagine</label>
-      <div className="emoji-pick">
-        {EMOJIS.map((x) => (
-          <button type="button" key={x} className={x === emoji ? 'on' : ''} onClick={() => setEmoji(x)}>{x}</button>
-        ))}
+  const head = (
+    <div className="parent-head">
+      <button type="button" className="night-btn" aria-label="Înapoi" onClick={() => (mode ? choose() : nav('/povesti'))}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+      </button>
+      <div>
+        <span className="pbadge">Mod părinte</span>
+        <h1>{mode ? TITLES[mode] : 'Poveste nouă'}</h1>
       </div>
-      <div className="tabs">
-        <button type="button" className={mode === 'audio' ? 'tab on' : 'tab'} onClick={() => setMode('audio')}>🎙️ Audio propriu</button>
-        <button type="button" className={mode === 'generate' ? 'tab on' : 'tab'} onClick={() => setMode('generate')}>✨ Citită de aplicație</button>
-      </div>
+    </div>
+  )
 
-      {mode === 'audio' ? (
+  if (!mode) {
+    return (
+      <div className="parent">
+        {head}
+        <p className="parent-sub">Poveștile noi apar pe raftul copilului imediat ce le salvezi.</p>
+        <div className="add-opts">
+          {OPTIONS.map((o) => (
+            <button key={o.mode} type="button" className="add-opt" onClick={() => choose(o.mode)}>
+              <span className="ic" style={{ background: o.color }}><Icon d={o.icon} /></span>
+              <span><b>{TITLES[o.mode]}</b><small>{o.text}</small></span>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <form className="parent" onSubmit={save}>
+      {head}
+      <label className="night-field">Titlul poveștii
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={mode === 'create' ? 'Ursulețul curajos' : 'Vulpița Fifi'} />
+      </label>
+
+      {mode === 'record' && !ready && (
         <>
-          <label>Încarcă un fișier audio (MP3, M4A…)
-            <input type="file" accept="audio/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setAudio(f); setGenerated(undefined); setSource('upload') } }} />
-          </label>
-          <div className="or">sau</div>
-          {recording
-            ? <button type="button" className="btn danger big" onClick={stopRec}>⏹ Oprește înregistrarea</button>
-            : <button type="button" className="btn big" onClick={startRec}>🎙️ Înregistrează cu vocea ta</button>}
-        </>
-      ) : generating ? (
-        <p className="importing"><span className="spinner" /> Scriu și înregistrez povestea… durează cam un minut.</p>
-      ) : (
-        <>
-          <div className="brief">
-            <label>Prenumele copilului (opțional)
-              <input value={brief.childName ?? ''} onChange={(e) => setB('childName', e.target.value)} placeholder="Ana" />
-            </label>
-            <div className="field">
-              <span>Pentru</span>
-              <div className="chips">
-                <button type="button" className={brief.gender === 'girl' ? 'chip on' : 'chip'} onClick={() => setB('gender', brief.gender === 'girl' ? undefined : 'girl')}>👧 Fetiță</button>
-                <button type="button" className={brief.gender === 'boy' ? 'chip on' : 'chip'} onClick={() => setB('gender', brief.gender === 'boy' ? undefined : 'boy')}>👦 Băiețel</button>
-              </div>
-            </div>
-            <div className="field">
-              <span>Vârsta</span>
-              <div className="chips">
-                {AGES.map((a) => (
-                  <button type="button" key={a} className={brief.age === a ? 'chip on' : 'chip'} onClick={() => setB('age', brief.age === a ? undefined : a)}>{a} ani</button>
-                ))}
-              </div>
-            </div>
-            <label>Cuvinte cheie sau o scurtă descriere
-              <textarea rows={3} value={brief.prompt ?? ''} onChange={(e) => setB('prompt', e.target.value)}
-                placeholder="Ex.: arici, lac, prietenie, prima zi de grădiniță" />
-            </label>
-            <div className="field">
-              <span>Lungime</span>
-              <div className="chips">
-                {([['short', 'Scurtă · 2 min'], ['medium', 'Medie · 4 min'], ['long', 'Lungă · 7 min']] as const).map(([k, l]) => (
-                  <button type="button" key={k} className={brief.length === k ? 'chip on' : 'chip'} onClick={() => setB('length', k)}>{l}</button>
-                ))}
-              </div>
-            </div>
-          </div>
-          <button type="button" className="btn big" onClick={() => generate(false)}>✨ Scrie o poveste nouă</button>
-          <div className="or">sau</div>
-          <label>Am deja textul poveștii
-            <textarea rows={5} value={ownText} onChange={(e) => setOwnText(e.target.value)} placeholder="Lipește aici povestea, iar aplicația o citește cu voce tare." />
-          </label>
-          <button type="button" className="btn big" disabled={!ownText.trim()} onClick={() => generate(true)}>🔊 Citește textul meu</button>
+          <p className="parent-sub">Citește în ritmul tău, ca la culcare. Poți face pauză oricând și continui de unde ai rămas.</p>
+          <Recorder onDone={(blob, s) => { reset(); setAudio(blob); setSeconds(s); setSource('recording') }} />
         </>
       )}
+
+      {mode === 'upload' && !ready && (
+        <label className="drop">
+          <Icon d="M12 15V4M7 9l5-5 5 5M5 20h14" />
+          <b>Alege un fișier audio</b>
+          <small>MP3, M4A sau WAV</small>
+          <input type="file" accept="audio/*" onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (!f) return
+            reset(); setAudio(f); setFileName(f.name); setSource('upload')
+            if (!title.trim()) setTitle(f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '))
+          }} />
+        </label>
+      )}
+
+      {mode === 'create' && !ready && (generating ? (
+        <p className="importing"><span className="spinner" /> Scriu și înregistrez povestea… durează cam un minut.</p>
+      ) : (
+        <div className="create-form">
+          <label className="night-field">Eroul poveștii{child.name ? <small> · din setări</small> : null}
+            <input value={brief.childName ?? ''} onChange={(e) => setB('childName', e.target.value)} placeholder="Ana" />
+          </label>
+          <div className="night-field">
+            <span>Este</span>
+            <div className="pills">
+              <button type="button" aria-pressed={brief.gender === 'girl'} onClick={() => setB('gender', brief.gender === 'girl' ? undefined : 'girl')}>fetiță</button>
+              <button type="button" aria-pressed={brief.gender === 'boy'} onClick={() => setB('gender', brief.gender === 'boy' ? undefined : 'boy')}>băiețel</button>
+            </div>
+          </div>
+          <div className="night-field">
+            <span>Vârsta{child.age ? <small> · din setări</small> : null}</span>
+            <div className="pills">
+              {AGES.map((a) => <button type="button" key={a} aria-pressed={brief.age === a} onClick={() => setB('age', brief.age === a ? undefined : a)}>{a} ani</button>)}
+            </div>
+          </div>
+          <div className="night-field">
+            <span>Despre ce?</span>
+            <div className="pills">
+              {TOPICS.map((t) => (
+                <button type="button" key={t} aria-pressed={topics.includes(t)}
+                  onClick={() => setTopics((x) => (x.includes(t) ? x.filter((y) => y !== t) : [...x, t]))}>{t}</button>
+              ))}
+            </div>
+            <input value={brief.prompt ?? ''} onChange={(e) => setB('prompt', e.target.value)} placeholder="Altceva? Ex.: prima zi de grădiniță" />
+          </div>
+          <div className="night-field">
+            <span>Cât de lungă?</span>
+            <div className="pills">
+              {LENGTHS.map(([k, l]) => <button type="button" key={k} aria-pressed={brief.length === k} onClick={() => setB('length', k)}>{l}</button>)}
+            </div>
+          </div>
+          <button type="button" className="moon-btn" onClick={() => generate(false)}>Creează povestea</button>
+          <details className="own-text">
+            <summary>Am deja textul poveștii</summary>
+            <textarea rows={6} value={ownText} onChange={(e) => setOwnText(e.target.value)} placeholder="Lipește aici povestea, iar aplicația o citește cu voce tare." />
+            <button type="button" className="moon-btn quiet" disabled={!ownText.trim()} onClick={() => generate(true)}>Citește textul meu</button>
+          </details>
+        </div>
+      ))}
+
+      {ready && (
+        <div className="add-finish">
+          <div className="finish-audio">
+            <span>{source === 'recording' ? 'Înregistrarea ta' : source === 'generated' ? 'Povestea nouă' : fileName || 'Fișierul tău'}</span>
+            {preview && <audio controls src={preview} onLoadedMetadata={(e) => { const d = e.currentTarget.duration; if (isFinite(d) && d > 0) setSeconds(d) }} />}
+            <button type="button" className="link-btn" onClick={reset}>
+              {source === 'recording' ? 'Înregistrează din nou' : source === 'generated' ? 'Schimbă detaliile' : 'Alt fișier'}
+            </button>
+          </div>
+          {generated && <details className="story-text"><summary>Textul poveștii</summary><p>{generated.text}</p></details>}
+          <div className="night-field">
+            <span>Alege o imagine pentru copertă</span>
+            <div className="emoji-pick">
+              {EMOJIS.map((x) => <button type="button" key={x} className={x === emoji ? 'on' : ''} aria-pressed={x === emoji} onClick={() => setEmoji(x)}>{x}</button>)}
+            </div>
+          </div>
+          <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? 'Se salvează…' : 'Pune pe raft'}</button>
+          {source !== 'generated' && <p className="rec-hint">Se salvează și pe acest dispozitiv, merge și fără internet.</p>}
+        </div>
+      )}
       {error && <p className="error">{error}</p>}
-      {generated && <details className="story-text"><summary>Textul poveștii</summary><p>{generated.text}</p></details>}
-      {preview && <audio controls src={preview} className="preview-audio" />}
-      <div className="row">
-        <button className="btn primary" type="submit" disabled={(!audio && !generated) || !title.trim() || saving || generating}>{saving ? 'Se salvează…' : 'Salvează'}</button>
-        <button className="btn" type="button" onClick={() => nav(-1)}>Anulează</button>
-      </div>
     </form>
   )
 }

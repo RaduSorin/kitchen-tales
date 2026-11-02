@@ -1,19 +1,17 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { createStory, fileUrl, generateStory, removeFile, uploadFile, type StoryBrief } from '../lib/db'
 import { saveAudio } from '../lib/offline'
 import type { StorySource } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
-import { getSettings, useSettings } from '../lib/settings'
+import { childAge, useSettings } from '../lib/settings'
 import Recorder from '../components/Recorder'
 
 const BRIEF_KEY = 'kt-story-brief'
 const loadBrief = (): StoryBrief => {
   let saved: StoryBrief = {}
   try { saved = JSON.parse(localStorage.getItem(BRIEF_KEY) ?? '{}') } catch { /* ignore */ }
-  // The child's profile in Settings is the source of truth for name, age and gender.
-  const { child } = getSettings()
-  return { ...saved, childName: child.name || saved.childName, age: child.age ?? saved.age, gender: child.gender ?? saved.gender }
+  return saved
 }
 const saveBrief = (b: StoryBrief) => {
   try { localStorage.setItem(BRIEF_KEY, JSON.stringify({ childName: b.childName, gender: b.gender, age: b.age, length: b.length })) } catch { /* ignore */ }
@@ -41,6 +39,8 @@ export default function StoryAdd() {
   const [params, setParams] = useSearchParams()
   const mode = (['record', 'create', 'upload'] as const).find((m) => m === params.get('mod'))
   const { child } = useSettings()
+  // Name, age and girl/boy come from the child's profile in Settings; the form only asks for what's missing there.
+  const known = { childName: child.name.trim() || undefined, age: childAge(child), gender: child.gender }
   const [title, setTitle] = useState('')
   const [emoji, setEmoji] = useState(EMOJIS[0])
   const [audio, setAudio] = useState<Blob>()
@@ -76,7 +76,8 @@ export default function StoryAdd() {
       if (generated) await removeFile(generated.audioKey)
       const prompt = [...topics, brief.prompt?.trim()].filter(Boolean).join(', ')
       if (!useOwnText) saveBrief(brief)
-      const g = await generateStory({ title: title.trim(), ...(useOwnText ? { text: ownText } : { ...brief, prompt }) })
+      const forChild = { childName: known.childName ?? brief.childName, age: known.age ?? brief.age, gender: known.gender ?? brief.gender }
+      const g = await generateStory({ title: title.trim(), ...(useOwnText ? { text: ownText } : { ...brief, ...forChild, prompt }) })
       setGenerated({ ...g, url: await fileUrl(g.audioKey) })
       setAudio(undefined); setSource('generated'); setSeconds(undefined)
     } catch (err) {
@@ -163,22 +164,40 @@ export default function StoryAdd() {
         <p className="importing"><span className="spinner" /> Scriu și înregistrez povestea… durează cam un minut.</p>
       ) : (
         <div className="create-form">
-          <label className="night-field">Eroul poveștii{child.name ? <small> · din setări</small> : null}
-            <input value={brief.childName ?? ''} onChange={(e) => setB('childName', e.target.value)} placeholder="Ana" />
-          </label>
-          <div className="night-field">
-            <span>Este</span>
-            <div className="pills">
-              <button type="button" aria-pressed={brief.gender === 'girl'} onClick={() => setB('gender', brief.gender === 'girl' ? undefined : 'girl')}>fetiță</button>
-              <button type="button" aria-pressed={brief.gender === 'boy'} onClick={() => setB('gender', brief.gender === 'boy' ? undefined : 'boy')}>băiețel</button>
+          {(known.childName || known.age || known.gender) && (
+            <div className="for-child">
+              <span>
+                <small>Povestea e pentru</small>
+                <b>{[known.childName, known.age && `${known.age} ${known.age === 1 ? 'an' : 'ani'}`, known.gender && (known.gender === 'girl' ? 'fetiță' : 'băiețel')].filter(Boolean).join(' · ')}</b>
+              </span>
+              <Link to="/setari">Schimbă în Setări</Link>
             </div>
-          </div>
-          <div className="night-field">
-            <span>Vârsta{child.age ? <small> · din setări</small> : null}</span>
-            <div className="pills">
-              {AGES.map((a) => <button type="button" key={a} aria-pressed={brief.age === a} onClick={() => setB('age', brief.age === a ? undefined : a)}>{a} ani</button>)}
+          )}
+          {!known.childName && (
+            <label className="night-field">Eroul poveștii
+              <input value={brief.childName ?? ''} onChange={(e) => setB('childName', e.target.value)} placeholder="Ana" />
+            </label>
+          )}
+          {!known.gender && (
+            <div className="night-field">
+              <span>Este</span>
+              <div className="pills">
+                <button type="button" aria-pressed={brief.gender === 'girl'} onClick={() => setB('gender', brief.gender === 'girl' ? undefined : 'girl')}>fetiță</button>
+                <button type="button" aria-pressed={brief.gender === 'boy'} onClick={() => setB('gender', brief.gender === 'boy' ? undefined : 'boy')}>băiețel</button>
+              </div>
             </div>
-          </div>
+          )}
+          {!known.age && (
+            <div className="night-field">
+              <span>Vârsta</span>
+              <div className="pills">
+                {AGES.map((a) => <button type="button" key={a} aria-pressed={brief.age === a} onClick={() => setB('age', brief.age === a ? undefined : a)}>{a} ani</button>)}
+              </div>
+            </div>
+          )}
+          {!(known.childName && known.age && known.gender) && (
+            <p className="rec-hint">Completează în <Link to="/setari">Setări</Link> prenumele, anul nașterii și dacă e fetiță sau băiețel, ca să nu le mai alegi de fiecare dată.</p>
+          )}
           <div className="night-field">
             <span>Despre ce?</span>
             <div className="pills">

@@ -92,6 +92,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; min-height: 52px; border-top: 1px solid var(--border); }
 .set-row:first-child { border-top: 0; }
 .set-row > span { font-weight: 500; }
+.set-row > span .set-sub { display: block; color: var(--muted); font-size: .85rem; font-weight: 400; }
+.set-row select { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; font-variant-numeric: tabular-nums; }
 .set-row.stack { flex-direction: column; align-items: stretch; }
 .set-row input[type=text] { flex: 1; min-width: 0; max-width: 220px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; text-align: right; }
 .set-hint { color: var(--muted); font-size: .85rem; margin: 0; padding: 0 4px; }
@@ -412,3 +414,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .home-recipe-img > * { width: 100%; height: 100%; object-fit: cover; display: block; }
 .home-empty { display: block; padding: 18px; border-radius: 18px; border: 1px dashed var(--border); color: var(--muted); text-decoration: none; }
 .home-empty b { color: var(--accent); }
+.for-child { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border-radius: 18px; padding: 12px 14px; }
+.for-child span { display: grid; min-width: 0; }
+.for-child small { color: var(--muted); }
+.for-child b { font-size: 1.15rem; }
+.for-child a, .rec-hint a { color: var(--moon); font-weight: 700; white-space: nowrap; }

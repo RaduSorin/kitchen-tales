@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { deleteStory, downloadStory, getOfflineAudio, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile } from '../lib/db'
+import { deleteStory, downloadStory, getOfflineAudio, getStory, listStories, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile } from '../lib/db'
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
@@ -15,7 +15,15 @@ import { useCoverUrl } from '../lib/useCoverUrl'
 import { storyArtwork } from '../lib/artwork'
 
 type Sleep = 'end' | 15 | 30
-export default function StoryPlayer() {
+const REMAINING_KEY = 'kt-player-remaining'
+
+// Remount the player for each story, so Previous/Next start from a clean state.
+export default function StoryPlayerRoute() {
+  const { id } = useParams()
+  return <StoryPlayer key={id} />
+}
+
+function StoryPlayer() {
   const { id } = useParams()
   const nav = useNavigate()
   const location = useLocation()
@@ -30,6 +38,8 @@ export default function StoryPlayer() {
   const [playing, setPlaying] = useState(false)
   const [t, setT] = useState(0)
   const [dur, setDur] = useState(0)
+  const [remaining, setRemaining] = useState(() => { try { return localStorage.getItem(REMAINING_KEY) === '1' } catch { return false } })
+  const toggleRemaining = () => setRemaining((r) => { try { localStorage.setItem(REMAINING_KEY, r ? '0' : '1') } catch { /* ignore */ } return !r })
   const [sleep, setSleep] = useState<Sleep>('end')
   const sleepLeft = useRef(0) // ms of listening left before the sleep timer stops the story
   const sleepReset = useRef(false)
@@ -50,6 +60,23 @@ export default function StoryPlayer() {
   const localUrl = useBlobUrl(localAudio)
   const remoteUrl = useFileUrl(localAudio ? undefined : s?.audioKey)
   const url = localUrl ?? remoteUrl
+
+  // Previous / next story in the same folder, in shelf order (offline: only stories saved on this device).
+  const [siblings, setSiblings] = useState<Story[]>([])
+  useEffect(() => {
+    if (!s) return
+    listStories().then((all) => setSiblings(all.filter((x) => folderOf(x) === folderOf(s)))).catch(() => {})
+  }, [s])
+  const playable = online ? siblings : siblings.filter((x) => offlineIds.has(x.id))
+  const idx = playable.findIndex((x) => x.id === id)
+  const prev = idx > 0 ? playable[idx - 1] : undefined
+  const next = idx >= 0 && idx < playable.length - 1 ? playable[idx + 1] : undefined
+  const autoplay = !!(location.state as { autoplay?: boolean } | null)?.autoplay
+  const goTo = (to: Story) => {
+    if (audio.current && s) setPosition(s.id, audio.current.currentTime)
+    // Replace, so Back still returns to the folder rather than walking through every story.
+    nav(`/povesti/${to.id}`, { replace: true, state: { ...(location.state as object | null), autoplay: playing } })
+  }
 
   // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
   const coverUrl = useCoverUrl(s?.coverKey)
@@ -143,12 +170,20 @@ export default function StoryPlayer() {
           setDur(isFinite(a.duration) ? a.duration : 0)
           const pos = getPosition(s.id)
           if (pos && (!isFinite(a.duration) || pos < a.duration - 5)) a.currentTime = pos
+          if (autoplay) a.play().catch(() => {})
         }} />
       <input type="range" className="seek" aria-label="Unde suntem în poveste" min={0} max={dur || 1} step={1} value={Math.min(t, dur || 1)}
         style={{ ['--p' as string]: dur ? `${(t / dur) * 100}%` : '0%' }}
         onChange={(e) => { if (audio.current) audio.current.currentTime = +e.target.value }} />
-      <div className="seek-times"><span>{fmtTime(t)}</span><span>{dur ? fmtTime(dur) : ''}</span></div>
+      <div className="seek-times"><span>{fmtTime(t)}</span>
+        {dur ? <button type="button" className="time-toggle" onClick={toggleRemaining} aria-label={remaining ? 'Arată durata totală' : 'Arată timpul rămas'}>
+          {remaining ? `-${fmtTime(Math.max(0, dur - t))}` : fmtTime(dur)}
+        </button> : <span />}
+      </div>
       <div className="night-controls">
+        <button className="track" aria-label={prev ? `Povestea anterioară: ${prev.title}` : 'Povestea anterioară'} disabled={!prev} onClick={() => prev && goTo(prev)}>
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M20 5v14L8.5 12z" fill="currentColor" /></svg>
+        </button>
         <button aria-label="Înapoi 15 secunde" onClick={() => skip(-15)}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2" /><path d="M4 4v4h4" /></svg>
         </button>
@@ -159,6 +194,9 @@ export default function StoryPlayer() {
         </button>
         <button aria-label="Înainte 15 secunde" onClick={() => skip(15)}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2" /><path d="M20 4v4h-4" /></svg>
+        </button>
+        <button className="track" aria-label={next ? `Povestea următoare: ${next.title}` : 'Povestea următoare'} disabled={!next} onClick={() => next && goTo(next)}>
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="17.4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M4 5v14l11.5-7z" fill="currentColor" /></svg>
         </button>
       </div>
       <div className="sleep" role="group" aria-label="Oprește după">

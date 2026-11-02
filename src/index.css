@@ -353,10 +353,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .seek::-webkit-slider-thumb { appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff6d6; border: 0; }
 .seek::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff6d6; border: 0; }
 .seek-times { width: 100%; display: flex; justify-content: space-between; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -6px; }
-.night-controls { display: flex; gap: 26px; align-items: center; }
+.night-controls { display: flex; gap: clamp(10px, 3.5vw, 26px); align-items: center; }
 .night-controls button { width: 60px; height: 60px; border-radius: 50%; border: 0; background: var(--surface); color: var(--text); display: grid; place-items: center; cursor: pointer; }
 .night-controls .play { width: 100px; height: 100px; background: var(--moon); color: #171a45; }
 .night-controls .play:disabled { opacity: .5; }
+.night-controls .track { width: 44px; height: 44px; background: transparent; }
+.night-controls .track:disabled { opacity: .3; cursor: default; }
+@media (max-width: 400px) { .night-controls button:not(.track) { width: 54px; height: 54px; } .night-controls button.play { width: 88px; height: 88px; } }
+.time-toggle { border: 0; background: none; color: inherit; font: inherit; font-variant-numeric: tabular-nums; padding: 4px 0 4px 12px; cursor: pointer; }
 .sleep { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: .9rem; }
 .sleep > span { color: var(--muted); margin-right: 2px; }
 .sleep button { border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; padding: 5px 12px; cursor: pointer; }

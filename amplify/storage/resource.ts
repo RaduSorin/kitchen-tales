@@ -14,5 +14,6 @@ export const storage = defineStorage({
       allow.authenticated.to(['read', 'write', 'delete']),
       allow.resource(generateStory).to(['write']),
     ],
+    'story-covers/*': [allow.authenticated.to(['read', 'write', 'delete'])],
   }),
 })

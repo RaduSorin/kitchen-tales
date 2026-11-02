@@ -32,6 +32,7 @@ const toStory = (s: StoryRow): Story => ({
   id: s.id,
   title: s.title,
   emoji: s.emoji ?? '⭐',
+  coverKey: s.coverKey ?? undefined,
   source: (s.source ?? 'upload') as StorySource,
   audioKey: s.audioKey,
   durationSec: s.durationSec ?? undefined,
@@ -62,7 +63,7 @@ const extFor = (blob: Blob, fallback: string) => {
   return t ? t.replace('mpeg', 'mp3').replace('x-m4a', 'm4a') : fallback
 }
 
-export async function uploadFile(prefix: 'recipe-photos' | 'stories', blob: Blob, fallbackExt: string) {
+export async function uploadFile(prefix: 'recipe-photos' | 'stories' | 'story-covers', blob: Blob, fallbackExt: string) {
   const path = `${prefix}/${newId()}.${extFor(blob, fallbackExt)}`
   await uploadData({ path, data: blob, options: { contentType: blob.type || undefined } }).result
   return path
@@ -163,6 +164,7 @@ export async function createStory(s: Omit<Story, 'id' | 'createdAt'>) {
 export async function deleteStory(s: Story) {
   await client.models.Story.delete({ id: s.id })
   await removeFile(s.audioKey)
+  await removeFile(s.coverKey)
   await removeAudio(s.id).catch(() => {})
 }
 

@@ -24,6 +24,7 @@ const schema = a.schema({
     .model({
       title: a.string().required(),
       emoji: a.string(),
+      coverKey: a.string(),
       source: a.enum(['upload', 'recording', 'generated']),
       audioKey: a.string().required(),
       durationSec: a.float(),

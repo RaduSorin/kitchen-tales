@@ -4,6 +4,7 @@ import { generateClient } from 'aws-amplify/data'
 import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
 import type { Recipe, Story, StorySource } from './types'
+import { cachedList, cacheList, getAudio, removeAudio, saveAudio } from './offline'
 
 const client = generateClient<Schema>()
 
@@ -37,11 +38,14 @@ const toStory = (s: StoryRow): Story => ({
   createdAt: s.createdAt,
 })
 
-async function listAll<T>(fetchPage: (nextToken?: string | null) => Promise<{ data: T[]; nextToken?: string | null }>) {
+type Page<T> = { data: T[]; nextToken?: string | null; errors?: { message: string }[] }
+
+async function listAll<T>(fetchPage: (nextToken?: string | null) => Promise<Page<T>>) {
   const out: T[] = []
   let token: string | null | undefined
   do {
     const page = await fetchPage(token)
+    if (page.errors?.length) throw new Error(page.errors.map((e) => e.message).join('; '))
     out.push(...page.data)
     token = page.nextToken
   } while (token)
@@ -74,13 +78,27 @@ async function removeFile(path?: string) {
 // ---- recipes ----
 
 export async function listRecipes() {
-  const rows = await listAll((nextToken) => client.models.Recipe.list({ nextToken, limit: 200 }))
-  return rows.map(toRecipe).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
+  try {
+    const rows = await listAll((nextToken) => client.models.Recipe.list({ nextToken, limit: 200 }))
+    const list = rows.map(toRecipe).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
+    cacheList('recipes', list).catch(() => {})
+    return list
+  } catch (err) {
+    const cached = await cachedList('recipes')
+    if (cached) return cached
+    throw err
+  }
 }
 
 export async function getRecipe(id: string) {
-  const { data } = await client.models.Recipe.get({ id })
-  return data ? toRecipe(data) : undefined
+  try {
+    const { data } = await client.models.Recipe.get({ id })
+    return data ? toRecipe(data) : undefined
+  } catch (err) {
+    const hit = (await cachedList('recipes'))?.find((r) => r.id === id)
+    if (hit) return hit
+    throw err
+  }
 }
 
 export async function saveRecipe(r: Recipe, isNew: boolean) {
@@ -101,14 +119,37 @@ export { removeFile }
 // ---- stories ----
 
 export async function listStories() {
-  const rows = await listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 }))
-  return rows.map(toStory).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+  try {
+    const rows = await listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 }))
+    const list = rows.map(toStory).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+    cacheList('stories', list).catch(() => {})
+    return list
+  } catch (err) {
+    const cached = await cachedList('stories')
+    if (cached) return cached
+    throw err
+  }
 }
 
 export async function getStory(id: string) {
-  const { data } = await client.models.Story.get({ id })
-  return data ? toStory(data) : undefined
+  try {
+    const { data } = await client.models.Story.get({ id })
+    return data ? toStory(data) : undefined
+  } catch (err) {
+    const hit = (await cachedList('stories'))?.find((s) => s.id === id)
+    if (hit) return hit
+    throw err
+  }
 }
+
+// Downloads a story's audio to the device so it plays without internet.
+export async function downloadStory(s: Story) {
+  const res = await fetch(await fileUrl(s.audioKey))
+  if (!res.ok) throw new Error('Descărcarea a eșuat')
+  await saveAudio(s.id, await res.blob())
+}
+
+export { getAudio as getOfflineAudio, removeAudio as removeOfflineAudio }
 
 export async function createStory(s: Omit<Story, 'id' | 'createdAt'>) {
   const res = await client.models.Story.create(s)
@@ -119,6 +160,7 @@ export async function createStory(s: Omit<Story, 'id' | 'createdAt'>) {
 export async function deleteStory(s: Story) {
   await client.models.Story.delete({ id: s.id })
   await removeFile(s.audioKey)
+  await removeAudio(s.id).catch(() => {})
 }
 
 // ---- recipe import ----

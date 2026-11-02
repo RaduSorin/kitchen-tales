@@ -4,7 +4,8 @@ export type ThemeChoice = 'auto' | 'light' | 'dark'
 
 export interface ChildProfile {
   name: string
-  age?: number
+  /** Year of birth; the age is worked out from it so it never goes stale. */
+  birthYear?: number
   gender?: 'boy' | 'girl'
   canRead: boolean
 }
@@ -18,16 +19,28 @@ const KEY = 'kt-settings'
 const LEGACY_BRIEF_KEY = 'kt-story-brief'
 const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false } }
 
+// Earlier versions stored the age; turn it into a birth year once.
+function migrateChild(c: ChildProfile & { age?: number }): ChildProfile {
+  const { age, ...rest } = c
+  if (rest.birthYear || !age) return rest
+  return { ...rest, birthYear: new Date().getFullYear() - age }
+}
+
+/** The child's age this year, from the birth year (at least 1), or undefined if not set. */
+export function childAge(child: ChildProfile, now = new Date()) {
+  return child.birthYear ? Math.max(1, now.getFullYear() - child.birthYear) : undefined
+}
+
 function read(): Settings {
   try {
     const raw = localStorage.getItem(KEY)
     if (raw) {
       const s = JSON.parse(raw) as Partial<Settings>
-      return { ...DEFAULTS, ...s, child: { ...DEFAULTS.child, ...s.child } }
+      return { ...DEFAULTS, ...s, child: migrateChild({ ...DEFAULTS.child, ...s.child }) }
     }
     // First run after the redesign: carry over the child details from the story form.
     const brief = JSON.parse(localStorage.getItem(LEGACY_BRIEF_KEY) ?? '{}')
-    return { ...DEFAULTS, child: { ...DEFAULTS.child, name: brief.childName ?? '', age: brief.age, gender: brief.gender } }
+    return { ...DEFAULTS, child: migrateChild({ ...DEFAULTS.child, name: brief.childName ?? '', age: brief.age, gender: brief.gender }) }
   } catch {
     return DEFAULTS
   }

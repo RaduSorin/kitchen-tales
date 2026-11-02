@@ -20,9 +20,20 @@ function useWakeLock() {
   }, [])
 }
 
-function StepBackground({ photoKey, seed, index }: { photoKey?: string; seed: string; index: number }) {
+/**
+ * A step's own photo fills the screen. Steps without one show the recipe photo, dimmed, with the
+ * big step number on top; recipes without any photo keep the drawn plate.
+ */
+function StepBackground({ photoKey, recipePhotoKey, seed, index }: { photoKey?: string; recipePhotoKey?: string; seed: string; index: number }) {
   const url = useFileUrl(photoKey || undefined)
+  const recipeUrl = useFileUrl(photoKey ? undefined : recipePhotoKey || undefined)
   if (url) return <img className="cook-bg" src={url} alt="" />
+  if (recipeUrl) return (
+    <div className="cook-bg">
+      <img className="cook-bg cook-bg-recipe" src={recipeUrl} alt="" />
+      <span className="cook-bignum" aria-hidden="true">{index + 1}</span>
+    </div>
+  )
   return (
     <div className="cook-bg cook-bg-plain">
       <PlatePlaceholder seed={seed} className="cook-bg-art" />
@@ -136,7 +147,7 @@ export default function CookMode() {
         </div>
       ) : (
         <>
-          <StepBackground key={i} photoKey={r.stepPhotoKeys?.[i]} seed={r.title} index={i} />
+          <StepBackground key={i} photoKey={r.stepPhotoKeys?.[i]} recipePhotoKey={r.photoKey} seed={r.title} index={i} />
           <div className="cook-top">
             <div className="cook-bars" role="progressbar" aria-valuemin={1} aria-valuemax={count} aria-valuenow={i + 1} aria-label="Progres">
               {r.steps.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}

@@ -66,7 +66,7 @@ const theme = createTheme({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
-      <Authenticator hideSignUp components={{ Header: () => <h1 className="auth-brand">Kitchen Tales</h1> }}>
+      <Authenticator hideSignUp components={{ Header: () => <h1 className="auth-brand">Bucătăria cu povești</h1> }}>
         <App />
       </Authenticator>
     </ThemeProvider>

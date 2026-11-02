@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { deleteStory, downloadStory, getStory, listStories, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile } from '../lib/db'
+import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile } from '../lib/db'
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
@@ -55,16 +55,15 @@ function StoryPlayer() {
   const ended = current && player.ended
   const url = current ? player.url : undefined
 
-  // Previous / next story in the same folder, in shelf order (offline: only stories saved on this device).
-  const [siblings, setSiblings] = useState<Story[]>([])
+  // Previous / next come from the app-wide player (same folder; next is random when shuffling).
+  const prev = current ? player.prev : undefined
+  const next = current ? player.next : undefined
+  // When the player moves on to the next story by itself, follow it here.
+  const wasCurrent = useRef(false)
   useEffect(() => {
-    if (!s) return
-    listStories().then((all) => setSiblings(all.filter((x) => folderOf(x) === folderOf(s)))).catch(() => {})
-  }, [s])
-  const playable = online ? siblings : siblings.filter((x) => offlineIds.has(x.id))
-  const idx = playable.findIndex((x) => x.id === id)
-  const prev = idx > 0 ? playable[idx - 1] : undefined
-  const next = idx >= 0 && idx < playable.length - 1 ? playable[idx + 1] : undefined
+    if (current) { wasCurrent.current = true; return }
+    if (wasCurrent.current && player.story) nav(`/povesti/${player.story.id}`, { replace: true, state: location.state })
+  }, [current, player.story, nav, location.state])
   const goTo = (to: Story) => {
     // Replace, so Back still returns to the folder rather than walking through every story.
     nav(`/povesti/${to.id}`, { replace: true, state: { ...(location.state as object | null), autoplay: playing } })
@@ -153,10 +152,14 @@ function StoryPlayer() {
       </div>
       <div className="sleep" role="group" aria-label="Oprește după">
         <span>Oprește după</span>
-        {([['end', 'poveste'], [15, '15 min'], [30, '30 min']] as [Sleep, string][]).map(([v, label]) => (
-          <button key={v} aria-pressed={sleep === v} onClick={() => chooseSleep(v)}>{label}</button>
+        {([1, 2, 3, 5] as Sleep[]).map((v) => (
+          <button key={v} aria-pressed={sleep === v} onClick={() => chooseSleep(v)}>{v === 1 ? '1 poveste' : `${v} povești`}</button>
         ))}
       </div>
+      <button type="button" className="shuffle-btn" aria-pressed={player.shuffle} onClick={player.toggleShuffle}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 3h5v5" /><path d="M4 20 21 3" /><path d="M21 16v5h-5" /><path d="M15 15l6 6" /><path d="M4 4l5 5" /></svg>
+        {player.shuffle ? 'Amestecat' : 'Una după alta'}
+      </button>
 
       <details className="parents">
         <summary>Pentru părinți</summary>

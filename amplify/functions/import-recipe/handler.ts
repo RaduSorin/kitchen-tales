@@ -1,4 +1,4 @@
-import { BedrockRuntimeClient, ConverseCommand, type ContentBlock, type ImageFormat } from '@aws-sdk/client-bedrock-runtime'
+import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand, type ContentBlock, type ImageFormat } from '@aws-sdk/client-bedrock-runtime'
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { Schema } from '../../data/resource'
 
@@ -6,6 +6,9 @@ const bedrock = new BedrockRuntimeClient({})
 const s3 = new S3Client({})
 const BUCKET = process.env.KITCHEN_TALES_FILES_BUCKET_NAME!
 const MODEL_ID = process.env.MODEL_ID!
+// Text-to-image models are only offered in us-west-2 on this account's Bedrock.
+const IMAGE_MODEL_ID = process.env.IMAGE_MODEL_ID!
+const imageBedrock = new BedrockRuntimeClient({ region: process.env.IMAGE_MODEL_REGION })
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 const MAX_PAGE_BYTES = 3_000_000
@@ -273,6 +276,47 @@ async function suggest(ingredients: string, tools: string[]): Promise<Idea[]> {
 }
 
 // Amplify Gen2 sends fieldName at the top level of the event (no AppSync-style `info`).
+// AI photo for a recipe that has none: Claude writes an English food-photo prompt from the
+// Romanian recipe, Stable Image Core draws it, and the JPEG goes to recipe-photos/.
+async function imagePrompt(title: string, ingredients: string[]): Promise<string> {
+  const res = await bedrock.send(new ConverseCommand({
+    modelId: MODEL_ID,
+    system: [{ text: 'You write one-sentence English prompts for realistic food photography. Describe only the finished dish as it is served, its look, the plate or pot, and a warm home-kitchen setting. No text, no people, no hands. Reply with the prompt only.' }],
+    messages: [{ role: 'user', content: [{ text: `Recipe (Romanian): ${title}\nIngredients: ${ingredients.slice(0, 15).join('; ')}` }] }],
+    inferenceConfig: { maxTokens: 200, temperature: 0.4 },
+  }))
+  const text = res.output?.message?.content?.find((c) => c.text)?.text?.trim()
+  return text || `A homemade dish: ${title}`
+}
+
+async function generatePhoto(title: string, ingredients: string[]): Promise<string> {
+  if (!title.trim()) throw new Error('Rețeta nu are titlu.')
+  const prompt = await imagePrompt(title, ingredients)
+  const res = await imageBedrock.send(new InvokeModelCommand({
+    modelId: IMAGE_MODEL_ID,
+    contentType: 'application/json',
+    accept: 'application/json',
+    body: JSON.stringify({
+      prompt: `${prompt} Professional food photography, natural window light, shallow depth of field, appetizing.`,
+      negative_prompt: 'text, letters, watermark, logo, people, hands, cartoon, illustration',
+      aspect_ratio: '3:2',
+      output_format: 'jpeg',
+    }),
+  })).catch((err: Error) => {
+    // The image model is sold through AWS Marketplace: it needs an active subscription and a valid card.
+    if (err.name === 'AccessDeniedException') throw new Error('Modelul de imagini nu e activ în contul AWS (abonament Marketplace sau card de plată).')
+    throw err
+  })
+  const out = JSON.parse(new TextDecoder().decode(res.body)) as { images?: string[]; finish_reasons?: (string | null)[] }
+  const b64 = out.images?.[0]
+  if (!b64 || out.finish_reasons?.[0]) throw new Error('Nu am putut genera poza. Încearcă din nou.')
+  const key = `recipe-photos/${crypto.randomUUID()}.jpg`
+  await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: Buffer.from(b64, 'base64'), ContentType: 'image/jpeg' }))
+  return key
+}
+
+type PhotoEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: { title: string; ingredients?: (string | null)[] | null } }
+
 type SuggestEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: { ingredients: string; tools?: (string | null)[] | null } }
 
 const importHandler: Schema['importRecipe']['functionHandler'] = async (event) => {
@@ -283,10 +327,14 @@ const importHandler: Schema['importRecipe']['functionHandler'] = async (event) =
   throw new Error('Trimite un link, o poză sau o idee de rețetă.')
 }
 
-// One function serves both importRecipe and suggestRecipes.
+// One function serves importRecipe, suggestRecipes and generateRecipePhoto.
 export const handler = async (event: Parameters<typeof importHandler>[0] | SuggestEvent, ...rest: unknown[]) => {
   const e = event as SuggestEvent
   const field = e.fieldName ?? e.info?.fieldName
+  if (field === 'generateRecipePhoto') {
+    const { title, ingredients } = (event as unknown as PhotoEvent).arguments
+    return generatePhoto(title ?? '', (ingredients ?? []).filter((x): x is string => !!x?.trim()))
+  }
   if (field === 'suggestRecipes' || (!field && 'ingredients' in (e.arguments ?? {}))) {
     const { ingredients, tools } = (event as SuggestEvent).arguments
     if (!ingredients?.trim()) throw new Error('Scrie ce ai în frigider.')

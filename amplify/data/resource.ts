@@ -64,6 +64,14 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(importRecipe)),
 
+  // Draws a photo for a recipe that has none (AI) and returns its storage path.
+  generateRecipePhoto: a
+    .mutation()
+    .arguments({ title: a.string().required(), ingredients: a.string().array() })
+    .returns(a.string())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(importRecipe)),
+
   RecipeIdea: a.customType({
     title: a.string().required(),
     description: a.string(),

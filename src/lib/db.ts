@@ -194,6 +194,14 @@ export async function suggestRecipes(ingredients: string, tools: string[]): Prom
 /** Asks Claude for a new recipe from an idea, using only the given kitchen tools. */
 export const generateRecipe = (idea: string, tools: string[], servings?: number) => runImport({ idea, tools, servings })
 
+/** Draws a photo for a recipe with AI and returns its storage path. */
+export async function generateRecipePhoto(title: string, ingredients: string[]): Promise<string> {
+  const res = await client.mutations.generateRecipePhoto({ title, ingredients })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (!res.data) throw new Error('Nu am putut genera poza.')
+  return res.data
+}
+
 export async function importRecipeFromPhoto(photo: Blob) {
   const photoKey = await uploadFile('recipe-photos', photo, 'jpg')
   try {

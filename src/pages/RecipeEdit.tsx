@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { generateRecipe, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhoto, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
+import { generateRecipe, generateRecipePhoto, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhoto, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
 import { parseRecipeText } from '../lib/parseRecipe'
 import { resizeImage } from '../lib/resizeImage'
 import type { Recipe } from '../lib/types'
@@ -86,6 +86,10 @@ export default function RecipeEdit() {
   const [skipTools, setSkipTools] = useState<string[]>([])
   const [fridge, setFridge] = useState('')
   const [ideas, setIdeas] = useState<RecipeIdea[]>()
+  // AI photo: the running job (Save waits for it) and the last unsaved key, removed if replaced.
+  const [aiBusy, setAiBusy] = useState(false)
+  const aiJob = useRef<Promise<string | undefined>>(undefined)
+  const aiUnsaved = useRef<string>(undefined)
 
   useEffect(() => {
     if (!id) { setR(empty()); return }
@@ -123,9 +127,30 @@ export default function RecipeEdit() {
     })
   }
 
+  const makeAiPhoto = (title: string, ingredients: string[]) => {
+    if (!title.trim() || aiJob.current) return
+    setAiBusy(true)
+    const job = generateRecipePhoto(title.trim(), ingredients)
+      .then((key) => {
+        if (aiUnsaved.current) removeFile(aiUnsaved.current).catch(() => {})
+        aiUnsaved.current = key
+        setPhoto(undefined)
+        setR((cur) => (cur ? { ...cur, photoKey: key } : cur))
+        return key
+      })
+      .catch((err) => { setError(`Poza AI nu a reușit: ${(err as Error).message}`); return undefined })
+      .finally(() => { aiJob.current = undefined; setAiBusy(false) })
+    aiJob.current = job
+  }
+
   const doImport = async (label: string, run: () => Promise<ImportedRecipe>) => {
     setImporting(label); setError('')
-    try { applyImport(await run()) } catch (err) { setError(`Importul nu a reușit: ${(err as Error).message}`) }
+    try {
+      const x = await run()
+      applyImport(x)
+      // No photo from the source (generated or text-only recipes): draw one with AI in the background.
+      if (!x.photoKey && !r.photoKey && !photo) makeAiPhoto(x.title, x.ingredients.filter((v): v is string => !!v))
+    } catch (err) { setError(`Importul nu a reușit: ${(err as Error).message}`) }
     setImporting('')
   }
   const importLink = () => { if (link.trim()) doImport('Citesc rețeta de pe site…', () => importRecipeFromUrl(link.trim())) }
@@ -198,7 +223,9 @@ export default function RecipeEdit() {
     if (!r.title.trim()) { setError('Scrie un titlu pentru rețetă.'); return }
     setSaving(true); setError('')
     try {
-      let photoKey = r.photoKey
+      // An AI photo still being drawn is part of this save.
+      const aiKey = aiJob.current ? await aiJob.current : undefined
+      let photoKey = aiKey ?? r.photoKey
       if (photo) photoKey = await uploadFile('recipe-photos', await resizeImage(photo), 'jpg')
       const kept = steps.filter((s) => s.text.trim())
       const stepPhotoKeys = await Promise.all(kept.map(async (s) =>
@@ -206,6 +233,7 @@ export default function RecipeEdit() {
       await saveRecipe({ ...r, photoKey, title: r.title.trim(), ingredients: lines(ing), steps: kept.map((s) => s.text.trim()), stepPhotoKeys }, !id)
       // Clean up photos that were replaced or removed.
       if (original?.photoKey && original.photoKey !== photoKey) await removeFile(original.photoKey)
+      if (aiUnsaved.current && aiUnsaved.current !== photoKey) await removeFile(aiUnsaved.current)
       for (const old of original?.stepPhotoKeys ?? []) if (old && !stepPhotoKeys.includes(old)) await removeFile(old)
       nav(`/retete/${r.id}`, { replace: true })
     } catch (err) {
@@ -316,11 +344,16 @@ export default function RecipeEdit() {
 
       {found && <p className="found">{found}</p>}
 
-      <label className="editor-photo">
-        {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title || 'rețetă'} />}
-        <span className="editor-photo-btn">{img ? 'Schimbă poza' : 'Adaugă o poză'}</span>
-        <input type="file" accept="image/*" hidden onChange={(e) => setPhoto(e.target.files?.[0])} />
-      </label>
+      <div className="editor-photo-wrap">
+        <label className="editor-photo">
+          {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title || 'rețetă'} />}
+          <span className="editor-photo-btn">{img ? 'Schimbă poza' : 'Adaugă o poză'}</span>
+          <input type="file" accept="image/*" hidden onChange={(e) => setPhoto(e.target.files?.[0])} />
+        </label>
+        {aiBusy
+          ? <span className="editor-ai-busy"><span className="spinner" /> Generez o poză…</span>
+          : r.title.trim() && <button type="button" className="editor-ai-btn" onClick={() => makeAiPhoto(r.title, lines(ing))}>✨ {img ? 'Altă poză AI' : 'Poză AI'}</button>}
+      </div>
 
       <input className="editor-title" aria-label="Titlu" required value={r.title} placeholder="Numele rețetei" onChange={(e) => set('title', e.target.value)} />
 

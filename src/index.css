@@ -270,6 +270,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .found { margin: 0; background: var(--surface-2); border-radius: 14px; padding: 12px 14px; }
 .editor-photo { position: relative; display: block; height: 200px; border-radius: 20px; overflow: hidden; cursor: pointer; background: var(--surface-2); }
 .editor-photo img, .editor-photo svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.editor-photo-wrap { position: relative; }
+.editor-ai-btn, .editor-ai-busy { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 8px; border: 0; background: rgb(0 0 0 / .55); color: #fff; border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 600; font-size: .9rem; cursor: pointer; }
+.editor-ai-busy { cursor: default; }
+.editor-ai-busy .spinner { width: 14px; height: 14px; border-width: 2px; border-color: rgb(255 255 255 / .3); border-top-color: #fff; }
 .editor-photo-btn { position: absolute; right: 12px; bottom: 12px; background: rgb(0 0 0 / .55); color: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: .9rem; }
 .editor input.editor-title { font-family: var(--f-display); font-size: 1.9rem; padding: 6px 2px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: none; }
 .editor-fields { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }

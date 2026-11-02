@@ -4,7 +4,7 @@ import { importRecipe } from './functions/import-recipe/resource'
 import { generateStory } from './functions/generate-story/resource'
 import { findCover } from './functions/find-cover/resource'
 import { family } from './functions/family/resource'
-import { MODEL_ID } from './shared/model'
+import { IMAGE_MODEL_ID, IMAGE_MODEL_REGION, MODEL_ID } from './shared/model'
 import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { storage } from './storage/resource'
@@ -31,6 +31,11 @@ const invokeClaude = new PolicyStatement({
   ],
 })
 backend.importRecipe.resources.lambda.addToRolePolicy(invokeClaude)
+// Recipe photos (Stable Image Core in us-west-2).
+backend.importRecipe.resources.lambda.addToRolePolicy(new PolicyStatement({
+  actions: ['bedrock:InvokeModel'],
+  resources: [`arn:aws:bedrock:${IMAGE_MODEL_REGION}::foundation-model/${IMAGE_MODEL_ID}`],
+}))
 backend.generateStory.resources.lambda.addToRolePolicy(invokeClaude)
 backend.generateStory.resources.lambda.addToRolePolicy(
   new PolicyStatement({ actions: ['polly:SynthesizeSpeech'], resources: ['*'] }),

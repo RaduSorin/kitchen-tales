@@ -6,58 +6,85 @@ import { resizeImage } from '../lib/resizeImage'
 import type { Recipe } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
 import { useFileUrl } from '../lib/useFileUrl'
+import { detectDuration } from '../lib/cooking'
+import { parseQuantity } from '../lib/scale'
+import { formatMinutes } from '../lib/format'
+import PlatePlaceholder from '../components/PlatePlaceholder'
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 
-type StepPhoto = { key?: string; blob?: Blob }
+type Step = { uid: string; text: string; photoKey?: string; photoBlob?: Blob }
+type Mode = 'choose' | 'link' | 'text' | 'edit'
 
-function StepPhotoSlot({ n, text, photo, onPick, onRemove }: { n: number; text: string; photo?: StepPhoto; onPick: (f: File) => void; onRemove: () => void }) {
-  const blobUrl = useBlobUrl(photo?.blob)
-  const savedUrl = useFileUrl(photo?.blob ? undefined : photo?.key || undefined)
+const empty = (): Recipe => ({ id: newId(), title: '', category: '', ingredients: [], steps: [] })
+const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
+const toSteps = (texts: string[], photos: string[] = []): Step[] =>
+  texts.map((text, k) => ({ uid: newId(), text, photoKey: photos[k] || undefined }))
+
+function Icon({ d }: { d: string }) {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
+}
+
+function StepItem({ n, step, total, onChange, onMove, onRemove }: {
+  n: number; step: Step; total: number
+  onChange: (s: Step) => void; onMove: (d: number) => void; onRemove: () => void
+}) {
+  const blobUrl = useBlobUrl(step.photoBlob)
+  const savedUrl = useFileUrl(step.photoBlob ? undefined : step.photoKey)
   const url = blobUrl ?? savedUrl
+  const secs = detectDuration(step.text)
   return (
-    <li className="step-photo">
-      <span className="step-no">{n}</span>
-      <span className="step-photo-text">{text}</span>
+    <li className="edit-step">
+      <div className="edit-step-side">
+        <span className="step-no">{n}</span>
+        <button type="button" className="icon-btn" aria-label={`Mută pasul ${n} mai sus`} disabled={n === 1} onClick={() => onMove(-1)}>↑</button>
+        <button type="button" className="icon-btn" aria-label={`Mută pasul ${n} mai jos`} disabled={n === total} onClick={() => onMove(1)}>↓</button>
+      </div>
+      <div className="edit-step-main">
+        <textarea id={`step-${step.uid}`} aria-label={`Pasul ${n}`} rows={Math.max(2, Math.ceil(step.text.length / 32))} value={step.text} placeholder="Ce faci la acest pas?"
+          onChange={(e) => onChange({ ...step, text: e.target.value })} />
+        <div className="edit-step-meta">
+          {secs > 0 && <span className="timer-chip">Cronometru {formatMinutes(Math.max(1, Math.round(secs / 60)))}</span>}
+          <button type="button" className="link-btn danger-text" onClick={onRemove}>Șterge pasul</button>
+        </div>
+      </div>
       {url ? (
         <span className="step-photo-thumb">
           <img src={url} alt="" />
-          <button type="button" aria-label={`Scoate poza de la pasul ${n}`} onClick={onRemove}>×</button>
+          <button type="button" aria-label={`Scoate poza de la pasul ${n}`} onClick={() => onChange({ ...step, photoKey: undefined, photoBlob: undefined })}>×</button>
         </span>
       ) : (
         <label className="step-photo-add">
           + poză
-          <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f) }} />
+          <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange({ ...step, photoBlob: f }) }} />
         </label>
       )}
     </li>
   )
 }
 
-const empty = (): Recipe => ({ id: newId(), title: '', category: '', ingredients: [], steps: [] })
-
 export default function RecipeEdit() {
   const { id } = useParams()
   const nav = useNavigate()
   const [r, setR] = useState<Recipe>()
+  const [original, setOriginal] = useState<Recipe>()
   const [ing, setIng] = useState('')
-  const [steps, setSteps] = useState('')
-  const [paste, setPaste] = useState('')
-  const [showPaste, setShowPaste] = useState(false)
+  const [steps, setSteps] = useState<Step[]>([])
   const [photo, setPhoto] = useState<Blob>()
-  const [stepPhotos, setStepPhotos] = useState<StepPhoto[]>([])
-  const [saving, setSaving] = useState(false)
-  const [importMode, setImportMode] = useState<'none' | 'link' | 'text'>('none')
+  const [mode, setMode] = useState<Mode>(id ? 'edit' : 'choose')
   const [link, setLink] = useState('')
+  const [paste, setPaste] = useState('')
   const [importing, setImporting] = useState('')
+  const [found, setFound] = useState<string>()
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!id) { setR(empty()); return }
     getRecipe(id).then((x) => {
       const rec = x ?? empty()
-      setR(rec); setIng(rec.ingredients.join('\n')); setSteps(rec.steps.join('\n'))
-      setStepPhotos((rec.stepPhotoKeys ?? []).map((key) => ({ key: key || undefined })))
+      setR(rec); setOriginal(rec)
+      setIng(rec.ingredients.join('\n')); setSteps(toSteps(rec.steps, rec.stepPhotoKeys))
     })
   }, [id])
   const newPhotoUrl = useBlobUrl(photo)
@@ -66,20 +93,19 @@ export default function RecipeEdit() {
   if (!r) return null
 
   const set = <K extends keyof Recipe>(k: K, v: Recipe[K]) => setR({ ...r, [k]: v })
-  const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
 
-  const applyPaste = () => {
-    const p = parseRecipeText(paste)
-    setR({ ...r, title: r.title || p.title })
-    setIng(p.ingredients.join('\n')); setSteps(p.steps.join('\n'))
-    setShowPaste(false); setPaste('')
+  const fill = (title: string, ingredients: string[], stepTexts: string[], extra: Partial<Recipe> = {}) => {
+    setR({ ...r, ...extra, title: title || r.title })
+    setIng(ingredients.join('\n')); setSteps(toSteps(stepTexts))
+    const vague = ingredients.filter((x) => !parseQuantity(x)).length
+    setFound(`Am găsit ${ingredients.length} ingrediente și ${stepTexts.length} pași.` +
+      (vague ? ` ${vague === 1 ? 'Un ingredient nu are' : `${vague} ingrediente nu au`} cantitate, verifică-le.` : ' Verifică și salvează.'))
+    setMode('edit')
   }
 
   const applyImport = (x: ImportedRecipe) => {
     const clean = (xs: (string | null)[]) => xs.filter((v): v is string => !!v)
-    setR({
-      ...r,
-      title: x.title,
+    fill(x.title, clean(x.ingredients), clean(x.steps), {
       category: x.category ?? r.category,
       servings: x.servings ?? undefined,
       minutes: x.minutes ?? undefined,
@@ -87,8 +113,6 @@ export default function RecipeEdit() {
       sourceUrl: x.sourceUrl ?? undefined,
       photoKey: x.photoKey ?? r.photoKey,
     })
-    setIng(clean(x.ingredients).join('\n')); setSteps(clean(x.steps).join('\n'))
-    setImportMode('none'); setLink('')
   }
 
   const doImport = async (label: string, run: () => Promise<ImportedRecipe>) => {
@@ -96,29 +120,37 @@ export default function RecipeEdit() {
     try { applyImport(await run()) } catch (err) { setError(`Importul nu a reușit: ${(err as Error).message}`) }
     setImporting('')
   }
-
   const importLink = () => { if (link.trim()) doImport('Citesc rețeta de pe site…', () => importRecipeFromUrl(link.trim())) }
-  const importPhoto = async (f?: File) => {
+  const importPhoto = (f?: File) => {
     if (f) doImport('Citesc rețeta din poză…', async () => importRecipeFromPhoto(await resizeImage(f, 2000, 0.85)))
+  }
+  const importText = () => { const p = parseRecipeText(paste); fill(p.title, p.ingredients, p.steps) }
+
+  const updateStep = (k: number, s: Step) => setSteps((xs) => xs.map((x, j) => (j === k ? s : x)))
+  const moveStep = (k: number, d: number) => setSteps((xs) => {
+    const n = [...xs]; const [s] = n.splice(k, 1); n.splice(k + d, 0, s); return n
+  })
+  const removeStep = (k: number) => setSteps((xs) => xs.filter((_, j) => j !== k))
+  const addStep = () => {
+    const s = { uid: newId(), text: '' }
+    setSteps((xs) => [...xs, s])
+    requestAnimationFrame(() => document.getElementById(`step-${s.uid}`)?.focus())
   }
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!r.title.trim()) return
+    if (!r.title.trim()) { setError('Scrie un titlu pentru rețetă.'); return }
     setSaving(true); setError('')
     try {
       let photoKey = r.photoKey
       if (photo) photoKey = await uploadFile('recipe-photos', await resizeImage(photo), 'jpg')
-      const stepList = lines(steps)
-      const stepPhotoKeys = await Promise.all(stepList.map(async (_, k) => {
-        const p = stepPhotos[k]
-        if (p?.blob) return uploadFile('recipe-photos', await resizeImage(p.blob), 'jpg')
-        return p?.key ?? ''
-      }))
-      await saveRecipe({ ...r, photoKey, title: r.title.trim(), ingredients: lines(ing), steps: stepList, stepPhotoKeys }, !id)
-      if (photo && r.photoKey && r.photoKey !== photoKey) await removeFile(r.photoKey)
-      // Clean up step photos that were replaced, removed, or belonged to deleted steps.
-      for (const old of r.stepPhotoKeys ?? []) if (old && !stepPhotoKeys.includes(old)) await removeFile(old)
+      const kept = steps.filter((s) => s.text.trim())
+      const stepPhotoKeys = await Promise.all(kept.map(async (s) =>
+        s.photoBlob ? uploadFile('recipe-photos', await resizeImage(s.photoBlob), 'jpg') : s.photoKey ?? ''))
+      await saveRecipe({ ...r, photoKey, title: r.title.trim(), ingredients: lines(ing), steps: kept.map((s) => s.text.trim()), stepPhotoKeys }, !id)
+      // Clean up photos that were replaced or removed.
+      if (original?.photoKey && original.photoKey !== photoKey) await removeFile(original.photoKey)
+      for (const old of original?.stepPhotoKeys ?? []) if (old && !stepPhotoKeys.includes(old)) await removeFile(old)
       nav(`/retete/${r.id}`, { replace: true })
     } catch (err) {
       setError(`Nu am putut salva rețeta: ${(err as Error).message}`)
@@ -126,78 +158,106 @@ export default function RecipeEdit() {
     }
   }
 
+  if (mode !== 'edit') {
+    return (
+      <section className="add-recipe">
+        <button type="button" className="link-btn" onClick={() => (mode === 'choose' ? nav(-1) : setMode('choose'))}>{mode === 'choose' ? 'Renunță' : 'Înapoi'}</button>
+        <h1>Rețetă nouă</h1>
+        {importing ? (
+          <p className="importing"><span className="spinner" /> {importing}</p>
+        ) : mode === 'link' ? (
+          <div className="add-panel">
+            <label htmlFor="import-link">Linkul rețetei</label>
+            <input id="import-link" type="url" inputMode="url" autoFocus value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://…"
+              onKeyDown={(e) => { if (e.key === 'Enter') importLink() }} />
+            <button type="button" className="btn primary big" onClick={importLink} disabled={!link.trim()}>Importă</button>
+          </div>
+        ) : mode === 'text' ? (
+          <div className="add-panel">
+            <label htmlFor="import-text">Lipește textul rețetei, cu titlul pe primul rând</label>
+            <textarea id="import-text" rows={10} autoFocus value={paste} onChange={(e) => setPaste(e.target.value)}
+              placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. …'} />
+            <button type="button" className="btn primary big" onClick={importText} disabled={!paste.trim()}>Completează rețeta</button>
+          </div>
+        ) : (
+          <div className="ways">
+            <button type="button" className="way" onClick={() => setMode('edit')}>
+              <span className="way-ic"><Icon d="M4 20h4L19 9l-4-4L4 16z" /></span>
+              <span><b>Scriu eu</b><small>Titlu, ingrediente și pași</small></span>
+            </button>
+            <button type="button" className="way" onClick={() => setMode('link')}>
+              <span className="way-ic"><Icon d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1" /></span>
+              <span><b>Din link</b><small>De pe un blog sau un site</small></span>
+            </button>
+            <label className="way">
+              <span className="way-ic"><Icon d="M3 9a2 2 0 0 1 2-2h2l1.5-3h7L17 7h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 10a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" /></span>
+              <span><b>Din poză</b><small>O pagină din carte sau din caiet</small></span>
+              <input type="file" accept="image/*" hidden onChange={(e) => importPhoto(e.target.files?.[0])} />
+            </label>
+            <button type="button" className="way" onClick={() => setMode('text')}>
+              <span className="way-ic"><Icon d="M8 4h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 4V2h6v2M9 10h6M9 14h6" /></span>
+              <span><b>Din text</b><small>Un mesaj sau o notiță copiată</small></span>
+            </button>
+          </div>
+        )}
+        {error && <p className="error">{error}</p>}
+      </section>
+    )
+  }
+
   return (
-    <form className="form" onSubmit={save}>
-      <h1>{id ? 'Editează rețeta' : 'Rețetă nouă'}</h1>
-
-      {!id && (
-        <div className="import">
-          {importing ? (
-            <p className="importing"><span className="spinner" /> {importing}</p>
-          ) : importMode === 'link' ? (
-            <div className="paste">
-              <label>Link către rețetă
-                <input type="url" inputMode="url" autoFocus value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
-              </label>
-              <div className="row">
-                <button type="button" className="btn primary" onClick={importLink} disabled={!link.trim()}>Importă</button>
-                <button type="button" className="btn" onClick={() => setImportMode('none')}>Renunță</button>
-              </div>
-            </div>
-          ) : showPaste ? (
-            <div className="paste">
-              <label>Lipește textul rețetei (titlul pe primul rând)</label>
-              <textarea rows={8} value={paste} onChange={(e) => setPaste(e.target.value)}
-                placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. ...'} />
-              <div className="row"><button type="button" className="btn primary" onClick={applyPaste}>Completează automat</button>
-                <button type="button" className="btn" onClick={() => setShowPaste(false)}>Renunță</button></div>
-            </div>
-          ) : (
-            <div className="import-buttons">
-              <button type="button" className="btn ghost" onClick={() => setImportMode('link')}>🔗 Din link</button>
-              <label className="btn ghost">📷 Din poză
-                <input type="file" accept="image/*" hidden onChange={(e) => importPhoto(e.target.files?.[0])} />
-              </label>
-              <button type="button" className="btn ghost" onClick={() => setShowPaste(true)}>📋 Din text</button>
-            </div>
-          )}
-        </div>
-      )}
-
-      <label>Titlu<input required value={r.title} onChange={(e) => set('title', e.target.value)} /></label>
-      <label>Categorie
-        <input list="cats" value={r.category} onChange={(e) => set('category', e.target.value)} />
-        <datalist id="cats">{CATEGORIES.map((c) => <option key={c} value={c} />)}</datalist>
-      </label>
-      <div className="row">
-        <label>Porții<input type="number" min={1} value={r.servings ?? ''} onChange={(e) => set('servings', e.target.value ? +e.target.value : undefined)} /></label>
-        <label>Minute<input type="number" min={1} value={r.minutes ?? ''} onChange={(e) => set('minutes', e.target.value ? +e.target.value : undefined)} /></label>
+    <form className="editor" onSubmit={save}>
+      <div className="editor-bar">
+        <button type="button" className="link-btn" onClick={() => nav(-1)}>Renunță</button>
+        <span className="editor-bar-title">{id ? 'Editează' : 'Rețetă nouă'}</span>
+        <button type="submit" className="btn primary small" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
       </div>
-      <label>Poză
-        <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0])} />
+
+      {found && <p className="found">{found}</p>}
+
+      <label className="editor-photo">
+        {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title || 'rețetă'} />}
+        <span className="editor-photo-btn">{img ? 'Schimbă poza' : 'Adaugă o poză'}</span>
+        <input type="file" accept="image/*" hidden onChange={(e) => setPhoto(e.target.files?.[0])} />
       </label>
-      {img && <img className="preview" src={img} alt="" />}
-      <label>Ingrediente (unul pe rând)<textarea rows={6} value={ing} onChange={(e) => setIng(e.target.value)} /></label>
-      <label>Mod de preparare (un pas pe rând)<textarea rows={8} value={steps} onChange={(e) => setSteps(e.target.value)} /></label>
-      {lines(steps).length > 0 && (
-        <div className="step-photos">
-          <span className="step-photos-label">Poze la pași (opțional)</span>
-          <ol>
-            {lines(steps).map((text, k) => (
-              <StepPhotoSlot key={k} n={k + 1} text={text} photo={stepPhotos[k]}
-                onPick={(f) => setStepPhotos((ps) => { const n = [...ps]; n[k] = { blob: f }; return n })}
-                onRemove={() => setStepPhotos((ps) => { const n = [...ps]; n[k] = {}; return n })} />
-            ))}
-          </ol>
-        </div>
-      )}
-      <label>Note<textarea rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} /></label>
-      <label>Link sursă<input type="url" value={r.sourceUrl ?? ''} onChange={(e) => set('sourceUrl', e.target.value || undefined)} /></label>
+
+      <input className="editor-title" aria-label="Titlu" required value={r.title} placeholder="Numele rețetei" onChange={(e) => set('title', e.target.value)} />
+
+      <div className="editor-fields">
+        <label>Categorie
+          <input list="cats" value={r.category} onChange={(e) => set('category', e.target.value)} />
+          <datalist id="cats">{CATEGORIES.map((c) => <option key={c} value={c} />)}</datalist>
+        </label>
+        <label>Porții<input type="number" inputMode="numeric" min={1} value={r.servings ?? ''} onChange={(e) => set('servings', e.target.value ? +e.target.value : undefined)} /></label>
+        <label>Minute<input type="number" inputMode="numeric" min={1} value={r.minutes ?? ''} onChange={(e) => set('minutes', e.target.value ? +e.target.value : undefined)} /></label>
+      </div>
+
+      <section className="editor-section">
+        <h2>Ingrediente</h2>
+        <p className="set-hint">Câte unul pe rând, cu cantitatea la început (de exemplu „500 g carne tocată”), ca să se poată recalcula porțiile.</p>
+        <textarea aria-label="Ingrediente" rows={Math.max(5, lines(ing).length + 1)} value={ing} onChange={(e) => setIng(e.target.value)} />
+      </section>
+
+      <section className="editor-section">
+        <h2>Pași</h2>
+        <p className="set-hint">Dacă scrii un timp („10 minute”), apare un cronometru când gătești. Poza unui pas apare pe tot ecranul.</p>
+        <ol className="edit-steps">
+          {steps.map((s, k) => (
+            <StepItem key={s.uid} n={k + 1} step={s} total={steps.length}
+              onChange={(x) => updateStep(k, x)} onMove={(d) => moveStep(k, d)} onRemove={() => removeStep(k)} />
+          ))}
+        </ol>
+        <button type="button" className="btn ghost" onClick={addStep}>+ Adaugă un pas</button>
+      </section>
+
+      <section className="editor-section">
+        <h2>Note</h2>
+        <textarea aria-label="Note" rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} />
+        <label>Link sursă<input type="url" value={r.sourceUrl ?? ''} onChange={(e) => set('sourceUrl', e.target.value || undefined)} /></label>
+      </section>
+
       {error && <p className="error">{error}</p>}
-      <div className="row">
-        <button className="btn primary" type="submit" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
-        <button className="btn" type="button" onClick={() => nav(-1)}>Anulează</button>
-      </div>
+      <button className="btn primary big" type="submit" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează rețeta'}</button>
     </form>
   )
 }

@@ -6,7 +6,7 @@ import type { Schema } from '../../data/resource'
 const bedrock = new BedrockRuntimeClient({})
 const polly = new PollyClient({})
 const s3 = new S3Client({})
-const BUCKET = process.env.kitchenTalesFiles_BUCKET_NAME!
+const BUCKET = process.env.KITCHEN_TALES_FILES_BUCKET_NAME!
 const MODEL_ID = process.env.MODEL_ID!
 const VOICE_ID = process.env.VOICE_ID as VoiceId
 

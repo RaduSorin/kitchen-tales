@@ -19,3 +19,6 @@ export function areaOf(pathname: string): Area {
 export function useArea() {
   return areaOf(useLocation().pathname)
 }
+
+/** The story player fills the screen like the cooking mode: no top bar or tab bar, so a child can't wander off. */
+export const isPlayerPage = (path: string) => /^\/povesti\/[^/]+$/.test(path) && path !== '/povesti/adauga' && path !== '/povesti/acasa'

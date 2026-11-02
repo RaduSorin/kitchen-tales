@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useSyncedList } from '../lib/synced'
 import { shoppingStore } from '../lib/plan'
-import { useArea } from '../lib/area'
+import { isPlayerPage, useArea } from '../lib/area'
 import { mergeShopping } from '../lib/merge'
 
 const I = ({ d }: { d: string }) => (
@@ -24,7 +24,7 @@ const PLUS = 'M12 5v14M5 12h14'
 const HEART = 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z'
 
 /** Hidden in full-screen cooking and on the story player, which has its own big controls. */
-const hidesTabBar = (path: string) => path.endsWith('/gateste') || (/^\/povesti\/[^/]+$/.test(path) && path !== '/povesti/adauga' && path !== '/povesti/acasa')
+const hidesTabBar = (path: string) => path.endsWith('/gateste') || isPlayerPage(path)
 
 /** The stories side: Acasă, Caută, Bibliotecă (big, in the middle), Adaugă, Favorite. */
 function StoryTabs() {
@@ -65,20 +65,38 @@ function opensKeyboard(el: EventTarget | null) {
 
 /**
  * iOS keeps fixed elements above the keyboard, so the floating bars would sit on top of the
- * field being typed in. While a text field has focus we mark <html> with data-typing and the
- * CSS hides the tab bar and mini player.
+ * field being typed in. While the keyboard is up we mark <html> with data-typing and the CSS
+ * hides the tab bar and mini player.
+ *
+ * A focused field alone is not enough: iOS does not open the keyboard when a page focuses a
+ * field by itself (the stories "Caută" tab does), and hiding the bars then leaves the screen
+ * with no navigation. Where the browser reports the visual viewport, we wait until it really
+ * shrinks for the keyboard.
  */
 function useTypingFlag() {
   useEffect(() => {
     const root = document.documentElement
-    const onIn = (e: FocusEvent) => { if (opensKeyboard(e.target)) root.dataset.typing = '' }
-    const onOut = () => {
-      // Focus may move straight to another field; check after it settles.
-      setTimeout(() => { if (!opensKeyboard(document.activeElement)) delete root.dataset.typing }, 0)
+    const vv = window.visualViewport
+    // The viewport height with no keyboard, remembered while no text field has focus
+    // (window.innerHeight is not reliable for this on iOS).
+    let full = vv?.height ?? 0
+    const update = () => {
+      const field = opensKeyboard(document.activeElement)
+      if (vv && !field) full = vv.height
+      if (field && (!vv || vv.height < full - 120)) root.dataset.typing = ''
+      else delete root.dataset.typing
     }
-    document.addEventListener('focusin', onIn)
-    document.addEventListener('focusout', onOut)
-    return () => { document.removeEventListener('focusin', onIn); document.removeEventListener('focusout', onOut); delete root.dataset.typing }
+    // Focus may move straight to another field; check after it settles.
+    const later = () => setTimeout(update, 0)
+    document.addEventListener('focusin', update)
+    document.addEventListener('focusout', later)
+    vv?.addEventListener('resize', update)
+    return () => {
+      document.removeEventListener('focusin', update)
+      document.removeEventListener('focusout', later)
+      vv?.removeEventListener('resize', update)
+      delete root.dataset.typing
+    }
   }, [])
 }
 

@@ -8,6 +8,7 @@ import { useSyncedList } from '../lib/synced'
 import { addDays, addToShopping, dayKey, dayName, mondayOf, planRecipe, planStore, shortDate, today, weekDays, weekLabel } from '../lib/plan'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import Sheet from '../components/Sheet'
+import { showToast } from '../lib/toast'
 
 const Chevron = ({ left }: { left?: boolean }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={left ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} /></svg>
@@ -18,14 +19,17 @@ function Thumb({ r }: { r?: Recipe }) {
   return img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r?.title ?? ''} />
 }
 
-function Planned({ e, r }: { e: PlanEntry; r?: Recipe }) {
+function Planned({ e, r, loaded }: { e: PlanEntry; r?: Recipe; loaded: boolean }) {
+  const body = (
+    <>
+      <span className="planned-thumb"><Thumb r={r} /></span>
+      <span className="planned-title">{r?.title ?? (loaded ? 'Rețetă ștearsă' : '…')}{e.servings ? <small> · {e.servings} porții</small> : null}</span>
+    </>
+  )
   return (
     <li className="planned">
-      <Link to={r ? `/retete/${r.id}` : '#'} className="planned-link">
-        <span className="planned-thumb"><Thumb r={r} /></span>
-        <span className="planned-title">{r?.title ?? 'Rețetă ștearsă'}{e.servings ? <small> · {e.servings} porții</small> : null}</span>
-      </Link>
-      <button type="button" className="planned-remove" onClick={() => planStore.remove(e.id)} aria-label={`Scoate ${r?.title ?? 'rețeta'} din ziua asta`}>
+      {r ? <Link to={`/retete/${r.id}`} className="planned-link">{body}</Link> : <span className="planned-link">{body}</span>}
+      <button type="button" className="planned-remove" onClick={() => { planStore.remove(e.id); showToast(`Am scos ${r?.title ?? 'rețeta'}`, () => planStore.create(e)) }} aria-label={`Scoate ${r?.title ?? 'rețeta'} din ziua asta`}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
     </li>
@@ -67,7 +71,8 @@ export default function Week() {
   const [picking, setPicking] = useState<Date>()
   const [note, setNote] = useState('')
   const plan = useSyncedList(planStore)
-  useEffect(() => { listRecipes().then(setRecipes).catch(() => {}) }, [])
+  const [loaded, setLoaded] = useState(false)
+  useEffect(() => { listRecipes().then((xs) => { setRecipes(xs); setLoaded(true) }).catch(() => {}) }, [])
   const byId = useMemo(() => new Map(recipes.map((r) => [r.id, r])), [recipes])
 
   const days = weekDays(monday)
@@ -109,7 +114,7 @@ export default function Week() {
                 <span><b>{dayName(d)}</b> <small>{shortDate(d)}{k === todayKey ? ' · azi' : ''}</small></span>
                 <button type="button" className="btn small" onClick={() => setPicking(d)}>+ Adaugă</button>
               </div>
-              {entries.length > 0 && <ul className="planned-list">{entries.map((e) => <Planned key={e.id} e={e} r={byId.get(e.recipeId)} />)}</ul>}
+              {entries.length > 0 && <ul className="planned-list">{entries.map((e) => <Planned key={e.id} e={e} r={byId.get(e.recipeId)} loaded={loaded} />)}</ul>}
             </li>
           )
         })}

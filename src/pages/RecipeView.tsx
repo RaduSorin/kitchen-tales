@@ -8,6 +8,7 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import { formatMinutes } from '../lib/format'
 import { getProgress } from '../lib/cooking'
 import Sheet from '../components/Sheet'
+import { LoadError, Loading } from '../components/LoadState'
 import { useSyncedList } from '../lib/synced'
 import { addDays, addToShopping, dayKey, dayName, planRecipe, planStore, shortDate, today } from '../lib/plan'
 
@@ -46,10 +47,21 @@ export default function RecipeView() {
   const [menu, setMenu] = useState(false)
   const [planning, setPlanning] = useState(false)
   const [note, setNote] = useState<{ text: string; to: string; link: string }>()
-  useEffect(() => { getRecipe(id!).then((x) => { setR(x ?? null); setServings(x?.servings) }) }, [id])
+  const [failed, setFailed] = useState(false)
+  const load = () => {
+    getRecipe(id!).then((x) => { setR(x ?? null); setServings(x?.servings) }).catch(() => setFailed(true))
+  }
+  useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   const img = useFileUrl(r?.photoKey)
-  if (r === undefined) return null
-  if (r === null) return <p className="empty">Rețeta nu a fost găsită.</p>
+  if (failed) return <LoadError text="Nu am putut deschide rețeta. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
+  if (r === undefined) return <Loading />
+  if (r === null) return (
+    <div className="not-found">
+      <h1>Rețeta nu a fost găsită</h1>
+      <p>Poate a fost ștearsă.</p>
+      <Link to="/retete" className="btn primary">Rețetele mele</Link>
+    </div>
+  )
 
   const toggle = (set: typeof setHave) => (i: number) => set((s) => { const n = new Set(s); if (n.has(i)) n.delete(i); else n.add(i); return n })
   const factor = r.servings && servings ? servings / r.servings : 1
@@ -81,7 +93,7 @@ export default function RecipeView() {
         <div className="recipe-plan-actions">
           <button type="button" className="btn" onClick={() => setPlanning(true)}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 2v4M16 2v4" /></svg>
-            Adaugă în săptămână
+            În săptămână
           </button>
           {r.ingredients.length > 0 && (
             <button type="button" className="btn" onClick={() => {

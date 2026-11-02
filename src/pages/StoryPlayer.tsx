@@ -86,8 +86,15 @@ function StoryPlayer() {
     return () => clearTimeout(h)
   }, [ended])
 
-  if (s === undefined) return <div className="night-player" />
-  if (s === null) return <p className="empty">Povestea nu a fost găsită{online ? '' : ' pe acest dispozitiv'}.</p>
+  if (s === undefined) return <div className="night-player"><p className="loading" role="status"><span className="spinner" aria-hidden="true" /> Se încarcă…</p></div>
+  // Full screen, no tab bar: a missing story still needs a way back.
+  if (s === null) return (
+    <div className="player-missing" role="alert">
+      <h1>Povestea nu a fost găsită</h1>
+      <p>{online ? 'Poate a fost ștearsă.' : 'Nu e salvată pe acest dispozitiv și nu ai internet acum.'}</p>
+      <button type="button" className="moon-btn" onClick={back}>Înapoi la povești</button>
+    </div>
+  )
 
   const { toggle, skip, chooseSleep, sleep } = player
   const changeCover = async (make: () => Promise<string>) => {

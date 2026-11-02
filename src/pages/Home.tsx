@@ -11,6 +11,7 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import StoryCover from '../components/StoryCover'
 import { useSyncedList } from '../lib/synced'
 import { dayKey, planStore, today } from '../lib/plan'
+import { LoadError } from '../components/LoadState'
 
 const Arrow = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
@@ -66,10 +67,13 @@ export default function Home() {
   const offline = useOfflineIds()
   const online = useOnline()
   const [now] = useState(() => new Date())
-  useEffect(() => {
-    listRecipes().then(setRecipes).catch(() => setRecipes([]))
-    listStories().then(setStories).catch(() => setStories([]))
-  }, [])
+  const [failed, setFailed] = useState(false)
+  const load = () => {
+    listRecipes().then(setRecipes).catch(() => setFailed(true))
+    // Without stories (no internet, nothing saved) the evening card simply stays away.
+    listStories().then(setStories).catch(() => {})
+  }
+  useEffect(load, [])
 
   const hour = now.getHours()
   const evening = hour >= 18 || hour < 5
@@ -126,7 +130,9 @@ export default function Home() {
           <h2>{recent.length ? 'Rețete recente' : 'Rețete'}</h2>
           <Link to="/retete">Toate</Link>
         </div>
-        {recipes && recipes.length === 0 ? (
+        {failed && !recipes ? (
+          <LoadError text="Nu am putut încărca rețetele. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
+        ) : recipes && recipes.length === 0 ? (
           <Link to="/retete/noua" className="home-empty">Nicio rețetă încă. <b>Adaugă prima rețetă</b></Link>
         ) : (
           <div className="home-recipes">

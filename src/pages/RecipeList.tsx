@@ -5,6 +5,7 @@ import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { formatMinutes, norm } from '../lib/format'
+import { LoadError, Loading } from '../components/LoadState'
 
 export function RecipeRow({ r }: { r: Recipe }) {
   const img = useFileUrl(r.photoKey)
@@ -25,7 +26,11 @@ export default function RecipeList() {
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('')
   const [loading, setLoading] = useState(true)
-  useEffect(() => { listRecipes().then(setRecipes).finally(() => setLoading(false)) }, [])
+  const [failed, setFailed] = useState(false)
+  const load = () => {
+    listRecipes().then(setRecipes).catch(() => setFailed(true)).finally(() => setLoading(false))
+  }
+  useEffect(load, [])
 
   const cats = useMemo(() => [...new Set(recipes.map((r) => r.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ro')), [recipes])
   const shown = recipes
@@ -47,14 +52,14 @@ export default function RecipeList() {
         <input type="search" id="recipe-search" aria-label="Caută rețete" placeholder="Caută după nume sau ingredient" value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
       {cats.length > 0 && (
-        <div className="cat-tabs" role="tablist" aria-label="Categorii">
-          <button role="tab" aria-selected={!cat} onClick={() => setCat('')}>Toate</button>
+        <div className="cat-tabs" role="group" aria-label="Categorii">
+          <button type="button" aria-pressed={!cat} onClick={() => setCat('')}>Toate</button>
           {cats.map((c) => (
-            <button role="tab" key={c} aria-selected={cat === c} onClick={() => setCat(c)}>{c}</button>
+            <button type="button" key={c} aria-pressed={cat === c} onClick={() => setCat(c)}>{c}</button>
           ))}
         </div>
       )}
-      {loading ? <p className="empty">Se încarcă…</p> : recipes.length === 0 ? (
+      {loading ? <Loading /> : failed ? <LoadError text="Nu am putut încărca rețetele. Verifică internetul." onRetry={() => { setLoading(true); setFailed(false); load() }} /> : recipes.length === 0 ? (
         <p className="empty">Nicio rețetă încă. Adaugă prima ta rețetă!</p>
       ) : shown.length === 0 ? (
         <p className="empty">Nicio rețetă nu se potrivește cu „{q}”.</p>

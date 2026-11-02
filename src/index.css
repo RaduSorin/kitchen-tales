@@ -1,7 +1,7 @@
 /* Design tokens. Recipes follow the calm "Liniște" direction; stories use the night palette.
    The theme is chosen in Settings and applied as data-theme on <html> (see src/lib/settings.ts). */
 :root {
-  --bg: #f2f3ee; --surface: #ffffff; --surface-2: #e3e7de; --text: #1f2a24; --muted: #6f7a72; --border: #dde1d8;
+  --bg: #f2f3ee; --surface: #ffffff; --surface-2: #e3e7de; --text: #1f2a24; --muted: #5c675f; --border: #dde1d8;
   --accent: #3e6a51; --accent-soft: #e3e7de; --on-accent: #ffffff; --gold: #d6a72b; --danger: #b3412e;
   --night: #2c2368; --night-soft: #e6e4f4; --moon: #ffd76a; --track: #d3d9cf; --knob: #ffffff;
   --f-display: 'Young Serif', Georgia, serif;
@@ -77,7 +77,7 @@ h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.3rem; margin:
 
 
 .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; }
-.chip { flex: none; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.chip { flex: none; min-height: 40px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
 .chip.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .notes { white-space: pre-wrap; }
 
@@ -119,7 +119,7 @@ h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.3rem; margin:
 .offline-bar > span { display: inline-flex; align-items: center; gap: 8px; }
 
 a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.icon-link { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: var(--muted); }
+.icon-link { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--muted); }
 .icon-link.active { background: var(--accent-soft); color: var(--accent); }
 
 /* Settings */
@@ -146,7 +146,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .member small { color: var(--muted); font-size: .8rem; font-weight: 400; }
 .invite-row input { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; }
 .stepper { display: inline-flex; align-items: center; border-radius: 12px; background: var(--surface-2); overflow: hidden; }
-.stepper button { width: 40px; height: 40px; border: 0; background: none; color: var(--text); font: inherit; font-size: 1.2rem; cursor: pointer; }
+.stepper button { width: 44px; height: 44px; border: 0; background: none; color: var(--text); font: inherit; font-size: 1.2rem; cursor: pointer; }
 .stepper button:disabled { opacity: .35; cursor: default; }
 .stepper output { min-width: 64px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
 .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; padding: 3px; border-radius: 12px; background: var(--surface-2); }
@@ -173,8 +173,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .search-box input { flex: 1; min-width: 0; border: 0; background: none; color: var(--text); font: inherit; padding: 13px 0; outline: none; }
 .search-box:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cat-tabs { display: flex; gap: 18px; overflow-x: auto; padding: 4px 2px 10px; margin-bottom: 6px; scrollbar-width: none; }
-.cat-tabs button { flex: none; border: 0; background: none; color: var(--muted); font: inherit; padding: 4px 0; border-bottom: 2px solid transparent; cursor: pointer; }
-.cat-tabs button[aria-selected=true] { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+.cat-tabs button { flex: none; border: 0; background: none; color: var(--muted); font: inherit; min-height: 44px; padding: 4px 0; border-bottom: 2px solid transparent; cursor: pointer; }
+.cat-tabs button[aria-pressed=true] { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
 .recipe-rows { display: grid; gap: 14px 24px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .recipe-row { display: grid; grid-template-columns: 76px 1fr; gap: 14px; align-items: center; text-decoration: none; color: var(--text); border-radius: 18px; padding: 4px; }
 .recipe-row:hover .recipe-row-title { text-decoration: underline; text-decoration-color: var(--accent); }
@@ -231,11 +231,16 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .cook-bars { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
 .cook-bars i { height: 3px; border-radius: 2px; background: rgb(255 255 255 / .35); }
 .cook-bars i.on { background: #fff; }
-.cook-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Title on the left (cut with … when long), close button always on the first row, running timers below. */
+.cook-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.cook-name { min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+.cook-name .cook-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cook-name .cook-pos { flex: none; }
+.cook-timers { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
 .cook-title { font-family: var(--f-display); font-size: 1.1rem; }
 .cook-pos { opacity: .8; font-size: .9rem; }
-.cook-mini { border: 0; border-radius: 999px; background: rgb(255 255 255 / .2); color: #fff; font: inherit; font-size: .8rem; padding: 4px 10px; cursor: pointer; font-variant-numeric: tabular-nums; }
-.cook-close { margin-left: auto; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgb(0 0 0 / .25); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.cook-mini { min-height: 40px; border: 0; border-radius: 999px; background: rgb(255 255 255 / .2); color: #fff; font: inherit; font-size: .85rem; padding: 6px 14px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.cook-close { margin-left: auto; width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: rgb(0 0 0 / .25); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .cook-zones { position: absolute; inset: 90px 0 0; display: grid; grid-template-columns: 30% 70%; z-index: 2; }
 .cook-zones button { border: 0; background: none; cursor: pointer; }
 .cook-zones button:disabled { cursor: default; }
@@ -273,12 +278,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .step-photo-add { width: 56px; height: 56px; border-radius: 12px; border: 1.5px dashed var(--muted); display: grid; place-items: center; text-align: center; font-size: .78rem; color: var(--muted); cursor: pointer; font-weight: 500; }
 .step-photo-thumb { position: relative; width: 56px; height: 56px; }
 .step-photo-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
-.step-photo-thumb button { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--text); color: var(--bg); font: inherit; line-height: 1; cursor: pointer; }
+.step-photo-thumb button::before { content: ""; position: absolute; inset: -10px; }
+.step-photo-thumb button { position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--text); color: var(--bg); font: inherit; line-height: 1; cursor: pointer; }
 
 /* Add recipe: choose a way */
 .add-recipe { max-width: 560px; display: grid; gap: 14px; }
 .add-recipe h1 { margin: 0; font-size: 2.2rem; }
-.link-btn { justify-self: start; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; padding: 8px 0; cursor: pointer; }
+.link-btn { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; padding: 8px 0; cursor: pointer; }
 .danger-text { color: var(--danger); }
 .ways { display: grid; gap: 10px; }
 .way { display: grid; grid-template-columns: 48px 1fr; gap: 14px; align-items: center; text-align: left; background: var(--surface); color: var(--text); border: 0; border-radius: 18px; padding: 14px; font: inherit; cursor: pointer; }
@@ -300,13 +306,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Recipe editor */
 .editor { max-width: 720px; display: grid; gap: 18px; }
-.editor-bar { position: sticky; top: 60px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); padding: 6px 0; }
+.editor-bar { position: sticky; top: var(--topbar-h, 60px); z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); padding: 6px 0; }
 .editor-bar-title { font-family: var(--f-display); font-size: 1.15rem; }
 .found { margin: 0; background: var(--surface-2); border-radius: 14px; padding: 12px 14px; }
 .editor-photo { position: relative; display: block; height: 200px; border-radius: 20px; overflow: hidden; cursor: pointer; background: var(--surface-2); }
 .editor-photo img, .editor-photo svg { width: 100%; height: 100%; object-fit: cover; display: block; }
 .editor-photo-wrap { position: relative; }
-.editor-ai-btn, .editor-ai-busy { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 8px; border: 0; background: rgb(0 0 0 / .55); color: #fff; border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 600; font-size: .9rem; cursor: pointer; }
+.editor-ai-btn, .editor-ai-busy { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 8px; border: 0; background: rgb(0 0 0 / .55); color: #fff; border-radius: 999px; padding: 7px 14px; min-height: 40px; font: inherit; font-weight: 600; font-size: .9rem; cursor: pointer; }
 .editor-ai-busy { cursor: default; }
 .editor-ai-busy .spinner { width: 14px; height: 14px; border-width: 2px; border-color: rgb(255 255 255 / .3); border-top-color: #fff; }
 .editor-photo-btn { position: absolute; right: 12px; bottom: 12px; background: rgb(0 0 0 / .55); color: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: .9rem; }
@@ -318,15 +324,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .editor-section h2 { margin: 6px 0 0; }
 .editor-section .set-hint { padding: 0; }
 .edit-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.edit-step { display: grid; grid-template-columns: 30px 1fr 56px; gap: 10px; align-items: start; background: var(--surface); border-radius: 16px; padding: 10px; }
+.edit-step { display: grid; grid-template-columns: 44px 1fr 56px; gap: 10px; align-items: start; background: var(--surface); border-radius: 16px; padding: 10px; }
 .edit-step-side { display: grid; gap: 4px; justify-items: center; }
-.icon-btn { width: 28px; height: 26px; border: 0; border-radius: 8px; background: none; color: var(--muted); font: inherit; cursor: pointer; }
+.icon-btn { width: 44px; height: 40px; font-size: 1.1rem; border: 0; border-radius: 8px; background: none; color: var(--muted); font: inherit; cursor: pointer; }
 .icon-btn:disabled { opacity: .3; cursor: default; }
 .icon-btn:not(:disabled):hover { background: var(--surface-2); }
 .edit-step-main { display: grid; gap: 6px; min-width: 0; }
 .edit-step-main textarea { resize: vertical; line-height: 1.45; field-sizing: content; min-height: 3.6em; }
 .edit-step-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.edit-step-meta .link-btn { padding: 2px 0; font-size: .85rem; font-weight: 500; }
+.edit-step-meta .link-btn { padding: 0; font-size: .9rem; font-weight: 500; }
 .timer-chip { background: var(--surface-2); color: var(--accent); border-radius: 999px; padding: 2px 10px; font-size: .8rem; font-weight: 600; }
 
 /* Stories: always the night palette */
@@ -347,7 +353,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 .story-cover { position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: 28px; overflow: hidden; }
 .story-cover > span { font-size: clamp(2.6rem, 12vw, 4.5rem); line-height: 1; filter: drop-shadow(0 4px 0 rgb(0 0 0 / .12)); }
-.story-cover.round { border-radius: 50%; width: min(64vw, 300px); margin: 6px auto 0; box-shadow: 0 0 0 12px rgb(255 255 255 / .06), 0 0 80px rgb(255 215 106 / .25); }
+.story-cover.round { border-radius: 50%; width: min(64vw, 300px, 34dvh); margin: 6px auto 0; box-shadow: 0 0 0 12px rgb(255 255 255 / .06), 0 0 80px rgb(255 215 106 / .25); }
 .story-cover.round > span { font-size: min(30vw, 140px); }
 .story-cover.round.playing > span { animation: bob 2.4s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateY(-8px) rotate(-4deg); } }
@@ -394,8 +400,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .player-top { justify-self: stretch; display: flex; justify-content: flex-start; }
 .player-title h1 { margin: 6px 0 0; font-size: 1.8rem; line-height: 1.1; }
 .player-title small { color: var(--muted); }
-.seek { width: 100%; appearance: none; height: 10px; border-radius: 5px; background: linear-gradient(var(--moon), var(--moon)) 0 / var(--p) 100% no-repeat, rgb(255 255 255 / .16); cursor: pointer; margin: 4px 0 0; }
-.seek::-webkit-slider-thumb { appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff6d6; border: 0; }
+/* The bar looks 10px tall but the touch area is 36px, so a small finger can grab it. */
+.seek { width: 100%; appearance: none; height: 36px; background: none; cursor: pointer; margin: -9px 0 -13px; }
+.seek::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; background: linear-gradient(var(--moon), var(--moon)) 0 / var(--p) 100% no-repeat, rgb(255 255 255 / .16); }
+.seek::-moz-range-track { height: 10px; border-radius: 5px; background: rgb(255 255 255 / .16); }
+.seek::-moz-range-progress { height: 10px; border-radius: 5px; background: var(--moon); }
+.seek::-webkit-slider-thumb { appearance: none; width: 24px; height: 24px; margin-top: -7px; border-radius: 50%; background: #fff6d6; border: 0; }
 .seek::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff6d6; border: 0; }
 .seek-times { width: 100%; display: flex; justify-content: space-between; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -6px; }
 .player-error { margin: 0; max-width: 32ch; text-align: center; color: var(--danger); font-weight: 500; }
@@ -406,19 +416,19 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .night-controls .track { width: 44px; height: 44px; background: transparent; }
 .night-controls .track:disabled { opacity: .3; cursor: default; }
 @media (max-width: 400px) { .night-controls button:not(.track) { width: 54px; height: 54px; } .night-controls button.play { width: 88px; height: 88px; } }
-.time-toggle { border: 0; background: none; color: inherit; font: inherit; font-variant-numeric: tabular-nums; padding: 4px 0 4px 12px; cursor: pointer; }
+.time-toggle { min-height: 44px; border: 0; background: none; color: inherit; font: inherit; font-variant-numeric: tabular-nums; padding: 4px 0 4px 16px; cursor: pointer; }
 .sleep { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: .9rem; }
 .sleep > span { color: var(--muted); margin-right: 2px; }
-.sleep button { border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; padding: 5px 12px; cursor: pointer; }
+.sleep button { min-height: 40px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; padding: 5px 14px; cursor: pointer; }
 .play-opts { display: flex; gap: 8px; justify-content: center; }
-.opt-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: .92rem; padding: 6px 14px; cursor: pointer; }
+.opt-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: .92rem; padding: 6px 14px; cursor: pointer; }
 .opt-chip b { color: var(--moon); font-size: 1.05rem; }
 .opt-chip[aria-pressed=true] { background: var(--accent-soft); color: var(--moon); font-weight: 700; }
 .shuffle-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--surface); color: var(--muted); font: inherit; font-size: .9rem; padding: 6px 14px; cursor: pointer; }
 .shuffle-btn[aria-pressed=true] { background: var(--accent-soft); color: var(--moon); font-weight: 700; }
 .sleep button[aria-pressed=true] { background: var(--text); color: #171a45; font-weight: 700; }
 .parents { justify-self: stretch; text-align: left; margin-top: 18px; color: var(--muted); font-family: var(--f-body); }
-.parents summary { cursor: pointer; font-size: .9rem; text-align: center; list-style: none; }
+.parents summary { cursor: pointer; font-size: .9rem; text-align: center; list-style: none; padding: 13px 0; }
 .parents summary::-webkit-details-marker { display: none; }
 .parents-body { display: grid; gap: 10px; margin-top: 10px; }
 
@@ -616,7 +626,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .sheet-head h2 { margin: 0; }
-.sheet-close { width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text); display: grid; place-items: center; cursor: pointer; }
+.sheet-close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text); display: grid; place-items: center; cursor: pointer; }
 .sheet .search-box { margin-bottom: 0; }
 .pick-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .pick-list button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px; border: 0; border-radius: 14px; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
@@ -647,7 +657,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .planned-thumb img, .planned-thumb svg { width: 100%; height: 100%; object-fit: cover; display: block; }
 .planned-title { font-family: var(--f-display); font-size: 1.05rem; line-height: 1.2; }
 .planned-title small { font-family: var(--f-body); color: var(--muted); font-size: .85rem; }
-.planned-remove, .shop-remove { flex: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+.planned-remove, .shop-remove { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
 .planned-remove:hover, .shop-remove:hover { background: var(--surface-2); color: var(--danger); }
 .week-shop { margin-top: 18px; display: grid; gap: 8px; }
 .week-note, .recipe-plan-note { margin: 0; color: var(--muted); }
@@ -726,3 +736,60 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .menu-confirm p { margin: 4px 0; }
 /* Under a line merged from several recipes: which recipes need it. */
 .shop-sources { display: block; color: var(--muted); font-size: .8rem; font-weight: 400; margin-top: 2px; }
+
+/* Back arrow in the top bar on pages that are not a main tab (it takes the name's place). */
+.back-btn { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -8px; padding: 0 10px 0 4px; border: 0; border-radius: 999px;
+  background: none; color: var(--accent); font: inherit; font-weight: 600; font-size: 1.05rem; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.back-btn:active { background: var(--accent-soft); }
+
+/* Loading, load errors and unknown pages: never a blank screen. */
+.loading { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); padding: 48px 0; margin: 0; }
+.load-error { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 40px 16px; color: var(--muted); }
+.load-error p { margin: 0; max-width: 32ch; }
+.not-found { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 48px 16px; }
+.not-found h1, .not-found p { margin: 0; }
+.not-found p { color: var(--muted); }
+.cook-empty { margin: auto; display: grid; justify-items: center; gap: 16px; text-align: center; padding: 24px; }
+.cook-empty p { margin: 0; font-size: 1.15rem; }
+.cook-empty .btn { background: #fff; color: #1f2a24; border-color: transparent; }
+
+/* Story player on its own, full screen: the top bar is gone, so keep clear of the clock and the home bar,
+   and fit the controls on short phones (iPhone SE) without scrolling. */
+:root[data-fullscreen] main { padding-top: calc(12px + env(safe-area-inset-top)); min-height: 100dvh; }
+:root[data-fullscreen] .night-player { gap: min(14px, 1.6dvh); }
+@media (max-height: 700px) {
+  :root[data-fullscreen] .night-controls .play { width: 84px; height: 84px; }
+  :root[data-fullscreen] .night-controls button:not(.track):not(.play) { width: 52px; height: 52px; }
+  :root[data-fullscreen] .player-title h1 { font-size: 1.5rem; }
+}
+.player-missing { display: grid; justify-items: center; gap: 16px; text-align: center; padding: 48px 16px; }
+.player-missing p { margin: 0; color: var(--muted); }
+
+/* Phones: compact top bar. The name shows only on the two home screens, and the bar slides away
+   while you scroll down (it comes back on scroll up). A fixed strip keeps the clock area painted. */
+:root { --status-h: calc(env(safe-area-inset-top, 0px) + min(env(safe-area-inset-top, 0px), 14px)); }
+.status-fill { display: none; }
+.topbar nav { margin-left: auto; }
+@media (max-width: 759px) {
+  .brand-sub { display: none; }
+  .topbar { padding-top: calc(6px + var(--status-h)); padding-bottom: 6px; transition: transform .25s ease; }
+  :root[data-topbar-hidden] .topbar { box-shadow: none; }
+  .status-fill { display: block; position: fixed; z-index: 11; left: 0; right: 0; top: 0; height: env(safe-area-inset-top, 0px); background: var(--statusbar); transition: background .3s; }
+  :root[data-topbar-hidden] .topbar { transform: translateY(calc(env(safe-area-inset-top, 0px) - 100%)); }
+  .editor-bar { transition: top .25s ease; }
+  :root[data-topbar-hidden] .editor-bar { top: env(safe-area-inset-top, 0px); }
+  .topbar nav .area-switch a { min-height: 38px; }
+}
+@media (max-width: 759px) and (prefers-reduced-motion: reduce) { .topbar, .editor-bar { transition: none; } }
+.editor-bar .btn.small { min-height: 44px; }
+
+/* Toast with "Anulează": floats above the tab bar, like a snackbar in a native app. */
+.toast { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom));
+  width: min(calc(100% - 24px), 480px); display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 6px 6px 6px 18px; border-radius: 16px; background: #1f2a24; color: #f2f3ee; box-shadow: 0 8px 26px rgb(0 0 0 / .3);
+  font-weight: 500; animation: toast-in .2s ease-out; }
+.toast span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toast button { flex: none; min-height: 44px; padding: 0 14px; border: 0; border-radius: 12px; background: none; color: #ffd76a; font: inherit; font-weight: 700; cursor: pointer; }
+@media (max-width: 759px) { :root[data-tabbar] .toast { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 84px); } }
+@keyframes toast-in { from { transform: translate(-50%, 16px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }

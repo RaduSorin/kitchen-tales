@@ -11,7 +11,7 @@ export default defineConfig({
       workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'] },
       manifest: {
         name: 'Bucătăria cu povești',
-        short_name: 'Bucătăria cu povești',
+        short_name: 'Bucătăria',
         description: 'Rețetele familiei și povești audio pentru copii',
         lang: 'ro',
         theme_color: '#3e6a51',

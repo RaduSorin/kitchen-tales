@@ -9,7 +9,7 @@ import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
 import { fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
-import { type Sleep, useNowPlaying } from '../lib/nowPlaying'
+import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
 
 const REMAINING_KEY = 'kt-player-remaining'
 
@@ -45,9 +45,11 @@ function StoryPlayer() {
   const isSaved = !!id && offlineIds.has(id)
   useEffect(() => { getStory(id!).then((x) => setS(x ?? null)).catch(() => setS(null)) }, [id])
   // The audio lives in the app-wide player, so it keeps going when you leave this page.
-  const autoplay = !!(location.state as { autoplay?: boolean } | null)?.autoplay
+  const navState = location.state as { autoplay?: boolean; from?: QueueFrom } | null
+  const autoplay = !!navState?.autoplay
+  const from = navState?.from
   const { load } = player
-  useEffect(() => { if (s) load(s, { autoplay }) }, [s, load, autoplay])
+  useEffect(() => { if (s) load(s, { autoplay, from }) }, [s, load, autoplay, from])
   const toggleFavorite = async () => {
     if (!s) return
     const favorite = !s.favorite

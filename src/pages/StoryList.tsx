@@ -125,7 +125,7 @@ export default function StoryList() {
           <div className="covers">
             {favs.map((s) => (
               <div key={s.id} className="cover-slot">
-                <Link to={`/povesti/${s.id}`} className="cover-card">
+                <Link to={`/povesti/${s.id}`} state={{ fromFolder: true, from: 'favorites' }} className="cover-card">
                   <StoryCover story={s} />
                   <span className="cover-title">{s.title}</span>
                   {s.durationSec ? <small className="cover-meta">{Math.max(1, Math.round(s.durationSec / 60))} min</small> : null}

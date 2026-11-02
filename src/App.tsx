@@ -8,6 +8,7 @@ import StoryList from './pages/StoryList'
 import StoryPlayer from './pages/StoryPlayer'
 import StoryAdd from './pages/StoryAdd'
 import Settings from './pages/Settings'
+import CookMode from './pages/CookMode'
 
 export default function App() {
   const online = useOnline()
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/retete/noua" element={<RecipeEdit />} />
           <Route path="/retete/:id" element={<RecipeView />} />
           <Route path="/retete/:id/editeaza" element={<RecipeEdit />} />
+          <Route path="/retete/:id/gateste" element={<CookMode />} />
           <Route path="/povesti" element={<StoryList />} />
           <Route path="/povesti/adauga" element={<StoryAdd />} />
           <Route path="/povesti/:id" element={<StoryPlayer />} />

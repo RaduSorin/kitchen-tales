@@ -6,6 +6,7 @@ import { useFileUrl } from '../lib/useFileUrl'
 import { scaleIngredient } from '../lib/scale'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { formatMinutes } from '../lib/format'
+import { getProgress } from '../lib/cooking'
 
 export default function RecipeView() {
   const { id } = useParams()
@@ -32,6 +33,15 @@ export default function RecipeView() {
           {r.minutes ? <span className="pill">{formatMinutes(r.minutes)}</span> : null}
           {r.category && <span className="pill">{r.category}</span>}
         </div>
+
+        {r.steps.length > 0 && (() => {
+          const saved = getProgress(r.id)
+          return (
+            <Link to={`/retete/${r.id}/gateste`} className="btn primary big cook-cta">
+              {saved != null && saved > 0 && saved < r.steps.length ? `Continuă de la pasul ${saved + 1}` : 'Gătește pas cu pas'}
+            </Link>
+          )
+        })()}
 
         <div className="recipe-cols">
           <section>

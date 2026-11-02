@@ -32,10 +32,11 @@ h1 { font-family: var(--f-display); font-weight: 400; font-size: 2rem; line-heig
 h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.3rem; margin: 24px 0 8px; }
 
 .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; padding: calc(10px + env(safe-area-inset-top)) 16px 10px; border-bottom: 1px solid var(--border);
+  gap: 12px; padding: calc(10px + env(safe-area-inset-top) + min(env(safe-area-inset-top, 0px), 14px)) 16px 10px; border-bottom: 1px solid var(--border);
   /* Mostly solid with a light frost, so scrolled content only faintly shows through. */
   background: var(--topbar-bg); -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%); }
 /* The strip behind the phone's clock and battery (only has height in iOS home-screen mode). */
+/* iOS softens a band just under the clock; the extra top padding (only when there is a notch inset) keeps the title out of it. */
 .topbar::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: env(safe-area-inset-top, 0px); background: var(--statusbar); transition: background .3s; }
 .brand { font-family: var(--f-display); font-weight: 400; font-size: 1.25rem; line-height: 1.05; color: var(--text); text-decoration: none; min-width: 0; }
 /* On phones the name stacks on two lines ("Bucătăria / cu povești") so the nav keeps its room. */

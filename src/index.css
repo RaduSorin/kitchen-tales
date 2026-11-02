@@ -707,3 +707,5 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .sh-recipe-text small { color: var(--muted); font-size: .8rem; }
 .sh-recipe-text b { font-family: var(--f-display); font-weight: 400; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sh-empty { grid-template-columns: 1fr 48px; }
+/* While typing (see useTypingFlag in TabBar.tsx), the floating bars step aside for the keyboard. */
+:root[data-typing] .tabbar, :root[data-typing] .mini-player { display: none; }

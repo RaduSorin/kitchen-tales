@@ -54,12 +54,40 @@ function StoryTabs() {
 }
 
 /** Phone-style navigation. On wide screens the same links are in the top bar. */
+/** True for fields that bring up the on-screen keyboard (not checkboxes, buttons, sliders...). */
+function opensKeyboard(el: EventTarget | null) {
+  if (!(el instanceof HTMLElement)) return false
+  if (el.isContentEditable || el instanceof HTMLTextAreaElement) return true
+  if (el instanceof HTMLInputElement) return !['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'file', 'color', 'image'].includes(el.type)
+  return false
+}
+
+/**
+ * iOS keeps fixed elements above the keyboard, so the floating bars would sit on top of the
+ * field being typed in. While a text field has focus we mark <html> with data-typing and the
+ * CSS hides the tab bar and mini player.
+ */
+function useTypingFlag() {
+  useEffect(() => {
+    const root = document.documentElement
+    const onIn = (e: FocusEvent) => { if (opensKeyboard(e.target)) root.dataset.typing = '' }
+    const onOut = () => {
+      // Focus may move straight to another field; check after it settles.
+      setTimeout(() => { if (!opensKeyboard(document.activeElement)) delete root.dataset.typing }, 0)
+    }
+    document.addEventListener('focusin', onIn)
+    document.addEventListener('focusout', onOut)
+    return () => { document.removeEventListener('focusin', onIn); document.removeEventListener('focusout', onOut); delete root.dataset.typing }
+  }, [])
+}
+
 export default function TabBar() {
   const { pathname } = useLocation()
   const hidden = hidesTabBar(pathname)
   const stories = useArea() === 'night'
   const shopping = useSyncedList(shoppingStore)
   const toBuy = shopping.filter((s) => !s.checked).length
+  useTypingFlag()
   useEffect(() => {
     if (hidden) delete document.documentElement.dataset.tabbar
     else document.documentElement.dataset.tabbar = ''

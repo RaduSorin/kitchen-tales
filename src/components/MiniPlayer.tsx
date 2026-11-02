@@ -4,7 +4,7 @@ import StoryCover from './StoryCover'
 
 /** A bar at the bottom of every other page while a story is loaded, so it can keep playing in the background. */
 export default function MiniPlayer() {
-  const { story, playing, t, dur, url, toggle, close } = useNowPlaying()
+  const { story, playing, t, dur, url, error, toggle, close } = useNowPlaying()
   const { pathname } = useLocation()
   if (!story || pathname === `/povesti/${story.id}`) return null
   return (
@@ -14,7 +14,7 @@ export default function MiniPlayer() {
         <span className="mini-progress" style={{ width: dur ? `${(t / dur) * 100}%` : '0%' }} />
         <Link to={`/povesti/${story.id}`} className="mini-open">
           <StoryCover story={story} />
-          <span className="mini-title">{story.title}</span>
+          <span className="mini-title">{story.title}{error && <small className="mini-error">Nu se poate reda acum</small>}</span>
         </Link>
         <button type="button" className="mini-btn mini-play" onClick={toggle} disabled={!url} aria-label={playing ? 'Pauză' : 'Pornește'}>
           {playing

@@ -4,7 +4,7 @@ import { generateClient } from 'aws-amplify/data'
 import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
 import type { PlanEntry, Recipe, ShoppingItem, Story, StorySource } from './types'
-import { cachedList, cacheList, getAudio, removeAudio, saveAudio } from './offline'
+import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, saveAudio } from './offline'
 
 const client = generateClient<Schema>()
 
@@ -126,9 +126,12 @@ export { removeFile }
 
 export async function listStories() {
   try {
+    const listedAt = Date.now()
     const rows = await listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 }))
     const list = rows.map(toStory).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
     cacheList('stories', list).catch(() => {})
+    // Free the space of stories deleted elsewhere; their audio would otherwise stay here forever.
+    pruneAudio(new Set(list.map((s) => s.id)), listedAt).catch(() => {})
     return list
   } catch (err) {
     const cached = await cachedList('stories')

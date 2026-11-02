@@ -40,6 +40,43 @@ export async function removeAudio(storyId: string) {
   notify()
 }
 
+/** Removes every saved story audio (covers and lists stay, they are small). */
+export async function removeAllAudio() {
+  await (await dbPromise).clear('audio')
+  notify()
+}
+
+/**
+ * Drops saved audio of stories that no longer exist (e.g. deleted on another phone).
+ * Only copies saved well before the list was requested are checked: a story just
+ * created here may be missing from a list loaded at the same moment, and must not be
+ * mistaken for a deleted one.
+ */
+export async function pruneAudio(existingIds: Set<string>, listedAt: number) {
+  const cutoff = listedAt - 60 * 60 * 1000
+  const db = await dbPromise
+  const tx = db.transaction('audio', 'readwrite')
+  let removed = 0
+  for (let cursor = await tx.store.openCursor(); cursor; cursor = await cursor.continue()) {
+    const { storyId, savedAt } = cursor.value
+    if (!existingIds.has(storyId) && savedAt < cutoff) { await cursor.delete(); removed++ }
+  }
+  await tx.done
+  if (removed) notify()
+}
+
+/** How many stories are saved on this device and how much space their audio takes. */
+export async function savedAudioSummary() {
+  const db = await dbPromise
+  let count = 0
+  let bytes = 0
+  for (let cursor = await db.transaction('audio').store.openCursor(); cursor; cursor = await cursor.continue()) {
+    count++
+    bytes += cursor.value.blob.size
+  }
+  return { count, bytes }
+}
+
 export async function offlineStoryIds() {
   return new Set(await (await dbPromise).getAllKeys('audio'))
 }

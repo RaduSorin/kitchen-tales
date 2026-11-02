@@ -709,3 +709,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .sh-empty { grid-template-columns: 1fr 48px; }
 /* While typing (see useTypingFlag in TabBar.tsx), the floating bars step aside for the keyboard. */
 :root[data-typing] .tabbar, :root[data-typing] .mini-player { display: none; }
+/* iPhone zooms the page in when a focused field's text is under 16px (the editor labels are .92rem, for example).
+   Keep every typing field at 16px or more on phones; the big title field is already larger. */
+@media (max-width: 759px) {
+  :is(input:not([type=checkbox], [type=radio], [type=range], [type=file], [type=button], [type=submit]), textarea, select):not(.editor-title) { font-size: max(16px, 1em) !important; }
+}

@@ -1,14 +1,15 @@
 import { useAuthenticator } from '@aws-amplify/ui-react'
-import { updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
+import FamilySection from './FamilySection'
+import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
 
 const THEMES: [ThemeChoice, string][] = [['auto', 'Automat'], ['light', 'Luminos'], ['dark', 'Întunecat']]
-const MIN_AGE = 1
-const MAX_AGE = 12
+const THIS_YEAR = new Date().getFullYear()
+const YEARS = Array.from({ length: 15 }, (_, i) => THIS_YEAR - i)
 
 export default function Settings() {
   const { theme, child } = useSettings()
   const { user, signOut } = useAuthenticator((c) => [c.user])
-  const age = child.age
+  const age = childAge(child)
 
   return (
     <section className="settings">
@@ -22,16 +23,14 @@ export default function Settings() {
             <input type="text" id="child-name" value={child.name} placeholder="Ana" autoComplete="off"
               onChange={(e) => updateSettings({ child: { name: e.target.value } })} />
           </label>
-          <div className="set-row">
-            <span id="child-age-label">Vârsta</span>
-            <div className="stepper" role="group" aria-labelledby="child-age-label">
-              <button type="button" aria-label="Mai mic" disabled={!age || age <= MIN_AGE}
-                onClick={() => updateSettings({ child: { age: (age ?? MIN_AGE + 1) - 1 } })}>−</button>
-              <output>{age ? `${age} ${age === 1 ? 'an' : 'ani'}` : 'nesetat'}</output>
-              <button type="button" aria-label="Mai mare" disabled={!!age && age >= MAX_AGE}
-                onClick={() => updateSettings({ child: { age: age ? age + 1 : 4 } })}>+</button>
-            </div>
-          </div>
+          <label className="set-row">
+            <span>Anul nașterii{age ? <small className="set-sub">{age} {age === 1 ? 'an' : 'ani'}</small> : null}</span>
+            <select id="child-birth-year" value={child.birthYear ?? ''}
+              onChange={(e) => updateSettings({ child: { birthYear: e.target.value ? +e.target.value : undefined } })}>
+              <option value="">nesetat</option>
+              {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </label>
           <div className="set-row">
             <span id="child-gender-label">Este</span>
             <div className="seg" role="group" aria-labelledby="child-gender-label">
@@ -45,7 +44,7 @@ export default function Settings() {
               onChange={(e) => updateSettings({ child: { canRead: e.target.checked } })} />
           </label>
         </div>
-        <p className="set-hint">Folosim prenumele și vârsta când creăm povești noi. Se salvează pe acest dispozitiv.</p>
+        <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează pe acest dispozitiv.</p>
       </div>
 
       <div className="set-group">
@@ -62,6 +61,8 @@ export default function Settings() {
         </div>
         <p className="set-hint">Automat urmează setarea telefonului.</p>
       </div>
+
+      <FamilySection me={user?.signInDetails?.loginId?.toLowerCase()} />
 
       <div className="set-group">
         <h2 className="set-label">Cont</h2>

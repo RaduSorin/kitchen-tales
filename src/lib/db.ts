@@ -230,3 +230,21 @@ export async function setStoryCover(s: Story, coverKey: string) {
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (s.coverKey && s.coverKey !== coverKey) await removeFile(s.coverKey)
 }
+
+// ---- family accounts ----
+
+export type FamilyMember = { email: string; pending: boolean; createdAt?: string | null }
+
+export async function listFamily(): Promise<FamilyMember[]> {
+  const res = await client.queries.listFamily()
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  return (res.data ?? []).filter((m): m is FamilyMember => !!m)
+}
+
+/** Creates the account and emails a temporary password; resend: true sends it again. */
+export async function inviteFamilyMember(email: string, resend = false): Promise<FamilyMember> {
+  const res = await client.mutations.inviteFamilyMember({ email, resend })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (!res.data) throw new Error('Nu am putut trimite invitația.')
+  return res.data
+}

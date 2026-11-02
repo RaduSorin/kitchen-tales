@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useBack } from './lib/back'
 import NotFound from './pages/NotFound'
+import ToastHost from './components/ToastHost'
 import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
 import { applyTheme, setStatusBarColor } from './lib/settings'
@@ -65,6 +66,27 @@ function BackButton({ to }: { to: string }) {
   )
 }
 
+/**
+ * Phones: the top bar slides away while you scroll down a page and comes back as soon as you
+ * scroll up, so content gets the screen (like Safari and most iOS apps).
+ */
+function useHideOnScroll(enabled: boolean) {
+  useEffect(() => {
+    const root = document.documentElement
+    if (!enabled) { delete root.dataset.topbarHidden; return }
+    let last = window.scrollY
+    const onScroll = () => {
+      const y = window.scrollY
+      if (y < 80) delete root.dataset.topbarHidden
+      else if (y > last + 6) root.dataset.topbarHidden = ''
+      else if (y < last - 6) delete root.dataset.topbarHidden
+      if (Math.abs(y - last) > 6 || y < 80) last = y
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); delete root.dataset.topbarHidden }
+  }, [enabled])
+}
+
 function Shell() {
   const online = useOnline()
   const { pathname } = useLocation()
@@ -72,6 +94,11 @@ function Shell() {
   const back = backFallback(pathname, night)
   const player = isPlayerPage(pathname)
   const header = useRef<HTMLElement>(null)
+  // The name only on the two home screens; elsewhere each page's big title says where you are.
+  const home = pathname === '/' || pathname === '/povesti/acasa'
+  useHideOnScroll(!player)
+  // A new page starts with the bar showing.
+  useEffect(() => { delete document.documentElement.dataset.topbarHidden }, [pathname])
   // Sticky bars under the top bar (e.g. the recipe editor's Save bar) need its real height,
   // which changes with the iPhone notch and the two-line name.
   useLayoutEffect(() => {
@@ -90,8 +117,9 @@ function Shell() {
   return (
     <>
       <NightArea />
+      {!player && <div className="status-fill" aria-hidden="true" />}
       {!player && <header className="topbar" ref={header}>
-        {back ? <BackButton to={back} /> : <Link to="/" className="brand"><span>Bucătăria</span> <span>cu povești</span></Link>}
+        {back ? <BackButton to={back} /> : <Link to="/" className={home ? 'brand' : 'brand brand-sub'}><span>Bucătăria</span> <span>cu povești</span></Link>}
         <nav>
           {/* On phones these live in the bottom tab bar; wide screens show them here (recipes side only). */}
           <NavLink to="/retete" className="wide-only day-only">Rețetele mele</NavLink>
@@ -126,6 +154,7 @@ function Shell() {
       </main>
       <MiniPlayer />
       <TabBar />
+      <ToastHost />
     </>
   )
 }

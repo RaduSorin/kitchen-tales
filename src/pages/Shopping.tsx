@@ -3,6 +3,14 @@ import { Link } from 'react-router-dom'
 import { useSyncedList } from '../lib/synced'
 import { addShoppingText, shoppingStore } from '../lib/plan'
 import { mergeShopping, type ShoppingRow } from '../lib/merge'
+import type { ShoppingItem } from '../lib/types'
+import { showToast } from '../lib/toast'
+
+/** Removes items right away and offers to bring them back for a few seconds. */
+function removeWithUndo(items: ShoppingItem[], text: string) {
+  items.forEach((s) => shoppingStore.remove(s.id))
+  showToast(text, () => items.forEach((s) => shoppingStore.create(s)))
+}
 
 /** One line on the list; a merged line (e.g. onions from two recipes) checks and removes all its items together. */
 function Item({ row }: { row: ShoppingRow }) {
@@ -16,7 +24,7 @@ function Item({ row }: { row: ShoppingRow }) {
           {row.sources.length > 1 && <small className="shop-sources">{row.sources.join(' · ')}</small>}
         </span>
       </label>
-      <button type="button" className="shop-remove" onClick={() => row.items.forEach((s) => shoppingStore.remove(s.id))} aria-label={`Șterge ${row.text}`}>
+      <button type="button" className="shop-remove" onClick={() => removeWithUndo(row.items, `Am șters ${row.text}`)} aria-label={`Șterge ${row.text}`}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
     </li>
@@ -86,7 +94,7 @@ export default function Shopping() {
                 <h2>În coș <small className="count">{doneRows.length}</small></h2>
                 {confirming ? (
                   <span className="confirm">
-                    <button type="button" className="btn danger small" onClick={() => { done.forEach((s) => shoppingStore.remove(s.id)); setConfirming(false) }}>Da, golește</button>
+                    <button type="button" className="btn danger small" onClick={() => { removeWithUndo(done, 'Am golit coșul'); setConfirming(false) }}>Da, golește</button>
                     <button type="button" className="btn small" onClick={() => setConfirming(false)}>Nu</button>
                   </span>
                 ) : (
@@ -100,7 +108,7 @@ export default function Shopping() {
             {clearingAll ? (
               <span className="confirm">
                 Ștergi toate cele {items.length} produse?
-                <button type="button" className="btn danger small" onClick={() => { items.forEach((s) => shoppingStore.remove(s.id)); setClearingAll(false) }}>Da, golește tot</button>
+                <button type="button" className="btn danger small" onClick={() => { removeWithUndo(items, 'Am golit lista'); setClearingAll(false) }}>Da, golește tot</button>
                 <button type="button" className="btn small" onClick={() => setClearingAll(false)}>Nu</button>
               </span>
             ) : (

@@ -1,4 +1,5 @@
-import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
 import RecipeList from './pages/RecipeList'
@@ -10,10 +11,22 @@ import StoryAdd from './pages/StoryAdd'
 import Settings from './pages/Settings'
 import CookMode from './pages/CookMode'
 
+// The stories area always uses the night palette, whatever the app theme is.
+function NightArea() {
+  const { pathname } = useLocation()
+  const night = pathname.startsWith('/povesti')
+  useEffect(() => {
+    if (night) document.documentElement.dataset.area = 'night'
+    else delete document.documentElement.dataset.area
+  }, [night])
+  return null
+}
+
 export default function App() {
   const online = useOnline()
   return (
     <BrowserRouter>
+      <NightArea />
       <header className="topbar">
         <Link to="/" className="brand">Kitchen Tales</Link>
         <nav>

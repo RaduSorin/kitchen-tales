@@ -8,6 +8,7 @@
   --f-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --f-kids: 'Baloo 2', 'Figtree', system-ui, sans-serif;
   --topbar-bg: rgb(255 255 255 / .9);
+  --statusbar: #3e6a51;
   /* Liquid-glass tab bar */
   --glass-bg: rgb(255 255 255 / .66); --glass-edge: rgb(255 255 255 / .7); --glass-shine: rgb(255 255 255 / .9); --glass-shadow: rgb(31 42 36 / .16);
   --glass-pill: rgb(62 106 81 / .14);
@@ -18,6 +19,7 @@
   --accent: #8fc4a6; --accent-soft: #23302a; --on-accent: #131915; --gold: #e2b84f; --danger: #f08a75;
   --night: #cfc9ff; --night-soft: #232463; --moon: #ffd76a; --track: #3a453e; --knob: #e7ebe4;
   --topbar-bg: rgb(28 35 30 / .9);
+  --statusbar: #131915;
   --glass-bg: rgb(40 50 44 / .62); --glass-edge: rgb(255 255 255 / .14); --glass-shine: rgb(255 255 255 / .22); --glass-shadow: rgb(0 0 0 / .45);
   --glass-pill: rgb(143 196 166 / .2);
   color-scheme: dark;
@@ -33,6 +35,8 @@ h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.3rem; margin:
   gap: 12px; padding: calc(10px + env(safe-area-inset-top)) 16px 10px; border-bottom: 1px solid var(--border);
   /* Mostly solid with a light frost, so scrolled content only faintly shows through. */
   background: var(--topbar-bg); -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%); }
+/* The strip behind the phone's clock and battery (only has height in iOS home-screen mode). */
+.topbar::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: env(safe-area-inset-top, 0px); background: var(--statusbar); transition: background .3s; }
 .brand { font-family: var(--f-display); font-weight: 400; font-size: 1.25rem; line-height: 1.05; color: var(--text); text-decoration: none; min-width: 0; }
 /* On phones the name stacks on two lines ("Bucătăria / cu povești") so the nav keeps its room. */
 @media (max-width: 480px) { .topbar { gap: 8px; } .topbar nav { gap: 0; } .topbar nav a { padding: 8px 10px; } .brand { font-size: 1.1rem; } }
@@ -96,7 +100,7 @@ h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.3rem; margin:
 
 
 
-.auth-brand { text-align: center; margin: 32px 0 16px; }
+.auth-brand { text-align: center; margin: calc(32px + env(safe-area-inset-top, 0px)) 0 16px; }
 [data-amplify-authenticator] { --amplify-components-authenticator-router-border-color: var(--border); --amplify-components-authenticator-router-box-shadow: none; }
 [data-amplify-authenticator] [data-amplify-router] { border-radius: 16px; overflow: hidden; }
 
@@ -324,6 +328,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Stories: always the night palette */
 :root[data-area="night"] {
+  --statusbar: #171a45;
   --glass-bg: rgb(36 31 92 / .62); --glass-edge: rgb(255 255 255 / .16); --glass-shine: rgb(255 255 255 / .22); --glass-shadow: rgb(0 0 0 / .45);
   --glass-pill: rgb(255 215 106 / .16);
   --bg: #171a45; --surface: rgb(255 255 255 / .08); --surface-2: rgb(255 255 255 / .12); --text: #fff6d6; --muted: rgb(255 246 214 / .68);

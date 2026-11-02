@@ -11,6 +11,8 @@ import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
 import { fmtTime, getPosition, SOURCE_LABEL, setPosition } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
+import { useCoverUrl } from '../lib/useCoverUrl'
+import { storyArtwork } from '../lib/artwork'
 
 type Sleep = 'end' | 15 | 30
 const HOLD_MS = 1500
@@ -60,11 +62,20 @@ export default function StoryPlayer() {
   const remoteUrl = useFileUrl(localAudio ? undefined : s?.audioKey)
   const url = localUrl ?? remoteUrl
 
-  // Lock-screen / headphone controls.
+  // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
+  const coverUrl = useCoverUrl(s?.coverKey)
   useEffect(() => {
     if (!s || !('mediaSession' in navigator)) return
+    let live = true
     navigator.mediaSession.metadata = new MediaMetadata({ title: s.title, artist: 'Kitchen Tales' })
-  }, [s])
+    storyArtwork(s, coverUrl).then((src) => {
+      if (!live || !src) return
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: s.title, artist: 'Kitchen Tales', artwork: [{ src, sizes: '512x512', type: 'image/png' }],
+      })
+    }).catch(() => {})
+    return () => { live = false }
+  }, [s, coverUrl])
 
   // Sleep timer: stop after 15 or 30 minutes of listening (paused time doesn't count).
   useEffect(() => {

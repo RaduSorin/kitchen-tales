@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile } from '../lib/db'
+import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile, setStoryFavorite } from '../lib/db'
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
@@ -9,7 +9,7 @@ import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
 import { fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
-import { type Sleep, useNowPlaying } from '../lib/nowPlaying'
+import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
 
 const REMAINING_KEY = 'kt-player-remaining'
 
@@ -45,9 +45,19 @@ function StoryPlayer() {
   const isSaved = !!id && offlineIds.has(id)
   useEffect(() => { getStory(id!).then((x) => setS(x ?? null)).catch(() => setS(null)) }, [id])
   // The audio lives in the app-wide player, so it keeps going when you leave this page.
-  const autoplay = !!(location.state as { autoplay?: boolean } | null)?.autoplay
+  const navState = location.state as { autoplay?: boolean; from?: QueueFrom } | null
+  const autoplay = !!navState?.autoplay
+  const from = navState?.from
   const { load } = player
-  useEffect(() => { if (s) load(s, { autoplay }) }, [s, load, autoplay])
+  useEffect(() => { if (s) load(s, { autoplay, from }) }, [s, load, autoplay, from])
+  const toggleFavorite = async () => {
+    if (!s) return
+    const favorite = !s.favorite
+    const next = { ...s, favorite }
+    setS(next)
+    player.update(next)
+    try { await setStoryFavorite(s, favorite) } catch { setS(s); setMsg('Nu am putut salva la favorite.') }
+  }
   const current = !!s && player.story?.id === s.id
   const playing = current && player.playing
   const t = current ? player.t : 0
@@ -117,6 +127,10 @@ function StoryPlayer() {
         <button type="button" className="night-btn" aria-label={`Înapoi la ${folderOf(s)}`} onClick={back}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
         </button>
+        <button type="button" className={`night-btn fav-btn${s.favorite ? ' on' : ''}`} aria-pressed={!!s.favorite}
+          aria-label={s.favorite ? 'Scoate din favorite' : 'Pune la favorite'} disabled={!online} onClick={toggleFavorite}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill={s.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" /></svg>
+        </button>
       </div>
       <StoryCover story={s} round className={playing ? 'playing' : ''} />
       <div className="player-title">
@@ -150,16 +164,18 @@ function StoryPlayer() {
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="17.4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M4 5v14l11.5-7z" fill="currentColor" /></svg>
         </button>
       </div>
-      <div className="sleep" role="group" aria-label="Oprește după">
-        <span>Oprește după</span>
-        {([1, 2, 3, 5] as Sleep[]).map((v) => (
-          <button key={v} aria-pressed={sleep === v} onClick={() => chooseSleep(v)}>{v === 1 ? '1 poveste' : `${v} povești`}</button>
-        ))}
+      {/* One compact row: tap the left chip to cycle 1 → 2 → 3 → 5 stories, the right one to shuffle. */}
+      <div className="play-opts">
+        <button type="button" className="opt-chip" onClick={() => { const all: Sleep[] = [1, 2, 3, 5]; chooseSleep(all[(all.indexOf(sleep) + 1) % all.length]) }}
+          aria-label={`Oprește după ${sleep === 1 ? 'o poveste' : `${sleep} povești`}. Atinge ca să schimbi.`}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>
+          <span>Stop după <b>{sleep}</b></span>
+        </button>
+        <button type="button" className="opt-chip" aria-pressed={player.shuffle} onClick={player.toggleShuffle} aria-label={player.shuffle ? 'Amestecat. Atinge pentru una după alta.' : 'Una după alta. Atinge ca să amesteci.'}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 3h5v5" /><path d="M4 20 21 3" /><path d="M21 16v5h-5" /><path d="M15 15l6 6" /><path d="M4 4l5 5" /></svg>
+          <span>{player.shuffle ? 'Amestecat' : 'La rând'}</span>
+        </button>
       </div>
-      <button type="button" className="shuffle-btn" aria-pressed={player.shuffle} onClick={player.toggleShuffle}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 3h5v5" /><path d="M4 20 21 3" /><path d="M21 16v5h-5" /><path d="M15 15l6 6" /><path d="M4 4l5 5" /></svg>
-        {player.shuffle ? 'Amestecat' : 'Una după alta'}
-      </button>
 
       <details className="parents">
         <summary>Pentru părinți</summary>

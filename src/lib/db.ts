@@ -38,6 +38,7 @@ const toStory = (s: StoryRow): Story => ({
   audioKey: s.audioKey,
   durationSec: s.durationSec ?? undefined,
   text: s.text ?? undefined,
+  favorite: s.favorite ?? undefined,
   createdAt: s.createdAt,
 })
 
@@ -244,6 +245,14 @@ export async function saveFoundCover(url: string) {
   const res = await client.mutations.saveCover({ url })
   if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') ?? 'Nu am putut salva coperta.')
   return res.data
+}
+
+/** Marks or unmarks a favourite story; also updates the offline copy of the list. */
+export async function setStoryFavorite(s: Story, favorite: boolean) {
+  const res = await client.models.Story.update({ id: s.id, favorite })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  const cached = await cachedList('stories').catch(() => undefined)
+  if (cached) await cacheList('stories', cached.map((x) => (x.id === s.id ? { ...x, favorite } : x))).catch(() => {})
 }
 
 export async function setStoryCover(s: Story, coverKey: string) {

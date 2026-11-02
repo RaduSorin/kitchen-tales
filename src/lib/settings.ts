@@ -71,7 +71,21 @@ export function applyTheme() {
   const dark = current.theme === 'dark' || (current.theme === 'auto' && !!media?.matches)
   document.documentElement.dataset.theme = dark ? 'dark' : 'light'
   const night = document.documentElement.dataset.area === 'night'
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', night ? '#171a45' : dark ? '#131915' : '#f2f3ee')
+  setStatusBarColor(night ? '#171a45' : dark ? '#131915' : '#f2f3ee')
+}
+
+/**
+ * Colors the phone's status bar. iOS home-screen apps ignore a changed `content` on the existing
+ * theme-color tag, but do pick up a freshly inserted one, so the tag is replaced instead of edited.
+ */
+export function setStatusBarColor(color: string) {
+  const old = document.querySelector('meta[name="theme-color"]')
+  if (old?.getAttribute('content') === color) return
+  const meta = document.createElement('meta')
+  meta.name = 'theme-color'
+  meta.content = color
+  old?.remove()
+  document.head.appendChild(meta)
 }
 
 media?.addEventListener('change', applyTheme)

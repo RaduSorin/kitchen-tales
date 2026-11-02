@@ -40,6 +40,21 @@ h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.3rem; margin:
 .topbar nav { display: flex; gap: 4px; }
 .topbar nav a { padding: 8px 12px; border-radius: 999px; color: var(--muted); text-decoration: none; font-weight: 500; }
 .topbar nav a.active { background: var(--accent-soft); color: var(--accent); }
+.topbar nav { align-items: center; }
+:root[data-area="night"] .topbar nav a.day-only { display: none; }
+
+/* Rețete | Povești switch: a bubble slides to the side you're on (sage by day, moon-yellow at night). */
+.area-switch { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 3px; border-radius: 999px; background: var(--surface-2);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / .12); margin: 0 4px; }
+.area-thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px; background: var(--accent);
+  box-shadow: 0 2px 6px rgb(0 0 0 / .2), inset 0 1px 0 rgb(255 255 255 / .35); transition: transform .3s cubic-bezier(.3, .7, .4, 1.2), background .3s; }
+.area-switch.night .area-thumb { transform: translateX(100%); background: #ffd76a; }
+.topbar nav .area-switch a { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 12px;
+  border-radius: 999px; color: var(--muted); font-weight: 600; text-decoration: none; transition: color .3s; background: none; }
+.topbar nav .area-switch a.on { color: var(--on-accent); }
+.area-switch.night a.on { color: #171a45; }
+@media (max-width: 400px) { .topbar nav .area-switch a { padding: 7px 9px; gap: 4px; font-size: .9rem; } .area-switch svg { width: 16px; height: 16px; } }
+@media (prefers-reduced-motion: reduce) { .area-thumb, .topbar nav .area-switch a { transition: none; } }
 
 .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .row.between { justify-content: space-between; }
@@ -309,6 +324,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Stories: always the night palette */
 :root[data-area="night"] {
+  --glass-bg: rgb(36 31 92 / .62); --glass-edge: rgb(255 255 255 / .16); --glass-shine: rgb(255 255 255 / .22); --glass-shadow: rgb(0 0 0 / .45);
+  --glass-pill: rgb(255 215 106 / .16);
   --bg: #171a45; --surface: rgb(255 255 255 / .08); --surface-2: rgb(255 255 255 / .12); --text: #fff6d6; --muted: rgb(255 246 214 / .68);
   --border: rgb(255 255 255 / .14); --accent: #ffd76a; --accent-soft: rgb(255 215 106 / .16); --on-accent: #171a45; --danger: #ff8fa3;
   --night: #ffd76a; --night-soft: rgb(255 255 255 / .1); --track: rgb(255 255 255 / .2); --knob: #fff6d6;
@@ -384,6 +401,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .sleep { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: .9rem; }
 .sleep > span { color: var(--muted); margin-right: 2px; }
 .sleep button { border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; padding: 5px 12px; cursor: pointer; }
+.play-opts { display: flex; gap: 8px; justify-content: center; }
+.opt-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: .92rem; padding: 6px 14px; cursor: pointer; }
+.opt-chip b { color: var(--moon); font-size: 1.05rem; }
+.opt-chip[aria-pressed=true] { background: var(--accent-soft); color: var(--moon); font-weight: 700; }
 .shuffle-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--surface); color: var(--muted); font: inherit; font-size: .9rem; padding: 6px 14px; cursor: pointer; }
 .shuffle-btn[aria-pressed=true] { background: var(--accent-soft); color: var(--moon); font-weight: 700; }
 .sleep button[aria-pressed=true] { background: var(--text); color: #171a45; font-weight: 700; }
@@ -519,7 +540,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .tabbar, .tabbar-spacer { display: none; }
 @media (max-width: 759px) {
   .topbar nav a.wide-only { display: none; }
-  :root[data-area="night"] .topbar nav a.wide-only:not(.wide-strict) { display: inline-block; }
   /* Floating "liquid glass" capsule, like the iOS tab bar: frosted, see-through, with a light rim. */
   .tabbar-spacer { display: block; height: calc(84px + env(safe-area-inset-bottom)); }
   .tabbar { --tb-bottom: max(10px, calc(env(safe-area-inset-bottom) - 6px));
@@ -543,6 +563,34 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   :root[data-tabbar] .mini-spacer { height: 76px; }
   :root[data-tabbar] main { padding-bottom: 16px; }
 }
+/* The middle tab (Rețete / Bibliotecă) is a big raised round button: sage by day, moon-yellow at night. */
+@media (max-width: 759px) {
+  .tabbar { overflow: visible; }
+  .tab-center, .tab-center.active { background: none !important; box-shadow: none !important; }
+  .tab-center .tab-icon { width: 60px; height: 60px; margin-top: -26px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
+    box-shadow: 0 6px 18px rgb(0 0 0 / .3), inset 0 2px 0 rgb(255 255 255 / .35); border: 3px solid var(--bg); }
+  .tab-center:not(.active) .tab-icon { filter: saturate(.75) brightness(1.05); }
+  .tab-center.active .tab-label { color: var(--accent); }
+}
+/* Stories: night glass, the big moon-yellow Bibliotecă button in the middle, and Noapte bună. */
+@media (max-width: 759px) {
+  .night-tabbar { font-family: var(--f-kids); overflow: visible; }
+  .night-tabbar .tab { border: 0; background: none; font: inherit; cursor: pointer; color: var(--text); }
+  .night-tabbar .tab.active:not(.tab-center) { color: var(--moon); background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 0 0 1px var(--glass-edge); }
+  .night-tabbar .tab-label { font-size: .74rem; font-weight: 700; }
+  .night-tabbar .tab-center.active { background: none; box-shadow: none; }
+  .night-tabbar .tab-center .tab-icon { background: #ffd76a; color: #171a45; border-color: rgb(23 26 69 / .9); }
+  .night-tabbar .tab-center:not(.active) .tab-icon { background: #e9d28f; filter: none; }
+  .night-tabbar .tab-center.active .tab-label { color: var(--moon); }
+  .wide-add { display: none !important; }
+}
+.fav-btn.on { color: #ff8fa3; }
+.fav-btn:disabled { opacity: .5; }
+.player-top { justify-content: space-between !important; }
+.fav-empty { line-height: 1.6; }
+:root[data-area="night"] .sheet { font-family: var(--f-kids); }
+:root[data-area="night"] .sheet h2 { font-family: var(--f-kids); font-weight: 800; }
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .tabbar { background: var(--surface); }
 }

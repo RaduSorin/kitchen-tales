@@ -26,7 +26,7 @@ interface NowPlaying {
   prev?: Story
   next?: Story
   /** Start (or keep) this story in the app-wide player. Loading the story already playing does nothing. */
-  load: (story: Story, opts?: { autoplay?: boolean; continued?: boolean }) => void
+  load: (story: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom }) => void
   /** Update the current story's details (e.g. a new cover) without touching playback. */
   update: (story: Story) => void
   toggle: () => void
@@ -38,6 +38,9 @@ interface NowPlaying {
   /** Stop and forget the current story (closes the mini player). */
   close: () => void
 }
+
+/** Where "next" comes from: the story's folder, or the Favorite list when started from there. */
+export type QueueFrom = 'folder' | 'favorites'
 
 const Ctx = createContext<NowPlaying | null>(null)
 
@@ -71,13 +74,21 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const online = useOnline()
   const offlineIds = useOfflineIds()
   const [folder, setFolder] = useState<Story[]>([])
+  const [from, setFrom] = useState<QueueFrom>('folder')
   const folderName = story ? folderOf(story) : undefined
+  const isFav = !!story?.favorite
   useEffect(() => {
     if (!folderName) return
     let live = true
-    listStories().then((all) => { if (live) setFolder(all.filter((x) => folderOf(x) === folderName)) }).catch(() => {})
+    listStories().then((all) => {
+      if (!live) return
+      // Started from Favorite: shuffle and "stop after N" stay within the favourites (sorted like that page).
+      setFolder(from === 'favorites'
+        ? all.filter((x) => x.favorite).sort((a, b) => a.title.localeCompare(b.title, 'ro'))
+        : all.filter((x) => folderOf(x) === folderName))
+    }).catch(() => {})
     return () => { live = false }
-  }, [folderName])
+  }, [folderName, from, isFav])
   const queue = online ? folder : folder.filter((x) => offlineIds.has(x.id))
   const idx = story ? queue.findIndex((x) => x.id === story.id) : -1
   const prev = idx > 0 ? queue[idx - 1] : undefined
@@ -115,8 +126,9 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story?.id])
 
-  const load = useCallback((s: Story, opts?: { autoplay?: boolean; continued?: boolean }) => {
+  const load = useCallback((s: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom }) => {
     const cur = storyRef.current
+    if (!opts?.continued) setFrom(opts?.from ?? 'folder')
     if (cur?.id === s.id) { setStory(s); return }
     // A story you pick yourself starts a new run; one that follows on its own continues it.
     if (!opts?.continued) { played.current = 0; heard.current = new Set() }

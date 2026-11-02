@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
-import { useBlobUrl } from '../lib/useBlobUrl'
+import { useFileUrl } from '../lib/useFileUrl'
 
 function Card({ r }: { r: Recipe }) {
-  const img = useBlobUrl(r.photo)
+  const img = useFileUrl(r.photoKey)
   return (
     <Link to={`/retete/${r.id}`} className="card">
       <div className="card-img">{img ? <img src={img} alt="" /> : <span>🍽️</span>}</div>
@@ -23,7 +23,8 @@ export default function RecipeList() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('')
-  useEffect(() => { listRecipes().then(setRecipes) }, [])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => { listRecipes().then(setRecipes).finally(() => setLoading(false)) }, [])
 
   const cats = useMemo(() => [...new Set(recipes.map((r) => r.category).filter(Boolean))].sort(), [recipes])
   const shown = recipes.filter((r) => {
@@ -47,7 +48,7 @@ export default function RecipeList() {
           ))}
         </div>
       )}
-      {recipes.length === 0 ? (
+      {loading ? <p className="empty">Se încarcă…</p> : recipes.length === 0 ? (
         <p className="empty">Nicio rețetă încă. Adaugă prima ta rețetă!</p>
       ) : (
         <div className="grid">{shown.map((r) => <Card key={r.id} r={r} />)}</div>

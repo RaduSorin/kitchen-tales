@@ -1,3 +1,4 @@
+import { useAuthenticator } from '@aws-amplify/ui-react'
 import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import RecipeList from './pages/RecipeList'
@@ -8,6 +9,7 @@ import StoryPlayer from './pages/StoryPlayer'
 import StoryAdd from './pages/StoryAdd'
 
 export default function App() {
+  const { signOut } = useAuthenticator((c) => [c.user])
   return (
     <BrowserRouter>
       <header className="topbar">
@@ -15,6 +17,7 @@ export default function App() {
         <nav>
           <NavLink to="/retete">Rețete</NavLink>
           <NavLink to="/povesti">Povești</NavLink>
+          <button className="signout" onClick={signOut} aria-label="Ieși din cont" title="Ieși din cont">⎋</button>
         </nav>
       </header>
       <main>

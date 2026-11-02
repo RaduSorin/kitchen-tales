@@ -7,10 +7,9 @@ export interface Recipe {
   ingredients: string[]
   steps: string[]
   notes?: string
-  photo?: Blob
   sourceUrl?: string
-  createdAt: number
-  updatedAt: number
+  photoKey?: string
+  updatedAt?: string
 }
 
 export type StorySource = 'upload' | 'recording' | 'generated'
@@ -20,7 +19,7 @@ export interface Story {
   title: string
   emoji: string
   source: StorySource
-  audio: Blob
+  audioKey: string
   durationSec?: number
-  createdAt: number
+  createdAt?: string
 }

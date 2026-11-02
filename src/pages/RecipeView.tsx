@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteRecipe, getRecipe } from '../lib/db'
 import type { Recipe } from '../lib/types'
-import { useBlobUrl } from '../lib/useBlobUrl'
+import { useFileUrl } from '../lib/useFileUrl'
 
 export default function RecipeView() {
   const { id } = useParams()
@@ -10,7 +10,7 @@ export default function RecipeView() {
   const [r, setR] = useState<Recipe | null>()
   const [done, setDone] = useState<Set<number>>(new Set())
   useEffect(() => { getRecipe(id!).then((x) => setR(x ?? null)) }, [id])
-  const img = useBlobUrl(r?.photo)
+  const img = useFileUrl(r?.photoKey)
   if (r === undefined) return null
   if (r === null) return <p className="empty">Rețeta nu a fost găsită.</p>
 
@@ -34,7 +34,7 @@ export default function RecipeView() {
       <div className="row">
         <Link to={`/retete/${r.id}/editeaza`} className="btn primary">Editează</Link>
         <button className="btn danger" onClick={async () => {
-          if (confirm(`Ștergi rețeta „${r.title}”?`)) { await deleteRecipe(r.id); nav('/retete') }
+          if (confirm(`Ștergi rețeta „${r.title}”?`)) { await deleteRecipe(r); nav('/retete') }
         }}>Șterge</button>
       </div>
     </article>

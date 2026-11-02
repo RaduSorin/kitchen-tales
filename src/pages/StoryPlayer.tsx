@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteStory, getStory } from '../lib/db'
 import type { Story } from '../lib/types'
-import { useBlobUrl } from '../lib/useBlobUrl'
+import { useFileUrl } from '../lib/useFileUrl'
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
@@ -15,7 +15,7 @@ export default function StoryPlayer() {
   const [dur, setDur] = useState(0)
   const audio = useRef<HTMLAudioElement>(null)
   useEffect(() => { getStory(id!).then((x) => setS(x ?? null)) }, [id])
-  const url = useBlobUrl(s?.audio)
+  const url = useFileUrl(s?.audioKey)
   if (s === undefined) return null
   if (s === null) return <p className="empty">Povestea nu a fost găsită.</p>
 
@@ -39,7 +39,7 @@ export default function StoryPlayer() {
         <button aria-label="Înainte 15 secunde" onClick={() => skip(15)}>⏩</button>
       </div>
       <button className="btn danger small" onClick={async () => {
-        if (confirm(`Ștergi povestea „${s.title}”?`)) { await deleteStory(s.id); nav('/povesti') }
+        if (confirm(`Ștergi povestea „${s.title}”?`)) { await deleteStory(s); nav('/povesti') }
       }}>Șterge povestea</button>
     </div>
   )

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { newId, saveStory } from '../lib/db'
+import { createStory, uploadFile } from '../lib/db'
 import type { StorySource } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
 
@@ -14,6 +14,7 @@ export default function StoryAdd() {
   const [source, setSource] = useState<StorySource>('upload')
   const [recording, setRecording] = useState(false)
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
   const rec = useRef<MediaRecorder>(null)
   const preview = useBlobUrl(audio)
 
@@ -38,9 +39,15 @@ export default function StoryAdd() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !audio) return
-    const id = newId()
-    await saveStory({ id, title: title.trim(), emoji, audio, source, createdAt: Date.now() })
-    nav(`/povesti/${id}`, { replace: true })
+    setSaving(true); setError('')
+    try {
+      const audioKey = await uploadFile('stories', audio, 'webm')
+      const id = await createStory({ title: title.trim(), emoji, source, audioKey })
+      nav(`/povesti/${id}`, { replace: true })
+    } catch (err) {
+      setError(`Nu am putut salva povestea: ${(err as Error).message}`)
+      setSaving(false)
+    }
   }
 
   return (
@@ -63,7 +70,7 @@ export default function StoryAdd() {
       {error && <p className="error">{error}</p>}
       {preview && <audio controls src={preview} className="preview-audio" />}
       <div className="row">
-        <button className="btn primary" type="submit" disabled={!audio || !title.trim()}>Salvează</button>
+        <button className="btn primary" type="submit" disabled={!audio || !title.trim() || saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
         <button className="btn" type="button" onClick={() => nav(-1)}>Anulează</button>
       </div>
     </form>

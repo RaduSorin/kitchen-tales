@@ -90,3 +90,8 @@ h2 { font-size: 1.15rem; margin: 24px 0 8px; }
 .controls button { width: 72px; height: 72px; border-radius: 50%; border: none; background: var(--night-soft); color: var(--night); font-size: 1.8rem; cursor: pointer; }
 .controls .play { width: 112px; height: 112px; font-size: 3rem; background: var(--night); color: var(--bg); }
 @media (prefers-reduced-motion: reduce) { .big-emoji.spin { animation: none; } }
+
+.signout { border: none; background: none; color: var(--muted); font-size: 1.2rem; padding: 8px; cursor: pointer; }
+.auth-brand { text-align: center; margin: 32px 0 16px; }
+[data-amplify-authenticator] { --amplify-components-authenticator-router-border-color: var(--border); --amplify-components-authenticator-router-box-shadow: none; }
+[data-amplify-authenticator] [data-amplify-router] { border-radius: 16px; overflow: hidden; }

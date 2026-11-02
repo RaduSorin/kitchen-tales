@@ -5,14 +5,15 @@ import type { Story } from '../lib/types'
 
 export default function StoryList() {
   const [stories, setStories] = useState<Story[]>([])
-  useEffect(() => { listStories().then(setStories) }, [])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => { listStories().then(setStories).finally(() => setLoading(false)) }, [])
   return (
     <section className="stories">
       <div className="row between">
         <h1>Povești</h1>
         <Link to="/povesti/adauga" className="btn primary">+ Adaugă</Link>
       </div>
-      {stories.length === 0 ? (
+      {loading ? <p className="empty">Se încarcă…</p> : stories.length === 0 ? (
         <p className="empty">Nicio poveste încă. Încarcă un MP3 sau înregistrează una cu vocea ta!</p>
       ) : (
         <div className="story-grid">

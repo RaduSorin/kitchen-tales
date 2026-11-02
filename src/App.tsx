@@ -17,6 +17,7 @@ import TabBar from './components/TabBar'
 import AreaSwitch from './components/AreaSwitch'
 import { useArea } from './lib/area'
 import Search from './pages/Search'
+import StoriesHome from './pages/StoriesHome'
 import Week from './pages/Week'
 import Shopping from './pages/Shopping'
 
@@ -75,6 +76,7 @@ export default function App() {
           <Route path="/retete/:id/gateste" element={<CookMode />} />
           <Route path="/povesti" element={<StoryList />} />
           <Route path="/povesti/adauga" element={<StoryAdd />} />
+          <Route path="/povesti/acasa" element={<StoriesHome />} />
           <Route path="/povesti/:id" element={<StoryPlayer />} />
           <Route path="/cauta" element={<Search />} />
           <Route path="/saptamana" element={<Week />} />

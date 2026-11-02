@@ -3,15 +3,18 @@ import { Link } from 'react-router-dom'
 import { listRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
+import PlatePlaceholder from '../components/PlatePlaceholder'
+import { formatMinutes } from '../lib/format'
 
-function Card({ r }: { r: Recipe }) {
+function Row({ r }: { r: Recipe }) {
   const img = useFileUrl(r.photoKey)
+  const meta = [r.category, r.minutes && formatMinutes(r.minutes), r.servings && `${r.servings} porții`].filter(Boolean).join(' · ')
   return (
-    <Link to={`/retete/${r.id}`} className="card">
-      <div className="card-img">{img ? <img src={img} alt="" /> : <span>🍽️</span>}</div>
-      <div className="card-body">
-        <strong>{r.title}</strong>
-        <small>{[r.category, r.minutes && `${r.minutes} min`].filter(Boolean).join(' · ')}</small>
+    <Link to={`/retete/${r.id}`} className="recipe-row">
+      <div className="recipe-thumb">{img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title} />}</div>
+      <div className="recipe-row-text">
+        <span className="recipe-row-title">{r.title}</span>
+        {meta && <small>{meta}</small>}
       </div>
     </Link>
   )
@@ -26,32 +29,39 @@ export default function RecipeList() {
   const [loading, setLoading] = useState(true)
   useEffect(() => { listRecipes().then(setRecipes).finally(() => setLoading(false)) }, [])
 
-  const cats = useMemo(() => [...new Set(recipes.map((r) => r.category).filter(Boolean))].sort(), [recipes])
-  const shown = recipes.filter((r) => {
-    if (cat && r.category !== cat) return false
-    if (!q) return true
-    return norm([r.title, r.category, ...r.ingredients].join(' ')).includes(norm(q))
-  })
+  const cats = useMemo(() => [...new Set(recipes.map((r) => r.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ro')), [recipes])
+  const shown = recipes
+    .filter((r) => {
+      if (cat && r.category !== cat) return false
+      if (!q) return true
+      return norm([r.title, r.category, ...r.ingredients].join(' ')).includes(norm(q))
+    })
+    .sort((a, b) => a.title.localeCompare(b.title, 'ro'))
 
   return (
-    <section>
-      <div className="row between">
+    <section className="recipes">
+      <div className="recipes-head">
         <h1>Rețete</h1>
         <Link to="/retete/noua" className="btn primary">+ Rețetă nouă</Link>
       </div>
-      <input className="search" placeholder="Caută după nume sau ingredient…" value={q} onChange={(e) => setQ(e.target.value)} />
+      <label className="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+        <input type="search" id="recipe-search" aria-label="Caută rețete" placeholder="Caută după nume sau ingredient" value={q} onChange={(e) => setQ(e.target.value)} />
+      </label>
       {cats.length > 0 && (
-        <div className="chips">
-          <button className={!cat ? 'chip on' : 'chip'} onClick={() => setCat('')}>Toate</button>
+        <div className="cat-tabs" role="tablist" aria-label="Categorii">
+          <button role="tab" aria-selected={!cat} onClick={() => setCat('')}>Toate</button>
           {cats.map((c) => (
-            <button key={c} className={cat === c ? 'chip on' : 'chip'} onClick={() => setCat(c)}>{c}</button>
+            <button role="tab" key={c} aria-selected={cat === c} onClick={() => setCat(c)}>{c}</button>
           ))}
         </div>
       )}
       {loading ? <p className="empty">Se încarcă…</p> : recipes.length === 0 ? (
         <p className="empty">Nicio rețetă încă. Adaugă prima ta rețetă!</p>
+      ) : shown.length === 0 ? (
+        <p className="empty">Nicio rețetă nu se potrivește cu „{q}”.</p>
       ) : (
-        <div className="grid">{shown.map((r) => <Card key={r.id} r={r} />)}</div>
+        <div className="recipe-rows">{shown.map((r) => <Row key={r.id} r={r} />)}</div>
       )}
     </section>
   )

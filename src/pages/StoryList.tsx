@@ -4,7 +4,7 @@ import { downloadStory, listStories } from '../lib/db'
 import type { Story } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { fmtTime, getLastStoryId, getPosition, greeting, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
+import { fmtTime, getLastStoryId, getPosition, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
 
 const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
@@ -91,8 +91,8 @@ export default function StoryList() {
           </div>
         ) : (
           <div>
-            <h1>{greeting()}{child.name ? `, ${child.name}` : ''}</h1>
-            <p className="shelf-sub">Ce poveste ascultăm?</p>
+            <h1>Bibliotecă</h1>
+            <p className="shelf-sub">{available.length ? `${available.length} ${available.length === 1 ? 'poveste' : 'povești'}` : 'Ce poveste ascultăm?'}</p>
           </div>
         )}
         {online && <Link to="/povesti/adauga" className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}

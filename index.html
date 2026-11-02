@@ -14,6 +14,9 @@
       } catch (e) {}
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- iOS home-screen apps never recolor the status bar after launch, so the app draws under it
+         and paints the strip itself (see .topbar::before), which follows recipes / stories / dark mode. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Bucătăria cu povești</title>
     <meta name="apple-mobile-web-app-title" content="Bucătăria cu povești" />
   </head>

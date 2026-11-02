@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useSyncedList } from '../lib/synced'
 import { shoppingStore } from '../lib/plan'
+import { useArea } from '../lib/area'
 
 const I = ({ d }: { d: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
@@ -22,7 +23,7 @@ const PLUS = 'M12 5v14M5 12h14'
 const HEART = 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z'
 
 /** Hidden in full-screen cooking and on the story player, which has its own big controls. */
-const hidesTabBar = (path: string) => path.endsWith('/gateste') || (/^\/povesti\/[^/]+$/.test(path) && path !== '/povesti/adauga')
+const hidesTabBar = (path: string) => path.endsWith('/gateste') || (/^\/povesti\/[^/]+$/.test(path) && path !== '/povesti/adauga' && path !== '/povesti/acasa')
 
 /** The stories side: Acasă, Caută, Bibliotecă (big, in the middle), Adaugă, Favorite. */
 function StoryTabs() {
@@ -36,7 +37,7 @@ function StoryTabs() {
     <>
       <div className="tabbar-spacer" aria-hidden="true" />
       <nav className="tabbar night-tabbar" aria-label="Meniu povești">
-        <NavLink to="/" end className="tab"><span className="tab-icon"><I d={HOME} /></span><span className="tab-label">Acasă</span></NavLink>
+        <NavLink to="/povesti/acasa" className="tab"><span className="tab-icon"><I d={HOME} /></span><span className="tab-label">Acasă</span></NavLink>
         <Link to="/povesti?cauta=1" className={`tab${searching ? ' active' : ''}`} aria-current={searching ? 'page' : undefined}>
           <span className="tab-icon"><I d={SEARCH} /></span><span className="tab-label">Caută</span>
         </Link>
@@ -56,7 +57,7 @@ function StoryTabs() {
 export default function TabBar() {
   const { pathname } = useLocation()
   const hidden = hidesTabBar(pathname)
-  const stories = pathname.startsWith('/povesti')
+  const stories = useArea() === 'night'
   const shopping = useSyncedList(shoppingStore)
   const toBuy = shopping.filter((s) => !s.checked).length
   useEffect(() => {

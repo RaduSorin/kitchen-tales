@@ -107,7 +107,7 @@ export default function Shopping() {
           <div className="shop-clear-all">
             {clearingAll ? (
               <span className="confirm">
-                Ștergi toate cele {items.length} produse?
+                Ștergi toate cele {openRows.length + doneRows.length} produse?
                 <button type="button" className="btn danger small" onClick={() => { removeWithUndo(items, 'Am golit lista'); setClearingAll(false) }}>Da, golește tot</button>
                 <button type="button" className="btn small" onClick={() => setClearingAll(false)}>Nu</button>
               </span>

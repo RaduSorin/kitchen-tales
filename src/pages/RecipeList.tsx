@@ -52,10 +52,10 @@ export default function RecipeList() {
         <input type="search" id="recipe-search" aria-label="Caută rețete" placeholder="Caută după nume sau ingredient" value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
       {cats.length > 0 && (
-        <div className="cat-tabs" role="tablist" aria-label="Categorii">
-          <button role="tab" aria-selected={!cat} onClick={() => setCat('')}>Toate</button>
+        <div className="cat-tabs" role="group" aria-label="Categorii">
+          <button type="button" aria-pressed={!cat} onClick={() => setCat('')}>Toate</button>
           {cats.map((c) => (
-            <button role="tab" key={c} aria-selected={cat === c} onClick={() => setCat(c)}>{c}</button>
+            <button type="button" key={c} aria-pressed={cat === c} onClick={() => setCat(c)}>{c}</button>
           ))}
         </div>
       )}

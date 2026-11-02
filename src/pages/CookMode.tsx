@@ -168,16 +168,15 @@ export default function CookMode() {
               {r.steps.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}
             </div>
             <div className="cook-head">
-              <span className="cook-title">{r.title}</span>
-              <span className="cook-pos">{i + 1} din {count}</span>
-              {otherRunning.map(([k, t]) => (
-                <button key={k} className={t.left === 0 ? 'cook-mini ring' : 'cook-mini'} onClick={() => { setI(+k); setProgress(r.id, +k) }}>
-                  Pasul {+k + 1} · {t.left === 0 ? 'gata!' : formatClock(t.left)}
-                </button>
-              ))}
+              <span className="cook-name"><span className="cook-title">{r.title}</span> <span className="cook-pos">{i + 1} din {count}</span></span>
               <button className="cook-close" aria-label="Închide modul de gătit" onClick={() => nav(`/retete/${r.id}`)}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
+              {otherRunning.length > 0 && <span className="cook-timers">{otherRunning.map(([k, t]) => (
+                <button key={k} className={t.left === 0 ? 'cook-mini ring' : 'cook-mini'} onClick={() => { setI(+k); setProgress(r.id, +k) }}>
+                  Pasul {+k + 1} · {t.left === 0 ? 'gata!' : formatClock(t.left)}
+                </button>
+              ))}</span>}
             </div>
           </div>
 

@@ -16,13 +16,13 @@ export const SOURCE_COLOR: Record<StorySource, string> = { recording: '#74e0d0',
 const SOURCE_FOLDER: Record<StorySource, string> = { generated: 'Povești create de noi', recording: 'Vocea noastră', upload: 'Fișierele mele' }
 export const folderOf = (s: Story) => s.collection || SOURCE_FOLDER[s.source]
 
-// Folders in shelf order (our own first, then collections), each with its stories.
+// Folders in shelf order (collections first, alphabetically, then our own), each with its stories.
 export function groupFolders(stories: Story[]) {
   const map = new Map<string, Story[]>()
   for (const s of stories) map.set(folderOf(s), [...(map.get(folderOf(s)) ?? []), s])
   const own = new Set(Object.values(SOURCE_FOLDER))
   return [...map].map(([name, items]) => ({ name, items }))
-    .sort((a, b) => Number(own.has(b.name)) - Number(own.has(a.name)) || a.name.localeCompare(b.name, 'ro'))
+    .sort((a, b) => Number(own.has(a.name)) - Number(own.has(b.name)) || a.name.localeCompare(b.name, 'ro'))
 }
 
 export function greeting(now = new Date()) {

@@ -45,7 +45,7 @@ export default function App() {
       <NowPlayingProvider>
       <NightArea />
       <header className="topbar">
-        <Link to="/" className="brand">Kitchen Tales</Link>
+        <Link to="/" className="brand"><span>Bucătăria</span> <span>cu povești</span></Link>
         <nav>
           <NavLink to="/retete">Rețete</NavLink>
           <NavLink to="/povesti">Povești</NavLink>

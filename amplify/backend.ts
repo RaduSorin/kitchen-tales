@@ -13,7 +13,10 @@ const backend = defineBackend({ auth, data, storage, importRecipe, generateStory
 
 // Invite-only: nobody can create an account from the app.
 // Family members invite each other from Settings (see functions/family).
-backend.auth.resources.cfnResources.cfnUserPool.adminCreateUserConfig = {
+// Merge rather than replace, so the invitation email template from auth/resource.ts is kept.
+const cfnUserPool = backend.auth.resources.cfnResources.cfnUserPool
+cfnUserPool.adminCreateUserConfig = {
+  ...(cfnUserPool.adminCreateUserConfig as object | undefined),
   allowAdminCreateUserOnly: true,
 }
 

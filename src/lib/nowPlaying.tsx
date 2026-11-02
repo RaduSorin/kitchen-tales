@@ -112,11 +112,11 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     if (!('mediaSession' in navigator)) return
     if (!story) { navigator.mediaSession.metadata = null; return }
     let live = true
-    navigator.mediaSession.metadata = new MediaMetadata({ title: story.title, artist: 'Kitchen Tales' })
+    navigator.mediaSession.metadata = new MediaMetadata({ title: story.title, artist: 'Bucătăria cu povești' })
     storyArtwork(story, coverUrl).then((src) => {
       if (!live || !src) return
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: story.title, artist: 'Kitchen Tales', artwork: [{ src, sizes: '512x512', type: 'image/png' }],
+        title: story.title, artist: 'Bucătăria cu povești', artwork: [{ src, sizes: '512x512', type: 'image/png' }],
       })
     }).catch(() => {})
     return () => { live = false }

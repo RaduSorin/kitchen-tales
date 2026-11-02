@@ -10,8 +10,8 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'] },
       manifest: {
-        name: 'Kitchen Tales',
-        short_name: 'Kitchen Tales',
+        name: 'Bucătăria cu povești',
+        short_name: 'Bucătăria cu povești',
         description: 'Rețetele familiei și povești audio pentru copii',
         lang: 'ro',
         theme_color: '#3e6a51',

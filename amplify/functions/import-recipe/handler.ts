@@ -161,11 +161,21 @@ async function fromUrl(raw: string): Promise<Imported> {
 
 // ---- photos ----
 
+/** Detects the image type from its first bytes, so a missing or generic Content-Type doesn't matter. */
+function imageFormat(b: Uint8Array): ImageFormat | undefined {
+  if (b[0] === 0xff && b[1] === 0xd8) return 'jpeg'
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'png'
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return 'gif'
+  if (String.fromCharCode(...b.slice(0, 4)) === 'RIFF' && String.fromCharCode(...b.slice(8, 12)) === 'WEBP') return 'webp'
+  return undefined
+}
+
 async function fromPhoto(key: string): Promise<Imported> {
   if (!key.startsWith('recipe-photos/')) throw new Error('Poză invalidă')
   const obj = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
   const bytes = await obj.Body!.transformToByteArray()
-  const fmt = (obj.ContentType?.split('/')[1] ?? 'jpeg').replace('jpg', 'jpeg') as ImageFormat
+  const fmt = imageFormat(bytes)
+  if (!fmt) throw new Error('Formatul pozei nu e suportat. Folosește JPG, PNG, WEBP sau GIF.')
   return askModel([
     { image: { format: fmt, source: { bytes } } },
     { text: 'Extrage rețeta din această fotografie.' },

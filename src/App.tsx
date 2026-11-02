@@ -22,6 +22,13 @@ function NightArea() {
   return null
 }
 
+// The gear opens the settings that match where you are: stories, recipes, or general.
+function SettingsLink({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation()
+  const to = pathname.startsWith('/povesti') ? '/setari/povesti' : pathname.startsWith('/retete') ? '/setari/retete' : '/setari'
+  return <NavLink to={to} className={() => (pathname.startsWith('/setari') ? 'icon-link active' : 'icon-link')} aria-label="Setări" title="Setări">{children}</NavLink>
+}
+
 export default function App() {
   const online = useOnline()
   return (
@@ -32,9 +39,9 @@ export default function App() {
         <nav>
           <NavLink to="/retete">Rețete</NavLink>
           <NavLink to="/povesti">Povești</NavLink>
-          <NavLink to="/setari" className="icon-link" aria-label="Setări" title="Setări">
+          <SettingsLink>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
-          </NavLink>
+          </SettingsLink>
         </nav>
       </header>
       {!online && <div className="offline-banner">Ești offline. Vezi rețetele și poveștile salvate pe acest dispozitiv.</div>}
@@ -50,6 +57,7 @@ export default function App() {
           <Route path="/povesti/adauga" element={<StoryAdd />} />
           <Route path="/povesti/:id" element={<StoryPlayer />} />
           <Route path="/setari" element={<Settings />} />
+          <Route path="/setari/:tab" element={<Settings />} />
         </Routes>
       </main>
     </BrowserRouter>

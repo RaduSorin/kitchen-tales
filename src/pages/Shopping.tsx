@@ -2,16 +2,21 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSyncedList } from '../lib/synced'
 import { addShoppingText, shoppingStore } from '../lib/plan'
-import type { ShoppingItem } from '../lib/types'
+import { mergeShopping, type ShoppingRow } from '../lib/merge'
 
-function Item({ s }: { s: ShoppingItem }) {
+/** One line on the list; a merged line (e.g. onions from two recipes) checks and removes all its items together. */
+function Item({ row }: { row: ShoppingRow }) {
+  const checked = row.items.every((s) => s.checked)
   return (
     <li className="shop-item">
-      <label className={s.checked ? 'done' : ''}>
-        <input type="checkbox" checked={s.checked} onChange={() => shoppingStore.update({ ...s, checked: !s.checked })} />
-        <span>{s.text}</span>
+      <label className={checked ? 'done' : ''}>
+        <input type="checkbox" checked={checked} onChange={() => row.items.forEach((s) => shoppingStore.update({ ...s, checked: !checked }))} />
+        <span>
+          {row.text}
+          {row.sources.length > 1 && <small className="shop-sources">{row.sources.join(' · ')}</small>}
+        </span>
       </label>
-      <button type="button" className="shop-remove" onClick={() => shoppingStore.remove(s.id)} aria-label={`Șterge ${s.text}`}>
+      <button type="button" className="shop-remove" onClick={() => row.items.forEach((s) => shoppingStore.remove(s.id))} aria-label={`Șterge ${row.text}`}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
     </li>
@@ -28,13 +33,20 @@ export default function Shopping() {
   const open = sorted.filter((s) => !s.checked)
   const done = sorted.filter((s) => s.checked)
 
-  // Groups keep the order in which recipes were added; items typed by hand come first.
-  const groups = new Map<string, ShoppingItem[]>()
-  for (const s of open) {
-    const k = s.recipeId ? s.recipeTitle ?? 'Rețetă' : ''
-    groups.set(k, [...(groups.get(k) ?? []), s])
+  // The same ingredient from several recipes is one line with the amounts added up ("3 cepe").
+  // Groups keep the order in which recipes were added; items typed by hand come first, then
+  // the lines shared by several recipes.
+  const MANY = 'Pentru mai multe rețete'
+  const openRows = mergeShopping(open)
+  const groups = new Map<string, ShoppingRow[]>()
+  for (const row of openRows) {
+    const first = row.items[0]
+    const k = row.sources.length > 1 ? MANY : first.recipeId ? first.recipeTitle ?? 'Rețetă' : ''
+    groups.set(k, [...(groups.get(k) ?? []), row])
   }
-  const ordered = [...groups].sort(([a], [b]) => (a ? 1 : 0) - (b ? 1 : 0))
+  const rank = (k: string) => (k === '' ? 0 : k === MANY ? 1 : 2)
+  const ordered = [...groups].sort(([a], [b]) => rank(a) - rank(b))
+  const doneRows = mergeShopping(done)
 
   const add = (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,7 +58,7 @@ export default function Shopping() {
     <section className="shopping">
       <div className="recipes-head">
         <h1>Cumpărături</h1>
-        {open.length > 0 && <small className="shop-count">{open.length} de luat</small>}
+        {open.length > 0 && <small className="shop-count">{openRows.length} de luat</small>}
       </div>
 
       <form className="shop-add" onSubmit={add}>
@@ -64,14 +76,14 @@ export default function Shopping() {
           {ordered.map(([title, xs]) => (
             <section key={title || '_'} className="shop-group">
               {title ? <h2>{title}</h2> : groups.size > 1 && <h2>Altele</h2>}
-              <ul className="checklist">{xs.map((s) => <Item key={s.id} s={s} />)}</ul>
+              <ul className="checklist">{xs.map((row) => <Item key={row.key} row={row} />)}</ul>
             </section>
           ))}
           {open.length === 0 && <p className="shop-all-done">Ai luat tot!</p>}
           {done.length > 0 && (
             <section className="shop-group shop-done">
               <div className="section-head">
-                <h2>În coș <small className="count">{done.length}</small></h2>
+                <h2>În coș <small className="count">{doneRows.length}</small></h2>
                 {confirming ? (
                   <span className="confirm">
                     <button type="button" className="btn danger small" onClick={() => { done.forEach((s) => shoppingStore.remove(s.id)); setConfirming(false) }}>Da, golește</button>
@@ -81,7 +93,7 @@ export default function Shopping() {
                   <button type="button" className="btn small" onClick={() => setConfirming(true)}>Golește coșul</button>
                 )}
               </div>
-              <ul className="checklist">{done.map((s) => <Item key={s.id} s={s} />)}</ul>
+              <ul className="checklist">{doneRows.map((row) => <Item key={row.key} row={row} />)}</ul>
             </section>
           )}
           <div className="shop-clear-all">

@@ -186,7 +186,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Recipe page */
 .recipe { margin: -16px -16px 0; }
-.recipe-hero { height: clamp(220px, 42vw, 380px); background: var(--surface-2); }
+.recipe-hero { position: relative; height: clamp(220px, 42vw, 380px); background: var(--surface-2); }
 .recipe-hero img, .recipe-hero svg { width: 100%; height: 100%; object-fit: cover; display: block; }
 :root[data-theme="dark"] .recipe-hero img, :root[data-theme="dark"] .recipe-hero svg, :root[data-theme="dark"] .recipe-thumb svg { filter: brightness(.82); }
 .recipe-sheet { position: relative; margin-top: -28px; background: var(--bg); border-radius: 28px 28px 0 0; padding: 22px 16px 8px; display: grid; gap: 14px; }
@@ -223,6 +223,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); user-select: none; -webkit-user-select: none; }
 .cook-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .cook-bg-plain { background: #3e6a51; }
+.cook-bg-recipe { filter: brightness(.55) saturate(1.05); }
 .cook-bg-art { position: absolute; left: 50%; top: 38%; width: min(70vw, 420px); height: auto; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; opacity: .32; }
 .cook-bignum { position: absolute; left: 0; right: 0; top: 12%; text-align: center; font-family: var(--f-display); font-size: min(60vw, 340px); line-height: 1; color: rgb(255 255 255 / .16); }
 .cook::before { content: ""; position: absolute; inset: 0 0 auto; height: 140px; background: linear-gradient(rgb(0 0 0 / .45), transparent); pointer-events: none; z-index: 1; }
@@ -652,9 +653,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .week-note, .recipe-plan-note { margin: 0; color: var(--muted); }
 
 /* Rețetă: plan + shopping actions */
-.recipe-plan-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: 520px; }
-.recipe-plan-actions > .btn { flex: 1 1 180px; }
-.recipe-plan-actions .recipe-plan-note { flex-basis: 100%; }
+.recipe-plan-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; align-items: stretch; max-width: 520px; }
+/* Both buttons share one size, even when one label wraps onto two lines. */
+.recipe-plan-actions > .btn { text-align: center; }
+.recipe-plan-actions .recipe-plan-note { grid-column: 1 / -1; }
 .recipe-plan-hint { color: var(--muted); margin-top: -6px; }
 
 /* Cumpărături */
@@ -706,3 +708,21 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .sh-recipe-text small { color: var(--muted); font-size: .8rem; }
 .sh-recipe-text b { font-family: var(--f-display); font-weight: 400; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sh-empty { grid-template-columns: 1fr 48px; }
+/* While typing (see useTypingFlag in TabBar.tsx), the floating bars step aside for the keyboard. */
+:root[data-typing] .tabbar, :root[data-typing] .mini-player { display: none; }
+/* iPhone zooms the page in when a focused field's text is under 16px (the editor labels are .92rem, for example).
+   Keep every typing field at 16px or more on phones; the big title field is already larger. */
+@media (max-width: 759px) {
+  :is(input:not([type=checkbox], [type=radio], [type=range], [type=file], [type=button], [type=submit]), textarea, select):not(.editor-title) { font-size: max(16px, 1em) !important; }
+}
+/* Recipe options (edit / delete) live behind a round glass "⋯" button on the photo. */
+.hero-more { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid rgb(255 255 255 / .35); background: rgb(20 26 22 / .45); color: #fff; box-shadow: 0 4px 14px rgb(0 0 0 / .25);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
+.hero-more:active { transform: scale(.94); }
+.menu-list { display: grid; gap: 10px; }
+.menu-list > .btn { justify-content: flex-start; gap: 10px; min-height: 52px; padding: 12px 16px; }
+.menu-confirm { display: grid; gap: 8px; }
+.menu-confirm p { margin: 4px 0; }
+/* Under a line merged from several recipes: which recipes need it. */
+.shop-sources { display: block; color: var(--muted); font-size: .8rem; font-weight: 400; margin-top: 2px; }

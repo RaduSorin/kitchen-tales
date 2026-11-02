@@ -43,6 +43,7 @@ export default function RecipeView() {
   const [done, setDone] = useState<Set<number>>(new Set())
   const [servings, setServings] = useState<number>()
   const [confirming, setConfirming] = useState(false)
+  const [menu, setMenu] = useState(false)
   const [planning, setPlanning] = useState(false)
   const [note, setNote] = useState<{ text: string; to: string; link: string }>()
   useEffect(() => { getRecipe(id!).then((x) => { setR(x ?? null); setServings(x?.servings) }) }, [id])
@@ -55,7 +56,12 @@ export default function RecipeView() {
 
   return (
     <article className="recipe">
-      <div className="recipe-hero">{img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title} />}</div>
+      <div className="recipe-hero">
+        {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title} />}
+        <button type="button" className="hero-more" aria-label="Opțiuni rețetă" onClick={() => setMenu(true)}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+        </button>
+      </div>
       <div className="recipe-sheet">
         <h1>{r.title}</h1>
         <div className="pills">
@@ -134,19 +140,29 @@ export default function RecipeView() {
         {r.notes && (<section><h2>Note</h2><p className="notes">{r.notes}</p></section>)}
         {r.sourceUrl && <p><a href={r.sourceUrl} target="_blank" rel="noreferrer">Sursa originală</a></p>}
 
-        <div className="recipe-actions">
-          <Link to={`/retete/${r.id}/editeaza`} className="btn">Editează</Link>
-          {confirming ? (
-            <span className="confirm">
-              Ștergi rețeta?
-              <button className="btn danger small" onClick={async () => { await deleteRecipe(r); nav('/retete') }}>Da, șterge</button>
-              <button className="btn small" onClick={() => setConfirming(false)}>Nu</button>
-            </span>
-          ) : (
-            <button className="btn danger" onClick={() => setConfirming(true)}>Șterge</button>
-          )}
-        </div>
       </div>
+      {menu && (
+        <Sheet title="Rețeta" onClose={() => { setMenu(false); setConfirming(false) }}>
+          <div className="menu-list">
+            <Link to={`/retete/${r.id}/editeaza`} className="btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /></svg>
+              Editează rețeta
+            </Link>
+            {confirming ? (
+              <div className="menu-confirm">
+                <p>Ștergi rețeta „{r.title}”? Nu se mai poate recupera.</p>
+                <button type="button" className="btn danger" onClick={async () => { await deleteRecipe(r); nav('/retete') }}>Da, șterge</button>
+                <button type="button" className="btn" onClick={() => setConfirming(false)}>Nu</button>
+              </div>
+            ) : (
+              <button type="button" className="btn danger" onClick={() => setConfirming(true)}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>
+                Șterge rețeta
+              </button>
+            )}
+          </div>
+        </Sheet>
+      )}
       {planning && <DayPicker r={r} servings={servings} onClose={() => setPlanning(false)} onDone={(text) => { setPlanning(false); setNote({ text, to: '/saptamana', link: 'Vezi săptămâna' }) }} />}
     </article>
   )

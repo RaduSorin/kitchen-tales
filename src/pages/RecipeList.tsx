@@ -4,9 +4,9 @@ import { listRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import PlatePlaceholder from '../components/PlatePlaceholder'
-import { formatMinutes } from '../lib/format'
+import { formatMinutes, norm } from '../lib/format'
 
-function Row({ r }: { r: Recipe }) {
+export function RecipeRow({ r }: { r: Recipe }) {
   const img = useFileUrl(r.photoKey)
   const meta = [r.category, r.minutes && formatMinutes(r.minutes), r.servings && `${r.servings} porții`].filter(Boolean).join(' · ')
   return (
@@ -19,8 +19,6 @@ function Row({ r }: { r: Recipe }) {
     </Link>
   )
 }
-
-const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
 export default function RecipeList() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
@@ -41,7 +39,7 @@ export default function RecipeList() {
   return (
     <section className="recipes">
       <div className="recipes-head">
-        <h1>Rețete</h1>
+        <h1>Rețetele mele</h1>
         <Link to="/retete/noua" className="btn primary">+ Rețetă nouă</Link>
       </div>
       <label className="search-box">
@@ -61,7 +59,7 @@ export default function RecipeList() {
       ) : shown.length === 0 ? (
         <p className="empty">Nicio rețetă nu se potrivește cu „{q}”.</p>
       ) : (
-        <div className="recipe-rows">{shown.map((r) => <Row key={r.id} r={r} />)}</div>
+        <div className="recipe-rows">{shown.map((r) => <RecipeRow key={r.id} r={r} />)}</div>
       )}
     </section>
   )

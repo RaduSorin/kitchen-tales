@@ -30,3 +30,20 @@ export interface Story {
   text?: string
   createdAt?: string
 }
+
+/** A recipe planned for a day of the week. `day` is a local date, YYYY-MM-DD. */
+export interface PlanEntry {
+  id: string
+  day: string
+  recipeId: string
+  servings?: number
+}
+
+export interface ShoppingItem {
+  id: string
+  text: string
+  checked: boolean
+  recipeId?: string
+  recipeTitle?: string
+  createdAt?: string
+}

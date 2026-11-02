@@ -72,7 +72,8 @@ export default function RecipeEdit() {
   const [ing, setIng] = useState('')
   const [steps, setSteps] = useState<Step[]>([])
   const [photo, setPhoto] = useState<Blob>()
-  const [mode, setMode] = useState<Mode>(id ? 'edit' : 'choose')
+  // /retete/noua?din=frigider opens straight on the fridge ideas (linked from Search).
+  const [mode, setMode] = useState<Mode>(id ? 'edit' : new URLSearchParams(window.location.search).get('din') === 'frigider' ? 'fridge' : 'choose')
   const [link, setLink] = useState('')
   const [paste, setPaste] = useState('')
   const [importing, setImporting] = useState('')

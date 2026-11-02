@@ -1,4 +1,5 @@
 import { useAuthenticator } from '@aws-amplify/ui-react'
+import FamilySection from './FamilySection'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
 
 const THEMES: [ThemeChoice, string][] = [['auto', 'Automat'], ['light', 'Luminos'], ['dark', 'Întunecat']]
@@ -60,6 +61,8 @@ export default function Settings() {
         </div>
         <p className="set-hint">Automat urmează setarea telefonului.</p>
       </div>
+
+      <FamilySection me={user?.signInDetails?.loginId?.toLowerCase()} />
 
       <div className="set-group">
         <h2 className="set-label">Cont</h2>

@@ -1,6 +1,7 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend'
 import { importRecipe } from '../functions/import-recipe/resource'
 import { generateStory } from '../functions/generate-story/resource'
+import { family } from '../functions/family/resource'
 
 // Every signed-in family member can read and edit everything.
 const schema = a.schema({
@@ -71,6 +72,27 @@ const schema = a.schema({
     .returns(a.ref('GeneratedStory'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(generateStory)),
+
+  FamilyMember: a.customType({
+    email: a.string().required(),
+    pending: a.boolean().required(),
+    createdAt: a.string(),
+  }),
+
+  // Accounts that can sign in. Any family member can see them and invite more.
+  listFamily: a
+    .query()
+    .returns(a.ref('FamilyMember').array())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(family)),
+
+  // Creates an account and emails a temporary password (resend: true sends it again).
+  inviteFamilyMember: a
+    .mutation()
+    .arguments({ email: a.string().required(), resend: a.boolean() })
+    .returns(a.ref('FamilyMember'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(family)),
 })
 
 export type Schema = ClientSchema<typeof schema>

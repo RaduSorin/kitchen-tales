@@ -12,6 +12,7 @@ export default function StoryList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [progress, setProgress] = useState<string>()
+  const [saving, setSaving] = useState<Set<string>>(new Set())
   const [params, setParams] = useSearchParams()
   const offline = useOfflineIds()
   const online = useOnline()
@@ -38,6 +39,13 @@ export default function StoryList() {
       try { await downloadStory(s) } catch { setError(`Nu am putut descărca „${s.title}”.`) }
     }
     setProgress(undefined)
+  }
+
+  const downloadOne = async (s: Story) => {
+    setError('')
+    setSaving((prev) => new Set(prev).add(s.id))
+    try { await downloadStory(s) } catch { setError(`Nu am putut descărca „${s.title}”.`) }
+    setSaving((prev) => { const next = new Set(prev); next.delete(s.id); return next })
   }
 
   return (
@@ -93,15 +101,26 @@ export default function StoryList() {
       ) : (
         <div className="covers">
           {shown.map((s) => (
-            <Link key={s.id} to={`/povesti/${s.id}`} className="cover-card">
-              <StoryCover story={s} />
-              {offline.has(s.id) && <span className="saved-dot" title="Salvată pe dispozitiv" aria-label="Salvată pe dispozitiv">✓</span>}
-              <span className="cover-title">{s.title}</span>
-              <small className="cover-meta">
-                {!s.collection && <><i style={{ background: SOURCE_COLOR[s.source] }} />{SOURCE_LABEL[s.source]}</>}
-                {s.durationSec ? `${s.collection ? '' : ' · '}${Math.max(1, Math.round(s.durationSec / 60))} min` : ''}
-              </small>
-            </Link>
+            <div key={s.id} className="cover-slot">
+              <Link to={`/povesti/${s.id}`} className="cover-card">
+                <StoryCover story={s} />
+                <span className="cover-title">{s.title}</span>
+                <small className="cover-meta">
+                  {!s.collection && <><i style={{ background: SOURCE_COLOR[s.source] }} />{SOURCE_LABEL[s.source]}</>}
+                  {s.durationSec ? `${s.collection ? '' : ' · '}${Math.max(1, Math.round(s.durationSec / 60))} min` : ''}
+                </small>
+              </Link>
+              {offline.has(s.id)
+                ? <span className="saved-dot" title="Salvată pe dispozitiv" aria-label="Salvată pe dispozitiv">✓</span>
+                : online && (
+                  <button type="button" className="save-dot" disabled={saving.has(s.id) || !!progress}
+                    title="Salvează pentru offline" aria-label={`Salvează „${s.title}” pentru offline`} onClick={() => downloadOne(s)}>
+                    {saving.has(s.id) ? <span className="spinner" /> : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="M7 10l5 5 5-5" /><path d="M5 20h14" /></svg>
+                    )}
+                  </button>
+                )}
+            </div>
           ))}
         </div>
       )}

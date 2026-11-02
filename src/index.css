@@ -337,6 +337,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .folder-mosaic .story-cover { border-radius: 0; }
 .folder-mosaic .story-cover > span { font-size: clamp(1.4rem, 6vw, 2.2rem); }
 .saved-dot { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; background: rgb(23 26 69 / .7); color: #fff6d6; font-size: .75rem; display: grid; place-items: center; font-weight: 700; }
+.cover-slot { position: relative; }
+.save-dot { position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  background: rgb(23 26 69 / .72); color: #fff6d6; display: grid; place-items: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.save-dot:hover:not(:disabled) { background: rgb(23 26 69 / .9); }
+.save-dot:disabled { cursor: default; opacity: .8; }
+.save-dot:focus-visible { outline: 3px solid var(--moon); outline-offset: 2px; }
+.save-dot .spinner { width: 16px; height: 16px; }
 
 .night-player { display: grid; justify-items: center; gap: 14px; text-align: center; max-width: 520px; margin: 0 auto; }
 .player-top { justify-self: stretch; display: flex; justify-content: flex-end; }

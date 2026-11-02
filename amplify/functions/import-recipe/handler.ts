@@ -197,11 +197,11 @@ Reguli:
 - În notes scrie pe scurt ce aparat folosește rețeta și, dacă e cazul, cum se face fără el.
 - Dacă cererea nu e despre mâncare, pune title = "" și listele goale.`
 
-const MAX_IDEA_CHARS = 1000
+const MAX_IDEA_CHARS = 2000
 const MAX_TOOLS = 30
 
-function generate(idea: string, tools: string[], servings?: number | null): Promise<Imported> {
-  const list = tools.map((t) => t.trim().slice(0, 60)).filter(Boolean).slice(0, MAX_TOOLS)
+function generate(idea: string, tools: (string | null)[], servings?: number | null): Promise<Imported> {
+  const list = cleanTools(tools)
   const text = [
     `Cererea: ${idea.trim().slice(0, MAX_IDEA_CHARS)}`,
     `Aparatele familiei: ${list.length ? list.join(', ') : 'doar ustensilele de bază'}.`,
@@ -210,10 +210,84 @@ function generate(idea: string, tools: string[], servings?: number | null): Prom
   return askModel([{ text }], GENERATE_SYSTEM)
 }
 
-export const handler: Schema['importRecipe']['functionHandler'] = async (event) => {
+// ---- ideas from the fridge ----
+
+type Idea = { title: string; description?: string; tools?: string[]; missing?: string[]; minutes?: number }
+
+const SUGGEST_SYSTEM = `Ești un bucătar care ajută o familie din România să gătească din ce are în frigider.
+Răspunde întotdeauna apelând unealta suggest_recipes.
+Reguli:
+- Propune 4 feluri de mâncare diferite (de exemplu o supă, un fel principal, ceva rapid, ceva pentru copii), toate în română, cu diacritice.
+- Folosește în principal ingredientele date. Presupune că familia are sare, piper, ulei, apă, zahăr și făină.
+- În missing pune doar ce ar mai trebui cumpărat (cel mult 3 lucruri); listă goală dacă nu lipsește nimic. Preferă rețete fără ingrediente lipsă.
+- Folosește DOAR ustensilele de bază (aragaz, cuptor, cratițe, tigaie) și aparatele familiei. În tools pune aparatele familiei pe care le folosește rețeta.
+- description: o frază scurtă și apetisantă.`
+
+const SUGGEST_TOOL = {
+  toolSpec: {
+    name: 'suggest_recipes',
+    description: 'Propune rețete.',
+    inputSchema: {
+      json: {
+        type: 'object',
+        properties: {
+          ideas: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                description: { type: 'string' },
+                tools: { type: 'array', items: { type: 'string' } },
+                missing: { type: 'array', items: { type: 'string' } },
+                minutes: { type: 'integer', description: 'Timp total, în minute' },
+              },
+              required: ['title', 'description', 'missing'],
+            },
+          },
+        },
+        required: ['ideas'],
+      },
+    },
+  },
+}
+
+const cleanTools = (tools: (string | null)[] | null | undefined) =>
+  (tools ?? []).filter((t): t is string => !!t).map((t) => t.trim().slice(0, 60)).filter(Boolean).slice(0, MAX_TOOLS)
+
+async function suggest(ingredients: string, tools: string[]): Promise<Idea[]> {
+  const text = [
+    `Ce am în frigider: ${ingredients.trim().slice(0, MAX_IDEA_CHARS)}`,
+    `Aparatele familiei: ${tools.length ? tools.join(', ') : 'doar ustensilele de bază'}.`,
+  ].join('\n')
+  const res = await bedrock.send(new ConverseCommand({
+    modelId: MODEL_ID,
+    system: [{ text: SUGGEST_SYSTEM }],
+    messages: [{ role: 'user', content: [{ text }] }],
+    toolConfig: { tools: [SUGGEST_TOOL], toolChoice: { tool: { name: 'suggest_recipes' } } },
+    inferenceConfig: { maxTokens: 2000 },
+  }))
+  const block = res.output?.message?.content?.find((c) => c.toolUse)
+  const ideas = ((block?.toolUse?.input as { ideas?: Idea[] } | undefined)?.ideas ?? [])
+  return ideas.filter((i) => i?.title?.trim()).slice(0, 6)
+}
+
+type SuggestEvent = { info: { fieldName: string }; arguments: { ingredients: string; tools?: (string | null)[] | null } }
+
+const importHandler: Schema['importRecipe']['functionHandler'] = async (event) => {
   const { url, photoKey, idea, tools, servings } = event.arguments
   if (url) return fromUrl(url)
   if (photoKey) return fromPhoto(photoKey)
-  if (idea?.trim()) return generate(idea, (tools ?? []).filter((t): t is string => !!t), servings)
+  if (idea?.trim()) return generate(idea, tools ?? [], servings)
   throw new Error('Trimite un link, o poză sau o idee de rețetă.')
+}
+
+// One function serves both importRecipe and suggestRecipes.
+export const handler = async (event: Parameters<typeof importHandler>[0] | SuggestEvent, ...rest: unknown[]) => {
+  if (event.info.fieldName === 'suggestRecipes') {
+    const { ingredients, tools } = (event as SuggestEvent).arguments
+    if (!ingredients?.trim()) throw new Error('Scrie ce ai în frigider.')
+    return suggest(ingredients, cleanTools(tools))
+  }
+  return (importHandler as (...a: unknown[]) => unknown)(event, ...rest)
 }

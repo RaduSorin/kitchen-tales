@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Amplify } from 'aws-amplify'
+import { cognitoCredentialsProvider } from 'aws-amplify/auth/cognito'
 import { I18n } from 'aws-amplify/utils'
 import { Authenticator, ThemeProvider, createTheme } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
@@ -18,9 +19,14 @@ import '@fontsource/baloo-2/latin-800.css'
 import '@fontsource/baloo-2/latin-ext-800.css'
 import './index.css'
 import { applyTheme } from './lib/settings'
+import { offlineFirstTokenProvider } from './lib/offlineAuth'
 import App from './App.tsx'
 
 Amplify.configure(outputs)
+// Same providers as the default, except that a saved session still opens the app offline.
+Amplify.configure(Amplify.getConfig(), {
+  Auth: { tokenProvider: offlineFirstTokenProvider, credentialsProvider: cognitoCredentialsProvider },
+})
 applyTheme()
 
 I18n.putVocabulariesForLanguage('ro', {

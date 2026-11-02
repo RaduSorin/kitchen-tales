@@ -145,6 +145,7 @@ function StoryPlayer() {
           {remaining ? `-${fmtTime(Math.max(0, dur - t))}` : fmtTime(dur)}
         </button> : <span />}
       </div>
+      {current && player.error && <p className="player-error" role="alert">{player.error}</p>}
       <div className="night-controls">
         <button className="track" aria-label={prev ? `Povestea anterioară: ${prev.title}` : 'Povestea anterioară'} disabled={!prev} onClick={() => prev && goTo(prev)}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M20 5v14L8.5 12z" fill="currentColor" /></svg>

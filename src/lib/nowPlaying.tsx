@@ -20,6 +20,8 @@ interface NowPlaying {
   t: number
   dur: number
   ended: boolean
+  /** Why the current story cannot play (no internet and not saved here, or a broken file). */
+  error?: string
   sleep: Sleep
   shuffle: boolean
   /** The previous / next story in the current folder (next is random when shuffling). */
@@ -42,6 +44,9 @@ interface NowPlaying {
 /** Where "next" comes from: the story's folder, or the Favorite list when started from there. */
 export type QueueFrom = 'folder' | 'favorites'
 
+const NOT_REACHABLE = 'Povestea nu e salvată pe acest dispozitiv și nu o pot descărca acum. Verifică internetul.'
+const BROKEN_FILE = 'Nu pot reda povestea salvată pe acest dispozitiv. Șterge-o de pe dispozitiv și salveaz-o din nou.'
+
 const Ctx = createContext<NowPlaying | null>(null)
 
 export function useNowPlaying() {
@@ -62,6 +67,9 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const [t, setT] = useState(0)
   const [dur, setDur] = useState(0)
   const [ended, setEnded] = useState(false)
+  const [error, setError] = useState<string>()
+  // Whether the current audio comes from this device (true) or from the internet (false).
+  const fromDevice = useRef(false)
   const [sleep, setSleep] = useState<Sleep>(() => ([1, 2, 3, 5].includes(readNum(SLEEP_KEY, 1)) ? readNum(SLEEP_KEY, 1) : 1) as Sleep)
   const [shuffle, setShuffle] = useState(() => readNum(SHUFFLE_KEY, 0) === 1)
   const played = useRef(0) // stories finished in this run, for "stop after N stories"
@@ -115,12 +123,14 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     let live = true
     let blobUrl: string | undefined
     setUrl(undefined)
+    setError(undefined)
     ;(async () => {
       const blob = await getOfflineAudio(story.id).catch(() => undefined)
       if (!live) return
+      fromDevice.current = !!blob
       if (blob) { blobUrl = URL.createObjectURL(blob); setUrl(blobUrl) }
       else if (story.audioKey) { const u = await fileUrl(story.audioKey); if (live) setUrl(u) }
-    })().catch(() => {})
+    })().catch(() => { if (live) setError(NOT_REACHABLE) })
     return () => { live = false; if (blobUrl) URL.revokeObjectURL(blobUrl) }
     // Only a different story needs new audio; cover or title edits keep playing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -179,12 +189,20 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     else { played.current = 0; setEnded(true) }
   }
 
-  const value: NowPlaying = { story, url, playing, t, dur, ended, sleep, shuffle, prev, next, load, update, toggle, skip, seek, restart, chooseSleep, toggleShuffle, close }
+  // Only errors of the current source count; a previous story's revoked link may still report one.
+  const onError = (e: React.SyntheticEvent<HTMLAudioElement>) => {
+    if (!url || e.currentTarget.src !== url) return
+    setPlaying(false)
+    setError(fromDevice.current ? BROKEN_FILE : NOT_REACHABLE)
+  }
+
+  const value: NowPlaying = { story, url, playing, t, dur, ended, error, sleep, shuffle, prev, next, load, update, toggle, skip, seek, restart, chooseSleep, toggleShuffle, close }
   return (
     <Ctx.Provider value={value}>
       {children}
       <audio ref={audio} src={url}
-        onPlay={() => { setPlaying(true); setEnded(false) }}
+        onError={onError}
+        onPlay={() => { setPlaying(true); setEnded(false); setError(undefined) }}
         onPause={() => { setPlaying(false); if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
         onEnded={onEnded}
         onTimeUpdate={(e) => setT(e.currentTarget.currentTime)}

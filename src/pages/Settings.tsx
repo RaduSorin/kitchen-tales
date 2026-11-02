@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import FamilySection from './FamilySection'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
 import { PRESET_TOOLS } from '../lib/kitchenTools'
+import { onOfflineChange, removeAllAudio, savedAudioSummary } from '../lib/offline'
 
 const THEMES: [ThemeChoice, string][] = [['auto', 'Automat'], ['light', 'Luminos'], ['dark', 'Întunecat']]
 const THIS_YEAR = new Date().getFullYear()
@@ -42,6 +43,64 @@ function KitchenTools() {
         </div>
       </div>
       <p className="set-hint">Când generezi o rețetă, folosim doar aceste aparate, plus aragazul și cuptorul. Se salvează pe acest dispozitiv.</p>
+    </div>
+  )
+}
+
+const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+const isInstalled = () => window.matchMedia?.('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true
+const fmtSize = (bytes: number) => (bytes < 1e9 ? `${Math.max(bytes ? 1 : 0, Math.round(bytes / 1e6))} MB` : `${(bytes / 1e9).toFixed(1)} GB`)
+
+/** Stories saved for listening without internet: how much space they take and whether the browser keeps them. */
+function OfflineStorage() {
+  const [saved, setSaved] = useState<{ count: number; bytes: number }>()
+  const [persisted, setPersisted] = useState<boolean | null>(null) // null: the browser cannot tell
+  const [confirmClear, setConfirmClear] = useState(false)
+  useEffect(() => {
+    const load = () => savedAudioSummary().then(setSaved).catch(() => {})
+    load()
+    navigator.storage?.persisted?.().then(setPersisted).catch(() => {})
+    return onOfflineChange(load)
+  }, [])
+  const protect = async () => {
+    const ok = await navigator.storage?.persist?.().catch(() => false)
+    setPersisted(!!ok)
+  }
+  const iosBrowser = isIos() && !isInstalled()
+  const canPersist = !!navigator.storage?.persist
+
+  return (
+    <div className="set-group">
+      <h2 className="set-label">Fără internet</h2>
+      <div className="set-box">
+        <div className="set-row">
+          <span>Povești salvate pe acest dispozitiv</span>
+          <span className="set-value">{saved ? `${saved.count} · ${fmtSize(saved.bytes)}` : '…'}</span>
+        </div>
+        {canPersist && (
+          <div className="set-row">
+            <span>Protejate de ștergere<small className="set-sub">Telefonul nu le șterge când rămâne fără spațiu</small></span>
+            {persisted
+              ? <span className="set-value">Da</span>
+              : <button type="button" className="btn small" onClick={protect}>Protejează</button>}
+          </div>
+        )}
+        {!!saved?.count && (
+          <div className="set-row">
+            {confirmClear ? (
+              <span className="confirm">Ștergi toate poveștile salvate?
+                <button type="button" className="btn danger small" onClick={async () => { await removeAllAudio().catch(() => {}); setConfirmClear(false) }}>Da, șterge</button>
+                <button type="button" className="btn small" onClick={() => setConfirmClear(false)}>Nu</button>
+              </span>
+            ) : <button type="button" className="btn danger small" onClick={() => setConfirmClear(true)}>Șterge toate de pe dispozitiv</button>}
+          </div>
+        )}
+      </div>
+      <p className="set-hint">
+        {iosBrowser
+          ? 'Pe iPhone, poveștile salvate din Safari se șterg după 7 zile fără folosire și nu apar în aplicația de pe ecranul principal. Deschide aplicația de pe ecranul principal și salvează-le de acolo.'
+          : 'Poveștile salvate merg și fără internet. Poveștile tale rămân pe server; aici se șterge doar copia de pe acest dispozitiv.'}
+      </p>
     </div>
   )
 }
@@ -85,6 +144,7 @@ function StorySettings() {
         </div>
         <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează pe acest dispozitiv.</p>
       </div>
+      <OfflineStorage />
     </>
   )
 }

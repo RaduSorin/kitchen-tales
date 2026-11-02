@@ -1,6 +1,5 @@
 import { defineFunction } from '@aws-amplify/backend'
-
-export const MODEL_ID = 'eu.anthropic.claude-sonnet-4-6'
+import { MODEL_ID } from '../../shared/model'
 
 // Reads a recipe from a web page or from a photo (printed or handwritten)
 // and returns it as structured fields, in Romanian.

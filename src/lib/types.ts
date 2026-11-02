@@ -21,5 +21,6 @@ export interface Story {
   source: StorySource
   audioKey: string
   durationSec?: number
+  text?: string
   createdAt?: string
 }

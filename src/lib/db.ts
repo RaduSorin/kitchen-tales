@@ -33,6 +33,7 @@ const toStory = (s: StoryRow): Story => ({
   source: (s.source ?? 'upload') as StorySource,
   audioKey: s.audioKey,
   durationSec: s.durationSec ?? undefined,
+  text: s.text ?? undefined,
   createdAt: s.createdAt,
 })
 
@@ -140,4 +141,13 @@ export async function importRecipeFromPhoto(photo: Blob) {
   } finally {
     await removeFile(photoKey)
   }
+}
+
+// ---- story generation ----
+
+export async function generateStory(args: { title: string; prompt?: string; text?: string }) {
+  const res = await client.queries.generateStory(args)
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (!res.data) throw new Error('Nu am putut crea povestea.')
+  return res.data
 }

@@ -143,6 +143,8 @@ async function fromUrl(raw: string): Promise<Imported> {
     redirect: 'follow',
     signal: AbortSignal.timeout(20_000),
   })
+  if (res.status === 404) throw new Error('Pagina nu există. Verifică linkul.')
+  if (res.status === 401 || res.status === 403) throw new Error('Site-ul nu permite citirea automată. Încearcă importul din text sau din poză.')
   if (!res.ok) throw new Error(`Site-ul a răspuns cu eroarea ${res.status}`)
   const html = (await res.text()).slice(0, MAX_PAGE_BYTES)
 

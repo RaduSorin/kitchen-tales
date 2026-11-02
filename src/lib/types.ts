@@ -6,6 +6,8 @@ export interface Recipe {
   minutes?: number
   ingredients: string[]
   steps: string[]
+  /** Optional photo per step, aligned with steps by index ('' = no photo). */
+  stepPhotoKeys?: string[]
   notes?: string
   sourceUrl?: string
   photoKey?: string

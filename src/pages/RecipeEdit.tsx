@@ -9,6 +9,31 @@ import { useFileUrl } from '../lib/useFileUrl'
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 
+type StepPhoto = { key?: string; blob?: Blob }
+
+function StepPhotoSlot({ n, text, photo, onPick, onRemove }: { n: number; text: string; photo?: StepPhoto; onPick: (f: File) => void; onRemove: () => void }) {
+  const blobUrl = useBlobUrl(photo?.blob)
+  const savedUrl = useFileUrl(photo?.blob ? undefined : photo?.key || undefined)
+  const url = blobUrl ?? savedUrl
+  return (
+    <li className="step-photo">
+      <span className="step-no">{n}</span>
+      <span className="step-photo-text">{text}</span>
+      {url ? (
+        <span className="step-photo-thumb">
+          <img src={url} alt="" />
+          <button type="button" aria-label={`Scoate poza de la pasul ${n}`} onClick={onRemove}>×</button>
+        </span>
+      ) : (
+        <label className="step-photo-add">
+          + poză
+          <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f) }} />
+        </label>
+      )}
+    </li>
+  )
+}
+
 const empty = (): Recipe => ({ id: newId(), title: '', category: '', ingredients: [], steps: [] })
 
 export default function RecipeEdit() {
@@ -20,6 +45,7 @@ export default function RecipeEdit() {
   const [paste, setPaste] = useState('')
   const [showPaste, setShowPaste] = useState(false)
   const [photo, setPhoto] = useState<Blob>()
+  const [stepPhotos, setStepPhotos] = useState<StepPhoto[]>([])
   const [saving, setSaving] = useState(false)
   const [importMode, setImportMode] = useState<'none' | 'link' | 'text'>('none')
   const [link, setLink] = useState('')
@@ -31,6 +57,7 @@ export default function RecipeEdit() {
     getRecipe(id).then((x) => {
       const rec = x ?? empty()
       setR(rec); setIng(rec.ingredients.join('\n')); setSteps(rec.steps.join('\n'))
+      setStepPhotos((rec.stepPhotoKeys ?? []).map((key) => ({ key: key || undefined })))
     })
   }, [id])
   const newPhotoUrl = useBlobUrl(photo)
@@ -82,8 +109,16 @@ export default function RecipeEdit() {
     try {
       let photoKey = r.photoKey
       if (photo) photoKey = await uploadFile('recipe-photos', await resizeImage(photo), 'jpg')
-      await saveRecipe({ ...r, photoKey, title: r.title.trim(), ingredients: lines(ing), steps: lines(steps) }, !id)
+      const stepList = lines(steps)
+      const stepPhotoKeys = await Promise.all(stepList.map(async (_, k) => {
+        const p = stepPhotos[k]
+        if (p?.blob) return uploadFile('recipe-photos', await resizeImage(p.blob), 'jpg')
+        return p?.key ?? ''
+      }))
+      await saveRecipe({ ...r, photoKey, title: r.title.trim(), ingredients: lines(ing), steps: stepList, stepPhotoKeys }, !id)
       if (photo && r.photoKey && r.photoKey !== photoKey) await removeFile(r.photoKey)
+      // Clean up step photos that were replaced, removed, or belonged to deleted steps.
+      for (const old of r.stepPhotoKeys ?? []) if (old && !stepPhotoKeys.includes(old)) await removeFile(old)
       nav(`/retete/${r.id}`, { replace: true })
     } catch (err) {
       setError(`Nu am putut salva rețeta: ${(err as Error).message}`)
@@ -144,6 +179,18 @@ export default function RecipeEdit() {
       {img && <img className="preview" src={img} alt="" />}
       <label>Ingrediente (unul pe rând)<textarea rows={6} value={ing} onChange={(e) => setIng(e.target.value)} /></label>
       <label>Mod de preparare (un pas pe rând)<textarea rows={8} value={steps} onChange={(e) => setSteps(e.target.value)} /></label>
+      {lines(steps).length > 0 && (
+        <div className="step-photos">
+          <span className="step-photos-label">Poze la pași (opțional)</span>
+          <ol>
+            {lines(steps).map((text, k) => (
+              <StepPhotoSlot key={k} n={k + 1} text={text} photo={stepPhotos[k]}
+                onPick={(f) => setStepPhotos((ps) => { const n = [...ps]; n[k] = { blob: f }; return n })}
+                onRemove={() => setStepPhotos((ps) => { const n = [...ps]; n[k] = {}; return n })} />
+            ))}
+          </ol>
+        </div>
+      )}
       <label>Note<textarea rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} /></label>
       <label>Link sursă<input type="url" value={r.sourceUrl ?? ''} onChange={(e) => set('sourceUrl', e.target.value || undefined)} /></label>
       {error && <p className="error">{error}</p>}

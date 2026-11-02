@@ -12,6 +12,8 @@ const schema = a.schema({
       minutes: a.integer(),
       ingredients: a.string().array(),
       steps: a.string().array(),
+      // Optional photo per step, aligned with steps by index ('' = no photo).
+      stepPhotoKeys: a.string().array(),
       notes: a.string(),
       sourceUrl: a.string(),
       photoKey: a.string(),

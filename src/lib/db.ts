@@ -21,6 +21,7 @@ const toRecipe = (r: RecipeRow): Recipe => ({
   minutes: r.minutes ?? undefined,
   ingredients: clean(r.ingredients),
   steps: clean(r.steps),
+  stepPhotoKeys: r.stepPhotoKeys?.map((k) => k ?? '') ?? undefined,
   notes: r.notes ?? undefined,
   sourceUrl: r.sourceUrl ?? undefined,
   photoKey: r.photoKey ?? undefined,
@@ -104,7 +105,8 @@ export async function getRecipe(id: string) {
 export async function saveRecipe(r: Recipe, isNew: boolean) {
   const { updatedAt: _, ...fields } = r
   const input = { ...fields, category: fields.category || null, notes: fields.notes || null, sourceUrl: fields.sourceUrl || null,
-    servings: fields.servings ?? null, minutes: fields.minutes ?? null, photoKey: fields.photoKey ?? null }
+    servings: fields.servings ?? null, minutes: fields.minutes ?? null, photoKey: fields.photoKey ?? null,
+    stepPhotoKeys: fields.stepPhotoKeys?.some(Boolean) ? fields.stepPhotoKeys : null }
   const res = isNew ? await client.models.Recipe.create(input) : await client.models.Recipe.update(input)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
 }
@@ -112,6 +114,7 @@ export async function saveRecipe(r: Recipe, isNew: boolean) {
 export async function deleteRecipe(r: Recipe) {
   await client.models.Recipe.delete({ id: r.id })
   await removeFile(r.photoKey)
+  await Promise.all((r.stepPhotoKeys ?? []).map((k) => removeFile(k || undefined)))
 }
 
 export { removeFile }

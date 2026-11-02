@@ -3,10 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { createStory, fileUrl, generateStory, removeFile, uploadFile, type StoryBrief } from '../lib/db'
 import type { StorySource } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
+import { getSettings } from '../lib/settings'
 
 const BRIEF_KEY = 'kt-story-brief'
 const loadBrief = (): StoryBrief => {
-  try { return JSON.parse(localStorage.getItem(BRIEF_KEY) ?? '{}') } catch { return {} }
+  let saved: StoryBrief = {}
+  try { saved = JSON.parse(localStorage.getItem(BRIEF_KEY) ?? '{}') } catch { /* ignore */ }
+  // The child's profile in Settings is the source of truth for name, age and gender.
+  const { child } = getSettings()
+  return { ...saved, childName: child.name || saved.childName, age: child.age ?? saved.age, gender: child.gender ?? saved.gender }
 }
 const saveBrief = (b: StoryBrief) => {
   try { localStorage.setItem(BRIEF_KEY, JSON.stringify({ childName: b.childName, gender: b.gender, age: b.age, length: b.length })) } catch { /* ignore */ }

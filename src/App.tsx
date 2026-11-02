@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
+import { applyTheme } from './lib/settings'
 import RecipeList from './pages/RecipeList'
 import RecipeView from './pages/RecipeView'
 import RecipeEdit from './pages/RecipeEdit'
@@ -18,8 +19,14 @@ function NightArea() {
   const { pathname } = useLocation()
   const night = pathname.startsWith('/povesti')
   useEffect(() => {
-    if (night) document.documentElement.dataset.area = 'night'
-    else delete document.documentElement.dataset.area
+    if (night) {
+      document.documentElement.dataset.area = 'night'
+      // Browser / status bar color follows the night palette too.
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#171a45')
+    } else {
+      delete document.documentElement.dataset.area
+      applyTheme()
+    }
   }, [night])
   return null
 }

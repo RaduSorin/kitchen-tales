@@ -70,7 +70,8 @@ const media = typeof window !== 'undefined' ? window.matchMedia('(prefers-color-
 export function applyTheme() {
   const dark = current.theme === 'dark' || (current.theme === 'auto' && !!media?.matches)
   document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#131915' : '#f2f3ee')
+  const night = document.documentElement.dataset.area === 'night'
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', night ? '#171a45' : dark ? '#131915' : '#f2f3ee')
 }
 
 media?.addEventListener('change', applyTheme)

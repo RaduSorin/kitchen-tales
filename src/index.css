@@ -563,9 +563,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 0 0 1px var(--glass-edge); }
   .tab-label { font-size: .68rem; font-weight: 600; line-height: 1.15; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .tab-badge { position: absolute; top: -4px; right: -8px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: .68rem; font-weight: 700; display: grid; place-items: center; line-height: 1; }
-  /* The story mini player floats just above the tab bar. */
-  :root[data-tabbar] .mini-player { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 78px); }
-  :root[data-tabbar] .mini-spacer { height: 76px; }
+  /* The story mini player floats above the tab bar, clear of the raised middle button (~26px over the bar). */
+  :root[data-tabbar] .mini-player { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 104px); }
+  :root[data-tabbar] .mini-spacer { height: 100px; }
   :root[data-tabbar] main { padding-bottom: 16px; }
 }
 /* The middle tab (Rețete / Bibliotecă) is a big raised round button: sage by day, moon-yellow at night. */

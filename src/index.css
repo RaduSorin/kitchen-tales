@@ -652,9 +652,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .week-note, .recipe-plan-note { margin: 0; color: var(--muted); }
 
 /* Rețetă: plan + shopping actions */
-.recipe-plan-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: 520px; }
-.recipe-plan-actions > .btn { flex: 1 1 180px; }
-.recipe-plan-actions .recipe-plan-note { flex-basis: 100%; }
+.recipe-plan-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; align-items: stretch; max-width: 520px; }
+/* Both buttons share one size, even when one label wraps onto two lines. */
+.recipe-plan-actions > .btn { text-align: center; }
+.recipe-plan-actions .recipe-plan-note { grid-column: 1 / -1; }
 .recipe-plan-hint { color: var(--muted); margin-top: -6px; }
 
 /* Cumpărături */

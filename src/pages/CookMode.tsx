@@ -5,6 +5,7 @@ import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import { detectDuration, formatClock, getProgress, ingredientsForStep, setProgress } from '../lib/cooking'
 import PlatePlaceholder from '../components/PlatePlaceholder'
+import { ringAlarm, unlockAlarm } from '../lib/alarm'
 
 type Timer = { total: number; left: number; running: boolean }
 
@@ -17,20 +18,6 @@ function useWakeLock() {
     document.addEventListener('visibilitychange', onVisible)
     return () => { document.removeEventListener('visibilitychange', onVisible); lock?.release().catch(() => {}) }
   }, [])
-}
-
-function beep() {
-  try {
-    const ctx = new AudioContext()
-    for (let i = 0; i < 3; i++) {
-      const o = ctx.createOscillator(), g = ctx.createGain()
-      o.frequency.value = 880; o.connect(g); g.connect(ctx.destination)
-      const t = ctx.currentTime + i * 0.35
-      g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3)
-      o.start(t); o.stop(t + 0.3)
-    }
-    navigator.vibrate?.([200, 100, 200, 100, 200])
-  } catch { /* audio not available */ }
 }
 
 function StepBackground({ photoKey, seed, index }: { photoKey?: string; seed: string; index: number }) {
@@ -103,7 +90,7 @@ export default function CookMode() {
         if (left === 0) rang = true
         next[+k] = { ...t, left, running: left > 0 }
       }
-      if (rang) beep()
+      if (rang) ringAlarm()
       setTimers(next)
     }, 1000)
     return () => clearInterval(h)
@@ -117,6 +104,7 @@ export default function CookMode() {
   const timer = timers[i] ?? (duration ? { total: duration, left: duration, running: false } : undefined)
   const toggleTimer = () => {
     if (!timer) return
+    unlockAlarm()
     if (timer.left === 0) { setTimers({ ...timers, [i]: { ...timer, left: timer.total, running: false } }); return }
     setTimers({ ...timers, [i]: { ...timer, running: !timer.running } })
   }

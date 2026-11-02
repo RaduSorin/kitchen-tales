@@ -7,6 +7,8 @@ import { useSettings } from '../lib/settings'
 import { fmtTime, getLastStoryId, getPosition, greeting, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
 
+const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+
 export default function StoryList() {
   const [stories, setStories] = useState<Story[]>([])
   const [loading, setLoading] = useState(true)
@@ -14,6 +16,11 @@ export default function StoryList() {
   const [progress, setProgress] = useState<string>()
   const [saving, setSaving] = useState<Set<string>>(new Set())
   const [params, setParams] = useSearchParams()
+  // The search box starts empty again whenever you open or leave a folder.
+  const folderParam = params.get('folder')
+  const [search, setSearch] = useState({ folder: folderParam, q: '' })
+  const q = search.folder === folderParam ? search.q : ''
+  const setQ = (v: string) => setSearch({ folder: folderParam, q: v })
   const location = useLocation()
   const nav = useNavigate()
   const offline = useOfflineIds()
@@ -28,8 +35,13 @@ export default function StoryList() {
   // The open folder lives in the address, so the browser's Back returns to the folders.
   const open = folders.length > 1 ? folders.find((f) => f.name === params.get('folder')) : folders[0]
   const inFolder = !!open && folders.length > 1
-  const shown = open?.items ?? []
-  const missing = (inFolder ? shown : stories).filter((s) => !offline.has(s.id))
+  // Searching looks through every story (or only the open folder), ignoring diacritics.
+  const query = norm(q.trim())
+  const searching = !!query
+  const shown = searching
+    ? (inFolder ? open.items : available).filter((s) => norm(`${s.title} ${s.collection ?? ''}`).includes(query))
+    : open?.items ?? []
+  const missing = (inFolder ? open.items : stories).filter((s) => !offline.has(s.id))
   const lastId = getLastStoryId()
   const last = available.find((s) => s.id === lastId)
   const lastPos = last ? getPosition(last.id) : 0
@@ -76,7 +88,14 @@ export default function StoryList() {
         {online && <Link to="/povesti/adauga" className="night-btn" aria-label="Adaugă o poveste">+</Link>}
       </div>
 
-      {last && !inFolder && (
+      {available.length > 0 && (
+        <label className="search-box night-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+          <input type="search" aria-label="Caută povești" placeholder={inFolder ? `Caută în ${open.name}` : 'Caută o poveste'} value={q} onChange={(e) => setQ(e.target.value)} />
+        </label>
+      )}
+
+      {last && !inFolder && !searching && (
         <Link to={`/povesti/${last.id}`} className="continue">
           <StoryCover story={last} />
           <span className="continue-text">
@@ -92,7 +111,9 @@ export default function StoryList() {
       {error && <p className="error">{error}</p>}
       {loading ? <p className="empty">Se încarcă…</p> : available.length === 0 ? (
         <p className="empty">{online ? 'Nicio poveste încă. Apasă + ca să adaugi una.' : 'Nicio poveste salvată pe acest dispozitiv.'}</p>
-      ) : !open ? (
+      ) : searching && shown.length === 0 ? (
+        <p className="empty">Nicio poveste găsită pentru „{q.trim()}”.</p>
+      ) : !open && !searching ? (
         <div className="covers">
           {folders.map((f) => (
             <button key={f.name} type="button" className="cover-card folder-card" onClick={() => setParams({ folder: f.name }, { state: { fromShelf: true } })}>

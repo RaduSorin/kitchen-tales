@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { listStories } from '../lib/db'
+import { getLastStoryId } from '../lib/stories'
 import { useSyncedList } from '../lib/synced'
 import { shoppingStore } from '../lib/plan'
 import { isPlayerPage, useArea } from '../lib/area'
@@ -23,6 +25,7 @@ const HOME = TABS[0].icon
 const SEARCH = TABS[1].icon
 const SHELF = 'M4 4h4v16H4zM10 4h4v16h-4zM15.5 5.2l3.8-1 3.7 15.5-3.8 1z'
 const PLUS = 'M12 5v14M5 12h14'
+const SPARKLE = 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z'
 const HEART = 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z'
 
 /** Hidden in full-screen cooking and on the story player, which has its own big controls. */
@@ -38,10 +41,18 @@ function StoryTabs() {
   const shelf = onShelf && !searching && !favorites
   // Kid mode: nothing to add, record or create.
   const kid = useKid().active
+  const nav = useNavigate()
+  // Kid mode swaps "Adaugă" for "Surpriză": a random story (not the last one) starts playing.
+  const surprise = async () => {
+    const all = await listStories().catch(() => [])
+    const pool = all.length > 1 ? all.filter((s) => s.id !== getLastStoryId()) : all
+    const pick = pool[Math.floor(Math.random() * pool.length)]
+    if (pick) nav(`/povesti/${pick.id}`, { state: { autoplay: true } })
+  }
   return (
     <>
       <div className="tabbar-spacer" aria-hidden="true" />
-      <nav className={`tabbar night-tabbar${kid ? ' kid-tabbar' : ''}`} aria-label="Meniu povești">
+      <nav className="tabbar night-tabbar" aria-label="Meniu povești">
         <NavLink to="/povesti/acasa" className="tab"><span className="tab-icon"><I d={HOME} /></span><span className="tab-label">Acasă</span></NavLink>
         <Link to="/povesti?cauta=1" onClick={() => primeKeyboard('story-search')} className={`tab${searching ? ' active' : ''}`} aria-current={searching ? 'page' : undefined}>
           <span className="tab-icon"><I d={SEARCH} /></span><span className="tab-label">Caută</span>
@@ -49,7 +60,9 @@ function StoryTabs() {
         <Link to="/povesti" className={`tab tab-center${shelf ? ' active' : ''}`} aria-current={shelf ? 'page' : undefined}>
           <span className="tab-icon"><I d={SHELF} /></span><span className="tab-label">Bibliotecă</span>
         </Link>
-        {!kid && <NavLink to="/povesti/adauga" className="tab"><span className="tab-icon"><I d={PLUS} /></span><span className="tab-label">Adaugă</span></NavLink>}
+        {kid
+          ? <button type="button" className="tab tab-surprise" onClick={surprise}><span className="tab-icon"><I d={SPARKLE} /></span><span className="tab-label">Surpriză</span></button>
+          : <NavLink to="/povesti/adauga" className="tab"><span className="tab-icon"><I d={PLUS} /></span><span className="tab-label">Adaugă</span></NavLink>}
         <Link to="/povesti?favorite=1" className={`tab${favorites ? ' active' : ''}`} aria-current={favorites ? 'page' : undefined}>
           <span className="tab-icon"><I d={HEART} /></span><span className="tab-label">Favorite</span>
         </Link>

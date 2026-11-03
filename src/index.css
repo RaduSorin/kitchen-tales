@@ -913,4 +913,4 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 @media (prefers-reduced-motion: reduce) { .kid-moon, .kid-lock.soon { animation: none; } }
 :root[data-kid="locked"] body { overflow: hidden; }
 .kid-layer { position: relative; z-index: 70; }
-@media (max-width: 759px) { .tabbar.kid-tabbar { grid-template-columns: repeat(4, 1fr); } }
+button.tab { border: 0; background: none; font: inherit; cursor: pointer; }

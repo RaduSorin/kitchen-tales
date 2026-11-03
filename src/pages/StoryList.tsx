@@ -19,7 +19,6 @@ export default function StoryList() {
   const [stories, setStories] = useState<Story[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [progress, setProgress] = useState<string>()
   const [saving, setSaving] = useState<Set<string>>(new Set())
   const [params, setParams] = useSearchParams()
   // The search box starts empty again whenever you open or leave a folder.
@@ -62,19 +61,9 @@ export default function StoryList() {
   const shown = searching
     ? (inFolder ? open.items : available).filter((s) => norm(`${s.title} ${s.collection ?? ''}`).includes(query))
     : open?.items ?? []
-  const missing = (inFolder ? open.items : stories).filter((s) => !offline.has(s.id))
   const lastId = getLastStoryId()
   const last = available.find((s) => s.id === lastId)
   const lastPos = last ? getPosition(last.id) : 0
-
-  const downloadAll = async () => {
-    setError('')
-    for (const [i, s] of missing.entries()) {
-      setProgress(`Descarc ${i + 1} din ${missing.length}…`)
-      try { await downloadStory(s) } catch { setError(`Nu am putut descărca „${s.title}”.`) }
-    }
-    setProgress(undefined)
-  }
 
   const downloadOne = async (s: Story) => {
     setError('')
@@ -199,7 +188,7 @@ export default function StoryList() {
               {kid ? null : offline.has(s.id)
                 ? <span className="saved-dot" title="Salvată pe dispozitiv" aria-label="Salvată pe dispozitiv">✓</span>
                 : online && (
-                  <button type="button" className="save-dot" disabled={saving.has(s.id) || !!progress}
+                  <button type="button" className="save-dot" disabled={saving.has(s.id)}
                     title="Salvează pentru offline" aria-label={`Salvează „${s.title}” pentru offline`} onClick={() => downloadOne(s)}>
                     {saving.has(s.id) ? <span className="spinner" /> : (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="M7 10l5 5 5-5" /><path d="M5 20h14" /></svg>
@@ -211,15 +200,6 @@ export default function StoryList() {
         </div>
       )}
 
-      {parent && stories.length > 0 && !favMode && !(inFolder && open.items.length === 0) && (
-        <div className="offline-bar">
-          {missing.length === 0
-            ? <span>{inFolder ? 'Poveștile din acest folder merg și fără internet.' : 'Toate poveștile merg și fără internet.'}</span>
-            : progress
-              ? <span><span className="spinner" /> {progress}</span>
-              : <button className="link-btn" onClick={downloadAll}>{inFolder ? 'Salvează folderul pentru drum' : 'Salvează toate pentru drum'} ({missing.length})</button>}
-        </div>
-      )}
       {editing === 'new' && (
         <FolderSheet taken={folders.map((f) => f.name)} onClose={() => setEditing(undefined)}
           onSave={async (name, icon) => {

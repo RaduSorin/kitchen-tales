@@ -924,3 +924,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 :root[data-kid="locked"] body { overflow: hidden; }
 .kid-layer { position: relative; z-index: 70; }
 button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
+.set-link { width: 100%; border: 0; border-top: 1px solid var(--border); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.set-link:first-child { border-top: 0; }
+.set-link .set-value { display: inline-flex; align-items: center; gap: 6px; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+.set-chev { flex: none; opacity: .5; }
+.kid-start { width: 100%; min-height: 50px; font-size: 1.05rem; border-radius: 14px; }
+.kid-guided ul { margin: 8px 0; padding-left: 20px; display: grid; gap: 4px; }
+.kid-folder-list { margin-top: 4px; }

@@ -390,12 +390,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .folder-mosaic { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 4px; aspect-ratio: 1; border-radius: 28px; overflow: hidden; background: var(--surface); }
 .folder-mosaic .story-cover { border-radius: 0; }
 .folder-mosaic .story-cover > span { font-size: clamp(1.4rem, 6vw, 2.2rem); }
-.saved-dot { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; background: rgb(23 26 69 / .7); color: #fff6d6; font-size: .75rem; display: grid; place-items: center; font-weight: 700; }
+.saved-dot { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 50%; background: rgb(23 26 69 / .72); color: #fff6d6; font-size: .85rem; display: grid; place-items: center; font-weight: 700; }
 .cover-slot { position: relative; }
 /* Favourite stories get a small heart on the cover, top-left (the download button is top-right). */
 .fav-dot { position: absolute; top: 8px; left: 8px; width: 32px; height: 32px; border-radius: 50%; background: rgb(23 26 69 / .72); color: #ff8fa3; display: grid; place-items: center; pointer-events: none; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.save-dot { position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+.save-dot { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
   background: rgb(23 26 69 / .72); color: #fff6d6; display: grid; place-items: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.save-dot::after { content: ''; position: absolute; inset: -6px; } /* keeps a ~44px tap area */
 .save-dot:hover:not(:disabled) { background: rgb(23 26 69 / .9); }
 .save-dot:disabled { cursor: default; opacity: .8; }
 .save-dot:focus-visible { outline: 3px solid var(--moon); outline-offset: 2px; }

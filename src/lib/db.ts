@@ -4,7 +4,7 @@ import { generateClient } from 'aws-amplify/data'
 import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
 import type { SharedSettings } from './settings'
-import type { PlanEntry, Recipe, ShoppingItem, Story, StorySource } from './types'
+import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, saveAudio } from './offline'
 
 const client = generateClient<Schema>()
@@ -172,6 +172,74 @@ export async function deleteStory(s: Story) {
   await removeFile(s.audioKey)
   await removeFile(s.coverKey)
   await removeAudio(s.id).catch(() => {})
+}
+
+// ---- story folders ----
+
+const FOLDERS_KEY = 'kt-story-folders'
+
+const errorsOf = (res: { errors?: { message: string }[] | null }) => {
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+}
+
+/** The family's own folders as last seen on this device (for a fast, offline-friendly first paint). */
+export function cachedFolders(): StoryFolder[] {
+  try { return JSON.parse(localStorage.getItem(FOLDERS_KEY) ?? '[]') } catch { return [] }
+}
+const cacheFolders = (list: StoryFolder[]) => { try { localStorage.setItem(FOLDERS_KEY, JSON.stringify(list)) } catch { /* storage unavailable */ } }
+
+export async function listFolders(): Promise<StoryFolder[]> {
+  try {
+    const rows = await listAll((nextToken) => client.models.StoryFolder.list({ nextToken, limit: 200 }))
+    const list = rows.map((r) => ({ id: r.id, name: r.name, icon: r.icon ?? undefined }))
+    cacheFolders(list)
+    return list
+  } catch {
+    return cachedFolders()
+  }
+}
+
+/** Updates stories in the offline copy of the list, so the shelf is right without internet too. */
+async function patchCachedStories(change: (s: Story) => Story) {
+  const cached = await cachedList('stories').catch(() => undefined)
+  if (cached) await cacheList('stories', cached.map(change)).catch(() => {})
+}
+
+/** Puts a story in a folder (by name), or back in its own folder by how it was made (null). */
+export async function moveStory(s: Story, collection: string | null) {
+  errorsOf(await client.models.Story.update({ id: s.id, collection }))
+  await patchCachedStories((x) => (x.id === s.id ? { ...x, collection: collection ?? undefined } : x))
+}
+
+export async function createFolder(name: string, icon?: string) {
+  const res = await client.models.StoryFolder.create({ name, icon: icon ?? null })
+  errorsOf(res)
+  if (!res.data) throw new Error('Nu am putut crea folderul.')
+  cacheFolders([...cachedFolders(), { id: res.data.id, name, icon }])
+  return res.data.id
+}
+
+/**
+ * Renames a folder and/or changes its icon, moving its stories along. `row` is missing for a
+ * folder that only existed through its stories (e.g. a bought collection); it gets one now.
+ */
+export async function saveFolder(oldName: string, row: StoryFolder | undefined, name: string, icon: string | undefined, stories: Story[]) {
+  if (row) {
+    errorsOf(await client.models.StoryFolder.update({ id: row.id, name, icon: icon ?? null }))
+    cacheFolders(cachedFolders().map((f) => (f.id === row.id ? { ...f, name, icon } : f)))
+  } else await createFolder(name, icon)
+  if (name !== oldName) {
+    for (const s of stories.filter((x) => x.collection === oldName)) errorsOf(await client.models.Story.update({ id: s.id, collection: name }))
+    await patchCachedStories((x) => (x.collection === oldName ? { ...x, collection: name } : x))
+  }
+}
+
+/** Removes a folder; its stories are kept and go back to their own folder by how they were made. */
+export async function deleteFolder(name: string, row: StoryFolder | undefined, stories: Story[]) {
+  for (const s of stories.filter((x) => x.collection === name)) errorsOf(await client.models.Story.update({ id: s.id, collection: null }))
+  await patchCachedStories((x) => (x.collection === name ? { ...x, collection: undefined } : x))
+  if (row) errorsOf(await client.models.StoryFolder.delete({ id: row.id }))
+  cacheFolders(cachedFolders().filter((f) => f.name !== name))
 }
 
 // ---- recipe import ----

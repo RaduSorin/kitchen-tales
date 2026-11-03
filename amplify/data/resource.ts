@@ -39,6 +39,15 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // A shelf folder the family made themselves (e.g. kids' music). Stories join it through
+  // Story.collection = name, so a folder can exist before anything is moved into it.
+  StoryFolder: a
+    .model({
+      name: a.string().required(),
+      icon: a.string(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   // A recipe planned for a day in "Săptămâna mea". `day` is a local date, YYYY-MM-DD.
   MealPlanEntry: a
     .model({

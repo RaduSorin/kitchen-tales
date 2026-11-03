@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { createStory, fileUrl, generateStory, removeFile, saveFoundCover, uploadFile, type StoryBrief } from '../lib/db'
+import { cachedFolders, createStory, fileUrl, listFolders, listStories, generateStory, removeFile, saveFoundCover, uploadFile, type StoryBrief } from '../lib/db'
 import { saveAudio, saveCover } from '../lib/offline'
 import { readAudioMeta } from '../lib/audioMeta'
 import { resizeImage } from '../lib/resizeImage'
@@ -10,6 +10,7 @@ import { childAge, useSettings } from '../lib/settings'
 import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
+import { groupFolders } from '../lib/stories'
 
 const BRIEF_KEY = 'kt-story-brief'
 const loadBrief = (): StoryBrief => {
@@ -58,6 +59,14 @@ export default function StoryAdd() {
   const [source, setSource] = useState<StorySource>('upload')
   const [seconds, setSeconds] = useState<number>()
   const [error, setError] = useState('')
+  // The shelf folder for the new story: opened from a folder, it goes there; '' = by how it was made.
+  const [collection, setCollection] = useState(params.get('folder') ?? '')
+  const [folderNames, setFolderNames] = useState(() => cachedFolders().map((f) => f.name))
+  useEffect(() => {
+    Promise.all([listStories(), listFolders()])
+      .then(([stories, rows]) => setFolderNames(groupFolders(stories, rows).filter((f) => !f.builtin).map((f) => f.name)))
+      .catch(() => {})
+  }, [])
   const [saving, setSaving] = useState(false)
   const localPreview = useBlobUrl(audio)
   const [brief, setBrief] = useState<StoryBrief>(() => ({ length: 'medium', ...loadBrief() }))
@@ -72,7 +81,8 @@ export default function StoryAdd() {
 
   const choose = (m?: Mode) => {
     setError('')
-    setParams(m ? { mod: m } : {})
+    const folder = params.get('folder')
+    setParams({ ...(m ? { mod: m } : {}), ...(folder ? { folder } : {}) })
   }
   const reset = () => {
     if (generated) removeFile(generated.audioKey).catch(() => {})
@@ -128,7 +138,7 @@ export default function StoryAdd() {
         coverKey = await uploadFile('story-covers', small, 'jpg')
         saveCover(coverKey, small).catch(() => {})
       }
-      const id = await createStory({ title: title.trim(), emoji, coverKey, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
+      const id = await createStory({ title: title.trim(), emoji, coverKey, collection: collection || undefined, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
       // Our own recordings and files are already on this device, so keep them for offline listening.
       if (audio) await saveAudio(id, audio).catch(() => {})
       nav(`/povesti/${id}`, { replace: true })
@@ -288,6 +298,14 @@ export default function StoryAdd() {
               </div>
             )}
           </div>
+          {folderNames.length > 0 && (
+            <label className="night-field">Folderul
+              <select className="night-select" value={collection} onChange={(e) => setCollection(e.target.value)}>
+                <option value="">Automat, după cum a fost făcută</option>
+                {[...new Set([...folderNames, ...(collection ? [collection] : [])])].sort((a, b) => a.localeCompare(b, 'ro')).map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </label>
+          )}
           <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? 'Se salvează…' : 'Pune pe raft'}</button>
           {source !== 'generated' && <p className="rec-hint">Se salvează și pe acest dispozitiv, merge și fără internet.</p>}
         </div>

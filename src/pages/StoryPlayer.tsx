@@ -238,11 +238,12 @@ const SKIP = 15
 function SkipIcon({ sec, back }: { sec: number; back?: boolean }) {
   return (
     <svg className="skip-icon" width="46" height="46" viewBox="0 0 44 44" aria-hidden="true">
-      <g fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" transform={`${back ? 'matrix(-1 0 0 1 44 0) ' : ''}rotate(35 22 22)`}>
-        <path d="M22 7A15 15 0 1 1 9 14.5" />
-        <path d="M21 2.2 27 7 21 11.8z" fill="currentColor" stroke="none" />
+      <g fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" transform={back ? 'matrix(-1 0 0 1 44 0)' : undefined}>
+        <path d="M22 10A14 14 0 1 0 34.1 17" />
+        <path d="M22 10h3" />
+        <path d="M24.5 4.8 31 10l-6.5 5.2z" fill="currentColor" strokeWidth="1.2" />
       </g>
-      <text x="22" y="22" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="14" fontWeight="800">{sec}</text>
+      <text x="22" y="25" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="13" fontWeight="800">{sec}</text>
     </svg>
   )
 }

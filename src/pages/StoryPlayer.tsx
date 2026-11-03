@@ -44,6 +44,10 @@ function StoryPlayer() {
   const [coverOpen, setCoverOpen] = useState(false)
   const [coverBusy, setCoverBusy] = useState(false)
   const [moveOpen, setMoveOpen] = useState(false)
+  // While the finger is on the progress bar we only move the bar; the audio seeks once, on release.
+  // Seeking on every move made iOS re-fetch the stream each time and timeupdate pulled the thumb back.
+  const [drag, setDrag] = useState<number | null>(null)
+  const commitSeek = () => { if (drag !== null) { player.seek(drag); setDrag(null) } }
   const offlineIds = useOfflineIds()
   const online = useOnline()
   // Kid mode: no "Pentru părinți" (delete, cover, offline, move to folder).
@@ -68,6 +72,7 @@ function StoryPlayer() {
   const playing = current && player.playing
   const t = current ? player.t : 0
   const dur = current ? player.dur : 0
+  const shown = drag ?? t
   const ended = current && player.ended
   const url = current ? player.url : undefined
 
@@ -150,12 +155,13 @@ function StoryPlayer() {
         <h1>{s.title}</h1>
         <small>{SOURCE_LABEL[s.source]}</small>
       </div>
-      <input type="range" className="seek" aria-label="Unde suntem în poveste" min={0} max={dur || 1} step={1} value={Math.min(t, dur || 1)}
-        style={{ ['--p' as string]: dur ? `${(t / dur) * 100}%` : '0%' }}
-        onChange={(e) => player.seek(+e.target.value)} />
-      <div className="seek-times"><span>{fmtTime(t)}</span>
+      <input type="range" className="seek" aria-label="Unde suntem în poveste" min={0} max={dur || 1} step={1} value={Math.min(shown, dur || 1)}
+        style={{ ['--p' as string]: dur ? `${(shown / dur) * 100}%` : '0%' }}
+        onChange={(e) => setDrag(+e.target.value)}
+        onPointerUp={commitSeek} onPointerCancel={commitSeek} onTouchEnd={commitSeek} onKeyUp={commitSeek} onBlur={commitSeek} />
+      <div className="seek-times"><span>{fmtTime(shown)}</span>
         {dur ? <button type="button" className="time-toggle" onClick={toggleRemaining} aria-label={remaining ? 'Arată durata totală' : 'Arată timpul rămas'}>
-          {remaining ? `-${fmtTime(Math.max(0, dur - t))}` : fmtTime(dur)}
+          {remaining ? `-${fmtTime(Math.max(0, dur - shown))}` : fmtTime(dur)}
         </button> : <span />}
       </div>
       {current && player.error && <p className="player-error" role="alert">{player.error}</p>}

@@ -155,7 +155,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const update = useCallback((s: Story) => { if (storyRef.current?.id === s.id) setStory(s) }, [])
   const toggle = useCallback(() => { const a = audio.current; if (!a || (a.paused && isKidLocked())) return; setEnded(false); if (a.paused) a.play().catch(() => {}); else a.pause() }, [])
   const skip = useCallback((d: number) => { const a = audio.current; if (a) a.currentTime = Math.max(0, Math.min(a.duration || 0, a.currentTime + d)) }, [])
-  const seek = useCallback((sec: number) => { if (audio.current) audio.current.currentTime = sec }, [])
+  const seek = useCallback((sec: number) => { if (audio.current) { audio.current.currentTime = sec; setT(sec) } }, [])
   const restart = useCallback(() => { const a = audio.current; if (!a || isKidLocked()) return; setEnded(false); a.currentTime = 0; a.play().catch(() => {}) }, [])
   // iPhone ignores the volume set by a web page, so there it simply pauses at the end of the fade.
   const fadeOut = useCallback(async () => {

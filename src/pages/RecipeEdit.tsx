@@ -11,6 +11,7 @@ import { parseQuantity } from '../lib/scale'
 import { formatMinutes } from '../lib/format'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import MicButton from '../components/MicButton'
+import { spokenIngredientLines } from '../lib/spokenIngredients'
 import { useSettings } from '../lib/settings'
 import { useBack } from '../lib/back'
 import { LoadError, Loading } from '../components/LoadState'
@@ -81,6 +82,8 @@ export default function RecipeEdit() {
   const [paste, setPaste] = useState('')
   // Dictated text has no headings, so it goes to the AI instead of the local parser.
   const [dictated, setDictated] = useState(false)
+  // The step that "Dictează un pas" is writing into.
+  const dictStep = useRef<string>(undefined)
   const [importing, setImporting] = useState('')
   const [found, setFound] = useState<string>()
   const [saving, setSaving] = useState(false)
@@ -398,6 +401,8 @@ export default function RecipeEdit() {
         <h2>Ingrediente</h2>
         <p className="set-hint">Câte unul pe rând, cu cantitatea la început (de exemplu „500 g carne tocată”), ca să se poată recalcula porțiile.</p>
         <textarea aria-label="Ingrediente" rows={Math.max(5, lines(ing).length + 1)} value={ing} onChange={(e) => setIng(e.target.value)} />
+        <MicButton value={ing} onChange={setIng} asLines={spokenIngredientLines}
+          hint="Spune câte un ingredient, cu o mică pauză între ele." />
       </section>
 
       <section className="editor-section">
@@ -409,12 +414,28 @@ export default function RecipeEdit() {
               onChange={(x) => updateStep(k, x)} onMove={(d) => moveStep(k, d)} onRemove={() => removeStep(k)} />
           ))}
         </ol>
-        <button type="button" className="btn ghost" onClick={addStep}>+ Adaugă un pas</button>
+        <div className="steps-add">
+          <button type="button" className="btn ghost" onClick={addStep}>+ Adaugă un pas</button>
+          <MicButton value="" label="Dictează un pas" hint="Spune pasul, apoi atinge Gata."
+            onStart={() => {
+              // Fill the last step if it is still empty, otherwise start a new one.
+              const last = steps[steps.length - 1]
+              if (last && !last.text.trim() && !last.photoKey && !last.photoBlob) { dictStep.current = last.uid; return }
+              const s: Step = { uid: newId(), text: '' }
+              dictStep.current = s.uid
+              setSteps((xs) => [...xs, s])
+            }}
+            onChange={(t) => {
+              const text = t.charAt(0).toUpperCase() + t.slice(1)
+              setSteps((xs) => xs.map((x) => (x.uid === dictStep.current ? { ...x, text } : x)))
+            }} />
+        </div>
       </section>
 
       <section className="editor-section">
         <h2>Note</h2>
         <textarea aria-label="Note" rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} />
+        <MicButton value={r.notes ?? ''} onChange={(t) => setR((cur) => (cur ? { ...cur, notes: t } : cur))} />
         <label>Link sursă<input type="url" value={r.sourceUrl ?? ''} onChange={(e) => set('sourceUrl', e.target.value || undefined)} /></label>
       </section>
 

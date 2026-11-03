@@ -17,11 +17,17 @@ function why(err: unknown) {
  * Dictation button for a text box: tap to talk, tap again to stop.
  * Words are appended to `value` live, so they can be corrected by hand afterwards.
  */
-export default function MicButton({ value, onChange, onDictated }: {
+export default function MicButton({ value, onChange, onDictated, onStart, asLines, label = 'Dictează', hint = 'Te ascult, vorbește liber.' }: {
   value: string
   onChange: (v: string) => void
   /** Called when some text came from the microphone. */
   onDictated?: () => void
+  /** Called on the tap that starts listening, before any text arrives. */
+  onStart?: () => void
+  /** Turns the phrases said so far into lines (one per pause), e.g. an ingredient list. Default: one running text. */
+  asLines?: (segments: string[]) => string[]
+  label?: string
+  hint?: string
 }) {
   const [state, setState] = useState<'idle' | 'starting' | 'on' | 'finishing'>('idle')
   const [sec, setSec] = useState(0)
@@ -46,10 +52,13 @@ export default function MicButton({ value, onChange, onDictated }: {
     setError(''); setSec(0); setState('starting')
     // New words go after what is already in the box.
     const base = value.trim()
+    onStart?.()
     try {
       session.current = await startDictation({
-        onText: (final, partial) => {
-          const said = [final, partial].filter(Boolean).join(' ')
+        onText: (segments, partial) => {
+          const said = asLines
+            ? [...asLines(segments), partial].filter(Boolean).join('\n')
+            : [...segments, partial].filter(Boolean).join(' ')
           if (!said) return
           onChange(base ? `${base}\n${said}` : said)
           onDictated?.()
@@ -84,9 +93,9 @@ export default function MicButton({ value, onChange, onDictated }: {
             <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
           </svg>
         )}
-        <span>{state === 'starting' ? 'Pornesc…' : state === 'on' ? `Gata · ${fmt(sec)}` : state === 'finishing' ? 'Termin…' : 'Dictează'}</span>
+        <span>{state === 'starting' ? 'Pornesc…' : state === 'on' ? `Gata · ${fmt(sec)}` : state === 'finishing' ? 'Termin…' : label}</span>
       </button>
-      {state === 'on' ? <span className="set-hint">Te ascult, vorbește liber.</span>
+      {state === 'on' ? <span className="set-hint">{hint}</span>
         : !online ? <span className="set-hint">Dictarea merge doar cu internet.</span> : null}
       {error && <p className="set-hint error">{error}</p>}
     </div>

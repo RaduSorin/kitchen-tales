@@ -177,7 +177,7 @@ export async function deleteStory(s: Story) {
 
 export type ImportedRecipe = NonNullable<Awaited<ReturnType<typeof client.queries.importRecipe>>['data']>
 
-async function runImport(args: { url?: string; photoKey?: string; idea?: string; tools?: string[]; servings?: number }) {
+async function runImport(args: { url?: string; photoKey?: string; text?: string; idea?: string; tools?: string[]; servings?: number }) {
   const res = await client.queries.importRecipe(args)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data?.title) throw new Error('Nu am găsit o rețetă aici.')
@@ -185,6 +185,9 @@ async function runImport(args: { url?: string; photoKey?: string; idea?: string;
 }
 
 export const importRecipeFromUrl = (url: string) => runImport({ url })
+
+/** Lets Claude structure free text (dictated, or pasted without clear headings). */
+export const importRecipeFromText = (text: string) => runImport({ text })
 
 export type RecipeIdea = { title: string; description?: string | null; tools?: (string | null)[] | null; missing?: (string | null)[] | null; minutes?: number | null }
 

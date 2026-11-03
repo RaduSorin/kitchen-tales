@@ -319,12 +319,28 @@ type PhotoEvent = { fieldName?: string; info?: { fieldName?: string }; arguments
 
 type SuggestEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: { ingredients: string; tools?: (string | null)[] | null } }
 
+// ---- free text (typed, pasted or dictated) ----
+
+const TEXT_RULES = `
+Textul vine dintr-un mesaj, o notiță sau a fost dictat cu vocea, deci poate fi neformatat și fără punctuație:
+- Numerele spuse în cuvinte devin cifre, cu unități metrice: „două sute de grame de făină” devine „200 g făină”, „o linguriță de sare” devine „1 linguriță sare”.
+- Ignoră cuvintele de umplutură („deci”, „păi”, „ăă”, „bun”) și urmează corecturile vorbitorului: „trei ouă, nu, de fapt patru” înseamnă 4 ouă.
+- Separă ingredientele de pași chiar dacă sunt amestecate. Un ingredient pomenit doar în pași intră și în lista de ingrediente (fără cantitate, dacă nu a fost spusă).
+- Corectează un cuvânt recunoscut greșit doar când sensul culinar e evident.
+- Dacă nu e spus un titlu, alege unul scurt pentru preparat (aici ai voie să completezi).`
+const MAX_FREE_TEXT_CHARS = 20_000
+
+function fromText(text: string): Promise<Imported> {
+  return askModel([{ text: `Textul rețetei:\n${text.trim().slice(0, MAX_FREE_TEXT_CHARS)}` }], SYSTEM + '\n' + TEXT_RULES)
+}
+
 const importHandler: Schema['importRecipe']['functionHandler'] = async (event) => {
-  const { url, photoKey, idea, tools, servings } = event.arguments
+  const { url, photoKey, text, idea, tools, servings } = event.arguments
   if (url) return fromUrl(url)
   if (photoKey) return fromPhoto(photoKey)
+  if (text?.trim()) return fromText(text)
   if (idea?.trim()) return generate(idea, tools ?? [], servings)
-  throw new Error('Trimite un link, o poză sau o idee de rețetă.')
+  throw new Error('Trimite un link, o poză, un text sau o idee de rețetă.')
 }
 
 // One function serves importRecipe, suggestRecipes and generateRecipePhoto.

@@ -6,6 +6,9 @@ import ToastHost from './components/ToastHost'
 import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
 import { applyTheme, setStatusBarColor } from './lib/settings'
+import { useSkyPhase } from './lib/sky'
+import { SKY_TOP } from './lib/sun'
+import { SkyBackdrop } from './components/Sky'
 import RecipeList from './pages/RecipeList'
 import RecipeView from './pages/RecipeView'
 import RecipeEdit from './pages/RecipeEdit'
@@ -27,17 +30,21 @@ import Shopping from './pages/Shopping'
 // The stories area always uses the night palette, whatever the app theme is.
 function NightArea() {
   const night = useArea() === 'night'
+  const sky = useSkyPhase()
   useEffect(() => {
+    const root = document.documentElement
     if (night) {
-      document.documentElement.dataset.area = 'night'
-      // Browser / status bar color follows the night palette too.
-      setStatusBarColor('#171a45')
+      root.dataset.area = 'night'
+      root.dataset.sky = sky
+      // Browser / status bar color follows the sky too.
+      setStatusBarColor(SKY_TOP[sky])
     } else {
-      delete document.documentElement.dataset.area
+      delete root.dataset.area
+      delete root.dataset.sky
       applyTheme()
     }
-  }, [night])
-  return null
+  }, [night, sky])
+  return night ? <SkyBackdrop /> : null
 }
 
 // The gear opens the settings that match where you are: stories, recipes, or general.

@@ -4,6 +4,7 @@
   --bg: #f2f3ee; --surface: #ffffff; --surface-2: #e3e7de; --text: #1f2a24; --muted: #5c675f; --border: #dde1d8;
   --accent: #3e6a51; --accent-soft: #e3e7de; --on-accent: #ffffff; --gold: #d6a72b; --danger: #b3412e;
   --night: #2c2368; --night-soft: #e6e4f4; --moon: #ffd76a; --track: #d3d9cf; --knob: #ffffff;
+  --moon-ink: var(--night); --on-text: #171a45;
   --f-display: 'Young Serif', Georgia, serif;
   --f-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --f-kids: 'Baloo 2', 'Figtree', system-ui, sans-serif;
@@ -57,7 +58,7 @@ h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.3rem; margin:
 .topbar nav .area-switch a { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 12px;
   border-radius: 999px; color: var(--muted); font-weight: 600; text-decoration: none; transition: color .3s; background: none; }
 .topbar nav .area-switch a.on { color: var(--on-accent); }
-.area-switch.night a.on { color: #171a45; }
+.area-switch.night a.on, .topbar nav .area-switch.night a.on { color: #171a45; }
 @media (max-width: 400px) { .topbar nav .area-switch a { padding: 7px 9px; gap: 4px; font-size: .9rem; } .area-switch svg { width: 16px; height: 16px; } }
 @media (prefers-reduced-motion: reduce) { .area-thumb, .topbar nav .area-switch a { transition: none; } }
 
@@ -352,10 +353,49 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   --border: rgb(255 255 255 / .14); --accent: #ffd76a; --accent-soft: rgb(255 215 106 / .16); --on-accent: #171a45; --danger: #ff8fa3;
   --night: #ffd76a; --night-soft: rgb(255 255 255 / .1); --track: rgb(255 255 255 / .2); --knob: #fff6d6;
   --topbar-bg: rgb(23 26 69 / .88);
+  --moon-ink: #ffd76a; --on-text: #171a45;
   color-scheme: dark;
 }
 :root[data-area="night"] body { background: linear-gradient(180deg, #171a45 0, #2c2368 100%) fixed; font-family: var(--f-kids); }
 :root[data-area="night"] .topbar { border-bottom-color: rgb(255 255 255 / .08); }
+
+/* The stories sky follows the real daylight (lib/sun.ts): data-sky on <html> is day, dusk or night.
+   A fixed backdrop on every stories screen, plus a picture with hills at the top of Acasă. */
+.sky-backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.sky-scene { position: absolute; top: 0; left: 0; right: 0; height: 340px; z-index: -1; pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000 62%, transparent); mask-image: linear-gradient(#000 62%, transparent); }
+.sky-layer { position: absolute; inset: 0; opacity: 0; transition: opacity 3s ease; }
+.sky-layer svg { display: block; }
+:root[data-sky="day"] .sky-layer[data-phase="day"], :root[data-sky="dusk"] .sky-layer[data-phase="dusk"], :root[data-sky="night"] .sky-layer[data-phase="night"] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .sky-layer { transition: none; } }
+/* Room under the greeting for the hills picture. */
+.stories-home .sh-tonight, .stories-home .continue { margin-top: 0; }
+.stories-home > .shelf-head + * { margin-top: 92px; }
+:root[data-sky="night"] { --statusbar: #121541; --topbar-bg: rgb(18 21 65 / .72); }
+:root[data-sky="dusk"] { --statusbar: #2f2878; --topbar-bg: rgb(47 40 120 / .72); }
+:root[data-sky] .topbar { border-bottom-color: transparent; }
+/* By day the sky is light, so the stories switch to dark ink; play buttons stay moon-yellow. */
+:root[data-area="night"][data-sky="day"] {
+  --statusbar: #78bff9; --topbar-bg: rgb(120 191 249 / .72);
+  --bg: #d6eeff; --text: #171a45; --muted: rgb(23 26 69 / .68); --surface: rgb(255 255 255 / .58); --surface-2: rgb(255 255 255 / .74);
+  --border: rgb(23 26 69 / .14); --accent: #2a2470; --accent-soft: rgb(42 36 112 / .12); --on-accent: #fff6d6; --danger: #c2334d;
+  --night: #2a2470; --night-soft: rgb(42 36 112 / .1); --track: rgb(23 26 69 / .18); --knob: #ffffff;
+  --glass-bg: rgb(255 255 255 / .55); --glass-edge: rgb(255 255 255 / .8); --glass-shine: rgb(255 255 255 / .9); --glass-shadow: rgb(23 26 69 / .2);
+  --glass-pill: rgb(42 36 112 / .12);
+  --moon-ink: #2a2470; --on-text: #fff6d6;
+  color-scheme: light;
+}
+:root[data-sky="day"] body { background: #a9d8fc; }
+:root[data-sky="day"] .sh-tonight { background: rgb(255 255 255 / .62); border-color: rgb(255 255 255 / .9); }
+:root[data-sky="day"] .seek::-webkit-slider-runnable-track { background: linear-gradient(var(--moon-ink), var(--moon-ink)) 0 / var(--p) 100% no-repeat, rgb(23 26 69 / .15); }
+:root[data-sky="day"] .seek::-moz-range-track { background: rgb(23 26 69 / .15); }
+:root[data-sky="day"] .seek::-moz-range-progress { background: var(--moon-ink); }
+:root[data-sky="day"] .seek::-webkit-slider-thumb { background: #fff; box-shadow: 0 1px 4px rgb(23 26 69 / .35); }
+:root[data-sky="day"] .seek::-moz-range-thumb { background: #fff; box-shadow: 0 1px 4px rgb(23 26 69 / .35); }
+:root[data-sky="day"] .rec-big { border-color: var(--text); color: var(--text); }
+:root[data-sky="day"] .wave i.old { background: rgb(23 26 69 / .25); }
+:root[data-sky="day"] .story-cover.round { box-shadow: 0 0 0 12px rgb(255 255 255 / .35), 0 0 80px rgb(255 215 106 / .45); }
+:root[data-sky="day"] .night-tabbar .tab-center .tab-icon { border-color: rgb(255 255 255 / .9); }
 :root[data-area="night"] h1, :root[data-area="night"] h2 { font-family: var(--f-kids); font-weight: 800; }
 .night-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--surface); color: var(--text); display: grid; place-items: center; font-size: 1.6rem; text-decoration: none; flex: none; }
 
@@ -386,7 +426,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .continue-play { width: 48px; height: 48px; border-radius: 50%; background: var(--moon); color: #171a45; display: grid; place-items: center; }
 .who-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
 .who-chips button { flex: none; display: inline-flex; gap: 6px; align-items: center; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; padding: 6px 14px; cursor: pointer; }
-.who-chips button[aria-selected=true] { background: var(--text); color: #171a45; font-weight: 700; }
+.who-chips button[aria-selected=true] { background: var(--text); color: var(--on-text); font-weight: 700; }
 .who-chips i, .cover-meta i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .covers { display: grid; gap: 18px 14px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .cover-card { position: relative; display: grid; gap: 4px; color: var(--text); text-decoration: none; }
@@ -433,11 +473,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .sleep button { min-height: 40px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; padding: 5px 14px; cursor: pointer; }
 .play-opts { display: flex; gap: 8px; justify-content: center; }
 .opt-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: .92rem; padding: 6px 14px; cursor: pointer; }
-.opt-chip b { color: var(--moon); font-size: 1.05rem; }
-.opt-chip[aria-pressed=true] { background: var(--accent-soft); color: var(--moon); font-weight: 700; }
+.opt-chip b { color: var(--moon-ink); font-size: 1.05rem; }
+.opt-chip[aria-pressed=true] { background: var(--accent-soft); color: var(--moon-ink); font-weight: 700; }
 .shuffle-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--surface); color: var(--muted); font: inherit; font-size: .9rem; padding: 6px 14px; cursor: pointer; }
-.shuffle-btn[aria-pressed=true] { background: var(--accent-soft); color: var(--moon); font-weight: 700; }
-.sleep button[aria-pressed=true] { background: var(--text); color: #171a45; font-weight: 700; }
+.shuffle-btn[aria-pressed=true] { background: var(--accent-soft); color: var(--moon-ink); font-weight: 700; }
+.sleep button[aria-pressed=true] { background: var(--text); color: var(--on-text); font-weight: 700; }
 .parents { justify-self: stretch; text-align: left; margin-top: 18px; color: var(--muted); font-family: var(--f-body); }
 .parents summary { cursor: pointer; font-size: .9rem; text-align: center; list-style: none; padding: 13px 0; }
 .parents summary::-webkit-details-marker { display: none; }
@@ -538,7 +578,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .for-child span { display: grid; min-width: 0; }
 .for-child small { color: var(--muted); }
 .for-child b { font-size: 1.15rem; }
-.for-child a, .rec-hint a { color: var(--moon); font-weight: 700; white-space: nowrap; }
+.for-child a, .rec-hint a { color: var(--moon-ink); font-weight: 700; white-space: nowrap; }
 
 /* Cover search results (parent mode) */
 .cover-search { display: grid; gap: 8px; }
@@ -613,12 +653,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width: 759px) {
   .night-tabbar { font-family: var(--f-kids); overflow: visible; }
   .night-tabbar .tab { border: 0; background: none; font: inherit; cursor: pointer; color: var(--text); }
-  .night-tabbar .tab.active:not(.tab-center) { color: var(--moon); background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 0 0 1px var(--glass-edge); }
+  .night-tabbar .tab.active:not(.tab-center) { color: var(--moon-ink); background: var(--glass-pill); box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 0 0 1px var(--glass-edge); }
   .night-tabbar .tab-label { font-size: .74rem; font-weight: 700; }
   .night-tabbar .tab-center.active { background: none; box-shadow: none; }
   .night-tabbar .tab-center .tab-icon { background: #ffd76a; color: #171a45; border-color: rgb(23 26 69 / .9); }
   .night-tabbar .tab-center:not(.active) .tab-icon { background: #e9d28f; filter: none; }
-  .night-tabbar .tab-center.active .tab-label { color: var(--moon); }
+  .night-tabbar .tab-center.active .tab-label { color: var(--moon-ink); }
   .wide-add { display: none !important; }
 }
 .fav-btn.on { color: #ff8fa3; }
@@ -720,7 +760,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .sh-sec { display: grid; gap: 10px; }
 .sh-sec-head { display: flex; align-items: baseline; justify-content: space-between; }
 .sh-sec-head h2 { margin: 4px 0 0; }
-.sh-sec-head a { color: var(--moon); font-weight: 700; text-decoration: none; }
+.sh-sec-head a { color: var(--moon-ink); font-weight: 700; text-decoration: none; }
 .sh-row { display: grid; grid-auto-flow: column; grid-auto-columns: 128px; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; scrollbar-width: none; }
 .sh-row::-webkit-scrollbar { display: none; }
 .sh-card { scroll-snap-align: start; }

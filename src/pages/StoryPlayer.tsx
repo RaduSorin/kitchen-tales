@@ -4,10 +4,12 @@ import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCove
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
+import MoveSheet from '../components/MoveSheet'
+import { showToast } from '../lib/toast'
 import type { Story } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories'
+import { builtinFolderOf, fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
 import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
 
@@ -40,6 +42,7 @@ function StoryPlayer() {
   const [msg, setMsg] = useState('')
   const [coverOpen, setCoverOpen] = useState(false)
   const [coverBusy, setCoverBusy] = useState(false)
+  const [moveOpen, setMoveOpen] = useState(false)
   const offlineIds = useOfflineIds()
   const online = useOnline()
   const isSaved = !!id && offlineIds.has(id)
@@ -201,6 +204,7 @@ function StoryPlayer() {
               }}>{saving ? 'Se salvează…' : 'Salvează offline'}</button>
             ) : null}
             {online && !coverOpen && <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>}
+            {online && <button className="btn small span-all" onClick={() => setMoveOpen(true)}>Mută în folder</button>}
             {online && (confirmDelete ? (
               <span className="confirm span-all">Ștergi povestea?
                 <button className="btn danger small" onClick={async () => { if (current) player.close(); await deleteStory(s); nav('/povesti') }}>Da, șterge</button>
@@ -227,6 +231,13 @@ function StoryPlayer() {
           {msg && <p className="error">{msg}</p>}
         </div>
       </details>
+      {moveOpen && (
+        <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection) => {
+          const moved = { ...s, collection }
+          setS(moved); player.update(moved)
+          showToast(`Mutată în ${collection ?? builtinFolderOf(s)}`)
+        }} />
+      )}
     </div>
   )
 }

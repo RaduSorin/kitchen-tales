@@ -33,6 +33,14 @@ export interface Story {
   createdAt?: string
 }
 
+/** A shelf folder made by the family; its stories have `collection` equal to its name. */
+export interface StoryFolder {
+  id: string
+  name: string
+  /** An emoji shown on the folder card, e.g. 🎵. */
+  icon?: string
+}
+
 /** A recipe planned for a day of the week. `day` is a local date, YYYY-MM-DD. */
 export interface PlanEntry {
   id: string

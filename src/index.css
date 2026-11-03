@@ -366,6 +366,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .shelf-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .shelf-head h1 { margin: 4px 0 0; font-size: 1.9rem; line-height: 1.1; }
 .shelf-sub { margin: 2px 0 0; color: var(--muted); }
+.shelf-head > h1, .folder-head { flex: 1; min-width: 0; }
+.folder-head h1 { font-size: clamp(1.4rem, 6.4vw, 1.9rem); overflow-wrap: anywhere; }
+.shelf-count { flex: none; color: var(--muted); font-size: .95rem; white-space: nowrap; }
 .continue { display: grid; grid-template-columns: 64px 1fr 48px; gap: 12px; align-items: center; background: var(--surface); border-radius: 24px; padding: 10px; color: var(--text); text-decoration: none; }
 .continue .story-cover { border-radius: 18px; }
 .continue .story-cover > span { font-size: 2rem; }
@@ -431,6 +434,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .parents summary { cursor: pointer; font-size: .9rem; text-align: center; list-style: none; padding: 13px 0; }
 .parents summary::-webkit-details-marker { display: none; }
 .parents-body { display: grid; gap: 10px; margin-top: 10px; }
+.parents-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.parents-actions > .btn { width: 100%; min-height: 44px; justify-content: center; text-align: center; }
+.parents-actions > :only-child, .parents-actions > .span-all { grid-column: 1 / -1; }
+.parents-actions > .confirm { justify-content: center; }
 
 .goodnight { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; padding: 24px; background: radial-gradient(circle at 50% 38%, #232766 0, #0b0d26 70%); color: #fff6d6; transition: filter 2s; }
 .goodnight.dim { filter: brightness(.35); }

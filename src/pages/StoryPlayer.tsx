@@ -189,7 +189,8 @@ function StoryPlayer() {
         <summary>Pentru părinți</summary>
         <div className="parents-body">
           {s.text && <details className="story-text"><summary>Textul poveștii</summary><p>{s.text}</p></details>}
-          <div className="row">
+          {/* Same-size buttons in two columns; delete spans the full width at the bottom. */}
+          <div className="parents-actions">
             {isSaved ? (
               <button className="btn small" onClick={() => removeOfflineAudio(s.id)}>Șterge de pe dispozitiv</button>
             ) : online ? (
@@ -197,16 +198,17 @@ function StoryPlayer() {
                 setSaving(true); setMsg('')
                 try { await downloadStory(s) } catch { setMsg('Descărcarea a eșuat. Încearcă din nou.') }
                 setSaving(false)
-              }}>{saving ? 'Se salvează…' : 'Salvează pentru offline'}</button>
+              }}>{saving ? 'Se salvează…' : 'Salvează offline'}</button>
             ) : null}
+            {online && !coverOpen && <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>}
             {online && (confirmDelete ? (
-              <span className="confirm">Ștergi povestea?
+              <span className="confirm span-all">Ștergi povestea?
                 <button className="btn danger small" onClick={async () => { if (current) player.close(); await deleteStory(s); nav('/povesti') }}>Da, șterge</button>
                 <button className="btn small" onClick={() => setConfirmDelete(false)}>Nu</button>
               </span>
-            ) : <button className="btn danger small" onClick={() => setConfirmDelete(true)}>Șterge povestea</button>)}
+            ) : <button className="btn danger small span-all" onClick={() => setConfirmDelete(true)}>Șterge povestea</button>)}
           </div>
-          {online && (coverOpen ? (
+          {online && coverOpen && (
             <div className="cover-change">
               {coverBusy ? <p className="importing"><span className="spinner" /> Salvez coperta…</p> : (
                 <>
@@ -220,7 +222,7 @@ function StoryPlayer() {
                 </>
               )}
             </div>
-          ) : <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>)}
+          )}
           {isSaved && <small>Salvată pe acest dispozitiv, merge și fără internet.</small>}
           {msg && <p className="error">{msg}</p>}
         </div>

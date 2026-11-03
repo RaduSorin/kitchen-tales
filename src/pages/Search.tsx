@@ -5,6 +5,7 @@ import type { Recipe, Story } from '../lib/types'
 import { norm } from '../lib/format'
 import StoryCover from '../components/StoryCover'
 import { RecipeRow } from './RecipeList'
+import { focusField } from '../lib/keyboard'
 
 /** One search for everything: recipes by name, category or ingredient, and stories by title. */
 export default function Search() {
@@ -14,6 +15,8 @@ export default function Search() {
   const [recipes, setRecipes] = useState<Recipe[]>()
   const [stories, setStories] = useState<Story[]>([])
   const [failed, setFailed] = useState(false)
+  // Cursor in the box with the keyboard open (the tab tap primed it, see lib/keyboard).
+  useEffect(() => { focusField(document.getElementById('search-input')) }, [])
   useEffect(() => {
     listRecipes().then(setRecipes).catch(() => { setRecipes([]); setFailed(true) })
     listStories().then(setStories).catch(() => {})
@@ -31,7 +34,7 @@ export default function Search() {
       <h1>Caută</h1>
       <label className="search-box">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-        <input type="search" autoFocus aria-label="Caută" placeholder="Rețetă, ingredient sau poveste" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input type="search" id="search-input" aria-label="Caută" placeholder="Rețetă, ingredient sau poveste" value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
 
       {!words.length ? (

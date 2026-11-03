@@ -6,8 +6,11 @@ import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
 import { fmtTime, getLastStoryId, getPosition, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
+import { focusField } from '../lib/keyboard'
 
 const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+
+const count = (n: number) => `${n} ${n === 1 ? 'poveste' : 'povești'}`
 
 export default function StoryList() {
   const [stories, setStories] = useState<Story[]>([])
@@ -28,7 +31,9 @@ export default function StoryList() {
   const wantsSearch = params.has('cauta')
   // The "Favorite" tab opens the shelf with ?favorite=1.
   const favMode = params.has('favorite')
-  useEffect(() => { if (wantsSearch) document.getElementById('story-search')?.focus() }, [wantsSearch, loading])
+  // Re-runs when the box appears after loading; also on a repeat tap of the tab (location.key).
+  const hasBox = !loading && !favMode
+  useEffect(() => { if (wantsSearch && hasBox) focusField(document.getElementById('story-search')) }, [wantsSearch, hasBox, location.key])
   const online = useOnline()
   const { child } = useSettings()
   useEffect(() => {
@@ -84,16 +89,14 @@ export default function StoryList() {
             }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
             </button>
-            <div>
-              <h1>{open.name}</h1>
-              <p className="shelf-sub">{open.items.length} {open.items.length === 1 ? 'poveste' : 'povești'}</p>
-            </div>
+            <h1>{open.name}</h1>
           </div>
         ) : (
-          <div>
-            <h1>Bibliotecă</h1>
-            <p className="shelf-sub">{available.length ? `${available.length} ${available.length === 1 ? 'poveste' : 'povești'}` : 'Ce poveste ascultăm?'}</p>
-          </div>
+          <h1>Bibliotecă</h1>
+        )}
+        {/* The count sits at the right of the title row, to save vertical space. */}
+        {!favMode && (inFolder ? open.items.length : available.length) > 0 && (
+          <span className="shelf-count">{count(inFolder ? open.items.length : available.length)}</span>
         )}
         {online && <Link to="/povesti/adauga" className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>

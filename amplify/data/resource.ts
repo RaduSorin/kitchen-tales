@@ -58,6 +58,19 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // The family's settings (the child, the city for the stories sky, the kitchen tools), kept
+  // in the cloud so they survive a cleared phone and are the same on every device. One row, id "family".
+  FamilySettings: a
+    .model({
+      childName: a.string(),
+      childBirthYear: a.integer(),
+      childGender: a.string(),
+      childCanRead: a.boolean(),
+      city: a.string(),
+      kitchenTools: a.string().array(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   ImportedRecipe: a.customType({
     title: a.string().required(),
     category: a.string(),

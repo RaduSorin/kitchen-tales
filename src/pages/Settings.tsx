@@ -43,7 +43,7 @@ function KitchenTools() {
           <button type="button" className="btn small" onClick={add} disabled={!custom.trim()}>Adaugă</button>
         </div>
       </div>
-      <p className="set-hint">Când generezi o rețetă, folosim doar aceste aparate, plus aragazul și cuptorul. Se salvează pe acest dispozitiv.</p>
+      <p className="set-hint">Când generezi o rețetă, folosim doar aceste aparate, plus aragazul și cuptorul. Se salvează în cont, la fel pe toate dispozitivele familiei.</p>
     </div>
   )
 }
@@ -165,7 +165,7 @@ function StorySettings() {
               onChange={(e) => updateSettings({ child: { canRead: e.target.checked } })} />
           </label>
         </div>
-        <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează pe acest dispozitiv.</p>
+        <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează în cont, la fel pe toate dispozitivele familiei.</p>
       </div>
       <SkySettings />
       <OfflineStorage />

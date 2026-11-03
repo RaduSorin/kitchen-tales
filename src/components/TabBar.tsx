@@ -4,6 +4,7 @@ import { useSyncedList } from '../lib/synced'
 import { shoppingStore } from '../lib/plan'
 import { isPlayerPage, useArea } from '../lib/area'
 import { mergeShopping } from '../lib/merge'
+import { primeKeyboard } from '../lib/keyboard'
 
 const I = ({ d }: { d: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
@@ -39,7 +40,7 @@ function StoryTabs() {
       <div className="tabbar-spacer" aria-hidden="true" />
       <nav className="tabbar night-tabbar" aria-label="Meniu povești">
         <NavLink to="/povesti/acasa" className="tab"><span className="tab-icon"><I d={HOME} /></span><span className="tab-label">Acasă</span></NavLink>
-        <Link to="/povesti?cauta=1" className={`tab${searching ? ' active' : ''}`} aria-current={searching ? 'page' : undefined}>
+        <Link to="/povesti?cauta=1" onClick={() => primeKeyboard('story-search')} className={`tab${searching ? ' active' : ''}`} aria-current={searching ? 'page' : undefined}>
           <span className="tab-icon"><I d={SEARCH} /></span><span className="tab-label">Caută</span>
         </Link>
         <Link to="/povesti" className={`tab tab-center${shelf ? ' active' : ''}`} aria-current={shelf ? 'page' : undefined}>
@@ -118,7 +119,7 @@ export default function TabBar() {
       <div className="tabbar-spacer" aria-hidden="true" />
       <nav className="tabbar" aria-label="Meniu">
         {TABS.map((t) => (
-          <NavLink key={t.to} to={t.to} end={t.end} className={t.to === '/retete' ? 'tab tab-center' : 'tab'} aria-label={t.full}>
+          <NavLink key={t.to} to={t.to} end={t.end} onClick={t.to === '/cauta' ? () => primeKeyboard('search-input') : undefined} className={t.to === '/retete' ? 'tab tab-center' : 'tab'} aria-label={t.full}>
             <span className="tab-icon">
               <I d={t.icon} />
               {t.to === '/cumparaturi' && toBuy > 0 && <span className="tab-badge">{toBuy > 99 ? '99+' : toBuy}</span>}

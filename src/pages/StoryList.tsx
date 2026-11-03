@@ -6,6 +6,7 @@ import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
 import { fmtTime, getLastStoryId, getPosition, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
+import { focusField } from '../lib/keyboard'
 
 const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
@@ -30,7 +31,9 @@ export default function StoryList() {
   const wantsSearch = params.has('cauta')
   // The "Favorite" tab opens the shelf with ?favorite=1.
   const favMode = params.has('favorite')
-  useEffect(() => { if (wantsSearch) document.getElementById('story-search')?.focus() }, [wantsSearch, loading])
+  // Re-runs when the box appears after loading; also on a repeat tap of the tab (location.key).
+  const hasBox = !loading && !favMode
+  useEffect(() => { if (wantsSearch && hasBox) focusField(document.getElementById('story-search')) }, [wantsSearch, hasBox, location.key])
   const online = useOnline()
   const { child } = useSettings()
   useEffect(() => {

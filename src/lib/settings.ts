@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { SKY_TOP, type SkyPhase } from './sun'
 
 export type ThemeChoice = 'auto' | 'light' | 'dark'
 
@@ -15,11 +16,26 @@ export interface Settings {
   child: ChildProfile
   /** Appliances the family has, used when generating recipes. */
   kitchenTools: string[]
+  /** Where we live, roughly: the stories sky follows sunrise and sunset there. */
+  city: string
+  /** Kid mode (parental control): the family's PIN and choices, shared by all devices. */
+  kid: KidSettings
+}
+
+export interface KidSettings {
+  /** SHA-256 of salt + PIN (hex); undefined until a PIN is set. */
+  pinHash?: string
+  pinSalt?: string
+  /** Default time limit in minutes; 0 = no limit. */
+  minutes: number
+  /** Folders the child may see in kid mode; empty = all. */
+  folders: string[]
 }
 
 const KEY = 'kt-settings'
 const LEGACY_BRIEF_KEY = 'kt-story-brief'
-const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [] }
+const KID_DEFAULTS: KidSettings = { minutes: 30, folders: [] }
+const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [], city: 'București', kid: KID_DEFAULTS }
 
 // Earlier versions stored the age; turn it into a birth year once.
 function migrateChild(c: ChildProfile & { age?: number }): ChildProfile {
@@ -38,7 +54,7 @@ function read(): Settings {
     const raw = localStorage.getItem(KEY)
     if (raw) {
       const s = JSON.parse(raw) as Partial<Settings>
-      return { ...DEFAULTS, ...s, child: migrateChild({ ...DEFAULTS.child, ...s.child }) }
+      return { ...DEFAULTS, ...s, child: migrateChild({ ...DEFAULTS.child, ...s.child }), kid: { ...KID_DEFAULTS, ...s.kid } }
     }
     // First run after the redesign: carry over the child details from the story form.
     const brief = JSON.parse(localStorage.getItem(LEGACY_BRIEF_KEY) ?? '{}')
@@ -50,14 +66,48 @@ function read(): Settings {
 
 let current = read()
 const listeners = new Set<() => void>()
+const sharedListeners = new Set<() => void>()
+
+/** Settings shared by the family and kept in the cloud; the theme stays per device. */
+export type SharedSettings = Pick<Settings, 'child' | 'city' | 'kitchenTools' | 'kid'>
+const SHARED_KEYS = ['child', 'city', 'kitchenTools', 'kid'] as const
 
 export function getSettings() { return current }
 
-export function updateSettings(patch: Partial<Omit<Settings, 'child'>> & { child?: Partial<ChildProfile> }) {
-  current = { ...current, ...patch, child: { ...current.child, ...patch.child } }
+type Patch = Partial<Omit<Settings, 'child' | 'kid'>> & { child?: Partial<ChildProfile>; kid?: Partial<KidSettings> }
+
+function set(patch: Patch) {
+  current = { ...current, ...patch, child: { ...current.child, ...patch.child }, kid: { ...current.kid, ...patch.kid } }
   try { localStorage.setItem(KEY, JSON.stringify(current)) } catch { /* storage unavailable: keep in memory */ }
   applyTheme()
   listeners.forEach((l) => l())
+}
+
+export function updateSettings(patch: Patch) {
+  set(patch)
+  if (SHARED_KEYS.some((k) => k in patch)) sharedListeners.forEach((l) => l())
+}
+
+/** Called after a change to a shared setting on this device (used to send it to the cloud). */
+export function onSharedChange(fn: () => void) {
+  sharedListeners.add(fn)
+  return () => { sharedListeners.delete(fn) }
+}
+
+/** Takes the family's settings from the cloud without counting it as a local change. */
+export function applySharedSettings(s: Partial<SharedSettings>) {
+  set({ ...s, child: s.child ? { ...DEFAULTS.child, ...s.child } : undefined, kid: s.kid ? { ...KID_DEFAULTS, ...s.kid } : undefined })
+}
+
+// Another tab or window of the app changed the settings: use them here too, so this one
+// does not later write its old copy back over them.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key !== KEY) return
+    current = read()
+    applyTheme()
+    listeners.forEach((l) => l())
+  })
 }
 
 export function useSettings() {
@@ -70,8 +120,8 @@ const media = typeof window !== 'undefined' ? window.matchMedia('(prefers-color-
 export function applyTheme() {
   const dark = current.theme === 'dark' || (current.theme === 'auto' && !!media?.matches)
   document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-  const night = document.documentElement.dataset.area === 'night'
-  setStatusBarColor(night ? '#171a45' : dark ? '#131915' : '#f2f3ee')
+  const { area, sky } = document.documentElement.dataset
+  setStatusBarColor(area === 'night' ? SKY_TOP[(sky as SkyPhase) ?? 'night'] ?? '#171a45' : dark ? '#131915' : '#f2f3ee')
 }
 
 /**

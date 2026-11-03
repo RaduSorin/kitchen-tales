@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { generateRecipe, generateRecipePhoto, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhoto, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
+import { generateRecipe, generateRecipePhoto, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhoto, importRecipeFromText, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
 import { parseRecipeText } from '../lib/parseRecipe'
 import { resizeImage } from '../lib/resizeImage'
 import type { Recipe } from '../lib/types'
@@ -10,6 +10,8 @@ import { detectDuration } from '../lib/cooking'
 import { parseQuantity } from '../lib/scale'
 import { formatMinutes } from '../lib/format'
 import PlatePlaceholder from '../components/PlatePlaceholder'
+import MicButton from '../components/MicButton'
+import { spokenIngredientLines } from '../lib/spokenIngredients'
 import { useSettings } from '../lib/settings'
 import { useBack } from '../lib/back'
 import { LoadError, Loading } from '../components/LoadState'
@@ -78,6 +80,10 @@ export default function RecipeEdit() {
   const [mode, setMode] = useState<Mode>(id ? 'edit' : new URLSearchParams(window.location.search).get('din') === 'frigider' ? 'fridge' : 'choose')
   const [link, setLink] = useState('')
   const [paste, setPaste] = useState('')
+  // Dictated text has no headings, so it goes to the AI instead of the local parser.
+  const [dictated, setDictated] = useState(false)
+  // The step that "Dictează un pas" is writing into.
+  const dictStep = useRef<string>(undefined)
   const [importing, setImporting] = useState('')
   const [found, setFound] = useState<string>()
   const [saving, setSaving] = useState(false)
@@ -219,7 +225,14 @@ export default function RecipeEdit() {
     </>
   )
 
-  const importText = () => { const p = parseRecipeText(paste); fill(p.title, p.ingredients, p.steps) }
+  const importText = () => {
+    const text = paste.trim()
+    if (!text) return
+    const p = parseRecipeText(text)
+    // Clear "Ingrediente / Mod de preparare" text is split on the phone; anything looser is read by the AI.
+    if (!dictated && p.ingredients.length && p.steps.length) fill(p.title, p.ingredients, p.steps)
+    else doImport('Citesc rețeta…', () => importRecipeFromText(text))
+  }
 
   const updateStep = (k: number, s: Step) => setSteps((xs) => xs.map((x, j) => (j === k ? s : x)))
   const moveStep = (k: number, d: number) => setSteps((xs) => {
@@ -273,8 +286,10 @@ export default function RecipeEdit() {
         ) : mode === 'generate' ? (
           <div className="add-panel">
             <label htmlFor="gen-idea">Ce ai vrea să gătești?</label>
-            <textarea id="gen-idea" rows={4} autoFocus value={idea} onChange={(e) => setIdea(e.target.value)}
-              placeholder="De exemplu: o ciorbă de pui rapidă, ceva cu dovlecei și brânză, un desert fără zahăr pentru copii" />
+            <MicButton value={idea} onChange={setIdea}>
+              <textarea id="gen-idea" rows={4} autoFocus value={idea} onChange={(e) => setIdea(e.target.value)}
+                placeholder="De exemplu: o ciorbă de pui rapidă, ceva cu dovlecei și brânză, un desert fără zahăr pentru copii" />
+            </MicButton>
             {genOptions}
             <button type="button" className="btn primary big" onClick={runGenerate} disabled={!idea.trim()}>Generează rețeta</button>
           </div>
@@ -300,8 +315,10 @@ export default function RecipeEdit() {
           ) : (
             <div className="add-panel">
               <label htmlFor="fridge">Ce ai în frigider?</label>
-              <textarea id="fridge" rows={5} autoFocus value={fridge} onChange={(e) => setFridge(e.target.value)}
-                placeholder="De exemplu: piept de pui, 2 dovlecei, smântână, ouă, o ceapă, orez" />
+              <MicButton value={fridge} onChange={setFridge}>
+                <textarea id="fridge" rows={5} autoFocus value={fridge} onChange={(e) => setFridge(e.target.value)}
+                  placeholder="De exemplu: piept de pui, 2 dovlecei, smântână, ouă, o ceapă, orez" />
+              </MicButton>
               <p className="set-hint">Sarea, piperul, uleiul, zahărul și făina le considerăm deja în casă.</p>
               {genOptions}
               <button type="button" className="btn primary big" onClick={runSuggest} disabled={!fridge.trim()}>Propune rețete</button>
@@ -309,9 +326,12 @@ export default function RecipeEdit() {
           )
         ) : mode === 'text' ? (
           <div className="add-panel">
-            <label htmlFor="import-text">Lipește textul rețetei, cu titlul pe primul rând</label>
-            <textarea id="import-text" rows={10} autoFocus value={paste} onChange={(e) => setPaste(e.target.value)}
-              placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. …'} />
+            <label htmlFor="import-text">Lipește, scrie sau dictează rețeta</label>
+            <MicButton value={paste} onChange={setPaste} onDictated={() => setDictated(true)}>
+              <textarea id="import-text" rows={10} autoFocus value={paste} onChange={(e) => setPaste(e.target.value)}
+                placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. …'} />
+            </MicButton>
+            <p className="set-hint">Dictează liber: ce ingrediente pui, cât și cum le gătești. Le aranjăm noi.</p>
             <button type="button" className="btn primary big" onClick={importText} disabled={!paste.trim()}>Completează rețeta</button>
           </div>
         ) : (
@@ -339,7 +359,7 @@ export default function RecipeEdit() {
             </button>
             <button type="button" className="way" onClick={() => setMode('text')}>
               <span className="way-ic"><Icon d="M8 4h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 4V2h6v2M9 10h6M9 14h6" /></span>
-              <span><b>Din text</b><small>Un mesaj sau o notiță copiată</small></span>
+              <span><b>Din text sau voce</b><small>O notiță copiată sau o rețetă dictată</small></span>
             </button>
           </div>
         )}
@@ -383,7 +403,10 @@ export default function RecipeEdit() {
       <section className="editor-section">
         <h2>Ingrediente</h2>
         <p className="set-hint">Câte unul pe rând, cu cantitatea la început (de exemplu „500 g carne tocată”), ca să se poată recalcula porțiile.</p>
-        <textarea aria-label="Ingrediente" rows={Math.max(5, lines(ing).length + 1)} value={ing} onChange={(e) => setIng(e.target.value)} />
+        <MicButton value={ing} onChange={setIng} asLines={spokenIngredientLines}
+          hint="Spune câte un ingredient, cu o mică pauză între ele.">
+          <textarea aria-label="Ingrediente" rows={Math.max(5, lines(ing).length + 1)} value={ing} onChange={(e) => setIng(e.target.value)} />
+        </MicButton>
       </section>
 
       <section className="editor-section">
@@ -395,12 +418,29 @@ export default function RecipeEdit() {
               onChange={(x) => updateStep(k, x)} onMove={(d) => moveStep(k, d)} onRemove={() => removeStep(k)} />
           ))}
         </ol>
-        <button type="button" className="btn ghost" onClick={addStep}>+ Adaugă un pas</button>
+        <div className="steps-add">
+          <button type="button" className="btn ghost" onClick={addStep}>+ Adaugă un pas</button>
+          <MicButton value="" label="Dictează un pas" hint="Spune pasul, apoi atinge pătratul ca să oprești."
+            onStart={() => {
+              // Fill the last step if it is still empty, otherwise start a new one.
+              const last = steps[steps.length - 1]
+              if (last && !last.text.trim() && !last.photoKey && !last.photoBlob) { dictStep.current = last.uid; return }
+              const s: Step = { uid: newId(), text: '' }
+              dictStep.current = s.uid
+              setSteps((xs) => [...xs, s])
+            }}
+            onChange={(t) => {
+              const text = t.charAt(0).toUpperCase() + t.slice(1)
+              setSteps((xs) => xs.map((x) => (x.uid === dictStep.current ? { ...x, text } : x)))
+            }} />
+        </div>
       </section>
 
       <section className="editor-section">
         <h2>Note</h2>
-        <textarea aria-label="Note" rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} />
+        <MicButton value={r.notes ?? ''} onChange={(t) => setR((cur) => (cur ? { ...cur, notes: t } : cur))}>
+          <textarea aria-label="Note" rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} />
+        </MicButton>
         <label>Link sursă<input type="url" value={r.sourceUrl ?? ''} onChange={(e) => set('sourceUrl', e.target.value || undefined)} /></label>
       </section>
 

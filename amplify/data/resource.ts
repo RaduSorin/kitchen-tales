@@ -39,6 +39,15 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // A shelf folder the family made themselves (e.g. kids' music). Stories join it through
+  // Story.collection = name, so a folder can exist before anything is moved into it.
+  StoryFolder: a
+    .model({
+      name: a.string().required(),
+      icon: a.string(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   // A recipe planned for a day in "Săptămâna mea". `day` is a local date, YYYY-MM-DD.
   MealPlanEntry: a
     .model({
@@ -58,6 +67,24 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // The family's settings (the child, the city for the stories sky, the kitchen tools), kept
+  // in the cloud so they survive a cleared phone and are the same on every device. One row, id "family".
+  FamilySettings: a
+    .model({
+      childName: a.string(),
+      childBirthYear: a.integer(),
+      childGender: a.string(),
+      childCanRead: a.boolean(),
+      city: a.string(),
+      kitchenTools: a.string().array(),
+      // Kid mode: PIN (salted SHA-256), default time limit, folders the child may see.
+      kidPinHash: a.string(),
+      kidPinSalt: a.string(),
+      kidMinutes: a.integer(),
+      kidFolders: a.string().array(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   ImportedRecipe: a.customType({
     title: a.string().required(),
     category: a.string(),
@@ -70,13 +97,14 @@ const schema = a.schema({
     photoKey: a.string(),
   }),
 
-  // Reads a recipe from a web page link or from an uploaded photo,
+  // Reads a recipe from a web page link, an uploaded photo or free (typed or dictated) text,
   // or writes a new one from an idea, using only the kitchen tools given.
   importRecipe: a
     .query()
     .arguments({
       url: a.string(),
       photoKey: a.string(),
+      text: a.string(),
       idea: a.string(),
       tools: a.string().array(),
       servings: a.integer(),

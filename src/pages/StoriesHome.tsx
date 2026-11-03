@@ -11,6 +11,9 @@ import { useFileUrl } from '../lib/useFileUrl'
 import StoryCover from '../components/StoryCover'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { LoadError, Loading } from '../components/LoadState'
+import { SkyScene } from '../components/Sky'
+import { useSkyPhase } from '../lib/sky'
+import { useKid } from '../lib/kidMode'
 
 const Play = () => <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>
 
@@ -57,6 +60,8 @@ export default function StoriesHome() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const plan = useSyncedList(planStore)
   const [{ hour, day }] = useState(() => ({ hour: new Date().getHours(), day: Math.floor(Date.now() / 86400000) }))
+  const sky = useSkyPhase()
+  const kid = useKid().active
   const [failed, setFailed] = useState(false)
   const load = () => {
     listStories().then(setStories).catch(() => setFailed(true))
@@ -72,19 +77,21 @@ export default function StoriesHome() {
   const recent = available.slice(0, 10) // the list comes newest first
   const todayKey = dayKey(today())
   const cooking = plan.filter((e) => e.day === todayKey).map((e) => recipes.find((r) => r.id === e.recipeId)).filter((r): r is Recipe => !!r)
-  const evening = hour >= 18 || hour < 5
+  // "Tonight" as soon as the sun starts going down (earlier in winter).
+  const evening = sky !== 'day'
 
   return (
     <section className="stories-home">
+      <SkyScene />
       <div className="shelf-head">
         <div>
-          <h1>{greeting()}{child.name ? `, ${child.name}` : ''}</h1>
+          <h1>{evening && hour >= 12 ? 'Bună seara' : greeting()}{child.name ? `, ${child.name}` : ''}</h1>
           <p className="shelf-sub">{evening ? 'E vremea de o poveste.' : 'Ce poveste ascultăm?'}</p>
         </div>
       </div>
 
       {failed && !stories ? <LoadError text="Nu am putut încărca poveștile. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
-        : stories === undefined ? <Loading /> : !available.length ? (
+        : stories === undefined ? <Loading /> : !available.length ? kid ? <p className="empty">Nicio poveste aici încă.</p> : (
         <Link to="/povesti/adauga" className="continue sh-empty">
           <span className="continue-text"><b>Nicio poveste încă</b><small>Adaugă prima poveste: încarci, înregistrezi sau o creăm împreună</small></span>
           <span className="continue-play" aria-hidden="true">+</span>
@@ -115,12 +122,12 @@ export default function StoriesHome() {
         </>
       )}
 
-      <section className="sh-sec">
+      {!kid && <section className="sh-sec">
         <div className="sh-sec-head"><h2>Din bucătărie</h2><Link to="/saptamana">Săptămâna</Link></div>
         {cooking.length
           ? cooking.slice(0, 2).map((r) => <RecipePeek key={r.id} r={r} label="Azi în meniu" />)
           : recipes[0] ? <RecipePeek r={recipes[0]} label="Rețetă recentă" /> : <Link to="/retete" className="sh-recipe"><span className="sh-recipe-text"><b>Rețetele mele</b></span></Link>}
-      </section>
+      </section>}
     </section>
   )
 }

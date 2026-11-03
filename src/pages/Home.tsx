@@ -7,6 +7,9 @@ import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
 import { getLastCook } from '../lib/cooking'
 import { getLastStoryId, getPosition, greeting } from '../lib/stories'
+import { SkyCard } from '../components/Sky'
+import { useSkyPhase } from '../lib/sky'
+import type { SkyPhase } from '../lib/sun'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import StoryCover from '../components/StoryCover'
 import { useSyncedList } from '../lib/synced'
@@ -32,13 +35,13 @@ function pickStory(stories: Story[]) {
   return { story: pool[day % pool.length], resume: false }
 }
 
-function NightCard({ stories, evening }: { stories: Story[]; evening: boolean }) {
+function NightCard({ stories, evening, sky }: { stories: Story[]; evening: boolean; sky: SkyPhase }) {
   const { child } = useSettings()
   const [pick] = useState(() => pickStory(stories))
   if (!pick) {
     return (
-      <Link to="/povesti/adauga" className="home-night">
-        <Moon />
+      <Link to="/povesti/adauga" className="home-night" data-sky={sky}>
+        <SkyCard phase={sky} />
         <small>Povești pentru {child.name || 'cei mici'}</small>
         <b>Adaugă prima poveste</b>
         <span className="home-night-btn">Înregistrează sau creează</span>
@@ -48,18 +51,14 @@ function NightCard({ stories, evening }: { stories: Story[]; evening: boolean })
   const { story, resume } = pick
   const mins = story.durationSec ? ` · ${Math.max(1, Math.round(story.durationSec / 60))} min` : ''
   return (
-    <Link to={`/povesti/${story.id}`} className="home-night">
-      <Moon />
+    <Link to={`/povesti/${story.id}`} className="home-night" data-sky={sky}>
+      <SkyCard phase={sky} />
       <small>{resume ? 'Ați rămas la jumătate' : `Pentru ${child.name || 'cei mici'}, ${evening ? 'diseară' : 'la culcare'}`}</small>
       <span className="home-night-title"><StoryCover story={story} /><b>{story.title}</b></span>
       <span className="home-night-btn">{resume ? 'Continuă' : 'Ascultă'}{mins}</span>
     </Link>
   )
 }
-
-const Moon = () => (
-  <svg className="home-moon" width="96" height="96" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="22" fill="#ffd76a" /><circle cx="50" cy="32" r="20" fill="#232463" /></svg>
-)
 
 export default function Home() {
   const [recipes, setRecipes] = useState<Recipe[]>()
@@ -75,8 +74,9 @@ export default function Home() {
   }
   useEffect(load, [])
 
-  const hour = now.getHours()
-  const evening = hour >= 18 || hour < 5
+  // Evening as soon as the sun starts going down, like the stories sky.
+  const sky = useSkyPhase()
+  const evening = sky !== 'day'
   const date = now.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long' })
   const lastCook = getLastCook()
   const cooking = lastCook && recipes?.find((r) => r.id === lastCook.id)
@@ -86,7 +86,7 @@ export default function Home() {
   const menu = (recipes ?? []).length ? plan.filter((e) => e.day === todayKey).map((e) => recipes!.find((r) => r.id === e.recipeId)).filter((r): r is Recipe => !!r) : []
   const playable = stories && (online ? stories : stories.filter((s) => offline.has(s.id)))
 
-  const night = playable && <NightCard key={playable.length} stories={playable} evening={evening} />
+  const night = playable && <NightCard key={playable.length} stories={playable} evening={evening} sky={sky} />
 
   return (
     <div className="home">

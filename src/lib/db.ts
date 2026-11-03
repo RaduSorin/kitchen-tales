@@ -3,8 +3,11 @@
 import { generateClient } from 'aws-amplify/data'
 import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
-import type { PlanEntry, Recipe, ShoppingItem, Story, StorySource } from './types'
+import type { SharedSettings } from './settings'
+import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, saveAudio } from './offline'
+import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
+import { folderOf } from './stories'
 
 const client = generateClient<Schema>()
 
@@ -124,7 +127,12 @@ export { removeFile }
 
 // ---- stories ----
 
+/** Every story, newest first (in kid mode only the folders the child may see). */
 export async function listStories() {
+  return kidStories(await listAllStories())
+}
+
+async function listAllStories() {
   try {
     const listedAt = Date.now()
     const rows = await listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 }))
@@ -143,10 +151,11 @@ export async function listStories() {
 export async function getStory(id: string) {
   try {
     const { data } = await client.models.Story.get({ id })
-    return data ? toStory(data) : undefined
+    const s = data ? toStory(data) : undefined
+    return s && kidAllowsFolder(folderOf(s)) ? s : undefined
   } catch (err) {
     const hit = (await cachedList('stories'))?.find((s) => s.id === id)
-    if (hit) return hit
+    if (hit) return kidAllowsFolder(folderOf(hit)) ? hit : undefined
     throw err
   }
 }
@@ -173,11 +182,81 @@ export async function deleteStory(s: Story) {
   await removeAudio(s.id).catch(() => {})
 }
 
+// ---- story folders ----
+
+const FOLDERS_KEY = 'kt-story-folders'
+
+const errorsOf = (res: { errors?: { message: string }[] | null }) => {
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+}
+
+/** The family's own folders as last seen on this device (for a fast, offline-friendly first paint). */
+export function cachedFolders(): StoryFolder[] {
+  try { return JSON.parse(localStorage.getItem(FOLDERS_KEY) ?? '[]') } catch { return [] }
+}
+const cacheFolders = (list: StoryFolder[]) => { try { localStorage.setItem(FOLDERS_KEY, JSON.stringify(list)) } catch { /* storage unavailable */ } }
+
+export async function listFolders(): Promise<StoryFolder[]> {
+  try {
+    const rows = await listAll((nextToken) => client.models.StoryFolder.list({ nextToken, limit: 200 }))
+    const list = rows.map((r) => ({ id: r.id, name: r.name, icon: r.icon ?? undefined }))
+    cacheFolders(list)
+    return kidFolderRows(list)
+  } catch {
+    return kidFolderRows(cachedFolders())
+  }
+}
+
+/** Updates stories in the offline copy of the list, so the shelf is right without internet too. */
+async function patchCachedStories(change: (s: Story) => Story) {
+  const cached = await cachedList('stories').catch(() => undefined)
+  if (cached) await cacheList('stories', cached.map(change)).catch(() => {})
+}
+
+/** Puts a story in a folder (by name), or back in its own folder by how it was made (null). */
+export async function moveStory(s: Story, collection: string | null) {
+  errorsOf(await client.models.Story.update({ id: s.id, collection }))
+  await patchCachedStories((x) => (x.id === s.id ? { ...x, collection: collection ?? undefined } : x))
+}
+
+export async function createFolder(name: string, icon?: string) {
+  const res = await client.models.StoryFolder.create({ name, icon: icon ?? null })
+  errorsOf(res)
+  if (!res.data) throw new Error('Nu am putut crea folderul.')
+  cacheFolders([...cachedFolders(), { id: res.data.id, name, icon }])
+  return res.data.id
+}
+
+/**
+ * Renames a folder and/or changes its icon, moving its stories along. `row` is missing for a
+ * folder that only existed through its stories (e.g. a bought collection); it gets one now.
+ */
+export async function saveFolder(oldName: string, row: StoryFolder | undefined, name: string, icon: string | undefined, stories: Story[]) {
+  if (row) {
+    errorsOf(await client.models.StoryFolder.update({ id: row.id, name, icon: icon ?? null }))
+    cacheFolders(cachedFolders().map((f) => (f.id === row.id ? { ...f, name, icon } : f)))
+  } else await createFolder(name, icon)
+  if (name !== oldName) {
+    kidFolderRenamed(oldName, name)
+    for (const s of stories.filter((x) => x.collection === oldName)) errorsOf(await client.models.Story.update({ id: s.id, collection: name }))
+    await patchCachedStories((x) => (x.collection === oldName ? { ...x, collection: name } : x))
+  }
+}
+
+/** Removes a folder; its stories are kept and go back to their own folder by how they were made. */
+export async function deleteFolder(name: string, row: StoryFolder | undefined, stories: Story[]) {
+  kidFolderRenamed(name)
+  for (const s of stories.filter((x) => x.collection === name)) errorsOf(await client.models.Story.update({ id: s.id, collection: null }))
+  await patchCachedStories((x) => (x.collection === name ? { ...x, collection: undefined } : x))
+  if (row) errorsOf(await client.models.StoryFolder.delete({ id: row.id }))
+  cacheFolders(cachedFolders().filter((f) => f.name !== name))
+}
+
 // ---- recipe import ----
 
 export type ImportedRecipe = NonNullable<Awaited<ReturnType<typeof client.queries.importRecipe>>['data']>
 
-async function runImport(args: { url?: string; photoKey?: string; idea?: string; tools?: string[]; servings?: number }) {
+async function runImport(args: { url?: string; photoKey?: string; text?: string; idea?: string; tools?: string[]; servings?: number }) {
   const res = await client.queries.importRecipe(args)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data?.title) throw new Error('Nu am găsit o rețetă aici.')
@@ -185,6 +264,9 @@ async function runImport(args: { url?: string; photoKey?: string; idea?: string;
 }
 
 export const importRecipeFromUrl = (url: string) => runImport({ url })
+
+/** Lets Claude structure free text (dictated, or pasted without clear headings). */
+export const importRecipeFromText = (text: string) => runImport({ text })
 
 export type RecipeIdea = { title: string; description?: string | null; tools?: (string | null)[] | null; missing?: (string | null)[] | null; minutes?: number | null }
 
@@ -311,4 +393,51 @@ export const shoppingApi = {
   },
   update: async (s: ShoppingItem) => check(await client.models.ShoppingItem.update({ id: s.id, text: s.text, checked: s.checked })),
   remove: async (id: string) => check(await client.models.ShoppingItem.delete({ id })),
+}
+
+// ---- family settings (one row shared by the family) ----
+
+const SETTINGS_ID = 'family'
+
+/** The family's settings from the cloud, or null if they were never saved there. */
+export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid'> & { city?: string; kid?: SharedSettings['kid'] }) | null> {
+  const res = await client.models.FamilySettings.get({ id: SETTINGS_ID })
+  check(res)
+  const r = res.data
+  if (!r) return null
+  return {
+    child: {
+      name: r.childName ?? '',
+      birthYear: r.childBirthYear ?? undefined,
+      gender: r.childGender === 'boy' || r.childGender === 'girl' ? r.childGender : undefined,
+      canRead: !!r.childCanRead,
+    },
+    city: r.city ?? undefined,
+    kitchenTools: clean(r.kitchenTools),
+    kid: r.kidMinutes == null && !r.kidPinHash ? undefined : {
+      pinHash: r.kidPinHash ?? undefined,
+      pinSalt: r.kidPinSalt ?? undefined,
+      minutes: r.kidMinutes ?? 30,
+      folders: clean(r.kidFolders),
+    },
+  }
+}
+
+export async function saveFamilySettings(s: SharedSettings) {
+  const row = {
+    id: SETTINGS_ID,
+    childName: s.child.name,
+    childBirthYear: s.child.birthYear ?? null,
+    childGender: s.child.gender ?? null,
+    childCanRead: s.child.canRead,
+    city: s.city ?? null,
+    kitchenTools: s.kitchenTools,
+    kidPinHash: s.kid.pinHash ?? null,
+    kidPinSalt: s.kid.pinSalt ?? null,
+    kidMinutes: s.kid.minutes,
+    kidFolders: s.kid.folders,
+  }
+  const res = await client.models.FamilySettings.update(row)
+  // Not there yet (first save): create it instead.
+  if (res.errors?.length || !res.data) check(await client.models.FamilySettings.create(row))
 }

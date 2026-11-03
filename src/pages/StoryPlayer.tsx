@@ -4,12 +4,15 @@ import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCove
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
+import MoveSheet from '../components/MoveSheet'
+import { showToast } from '../lib/toast'
 import type { Story } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories'
+import { builtinFolderOf, fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
 import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
+import { useKid } from '../lib/kidMode'
 
 const REMAINING_KEY = 'kt-player-remaining'
 
@@ -40,8 +43,11 @@ function StoryPlayer() {
   const [msg, setMsg] = useState('')
   const [coverOpen, setCoverOpen] = useState(false)
   const [coverBusy, setCoverBusy] = useState(false)
+  const [moveOpen, setMoveOpen] = useState(false)
   const offlineIds = useOfflineIds()
   const online = useOnline()
+  // Kid mode: no "Pentru părinți" (delete, cover, offline, move to folder).
+  const kid = useKid().active
   const isSaved = !!id && offlineIds.has(id)
   useEffect(() => { getStory(id!).then((x) => setS(x ?? null)).catch(() => setS(null)) }, [id])
   // The audio lives in the app-wide player, so it keeps going when you leave this page.
@@ -185,7 +191,7 @@ function StoryPlayer() {
         </button>
       </div>
 
-      <details className="parents">
+      {!kid && <details className="parents">
         <summary>Pentru părinți</summary>
         <div className="parents-body">
           {s.text && <details className="story-text"><summary>Textul poveștii</summary><p>{s.text}</p></details>}
@@ -201,6 +207,7 @@ function StoryPlayer() {
               }}>{saving ? 'Se salvează…' : 'Salvează offline'}</button>
             ) : null}
             {online && !coverOpen && <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>}
+            {online && <button className="btn small span-all" onClick={() => setMoveOpen(true)}>Mută în folder</button>}
             {online && (confirmDelete ? (
               <span className="confirm span-all">Ștergi povestea?
                 <button className="btn danger small" onClick={async () => { if (current) player.close(); await deleteStory(s); nav('/povesti') }}>Da, șterge</button>
@@ -226,7 +233,14 @@ function StoryPlayer() {
           {isSaved && <small>Salvată pe acest dispozitiv, merge și fără internet.</small>}
           {msg && <p className="error">{msg}</p>}
         </div>
-      </details>
+      </details>}
+      {moveOpen && !kid && (
+        <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection) => {
+          const moved = { ...s, collection }
+          setS(moved); player.update(moved)
+          showToast(`Mutată în ${collection ?? builtinFolderOf(s)}`)
+        }} />
+      )}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { folderOf, getPosition, setPosition } from './stories'
 import { useOfflineIds, useOnline } from './useOffline'
 import { useCoverUrl } from './useCoverUrl'
 import { storyArtwork } from './artwork'
+import { isKidLocked } from './kidMode'
 
 /** How many stories to play in a row before stopping. */
 export type Sleep = 1 | 2 | 3 | 5
@@ -39,6 +40,8 @@ interface NowPlaying {
   toggleShuffle: () => void
   /** Stop and forget the current story (closes the mini player). */
   close: () => void
+  /** Turns the sound down over a few seconds, then pauses (kid mode's time is up). */
+  fadeOut: () => Promise<void>
 }
 
 /** Where "next" comes from: the story's folder, or the Favorite list when started from there. */
@@ -150,10 +153,22 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   const update = useCallback((s: Story) => { if (storyRef.current?.id === s.id) setStory(s) }, [])
-  const toggle = useCallback(() => { const a = audio.current; if (!a) return; setEnded(false); if (a.paused) a.play().catch(() => {}); else a.pause() }, [])
+  const toggle = useCallback(() => { const a = audio.current; if (!a || (a.paused && isKidLocked())) return; setEnded(false); if (a.paused) a.play().catch(() => {}); else a.pause() }, [])
   const skip = useCallback((d: number) => { const a = audio.current; if (a) a.currentTime = Math.max(0, Math.min(a.duration || 0, a.currentTime + d)) }, [])
   const seek = useCallback((sec: number) => { if (audio.current) audio.current.currentTime = sec }, [])
-  const restart = useCallback(() => { const a = audio.current; if (!a) return; setEnded(false); a.currentTime = 0; a.play().catch(() => {}) }, [])
+  const restart = useCallback(() => { const a = audio.current; if (!a || isKidLocked()) return; setEnded(false); a.currentTime = 0; a.play().catch(() => {}) }, [])
+  // iPhone ignores the volume set by a web page, so there it simply pauses at the end of the fade.
+  const fadeOut = useCallback(async () => {
+    const a = audio.current
+    if (!a || a.paused) return
+    const start = a.volume
+    for (let i = 1; i <= 16 && !a.paused; i++) {
+      await new Promise((r) => setTimeout(r, 500))
+      a.volume = Math.max(0, start * (1 - i / 16))
+    }
+    a.pause()
+    a.volume = start
+  }, [])
   const chooseSleep = (v: Sleep) => { played.current = 0; setSleep(v); store(SLEEP_KEY, String(v)) }
   const toggleShuffle = () => setShuffle((x) => { store(SHUFFLE_KEY, x ? '0' : '1'); return !x })
   const close = useCallback(() => {
@@ -185,7 +200,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     if (storyRef.current) setPosition(storyRef.current.id, undefined)
     played.current += 1
     const following = nextRef.current
-    if (following && played.current < sleepRef.current) load(following, { autoplay: true, continued: true })
+    if (following && played.current < sleepRef.current && !isKidLocked()) load(following, { autoplay: true, continued: true })
     else { played.current = 0; setEnded(true) }
   }
 
@@ -196,13 +211,16 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     setError(fromDevice.current ? BROKEN_FILE : NOT_REACHABLE)
   }
 
-  const value: NowPlaying = { story, url, playing, t, dur, ended, error, sleep, shuffle, prev, next, load, update, toggle, skip, seek, restart, chooseSleep, toggleShuffle, close }
+  const value: NowPlaying = { story, url, playing, t, dur, ended, error, sleep, shuffle, prev, next, load, update, toggle, skip, seek, restart, chooseSleep, toggleShuffle, close, fadeOut }
   return (
     <Ctx.Provider value={value}>
       {children}
       <audio ref={audio} src={url}
         onError={onError}
-        onPlay={() => { setPlaying(true); setEnded(false); setError(undefined) }}
+        onPlay={(e) => {
+          // Time is up in kid mode: nothing plays, not even from the lock-screen or headphone buttons.
+          if (isKidLocked()) { e.currentTarget.pause(); return }
+          setPlaying(true); setEnded(false); setError(undefined) }}
         onPause={() => { setPlaying(false); if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
         onEnded={onEnded}
         onTimeUpdate={(e) => setT(e.currentTarget.currentTime)}
@@ -212,7 +230,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
           const cur = storyRef.current
           const pos = cur ? getPosition(cur.id) : 0
           if (pos && (!isFinite(a.duration) || pos < a.duration - 5)) a.currentTime = pos
-          if (autoplay.current) { autoplay.current = false; a.play().catch(() => {}) }
+          if (autoplay.current && !isKidLocked()) { autoplay.current = false; a.play().catch(() => {}) }
         }} />
     </Ctx.Provider>
   )

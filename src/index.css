@@ -434,6 +434,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .parents summary { cursor: pointer; font-size: .9rem; text-align: center; list-style: none; padding: 13px 0; }
 .parents summary::-webkit-details-marker { display: none; }
 .parents-body { display: grid; gap: 10px; margin-top: 10px; }
+.parents-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.parents-actions > .btn { width: 100%; min-height: 44px; justify-content: center; text-align: center; }
+.parents-actions > :only-child, .parents-actions > .span-all { grid-column: 1 / -1; }
+.parents-actions > .confirm { justify-content: center; }
 
 .goodnight { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; padding: 24px; background: radial-gradient(circle at 50% 38%, #232766 0, #0b0d26 70%); color: #fff6d6; transition: filter 2s; }
 .goodnight.dim { filter: brightness(.35); }

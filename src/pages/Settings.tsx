@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
+import { CITIES, cityByName, sunTimes } from '../lib/sun'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import FamilySection from './FamilySection'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
@@ -108,6 +109,28 @@ function OfflineStorage() {
 type Tab = 'povesti' | 'retete' | 'general'
 const TABS: [Tab, string, string][] = [['povesti', 'Povești', '/setari/povesti'], ['retete', 'Rețete', '/setari/retete'], ['general', 'General', '/setari']]
 
+function SkySettings() {
+  const { city } = useSettings()
+  const { lat, lon } = cityByName(city)
+  const [today] = useState(() => new Date())
+  const { rise, set } = sunTimes(today, lat, lon)
+  const hm = (d: Date) => d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
+  return (
+    <div className="set-group">
+      <h2 className="set-label">Cerul din povești</h2>
+      <div className="set-box">
+        <label className="set-row">
+          <span>Orașul<small className="set-sub">Răsărit {hm(rise)} · apus {hm(set)}</small></span>
+          <select id="sky-city" value={cityByName(city).name} onChange={(e) => updateSettings({ city: e.target.value })}>
+            {CITIES.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+          </select>
+        </label>
+      </div>
+      <p className="set-hint">Cerul se schimbă ca afară: zi cu soare de la răsărit, apus cu o oră înainte și o oră după apusul soarelui, apoi noapte cu stele.</p>
+    </div>
+  )
+}
+
 function StorySettings() {
   const { child } = useSettings()
   const age = childAge(child)
@@ -144,6 +167,7 @@ function StorySettings() {
         </div>
         <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează pe acest dispozitiv.</p>
       </div>
+      <SkySettings />
       <OfflineStorage />
     </>
   )

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { SKY_TOP, type SkyPhase } from './sun'
 
 export type ThemeChoice = 'auto' | 'light' | 'dark'
 
@@ -15,11 +16,13 @@ export interface Settings {
   child: ChildProfile
   /** Appliances the family has, used when generating recipes. */
   kitchenTools: string[]
+  /** Where we live, roughly: the stories sky follows sunrise and sunset there. */
+  city: string
 }
 
 const KEY = 'kt-settings'
 const LEGACY_BRIEF_KEY = 'kt-story-brief'
-const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [] }
+const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [], city: 'București' }
 
 // Earlier versions stored the age; turn it into a birth year once.
 function migrateChild(c: ChildProfile & { age?: number }): ChildProfile {
@@ -70,8 +73,8 @@ const media = typeof window !== 'undefined' ? window.matchMedia('(prefers-color-
 export function applyTheme() {
   const dark = current.theme === 'dark' || (current.theme === 'auto' && !!media?.matches)
   document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-  const night = document.documentElement.dataset.area === 'night'
-  setStatusBarColor(night ? '#171a45' : dark ? '#131915' : '#f2f3ee')
+  const { area, sky } = document.documentElement.dataset
+  setStatusBarColor(area === 'night' ? SKY_TOP[(sky as SkyPhase) ?? 'night'] ?? '#171a45' : dark ? '#131915' : '#f2f3ee')
 }
 
 /**

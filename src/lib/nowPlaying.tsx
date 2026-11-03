@@ -175,14 +175,33 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     const a = audio.current
     const cur = storyRef.current
     if (a && cur) { a.pause(); setPosition(cur.id, a.currentTime) }
+    // Unload the audio too: a paused element that still holds a source keeps the iPhone lock-screen player alive.
+    if (a) { a.removeAttribute('src'); a.load() }
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none'
     setStory(undefined); setEnded(false); played.current = 0
   }, [])
+
+  // Lock-screen / headphone buttons: play, pause and 15 s skips like in the app. None when nothing is loaded.
+  const hasStory = !!story
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+    const ms = navigator.mediaSession
+    const set = (action: MediaSessionAction, h: MediaSessionActionHandler | null) => { try { ms.setActionHandler(action, h) } catch { /* unsupported action */ } }
+    const actions: MediaSessionAction[] = ['play', 'pause', 'seekbackward', 'seekforward', 'seekto']
+    if (!hasStory) { actions.forEach((x) => set(x, null)); return }
+    set('play', () => { const a = audio.current; if (a && !isKidLocked()) { setEnded(false); a.play().catch(() => {}) } })
+    set('pause', () => audio.current?.pause())
+    set('seekbackward', (d) => skip(-(d.seekOffset || 15)))
+    set('seekforward', (d) => skip(d.seekOffset || 15))
+    set('seekto', (d) => { if (d.seekTime != null) seek(d.seekTime) })
+    return () => actions.forEach((x) => set(x, null))
+  }, [hasStory, skip, seek])
 
   // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
   const coverUrl = useCoverUrl(story?.coverKey)
   useEffect(() => {
     if (!('mediaSession' in navigator)) return
-    if (!story) { navigator.mediaSession.metadata = null; return }
+    if (!story) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; return }
     let live = true
     navigator.mediaSession.metadata = new MediaMetadata({ title: story.title, artist: 'Bucătăria cu povești' })
     storyArtwork(story, coverUrl).then((src) => {
@@ -220,8 +239,9 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
         onPlay={(e) => {
           // Time is up in kid mode: nothing plays, not even from the lock-screen or headphone buttons.
           if (isKidLocked()) { e.currentTarget.pause(); return }
-          setPlaying(true); setEnded(false); setError(undefined) }}
-        onPause={() => { setPlaying(false); if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
+          setPlaying(true); setEnded(false); setError(undefined)
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing' }}
+        onPause={(e) => { setPlaying(false); if ('mediaSession' in navigator && e.currentTarget.src) navigator.mediaSession.playbackState = 'paused'; if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
         onEnded={onEnded}
         onTimeUpdate={(e) => setT(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => {

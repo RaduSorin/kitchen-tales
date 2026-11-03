@@ -692,7 +692,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .sheet-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(0 0 0 / .4); display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: min(100%, 560px); max-height: 82vh; overflow-y: auto; background: var(--bg); color: var(--text); border-radius: 26px 26px 0 0;
   padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); display: grid; gap: 10px; align-content: start; animation: sheet-in .2s ease-out; }
+/* Keyboard up (iPhone): the backdrop is only the visible part above the keyboard, so the sheet fits there. */
+.sheet { max-height: min(82vh, calc(100% - 12px)); }
 @media (min-width: 760px) { .sheet-backdrop { align-items: center; } .sheet { border-radius: 22px; max-height: 76vh; } }
+.sheet-backdrop[data-keyboard] .sheet { padding-bottom: 12px; border-radius: 22px 22px 0 0; }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .sheet-head h2 { margin: 0; }

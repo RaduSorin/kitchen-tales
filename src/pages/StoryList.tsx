@@ -191,6 +191,11 @@ export default function StoryList() {
                   {s.durationSec ? `${s.collection ? '' : ' · '}${Math.max(1, Math.round(s.durationSec / 60))} min` : ''}
                 </small>
               </Link>
+              {s.favorite && (
+                <span className="fav-dot" title="La favorite" aria-label="La favorite">
+                  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" fill="currentColor" /></svg>
+                </span>
+              )}
               {kid ? null : offline.has(s.id)
                 ? <span className="saved-dot" title="Salvată pe dispozitiv" aria-label="Salvată pe dispozitiv">✓</span>
                 : online && (

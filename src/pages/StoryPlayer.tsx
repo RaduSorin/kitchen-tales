@@ -163,16 +163,16 @@ function StoryPlayer() {
         <button className="track" aria-label={prev ? `Povestea anterioară: ${prev.title}` : 'Povestea anterioară'} disabled={!prev} onClick={() => prev && goTo(prev)}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M20 5v14L8.5 12z" fill="currentColor" /></svg>
         </button>
-        <button aria-label="Înapoi 15 secunde" onClick={() => skip(-15)}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2" /><path d="M4 4v4h4" /></svg>
+        <button aria-label={`Înapoi ${SKIP} secunde`} onClick={() => skip(-SKIP)}>
+          <SkipIcon sec={SKIP} back />
         </button>
         <button className="play" aria-label={playing ? 'Pauză' : 'Pornește'} onClick={toggle} disabled={!url}>
           {playing
             ? <svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1.5" fill="currentColor" /><rect x="14" y="4" width="4" height="16" rx="1.5" fill="currentColor" /></svg>
             : <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>}
         </button>
-        <button aria-label="Înainte 15 secunde" onClick={() => skip(15)}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2" /><path d="M20 4v4h-4" /></svg>
+        <button aria-label={`Înainte ${SKIP} secunde`} onClick={() => skip(SKIP)}>
+          <SkipIcon sec={SKIP} />
         </button>
         <button className="track" aria-label={next ? `Povestea următoare: ${next.title}` : 'Povestea următoare'} disabled={!next} onClick={() => next && goTo(next)}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="17.4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M4 5v14l11.5-7z" fill="currentColor" /></svg>
@@ -242,5 +242,22 @@ function StoryPlayer() {
         }} />
       )}
     </div>
+  )
+}
+
+/** Seconds jumped by the skip buttons. */
+const SKIP = 15
+
+/** A curved arrow around the number of seconds it skips (mirrored for "back"). */
+function SkipIcon({ sec, back }: { sec: number; back?: boolean }) {
+  return (
+    <svg className="skip-icon" width="46" height="46" viewBox="0 0 44 44" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" transform={back ? 'matrix(-1 0 0 1 44 0)' : undefined}>
+        <path d="M22 10A14 14 0 1 0 34.1 17" />
+        <path d="M22 10h3" />
+        <path d="M24.5 4.8 31 10l-6.5 5.2z" fill="currentColor" strokeWidth="1.2" />
+      </g>
+      <text x="22" y="25" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="13" fontWeight="800">{sec}</text>
+    </svg>
   )
 }

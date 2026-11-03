@@ -40,3 +40,10 @@ backend.generateStory.resources.lambda.addToRolePolicy(invokeClaude)
 backend.generateStory.resources.lambda.addToRolePolicy(
   new PolicyStatement({ actions: ['polly:SynthesizeSpeech'], resources: ['*'] }),
 )
+
+// Voice dictation on the Add recipe screens: the browser streams microphone audio
+// straight to Amazon Transcribe (Romanian) with the signed-in user's credentials.
+backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(new PolicyStatement({
+  actions: ['transcribe:StartStreamTranscriptionWebSocket', 'transcribe:StartStreamTranscription'],
+  resources: ['*'],
+}))

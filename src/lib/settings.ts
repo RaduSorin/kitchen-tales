@@ -53,14 +53,48 @@ function read(): Settings {
 
 let current = read()
 const listeners = new Set<() => void>()
+const sharedListeners = new Set<() => void>()
+
+/** Settings shared by the family and kept in the cloud; the theme stays per device. */
+export type SharedSettings = Pick<Settings, 'child' | 'city' | 'kitchenTools'>
+const SHARED_KEYS = ['child', 'city', 'kitchenTools'] as const
 
 export function getSettings() { return current }
 
-export function updateSettings(patch: Partial<Omit<Settings, 'child'>> & { child?: Partial<ChildProfile> }) {
+type Patch = Partial<Omit<Settings, 'child'>> & { child?: Partial<ChildProfile> }
+
+function set(patch: Patch) {
   current = { ...current, ...patch, child: { ...current.child, ...patch.child } }
   try { localStorage.setItem(KEY, JSON.stringify(current)) } catch { /* storage unavailable: keep in memory */ }
   applyTheme()
   listeners.forEach((l) => l())
+}
+
+export function updateSettings(patch: Patch) {
+  set(patch)
+  if (SHARED_KEYS.some((k) => k in patch)) sharedListeners.forEach((l) => l())
+}
+
+/** Called after a change to a shared setting on this device (used to send it to the cloud). */
+export function onSharedChange(fn: () => void) {
+  sharedListeners.add(fn)
+  return () => { sharedListeners.delete(fn) }
+}
+
+/** Takes the family's settings from the cloud without counting it as a local change. */
+export function applySharedSettings(s: Partial<SharedSettings>) {
+  set({ ...s, child: s.child ? { ...DEFAULTS.child, ...s.child } : undefined })
+}
+
+// Another tab or window of the app changed the settings: use them here too, so this one
+// does not later write its old copy back over them.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key !== KEY) return
+    current = read()
+    applyTheme()
+    listeners.forEach((l) => l())
+  })
 }
 
 export function useSettings() {

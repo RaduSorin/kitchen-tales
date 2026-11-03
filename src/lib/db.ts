@@ -3,6 +3,7 @@
 import { generateClient } from 'aws-amplify/data'
 import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
+import type { SharedSettings } from './settings'
 import type { PlanEntry, Recipe, ShoppingItem, Story, StorySource } from './types'
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, saveAudio } from './offline'
 
@@ -314,4 +315,41 @@ export const shoppingApi = {
   },
   update: async (s: ShoppingItem) => check(await client.models.ShoppingItem.update({ id: s.id, text: s.text, checked: s.checked })),
   remove: async (id: string) => check(await client.models.ShoppingItem.delete({ id })),
+}
+
+// ---- family settings (one row shared by the family) ----
+
+const SETTINGS_ID = 'family'
+
+/** The family's settings from the cloud, or null if they were never saved there. */
+export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city'> & { city?: string }) | null> {
+  const res = await client.models.FamilySettings.get({ id: SETTINGS_ID })
+  check(res)
+  const r = res.data
+  if (!r) return null
+  return {
+    child: {
+      name: r.childName ?? '',
+      birthYear: r.childBirthYear ?? undefined,
+      gender: r.childGender === 'boy' || r.childGender === 'girl' ? r.childGender : undefined,
+      canRead: !!r.childCanRead,
+    },
+    city: r.city ?? undefined,
+    kitchenTools: clean(r.kitchenTools),
+  }
+}
+
+export async function saveFamilySettings(s: SharedSettings) {
+  const row = {
+    id: SETTINGS_ID,
+    childName: s.child.name,
+    childBirthYear: s.child.birthYear ?? null,
+    childGender: s.child.gender ?? null,
+    childCanRead: s.child.canRead,
+    city: s.city ?? null,
+    kitchenTools: s.kitchenTools,
+  }
+  const res = await client.models.FamilySettings.update(row)
+  // Not there yet (first save): create it instead.
+  if (res.errors?.length || !res.data) check(await client.models.FamilySettings.create(row))
 }

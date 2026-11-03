@@ -6,6 +6,7 @@ import ToastHost from './components/ToastHost'
 import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
 import { applyTheme, setStatusBarColor } from './lib/settings'
+import { useSettingsSync } from './lib/settingsSync'
 import { useSkyPhase } from './lib/sky'
 import { SKY_TOP } from './lib/sun'
 import { SkyBackdrop } from './components/Sky'
@@ -167,6 +168,7 @@ function Shell() {
 }
 
 export default function App() {
+  useSettingsSync()
   return (
     <BrowserRouter>
       <NowPlayingProvider>

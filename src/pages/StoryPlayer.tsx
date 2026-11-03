@@ -238,9 +238,9 @@ const SKIP = 15
 function SkipIcon({ sec, back }: { sec: number; back?: boolean }) {
   return (
     <svg className="skip-icon" width="46" height="46" viewBox="0 0 44 44" aria-hidden="true">
-      <g fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" transform={back ? 'matrix(-1 0 0 1 44 0)' : undefined}>
+      <g fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" transform={`${back ? 'matrix(-1 0 0 1 44 0) ' : ''}rotate(35 22 22)`}>
         <path d="M22 7A15 15 0 1 1 9 14.5" />
-        <path d="M22 3 26.5 7 22 11" />
+        <path d="M21 2.2 27 7 21 11.8z" fill="currentColor" stroke="none" />
       </g>
       <text x="22" y="22" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="14" fontWeight="800">{sec}</text>
     </svg>

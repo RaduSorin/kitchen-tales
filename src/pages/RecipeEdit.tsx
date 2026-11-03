@@ -286,9 +286,10 @@ export default function RecipeEdit() {
         ) : mode === 'generate' ? (
           <div className="add-panel">
             <label htmlFor="gen-idea">Ce ai vrea să gătești?</label>
-            <textarea id="gen-idea" rows={4} autoFocus value={idea} onChange={(e) => setIdea(e.target.value)}
-              placeholder="De exemplu: o ciorbă de pui rapidă, ceva cu dovlecei și brânză, un desert fără zahăr pentru copii" />
-            <MicButton value={idea} onChange={setIdea} />
+            <MicButton value={idea} onChange={setIdea}>
+              <textarea id="gen-idea" rows={4} autoFocus value={idea} onChange={(e) => setIdea(e.target.value)}
+                placeholder="De exemplu: o ciorbă de pui rapidă, ceva cu dovlecei și brânză, un desert fără zahăr pentru copii" />
+            </MicButton>
             {genOptions}
             <button type="button" className="btn primary big" onClick={runGenerate} disabled={!idea.trim()}>Generează rețeta</button>
           </div>
@@ -314,9 +315,10 @@ export default function RecipeEdit() {
           ) : (
             <div className="add-panel">
               <label htmlFor="fridge">Ce ai în frigider?</label>
-              <textarea id="fridge" rows={5} autoFocus value={fridge} onChange={(e) => setFridge(e.target.value)}
-                placeholder="De exemplu: piept de pui, 2 dovlecei, smântână, ouă, o ceapă, orez" />
-              <MicButton value={fridge} onChange={setFridge} />
+              <MicButton value={fridge} onChange={setFridge}>
+                <textarea id="fridge" rows={5} autoFocus value={fridge} onChange={(e) => setFridge(e.target.value)}
+                  placeholder="De exemplu: piept de pui, 2 dovlecei, smântână, ouă, o ceapă, orez" />
+              </MicButton>
               <p className="set-hint">Sarea, piperul, uleiul, zahărul și făina le considerăm deja în casă.</p>
               {genOptions}
               <button type="button" className="btn primary big" onClick={runSuggest} disabled={!fridge.trim()}>Propune rețete</button>
@@ -325,9 +327,10 @@ export default function RecipeEdit() {
         ) : mode === 'text' ? (
           <div className="add-panel">
             <label htmlFor="import-text">Lipește, scrie sau dictează rețeta</label>
-            <textarea id="import-text" rows={10} autoFocus value={paste} onChange={(e) => setPaste(e.target.value)}
-              placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. …'} />
-            <MicButton value={paste} onChange={setPaste} onDictated={() => setDictated(true)} />
+            <MicButton value={paste} onChange={setPaste} onDictated={() => setDictated(true)}>
+              <textarea id="import-text" rows={10} autoFocus value={paste} onChange={(e) => setPaste(e.target.value)}
+                placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. …'} />
+            </MicButton>
             <p className="set-hint">Dictează liber: ce ingrediente pui, cât și cum le gătești. Le aranjăm noi.</p>
             <button type="button" className="btn primary big" onClick={importText} disabled={!paste.trim()}>Completează rețeta</button>
           </div>
@@ -400,9 +403,10 @@ export default function RecipeEdit() {
       <section className="editor-section">
         <h2>Ingrediente</h2>
         <p className="set-hint">Câte unul pe rând, cu cantitatea la început (de exemplu „500 g carne tocată”), ca să se poată recalcula porțiile.</p>
-        <textarea aria-label="Ingrediente" rows={Math.max(5, lines(ing).length + 1)} value={ing} onChange={(e) => setIng(e.target.value)} />
         <MicButton value={ing} onChange={setIng} asLines={spokenIngredientLines}
-          hint="Spune câte un ingredient, cu o mică pauză între ele." />
+          hint="Spune câte un ingredient, cu o mică pauză între ele.">
+          <textarea aria-label="Ingrediente" rows={Math.max(5, lines(ing).length + 1)} value={ing} onChange={(e) => setIng(e.target.value)} />
+        </MicButton>
       </section>
 
       <section className="editor-section">
@@ -416,7 +420,7 @@ export default function RecipeEdit() {
         </ol>
         <div className="steps-add">
           <button type="button" className="btn ghost" onClick={addStep}>+ Adaugă un pas</button>
-          <MicButton value="" label="Dictează un pas" hint="Spune pasul, apoi atinge Gata."
+          <MicButton value="" label="Dictează un pas" hint="Spune pasul, apoi atinge pătratul ca să oprești."
             onStart={() => {
               // Fill the last step if it is still empty, otherwise start a new one.
               const last = steps[steps.length - 1]
@@ -434,8 +438,9 @@ export default function RecipeEdit() {
 
       <section className="editor-section">
         <h2>Note</h2>
-        <textarea aria-label="Note" rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} />
-        <MicButton value={r.notes ?? ''} onChange={(t) => setR((cur) => (cur ? { ...cur, notes: t } : cur))} />
+        <MicButton value={r.notes ?? ''} onChange={(t) => setR((cur) => (cur ? { ...cur, notes: t } : cur))}>
+          <textarea aria-label="Note" rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} />
+        </MicButton>
         <label>Link sursă<input type="url" value={r.sourceUrl ?? ''} onChange={(e) => set('sourceUrl', e.target.value || undefined)} /></label>
       </section>
 

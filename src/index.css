@@ -295,15 +295,24 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .way small { color: var(--muted); }
 .add-panel { display: grid; gap: 10px; background: var(--surface); border-radius: 18px; padding: 16px; }
 .add-panel label { font-weight: 600; }
-.steps-add { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.dictate { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
-.dictate .set-hint { padding: 0; }
-.dictate .set-hint.error { flex-basis: 100%; }
-.mic-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px 0 14px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.mic-btn:disabled { opacity: .5; cursor: default; }
-.mic-btn.on { --lvl: 0; background: var(--danger); border-color: var(--danger); color: #fff; font-variant-numeric: tabular-nums;
-  box-shadow: 0 0 0 calc(3px + var(--lvl) * 9px) color-mix(in srgb, var(--danger) 25%, transparent); transition: box-shadow .1s linear; }
-@media (prefers-reduced-motion: reduce) { .mic-btn.on { box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 25%, transparent); transition: none; } }
+.steps-add { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 10px; }
+.steps-add .mic-inline { display: contents; }
+.steps-add .mic-hint { grid-column: 1 / -1; margin: 0; }
+.mic-field { position: relative; }
+.mic-field > textarea { padding-right: 52px !important; padding-bottom: 14px; display: block; }
+.mic-field > .mic { position: absolute; right: 8px; bottom: 8px; }
+.mic { display: inline-flex; align-items: center; gap: 8px; }
+.mic-inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.mic-hint { margin-top: -4px; }
+.mic-time { font-size: .85rem; font-weight: 600; color: var(--danger); font-variant-numeric: tabular-nums; background: var(--surface); padding: 2px 8px; border-radius: 999px; }
+/* 36 px circle with a 44 px touch target around it. */
+.mic-btn { position: relative; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; padding: 0; border: 0; background: var(--accent-soft); color: var(--accent); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mic-btn::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
+.mic-btn:disabled { opacity: .45; cursor: default; }
+.mic-btn.on { --lvl: 0; background: var(--danger); color: #fff;
+  box-shadow: 0 0 0 calc(2px + var(--lvl) * 8px) color-mix(in srgb, var(--danger) 25%, transparent); transition: box-shadow .1s linear; }
+.mic-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; animation: spin .8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .mic-btn.on { box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent); transition: none; } }
 .gen-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; }
 .gen-label { font-weight: 600; }
 .ideas { display: grid; gap: 10px; }

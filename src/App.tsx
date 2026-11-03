@@ -130,7 +130,10 @@ function Shell() {
       <NightArea />
       {!player && <div className="status-fill" aria-hidden="true" />}
       {!player && <header className="topbar" ref={header}>
-        {back && !kid ? <BackButton to={back} /> : <Link to={kid ? '/povesti/acasa' : '/'} className={home ? 'brand' : 'brand brand-sub'}><span>Bucătăria</span> <span>cu povești</span></Link>}
+        {back && !kid ? <BackButton to={back} /> : kid
+          // Stories-only mode: nothing in the top bar points to the kitchen side, not even the name.
+          ? <Link to="/povesti/acasa" className={home ? 'brand' : 'brand brand-sub'}><span>Povești</span></Link>
+          : <Link to="/" className={home ? 'brand' : 'brand brand-sub'}><span>Bucătăria</span> <span>cu povești</span></Link>}
         <nav>
           {/* On phones these live in the bottom tab bar; wide screens show them here (recipes side only). */}
           <NavLink to="/retete" className="wide-only day-only">Rețetele mele</NavLink>

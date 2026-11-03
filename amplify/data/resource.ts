@@ -77,6 +77,11 @@ const schema = a.schema({
       childCanRead: a.boolean(),
       city: a.string(),
       kitchenTools: a.string().array(),
+      // Kid mode: PIN (salted SHA-256), default time limit, folders the child may see.
+      kidPinHash: a.string(),
+      kidPinSalt: a.string(),
+      kidMinutes: a.integer(),
+      kidFolders: a.string().array(),
     })
     .authorization((allow) => [allow.authenticated()]),
 

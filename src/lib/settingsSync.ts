@@ -15,13 +15,13 @@ const setDirty = (on: boolean) => {
 }
 
 const shared = (): SharedSettings => {
-  const { child, city, kitchenTools } = getSettings()
-  return { child, city, kitchenTools }
+  const { child, city, kitchenTools, kid } = getSettings()
+  return { child, city, kitchenTools, kid }
 }
 
 /** Whether anything worth keeping was set on this device. */
 const hasAny = (s: SharedSettings) =>
-  !!(s.child.name.trim() || s.child.birthYear || s.child.gender || s.child.canRead || s.kitchenTools.length)
+  !!(s.child.name.trim() || s.child.birthYear || s.child.gender || s.child.canRead || s.kitchenTools.length || s.kid.pinHash)
 
 let version = 0
 let timer: ReturnType<typeof setTimeout> | undefined
@@ -46,7 +46,8 @@ async function sync() {
     try {
       const server = await getFamilySettings()
       if (isDirty()) return // changed on this device while loading: that change wins
-      if (server) applySharedSettings({ ...server, city: server.city ?? getSettings().city })
+      // Rows saved before kid mode existed have no kid fields: keep this device's copy then.
+      if (server) applySharedSettings({ ...server, city: server.city ?? getSettings().city, kid: server.kid ?? getSettings().kid })
       else if (hasAny(shared())) await push() // first time: keep what this device has
     } catch (err) {
       console.warn('settings: load failed', err)

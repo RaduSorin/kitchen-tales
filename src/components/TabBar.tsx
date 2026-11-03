@@ -5,6 +5,7 @@ import { shoppingStore } from '../lib/plan'
 import { isPlayerPage, useArea } from '../lib/area'
 import { mergeShopping } from '../lib/merge'
 import { primeKeyboard } from '../lib/keyboard'
+import { useKid } from '../lib/kidMode'
 
 const I = ({ d }: { d: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
@@ -35,10 +36,12 @@ function StoryTabs() {
   const searching = onShelf && q.has('cauta')
   const favorites = onShelf && q.has('favorite')
   const shelf = onShelf && !searching && !favorites
+  // Kid mode: nothing to add, record or create.
+  const kid = useKid().active
   return (
     <>
       <div className="tabbar-spacer" aria-hidden="true" />
-      <nav className="tabbar night-tabbar" aria-label="Meniu povești">
+      <nav className={`tabbar night-tabbar${kid ? ' kid-tabbar' : ''}`} aria-label="Meniu povești">
         <NavLink to="/povesti/acasa" className="tab"><span className="tab-icon"><I d={HOME} /></span><span className="tab-label">Acasă</span></NavLink>
         <Link to="/povesti?cauta=1" onClick={() => primeKeyboard('story-search')} className={`tab${searching ? ' active' : ''}`} aria-current={searching ? 'page' : undefined}>
           <span className="tab-icon"><I d={SEARCH} /></span><span className="tab-label">Caută</span>
@@ -46,7 +49,7 @@ function StoryTabs() {
         <Link to="/povesti" className={`tab tab-center${shelf ? ' active' : ''}`} aria-current={shelf ? 'page' : undefined}>
           <span className="tab-icon"><I d={SHELF} /></span><span className="tab-label">Bibliotecă</span>
         </Link>
-        <NavLink to="/povesti/adauga" className="tab"><span className="tab-icon"><I d={PLUS} /></span><span className="tab-label">Adaugă</span></NavLink>
+        {!kid && <NavLink to="/povesti/adauga" className="tab"><span className="tab-icon"><I d={PLUS} /></span><span className="tab-label">Adaugă</span></NavLink>}
         <Link to="/povesti?favorite=1" className={`tab${favorites ? ' active' : ''}`} aria-current={favorites ? 'page' : undefined}>
           <span className="tab-icon"><I d={HEART} /></span><span className="tab-label">Favorite</span>
         </Link>

@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
-import { NavLink, useParams } from 'react-router-dom'
+import { NavLink, useNavigate, useParams } from 'react-router-dom'
 import { CITIES, cityByName, sunTimes } from '../lib/sun'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import FamilySection from './FamilySection'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
 import { PRESET_TOOLS } from '../lib/kitchenTools'
 import { onOfflineChange, removeAllAudio, savedAudioSummary } from '../lib/offline'
+import { listFolders, listStories } from '../lib/db'
+import { groupFolders } from '../lib/stories'
+import { startKid } from '../lib/kidMode'
+import { CheckPinSheet, NewPinSheet } from '../components/KidMode'
 
 const THEMES: [ThemeChoice, string][] = [['auto', 'Automat'], ['light', 'Luminos'], ['dark', 'Întunecat']]
 const THIS_YEAR = new Date().getFullYear()
@@ -131,11 +135,85 @@ function SkySettings() {
   )
 }
 
+const KID_TIMES: [number, string][] = [[15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 oră'], [0, 'Fără limită']]
+
+/** Kid mode: the PIN, the time limit, which folders the child sees, and the button that starts it. */
+function KidSettings() {
+  const { kid, child } = useSettings()
+  const nav = useNavigate()
+  const [sheet, setSheet] = useState<'new' | 'check'>()
+  const [folders, setFolders] = useState<string[]>([])
+  useEffect(() => {
+    Promise.all([listStories(), listFolders()]).then(([s, rows]) => setFolders(groupFolders(s, rows).map((f) => f.name))).catch(() => {})
+  }, [])
+  const allowed = kid.folders.filter((f) => folders.includes(f))
+  const toggleFolder = (name: string) => updateSettings({
+    kid: { folders: kid.folders.includes(name) ? kid.folders.filter((f) => f !== name) : [...kid.folders, name] },
+  })
+  const start = () => { startKid(kid.minutes); nav('/povesti/acasa') }
+
+  return (
+    <div className="set-group">
+      <h2 className="set-label">Modul copil</h2>
+      <div className="set-box">
+        {!kid.pinHash ? (
+          <div className="set-row stack">
+            <span>Dă-i telefonul copilului: doar povești, fără ștergere sau mutare, cu timp limitat. Ieși cu un PIN pe care îl alegi acum.</span>
+            <button type="button" className="btn primary" onClick={() => setSheet('new')}>Alege un PIN</button>
+          </div>
+        ) : (
+          <>
+            <div className="set-row stack">
+              <span id="kid-time-label">Timp<small className="set-sub">La final, povestea începută se termină dacă mai are cel mult 5 minute, apoi aplicația se blochează.</small></span>
+              <div className="seg seg-wrap" role="group" aria-labelledby="kid-time-label">
+                {KID_TIMES.map(([m, label]) => (
+                  <button type="button" key={m} aria-pressed={kid.minutes === m} onClick={() => updateSettings({ kid: { minutes: m } })}>{label}</button>
+                ))}
+              </div>
+            </div>
+            {folders.length > 1 && (
+              <div className="set-row stack">
+                <span id="kid-folders-label">Foldere pe care le vede{child.name ? ` ${child.name}` : ' copilul'}<small className="set-sub">{allowed.length ? `${allowed.length} din ${folders.length}` : 'Toate'}</small></span>
+                <div className="tool-chips" role="group" aria-labelledby="kid-folders-label">
+                  <button type="button" className={`chip${allowed.length ? '' : ' on'}`} aria-pressed={!allowed.length} onClick={() => updateSettings({ kid: { folders: [] } })}>Toate</button>
+                  {folders.map((f) => (
+                    <button type="button" key={f} className={`chip${allowed.includes(f) ? ' on' : ''}`} aria-pressed={allowed.includes(f)} onClick={() => toggleFolder(f)}>{f}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="set-row">
+              <span>PIN</span>
+              <button type="button" className="btn small" onClick={() => setSheet('check')}>Schimbă PIN-ul</button>
+            </div>
+            <div className="set-row stack">
+              <button type="button" className="btn big primary" onClick={start}>Dă-i telefonul copilului</button>
+            </div>
+          </>
+        )}
+      </div>
+      <p className="set-hint">Ca să iasă, părintele ține apăsat lacătul de sus 2 secunde și scrie PIN-ul. PIN-ul și alegerile se salvează în cont; modul copil pornește doar pe dispozitivul pe care îl apeși.</p>
+      <details className="set-hint kid-guided">
+        <summary>Ca să nu poată ieși deloc din aplicație (iPhone)</summary>
+        <ol>
+          <li>Setări iPhone › Accesibilitate › Acces ghidat: pornește-l și alege un cod.</li>
+          <li>Deschide aplicația, pornește modul copil, apoi apasă de 3 ori butonul lateral și alege Start.</li>
+          <li>Ca să ieși: apasă de 3 ori butonul lateral și scrie codul.</li>
+        </ol>
+        <p>Tot acolo poți bloca butoanele de volum. Pentru un volum mai mic în căști: Setări › Sunete › Siguranța căștilor › Reduce sunetele puternice.</p>
+      </details>
+      {sheet === 'new' && <NewPinSheet onClose={() => setSheet(undefined)} />}
+      {sheet === 'check' && <CheckPinSheet title="PIN-ul de acum" onClose={() => setSheet(undefined)} onOk={() => setSheet('new')} />}
+    </div>
+  )
+}
+
 function StorySettings() {
   const { child } = useSettings()
   const age = childAge(child)
   return (
     <>
+      <KidSettings />
       <div className="set-group">
         <h2 className="set-label">Copilul</h2>
         <div className="set-box">

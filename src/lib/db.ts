@@ -6,6 +6,8 @@ import type { Schema } from '../../amplify/data/resource'
 import type { SharedSettings } from './settings'
 import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, saveAudio } from './offline'
+import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
+import { folderOf } from './stories'
 
 const client = generateClient<Schema>()
 
@@ -125,7 +127,12 @@ export { removeFile }
 
 // ---- stories ----
 
+/** Every story, newest first (in kid mode only the folders the child may see). */
 export async function listStories() {
+  return kidStories(await listAllStories())
+}
+
+async function listAllStories() {
   try {
     const listedAt = Date.now()
     const rows = await listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 }))
@@ -144,10 +151,11 @@ export async function listStories() {
 export async function getStory(id: string) {
   try {
     const { data } = await client.models.Story.get({ id })
-    return data ? toStory(data) : undefined
+    const s = data ? toStory(data) : undefined
+    return s && kidAllowsFolder(folderOf(s)) ? s : undefined
   } catch (err) {
     const hit = (await cachedList('stories'))?.find((s) => s.id === id)
-    if (hit) return hit
+    if (hit) return kidAllowsFolder(folderOf(hit)) ? hit : undefined
     throw err
   }
 }
@@ -193,9 +201,9 @@ export async function listFolders(): Promise<StoryFolder[]> {
     const rows = await listAll((nextToken) => client.models.StoryFolder.list({ nextToken, limit: 200 }))
     const list = rows.map((r) => ({ id: r.id, name: r.name, icon: r.icon ?? undefined }))
     cacheFolders(list)
-    return list
+    return kidFolderRows(list)
   } catch {
-    return cachedFolders()
+    return kidFolderRows(cachedFolders())
   }
 }
 
@@ -229,6 +237,7 @@ export async function saveFolder(oldName: string, row: StoryFolder | undefined, 
     cacheFolders(cachedFolders().map((f) => (f.id === row.id ? { ...f, name, icon } : f)))
   } else await createFolder(name, icon)
   if (name !== oldName) {
+    kidFolderRenamed(oldName, name)
     for (const s of stories.filter((x) => x.collection === oldName)) errorsOf(await client.models.Story.update({ id: s.id, collection: name }))
     await patchCachedStories((x) => (x.collection === oldName ? { ...x, collection: name } : x))
   }
@@ -236,6 +245,7 @@ export async function saveFolder(oldName: string, row: StoryFolder | undefined, 
 
 /** Removes a folder; its stories are kept and go back to their own folder by how they were made. */
 export async function deleteFolder(name: string, row: StoryFolder | undefined, stories: Story[]) {
+  kidFolderRenamed(name)
   for (const s of stories.filter((x) => x.collection === name)) errorsOf(await client.models.Story.update({ id: s.id, collection: null }))
   await patchCachedStories((x) => (x.collection === name ? { ...x, collection: undefined } : x))
   if (row) errorsOf(await client.models.StoryFolder.delete({ id: row.id }))
@@ -390,7 +400,7 @@ export const shoppingApi = {
 const SETTINGS_ID = 'family'
 
 /** The family's settings from the cloud, or null if they were never saved there. */
-export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city'> & { city?: string }) | null> {
+export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid'> & { city?: string; kid?: SharedSettings['kid'] }) | null> {
   const res = await client.models.FamilySettings.get({ id: SETTINGS_ID })
   check(res)
   const r = res.data
@@ -404,6 +414,12 @@ export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city'>
     },
     city: r.city ?? undefined,
     kitchenTools: clean(r.kitchenTools),
+    kid: r.kidMinutes == null && !r.kidPinHash ? undefined : {
+      pinHash: r.kidPinHash ?? undefined,
+      pinSalt: r.kidPinSalt ?? undefined,
+      minutes: r.kidMinutes ?? 30,
+      folders: clean(r.kidFolders),
+    },
   }
 }
 
@@ -416,6 +432,10 @@ export async function saveFamilySettings(s: SharedSettings) {
     childCanRead: s.child.canRead,
     city: s.city ?? null,
     kitchenTools: s.kitchenTools,
+    kidPinHash: s.kid.pinHash ?? null,
+    kidPinSalt: s.kid.pinSalt ?? null,
+    kidMinutes: s.kid.minutes,
+    kidFolders: s.kid.folders,
   }
   const res = await client.models.FamilySettings.update(row)
   // Not there yet (first save): create it instead.

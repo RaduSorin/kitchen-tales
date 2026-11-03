@@ -12,6 +12,7 @@ import { useSettings } from '../lib/settings'
 import { builtinFolderOf, fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
 import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
+import { useKid } from '../lib/kidMode'
 
 const REMAINING_KEY = 'kt-player-remaining'
 
@@ -45,6 +46,8 @@ function StoryPlayer() {
   const [moveOpen, setMoveOpen] = useState(false)
   const offlineIds = useOfflineIds()
   const online = useOnline()
+  // Kid mode: no "Pentru părinți" (delete, cover, offline, move to folder).
+  const kid = useKid().active
   const isSaved = !!id && offlineIds.has(id)
   useEffect(() => { getStory(id!).then((x) => setS(x ?? null)).catch(() => setS(null)) }, [id])
   // The audio lives in the app-wide player, so it keeps going when you leave this page.
@@ -188,7 +191,7 @@ function StoryPlayer() {
         </button>
       </div>
 
-      <details className="parents">
+      {!kid && <details className="parents">
         <summary>Pentru părinți</summary>
         <div className="parents-body">
           {s.text && <details className="story-text"><summary>Textul poveștii</summary><p>{s.text}</p></details>}
@@ -230,8 +233,8 @@ function StoryPlayer() {
           {isSaved && <small>Salvată pe acest dispozitiv, merge și fără internet.</small>}
           {msg && <p className="error">{msg}</p>}
         </div>
-      </details>
-      {moveOpen && (
+      </details>}
+      {moveOpen && !kid && (
         <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection) => {
           const moved = { ...s, collection }
           setS(moved); player.update(moved)

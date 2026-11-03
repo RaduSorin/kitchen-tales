@@ -27,6 +27,8 @@ import Search from './pages/Search'
 import StoriesHome from './pages/StoriesHome'
 import Week from './pages/Week'
 import Shopping from './pages/Shopping'
+import { KidGate, KidLockButton } from './components/KidMode'
+import { applyPinReset, useKid } from './lib/kidMode'
 
 // The stories area always uses the night palette, whatever the app theme is.
 function NightArea() {
@@ -102,6 +104,7 @@ function Shell() {
   const back = backFallback(pathname, night)
   const player = isPlayerPage(pathname)
   const header = useRef<HTMLElement>(null)
+  const kid = useKid().active
   // The name only on the two home screens; elsewhere each page's big title says where you are.
   const home = pathname === '/' || pathname === '/povesti/acasa'
   useHideOnScroll(!player)
@@ -127,16 +130,21 @@ function Shell() {
       <NightArea />
       {!player && <div className="status-fill" aria-hidden="true" />}
       {!player && <header className="topbar" ref={header}>
-        {back ? <BackButton to={back} /> : <Link to="/" className={home ? 'brand' : 'brand brand-sub'}><span>Bucătăria</span> <span>cu povești</span></Link>}
+        {back && !kid ? <BackButton to={back} /> : kid
+          // Stories-only mode: nothing in the top bar points to the kitchen side, not even the name.
+          ? <Link to="/povesti/acasa" className={home ? 'brand' : 'brand brand-sub'}><span>Povești</span></Link>
+          : <Link to="/" className={home ? 'brand' : 'brand brand-sub'}><span>Bucătăria</span> <span>cu povești</span></Link>}
         <nav>
           {/* On phones these live in the bottom tab bar; wide screens show them here (recipes side only). */}
           <NavLink to="/retete" className="wide-only day-only">Rețetele mele</NavLink>
           <NavLink to="/saptamana" className="wide-only day-only">Săptămâna</NavLink>
           <NavLink to="/cumparaturi" className="wide-only day-only">Cumpărături</NavLink>
+          {kid ? <KidLockButton /> : <>
           <AreaSwitch />
           <SettingsLink>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
           </SettingsLink>
+          </>}
         </nav>
       </header>}
       {!online && <div className="offline-banner">Ești offline. Vezi rețetele și poveștile salvate pe acest dispozitiv.</div>}
@@ -160,6 +168,7 @@ function Shell() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      <KidGate />
       <MiniPlayer />
       <TabBar />
       <ToastHost />
@@ -169,6 +178,8 @@ function Shell() {
 
 export default function App() {
   useSettingsSync()
+  // Signed back in after "Am uitat PIN-ul": kid mode off, PIN cleared.
+  useEffect(applyPinReset, [])
   return (
     <BrowserRouter>
       <NowPlayingProvider>

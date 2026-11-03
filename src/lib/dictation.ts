@@ -8,8 +8,11 @@ const RATE = 16_000
 const CHUNK_SAMPLES = RATE / 10 // ~100 ms of audio per message
 
 export type DictationHandlers = {
-  /** Called on every update: `final` is the settled text so far, `partial` the words still being recognised. */
-  onText: (final: string, partial: string) => void
+  /**
+   * Called on every update: `segments` are the settled phrases so far (Transcribe closes one at each pause),
+   * `partial` the words still being recognised.
+   */
+  onText: (segments: string[], partial: string) => void
   /** Microphone loudness, 0..1, for the button animation. */
   onLevel?: (level: number) => void
   /** Called once when the session ends; `error` is set when it ended on a failure. */
@@ -115,7 +118,7 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
   }
 
   ;(async () => {
-    let final = ''
+    const segments: string[] = []
     try {
       const { TranscribeStreamingClient, StartStreamTranscriptionCommand } = await import('@aws-sdk/client-transcribe-streaming')
       const client = new TranscribeStreamingClient({
@@ -136,14 +139,14 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
         for (const r of ev.TranscriptEvent?.Transcript?.Results ?? []) {
           const said = r.Alternatives?.[0]?.Transcript?.trim() ?? ''
           if (!said) continue
-          if (r.IsPartial) h.onText(final, said)
-          else { final = final ? `${final} ${said}` : said; h.onText(final, '') }
+          if (r.IsPartial) h.onText([...segments], said)
+          else { segments.push(said); h.onText([...segments], '') }
         }
       }
-      h.onText(final, '')
+      h.onText([...segments], '')
       h.onEnd()
     } catch (err) {
-      h.onText(final, '')
+      h.onText([...segments], '')
       h.onEnd(err as Error)
     } finally {
       stopped = true

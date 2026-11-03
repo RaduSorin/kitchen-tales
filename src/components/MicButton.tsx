@@ -14,14 +14,24 @@ function why(err: unknown) {
 }
 
 /**
- * Dictation button for a text box: tap to talk, tap again to stop.
+ * Round dictation button for a text box: tap to talk, tap again to stop.
  * Words are appended to `value` live, so they can be corrected by hand afterwards.
  */
-export default function MicButton({ value, onChange, onDictated }: {
+export default function MicButton({ value, onChange, onDictated, onStart, asLines, label = 'Dictează', hint, children }: {
   value: string
   onChange: (v: string) => void
   /** Called when some text came from the microphone. */
   onDictated?: () => void
+  /** Called on the tap that starts listening, before any text arrives. */
+  onStart?: () => void
+  /** Turns the phrases said so far into lines (one per pause), e.g. an ingredient list. Default: one running text. */
+  asLines?: (segments: string[]) => string[]
+  /** Accessible name of the button. */
+  label?: string
+  /** Shown under the box while listening. */
+  hint?: string
+  /** The text box the mic belongs to; without it the button stands on its own. */
+  children?: React.ReactNode
 }) {
   const [state, setState] = useState<'idle' | 'starting' | 'on' | 'finishing'>('idle')
   const [sec, setSec] = useState(0)
@@ -46,10 +56,13 @@ export default function MicButton({ value, onChange, onDictated }: {
     setError(''); setSec(0); setState('starting')
     // New words go after what is already in the box.
     const base = value.trim()
+    onStart?.()
     try {
       session.current = await startDictation({
-        onText: (final, partial) => {
-          const said = [final, partial].filter(Boolean).join(' ')
+        onText: (segments, partial) => {
+          const said = asLines
+            ? [...asLines(segments), partial].filter(Boolean).join('\n')
+            : [...segments, partial].filter(Boolean).join(' ')
           if (!said) return
           onChange(base ? `${base}\n${said}` : said)
           onDictated?.()
@@ -72,23 +85,28 @@ export default function MicButton({ value, onChange, onDictated }: {
   const stop = () => { setState('finishing'); session.current?.stop() }
 
   const busy = state !== 'idle'
-  return (
-    <div className="dictate">
+  const mic = (
+    <span className="mic">
+      {state === 'on' && <span className="mic-time" aria-live="off">{fmt(sec)}</span>}
       <button type="button" className={`mic-btn${busy ? ' on' : ''}`} disabled={(!online && !busy) || state === 'starting' || state === 'finishing'}
         onClick={busy ? stop : start} aria-pressed={busy}
+        aria-label={busy ? 'Oprește dictarea' : !online ? 'Dictarea merge doar cu internet' : label}
+        title={busy ? 'Oprește dictarea' : !online ? 'Dictarea merge doar cu internet' : label}
         style={busy ? { ['--lvl' as string]: level.toFixed(2) } : undefined}>
-        {state === 'on' ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" /></svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {state === 'idle' ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
           </svg>
-        )}
-        <span>{state === 'starting' ? 'Pornesc…' : state === 'on' ? `Gata · ${fmt(sec)}` : state === 'finishing' ? 'Termin…' : 'Dictează'}</span>
+        ) : state === 'on' ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" /></svg>
+        ) : <span className="mic-spin" aria-hidden="true" />}
       </button>
-      {state === 'on' ? <span className="set-hint">Te ascult, vorbește liber.</span>
-        : !online ? <span className="set-hint">Dictarea merge doar cu internet.</span> : null}
-      {error && <p className="set-hint error">{error}</p>}
-    </div>
+    </span>
   )
+  const below = (state === 'on' && hint) || error
+    ? <p className={`set-hint mic-hint${error ? ' error' : ''}`}>{error || hint}</p> : null
+
+  // With a text box inside: the mic sits in its bottom-right corner, like the iPhone keyboard's.
+  if (children) return <><div className="mic-field">{children}{mic}</div>{below}</>
+  return <span className="mic-inline">{mic}{below}</span>
 }

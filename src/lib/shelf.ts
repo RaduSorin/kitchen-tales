@@ -106,11 +106,14 @@ export const newLabel = (n: number) => `${n} ${n === 1 ? 'nouă' : 'noi'}`
 
 // ---------- Book sizes ----------
 
-/** A spine is thicker for a longer story (about 28 to 50 px); 36 px when the length is unknown. */
+/**
+ * A spine is thicker for a longer story: 22 px up to 3 minutes, then 2.5 px more per minute, up to
+ * 52 px from 15 minutes (so 6, 7 and 8 minutes are 30, 32 and 35 px); 36 px when the length is unknown.
+ */
 export function spineWidth(s: Pick<Story, 'durationSec'>) {
   if (!s.durationSec) return 36
-  const min = Math.min(20, Math.max(5, s.durationSec / 60))
-  return Math.round(28 + (min - 5) / 15 * 22)
+  const min = Math.min(15, Math.max(3, s.durationSec / 60))
+  return Math.round(22 + (min - 3) * 2.5)
 }
 
 /** Books on a shelf are not all the same height: 86–100% of the shelf's book height. */

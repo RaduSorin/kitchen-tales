@@ -5,11 +5,16 @@ import { findCover } from '../functions/find-cover/resource'
 
 import { family } from '../functions/family/resource'
 import { timerAlarm } from '../functions/timer-alarm/resource'
+import { files } from '../functions/files/resource'
 
 // Every row belongs to a space (a household): its Cognito group `space-<id>` is in `spaceGroups`
 // and its members can read and edit it. A recipe, story or folder that is shared also has the
 // group every account is in (`everyone`) in `readerGroups`, which lets other spaces read it.
 // Week plan, shopping list and settings are never shared. See amplify/shared/spaces.ts.
+// Only the space's own members can read which space a row belongs to: other spaces get null here,
+// so they never learn another space's group name and cannot add it to rows of their own.
+const spaceGroupsField = () => a.string().array().authorization((allow) => [allow.groupsDefinedIn('spaceGroups')])
+
 const schema = a.schema({
   Recipe: a
     .model({
@@ -25,7 +30,7 @@ const schema = a.schema({
       sourceUrl: a.string(),
       photoKey: a.string(),
       // Sharing: see the comment at the top. Recipes start private.
-      spaceGroups: a.string().array(),
+      spaceGroups: spaceGroupsField(),
       readerGroups: a.string().array(),
       // The owning space's name, shown to other spaces ("De la Sorin").
       spaceName: a.string(),
@@ -47,7 +52,7 @@ const schema = a.schema({
       favorite: a.boolean(),
       // Sharing: see the comment at the top. Stories start shared. `sharedDirect` means shared on its
       // own, not only because its folder is shared, so it stays shared when moved out of that folder.
-      spaceGroups: a.string().array(),
+      spaceGroups: spaceGroupsField(),
       readerGroups: a.string().array(),
       sharedDirect: a.boolean(),
       spaceName: a.string(),
@@ -61,7 +66,7 @@ const schema = a.schema({
       name: a.string().required(),
       icon: a.string(),
       // Sharing a folder shares every story in it (their readerGroups are set too).
-      spaceGroups: a.string().array(),
+      spaceGroups: spaceGroupsField(),
       readerGroups: a.string().array(),
       spaceName: a.string(),
     })
@@ -238,6 +243,34 @@ const schema = a.schema({
     .returns(a.ref('FamilyMember'))
     .authorization((allow) => [allow.group('admins')])
     .handler(a.handler.function(family)),
+
+  // Stored files go through the files function, which checks the caller's space (see functions/files).
+  UploadTarget: a.customType({ path: a.string().required(), url: a.string().required() }),
+
+  // Signed links to read files, in the order asked ('' where the caller may not read one).
+  // refs[i] ("Story:<id>" / "Recipe:<id>") names the row that points at paths[i].
+  fileUrls: a
+    .query()
+    .arguments({ paths: a.string().array().required(), refs: a.string().array() })
+    .returns(a.string().array())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(files)),
+
+  // A signed link to upload one new file into the caller's space folder.
+  uploadUrl: a
+    .mutation()
+    .arguments({ prefix: a.string().required(), ext: a.string().required(), contentType: a.string() })
+    .returns(a.ref('UploadTarget'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(files)),
+
+  // Deletes files the caller's space may change; returns how many were deleted.
+  deleteFiles: a
+    .mutation()
+    .arguments({ paths: a.string().array().required(), refs: a.string().array() })
+    .returns(a.integer())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(files)),
 
   // Cooking timers: a push notification when the timer ends, even with the app closed.
   scheduleTimerAlarm: a

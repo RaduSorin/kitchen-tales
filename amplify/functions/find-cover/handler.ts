@@ -1,7 +1,9 @@
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { randomUUID } from 'node:crypto'
+import { newFilePath } from '../../shared/files'
+import { spaceOf } from '../../shared/spaces'
 
 const s3 = new S3Client({})
+
 const BUCKET = process.env.KITCHEN_TALES_FILES_BUCKET_NAME!
 const UA = 'KitchenTales/1.0 (private family app; https://github.com/RaduSorin/kitchen-tales)'
 const MAX_IMAGE_BYTES = 5_000_000
@@ -54,7 +56,7 @@ async function search(title: string, artist?: string | null) {
   return [...itunes, ...wiki].filter((c) => !seen.has(c.url) && !!seen.add(c.url)).slice(0, 9)
 }
 
-async function save(url: string) {
+async function save(url: string, space: string | undefined) {
   const u = new URL(url)
   if (u.protocol !== 'https:' || !IMAGE_HOSTS.some((h) => u.hostname.endsWith(h))) throw new Error('Imaginea nu vine dintr-o sursă cunoscută.')
   const res = await fetch(u, { headers: { 'User-Agent': UA }, redirect: 'error', signal: AbortSignal.timeout(10000) })
@@ -63,15 +65,15 @@ async function save(url: string) {
   const body = new Uint8Array(await res.arrayBuffer())
   if (body.length > MAX_IMAGE_BYTES) throw new Error('Imaginea este prea mare.')
   const ext = type.includes('png') ? 'png' : type.includes('webp') ? 'webp' : 'jpg'
-  const key = `story-covers/${randomUUID()}.${ext}`
+  const key = newFilePath('story-covers', space, ext)
   await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: body, ContentType: type }))
   return key
 }
 
 // Two operations share this function: search by title, or copy a chosen picture (url) into S3.
-export const handler = async (event: { arguments: Args; fieldName?: string }) => {
+export const handler = async (event: { arguments: Args; fieldName?: string; identity?: { groups?: string[] | null } }) => {
   const { title, artist, url } = event.arguments
-  if (event.fieldName === 'saveCover') return save(url ?? '')
+  if (event.fieldName === 'saveCover') return save(url ?? '', spaceOf(event.identity?.groups))
   if (!title?.trim()) return []
   return search(title, artist)
 }

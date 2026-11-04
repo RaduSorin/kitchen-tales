@@ -2,10 +2,13 @@ import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-r
 import { PollyClient, SynthesizeSpeechCommand, type VoiceId } from '@aws-sdk/client-polly'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { Schema } from '../../data/resource'
+import { newFilePath } from '../../shared/files'
+import { spaceOf } from '../../shared/spaces'
 
 const bedrock = new BedrockRuntimeClient({})
 const polly = new PollyClient({})
 const s3 = new S3Client({})
+
 const BUCKET = process.env.KITCHEN_TALES_FILES_BUCKET_NAME!
 const MODEL_ID = process.env.MODEL_ID!
 const VOICE_ID = process.env.VOICE_ID as VoiceId
@@ -95,7 +98,7 @@ export const handler: Schema['generateStory']['functionHandler'] = async (event)
   const text = (ownText || (await writeStory({ ...event.arguments, title }))).slice(0, MAX_TEXT_CHARS)
 
   const audio = await speak(text)
-  const audioKey = `stories/${crypto.randomUUID()}.mp3`
+  const audioKey = newFilePath('stories', spaceOf((event as { identity?: { groups?: string[] | null } }).identity?.groups), 'mp3')
   await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: audioKey, Body: audio, ContentType: 'audio/mpeg' }))
   return { text, audioKey }
 }

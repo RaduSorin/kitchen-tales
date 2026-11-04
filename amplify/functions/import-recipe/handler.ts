@@ -2,10 +2,15 @@ import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand, type Content
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { Schema } from '../../data/resource'
 import { safeFetch } from '../../shared/safeFetch'
+import { fileSpace, newFilePath } from '../../shared/files'
+import { spaceOf } from '../../shared/spaces'
 
 const bedrock = new BedrockRuntimeClient({})
 const s3 = new S3Client({})
+
 const BUCKET = process.env.KITCHEN_TALES_FILES_BUCKET_NAME!
+// The caller's space, set per call by the handler: new photos go in its folder (shared/files.ts).
+let callerSpace: string | undefined
 const MODEL_ID = process.env.MODEL_ID!
 // Text-to-image models are only offered in us-west-2 on this account's Bedrock.
 const IMAGE_MODEL_ID = process.env.IMAGE_MODEL_ID!
@@ -134,7 +139,7 @@ async function savePhotoFrom(url: string): Promise<string | undefined> {
     if (!format) return undefined
     const type = `image/${format}`
     const ext = format === 'jpeg' ? 'jpg' : format
-    const key = `recipe-photos/${crypto.randomUUID()}.${ext}`
+    const key = newFilePath('recipe-photos', callerSpace, ext)
     await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: body, ContentType: type }))
     return key
   } catch {
@@ -177,7 +182,8 @@ function imageFormat(b: Uint8Array): ImageFormat | undefined {
 }
 
 async function fromPhoto(key: string): Promise<Imported> {
-  if (!key.startsWith('recipe-photos/')) throw new Error('Poză invalidă')
+  // Only a photo the caller just uploaded to its own space folder, never another space's file.
+  if (!callerSpace || fileSpace(key) !== callerSpace || !key.startsWith('recipe-photos/')) throw new Error('Poză invalidă')
   const obj = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
   const bytes = await obj.Body!.transformToByteArray()
   const fmt = imageFormat(bytes)
@@ -313,7 +319,7 @@ async function generatePhoto(title: string, ingredients: string[]): Promise<stri
   const out = JSON.parse(new TextDecoder().decode(res.body)) as { images?: string[]; finish_reasons?: (string | null)[] }
   const b64 = out.images?.[0]
   if (!b64 || out.finish_reasons?.[0]) throw new Error('Nu am putut genera poza. Încearcă din nou.')
-  const key = `recipe-photos/${crypto.randomUUID()}.jpg`
+  const key = newFilePath('recipe-photos', callerSpace, 'jpg')
   await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: Buffer.from(b64, 'base64'), ContentType: 'image/jpeg' }))
   return key
 }
@@ -349,6 +355,7 @@ const importHandler: Schema['importRecipe']['functionHandler'] = async (event) =
 // One function serves importRecipe, suggestRecipes and generateRecipePhoto.
 export const handler = async (event: Parameters<typeof importHandler>[0] | SuggestEvent, ...rest: unknown[]) => {
   const e = event as SuggestEvent
+  callerSpace = spaceOf((event as { identity?: { groups?: string[] | null } }).identity?.groups)
   const field = e.fieldName ?? e.info?.fieldName
   if (field === 'generateRecipePhoto') {
     const { title, ingredients } = (event as unknown as PhotoEvent).arguments

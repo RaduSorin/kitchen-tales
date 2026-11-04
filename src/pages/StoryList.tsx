@@ -209,7 +209,7 @@ export default function StoryList() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
             <input type="search" id="story-search" aria-label="Caută povești" placeholder={inFolder ? `Caută în ${open.name}` : 'Caută o poveste'} value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
-          {open && (inFolder || !searching) && open.items.length > 0 && <ViewSwitch value={view} onChange={pickView} />}
+          {open && (inFolder || !searching) && open.items.length > 0 && <ViewSwitch value={view} onChange={pickView} collapsible />}
         </div>
       )}
 

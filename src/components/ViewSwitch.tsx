@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { SHELF_VIEWS, VIEW_LABEL, type ShelfView } from '../lib/shelf'
 
 const ICON: Record<ShelfView, React.ReactNode> = {
@@ -7,15 +8,61 @@ const ICON: Record<ShelfView, React.ReactNode> = {
   flow: <><path d="M2 7l4 1.5v7L2 17z" /><rect x="7.5" y="5" width="9" height="12" rx="1.5" /><path d="M22 7l-4 1.5v7l4 1.5z" /><rect x="7.5" y="19" width="9" height="1.6" rx=".8" opacity=".45" /></>,
 }
 
-/** Squares, list, bookshelf or Cover Flow for the open folder. */
-export default function ViewSwitch({ value, onChange }: { value: ShelfView; onChange: (v: ShelfView) => void }) {
-  return (
-    <div className="view-switch" role="group" aria-label="Cum se văd poveștile">
+const Icon = ({ v }: { v: ShelfView }) => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{ICON[v]}</svg>
+
+/** How long the opened switch stays open after the last tap. */
+const OPEN_MS = 3000
+
+/**
+ * Squares, list, bookshelf or Cover Flow for the open folder. With `collapsible` it is a single
+ * round button showing the current view: a tap opens the four choices to the left (over the search
+ * box, so nothing moves), and it folds back 3 seconds after the last tap, or at once on a tap
+ * elsewhere, on scroll, or with Escape.
+ */
+export default function ViewSwitch({ value, onChange, collapsible }: { value: ShelfView; onChange: (v: ShelfView) => void; collapsible?: boolean }) {
+  const [open, setOpen] = useState(false)
+  const wrap = useRef<HTMLDivElement>(null)
+  const toggle = useRef<HTMLButtonElement>(null)
+  const timer = useRef(0)
+  const closeLater = () => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setOpen(false), OPEN_MS) }
+
+  useEffect(() => {
+    if (!open) return
+    // Opened from the keyboard: move to the current choice.
+    if (document.activeElement === toggle.current) wrap.current?.querySelector<HTMLButtonElement>('.view-switch [aria-pressed="true"]')?.focus()
+    const outside = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false) }
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); toggle.current?.focus() } }
+    const scroll = () => setOpen(false)
+    document.addEventListener('pointerdown', outside)
+    document.addEventListener('keydown', key)
+    window.addEventListener('scroll', scroll, { passive: true })
+    return () => {
+      clearTimeout(timer.current)
+      document.removeEventListener('pointerdown', outside)
+      document.removeEventListener('keydown', key)
+      window.removeEventListener('scroll', scroll)
+    }
+  }, [open])
+
+  const pill = (
+    <div className="view-switch" role="group" aria-label="Cum se văd poveștile" inert={collapsible && !open}>
       {SHELF_VIEWS.map((v) => (
-        <button key={v} type="button" aria-pressed={v === value} aria-label={VIEW_LABEL[v]} title={VIEW_LABEL[v]} onClick={() => onChange(v)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{ICON[v]}</svg>
+        <button key={v} type="button" aria-pressed={v === value} aria-label={VIEW_LABEL[v]} title={VIEW_LABEL[v]}
+          onClick={() => { onChange(v); if (collapsible) closeLater() }}>
+          <Icon v={v} />
         </button>
       ))}
+    </div>
+  )
+  if (!collapsible) return pill
+  return (
+    <div className={`view-switch-wrap${open ? ' open' : ''}`} ref={wrap}>
+      <button type="button" ref={toggle} className="view-toggle" aria-expanded={open} tabIndex={open ? -1 : 0}
+        aria-label={`Cum se văd poveștile: ${VIEW_LABEL[value]}. Schimbă`} title="Cum se văd poveștile"
+        onClick={() => { setOpen(true); closeLater() }}>
+        <Icon v={value} />
+      </button>
+      {pill}
     </div>
   )
 }

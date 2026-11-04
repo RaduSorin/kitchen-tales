@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { errorText } from '../lib/errors'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { generateRecipe, generateRecipePhoto, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhoto, importRecipeFromText, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
 import { parseRecipeText } from '../lib/parseRecipe'
@@ -13,7 +14,8 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import MicButton from '../components/MicButton'
 import { spokenIngredientLines } from '../lib/spokenIngredients'
 import { useSettings } from '../lib/settings'
-import { useBack } from '../lib/back'
+import { canGoBack, useBack } from '../lib/back'
+import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { LoadError, Loading } from '../components/LoadState'
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
@@ -25,6 +27,23 @@ const empty = (): Recipe => ({ id: newId(), title: '', category: '', ingredients
 const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
 const toSteps = (texts: string[], photos: string[] = []): Step[] =>
   texts.map((text, k) => ({ uid: newId(), text, photoKey: photos[k] || undefined }))
+/** Everything the editor would save, to tell whether anything changed since it opened. */
+const snap = (r: Recipe, ing: string, steps: Step[], photo?: Blob) =>
+  JSON.stringify([{ ...r, id: '' }, ing, steps.map((s) => [s.text, s.photoKey ?? '', !!s.photoBlob]), !!photo])
+
+/** Sizes a one-line textarea to its text (called on every render through the ref). */
+const fitHeight = (el: HTMLTextAreaElement | null) => {
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`
+}
+
+const LEAVE_EDITS = {
+  title: 'Renunți la modificări?',
+  text: 'Ce ai schimbat la rețetă nu e salvat. Dacă pleci acum, se pierde.',
+  stay: 'Continuă editarea',
+  leave: 'Renunță la modificări',
+}
 
 function Icon({ d }: { d: string }) {
   return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
@@ -87,6 +106,8 @@ export default function RecipeEdit() {
   const [importing, setImporting] = useState('')
   const [found, setFound] = useState<string>()
   const [saving, setSaving] = useState(false)
+  // What the recipe looked like when the editor opened (blank for a new one).
+  const [base, setBase] = useState(() => snap(empty(), '', []))
   const [error, setError] = useState('')
   const { kitchenTools } = useSettings()
   const [idea, setIdea] = useState('')
@@ -99,6 +120,13 @@ export default function RecipeEdit() {
   const [aiBusy, setAiBusy] = useState(false)
   const aiJob = useRef<Promise<string | undefined>>(undefined)
   const aiUnsaved = useRef<string>(undefined)
+  // Photos this editor put in the cloud (from an import or the AI) that no saved recipe uses yet.
+  // Leaving without saving deletes them; saving deletes the ones not kept.
+  const made = useRef(new Set<string>())
+  useEffect(() => () => { for (const k of made.current) removeFile(k).catch(() => {}) }, [])
+  // Counts photos you chose yourself; an AI photo that finishes after one of them is thrown away.
+  const picked = useRef(0)
+  const pickPhoto = (f?: File) => { if (f) { picked.current++; setPhoto(f) } }
 
   const back = useBack(id ? `/retete/${id}` : '/retete')
   const [loadFailed, setLoadFailed] = useState<'error' | 'missing'>()
@@ -106,11 +134,16 @@ export default function RecipeEdit() {
     if (!id) { setR(empty()); return }
     getRecipe(id).then((x) => {
       if (!x) { setLoadFailed('missing'); return }
+      const st = toSteps(x.steps, x.stepPhotoKeys)
       setR(x); setOriginal(x)
-      setIng(x.ingredients.join('\n')); setSteps(toSteps(x.steps, x.stepPhotoKeys))
+      setIng(x.ingredients.join('\n')); setSteps(st)
+      setBase(snap(x, x.ingredients.join('\n'), st))
     }).catch(() => setLoadFailed('error'))
   }
   useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Unsaved changes: "Renunță", the tab bar and the iPhone swipe back ask first.
+  const dirty = mode === 'edit' && !!r && snap(r, ing, steps, photo) !== base
+  useLeaveGuard(dirty && !saving, LEAVE_EDITS)
   const newPhotoUrl = useBlobUrl(photo)
   const savedPhotoUrl = useFileUrl(photo ? undefined : r?.photoKey)
   const img = newPhotoUrl ?? savedPhotoUrl
@@ -136,6 +169,7 @@ export default function RecipeEdit() {
   }
 
   const applyImport = (x: ImportedRecipe) => {
+    if (x.photoKey) made.current.add(x.photoKey)
     const clean = (xs: (string | null)[]) => xs.filter((v): v is string => !!v)
     fill(x.title, clean(x.ingredients), clean(x.steps), {
       category: x.category ?? r.category,
@@ -150,15 +184,19 @@ export default function RecipeEdit() {
   const makeAiPhoto = (title: string, ingredients: string[]) => {
     if (!title.trim() || aiJob.current) return
     setAiBusy(true)
+    const before = picked.current
     const job = generateRecipePhoto(title.trim(), ingredients)
       .then((key) => {
+        // You picked your own photo while the AI was drawing: yours stays.
+        if (picked.current !== before) { removeFile(key).catch(() => {}); return undefined }
         if (aiUnsaved.current) removeFile(aiUnsaved.current).catch(() => {})
         aiUnsaved.current = key
+        made.current.add(key)
         setPhoto(undefined)
         setR((cur) => (cur ? { ...cur, photoKey: key } : cur))
         return key
       })
-      .catch((err) => { setError(`Poza AI nu a reușit: ${(err as Error).message}`); return undefined })
+      .catch((err) => { setError(`Poza AI nu a reușit: ${errorText(err)}`); return undefined })
       .finally(() => { aiJob.current = undefined; setAiBusy(false) })
     aiJob.current = job
   }
@@ -170,7 +208,7 @@ export default function RecipeEdit() {
       applyImport(x)
       // No photo from the source (generated or text-only recipes): draw one with AI in the background.
       if (!x.photoKey && !r.photoKey && !photo) makeAiPhoto(x.title, x.ingredients.filter((v): v is string => !!v))
-    } catch (err) { setError(`Importul nu a reușit: ${(err as Error).message}`) }
+    } catch (err) { setError(`Importul nu a reușit: ${errorText(err)}`) }
     setImporting('')
   }
   const importLink = () => { if (link.trim()) doImport('Citesc rețeta de pe site…', () => importRecipeFromUrl(link.trim())) }
@@ -188,7 +226,7 @@ export default function RecipeEdit() {
       const xs = await suggestRecipes(fridge.trim(), useTools)
       if (!xs.length) setError('Nu am găsit nicio idee. Adaugă mai multe ingrediente.')
       setIdeas(xs)
-    } catch (err) { setError(`Nu am putut propune rețete: ${(err as Error).message}`) }
+    } catch (err) { setError(`Nu am putut propune rețete: ${errorText(err)}`) }
     setImporting('')
   }
   const pickIdea = (x: RecipeIdea) => {
@@ -260,11 +298,15 @@ export default function RecipeEdit() {
       await saveRecipe({ ...r, photoKey, title: r.title.trim(), ingredients: lines(ing), steps: kept.map((s) => s.text.trim()), stepPhotoKeys }, !id)
       // Clean up photos that were replaced or removed.
       if (original?.photoKey && original.photoKey !== photoKey) await removeFile(original.photoKey)
-      if (aiUnsaved.current && aiUnsaved.current !== photoKey) await removeFile(aiUnsaved.current)
+      for (const k of made.current) if (k !== photoKey) await removeFile(k)
+      made.current.clear()
       for (const old of original?.stepPhotoKeys ?? []) if (old && !stepPhotoKeys.includes(old)) await removeFile(old)
-      nav(`/retete/${r.id}`, { replace: true })
+      await guardedWorkDone()
+      // An edit goes back to the recipe page it came from (no second copy of it in history).
+      if (id && canGoBack()) nav(-1)
+      else nav(`/retete/${r.id}`, { replace: true })
     } catch (err) {
-      setError(`Nu am putut salva rețeta: ${(err as Error).message}`)
+      setError(`Nu am putut salva rețeta: ${errorText(err)}`)
       setSaving(false)
     }
   }
@@ -272,8 +314,17 @@ export default function RecipeEdit() {
   if (mode !== 'edit') {
     return (
       <section className="add-recipe">
-        <button type="button" className="link-btn" onClick={() => (mode === 'choose' ? back() : setMode('choose'))}>{mode === 'choose' ? 'Renunță' : 'Înapoi'}</button>
-        <h1>Rețetă nouă</h1>
+        {/* "Renunță" closes the page (top right, like an iOS sheet); "‹ Alte variante" steps back to the choices. */}
+        {mode !== 'choose' && (
+          <button type="button" className="add-recipe-back" onClick={() => setMode('choose')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+            Alte variante
+          </button>
+        )}
+        <div className="add-recipe-head">
+          <h1>Rețetă nouă</h1>
+          <button type="button" className="link-btn" onClick={back}>Renunță</button>
+        </div>
         {importing ? (
           <p className="importing"><span className="spinner" /> {importing}</p>
         ) : mode === 'link' ? (
@@ -371,7 +422,7 @@ export default function RecipeEdit() {
   return (
     <form className="editor" onSubmit={save}>
       <div className="editor-bar">
-        <button type="button" className="link-btn" onClick={back}>Renunță</button>
+        <button type="button" className="link-btn" data-leaves onClick={back}>Renunță</button>
         <span className="editor-bar-title">{id ? 'Editează' : 'Rețetă nouă'}</span>
         <button type="submit" className="btn primary small" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
       </div>
@@ -382,14 +433,17 @@ export default function RecipeEdit() {
         <label className="editor-photo">
           {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title || 'rețetă'} />}
           <span className="editor-photo-btn">{img ? 'Schimbă poza' : 'Adaugă o poză'}</span>
-          <input type="file" accept="image/*" hidden onChange={(e) => setPhoto(e.target.files?.[0])} />
+          <input type="file" accept="image/*" hidden onChange={(e) => pickPhoto(e.target.files?.[0])} />
         </label>
         {aiBusy
           ? <span className="editor-ai-busy"><span className="spinner" /> Generez o poză…</span>
           : r.title.trim() && <button type="button" className="editor-ai-btn" onClick={() => makeAiPhoto(r.title, lines(ing))}>✨ {img ? 'Altă poză AI' : 'Poză AI'}</button>}
       </div>
 
-      <input className="editor-title" aria-label="Titlu" required value={r.title} placeholder="Numele rețetei" onChange={(e) => set('title', e.target.value)} />
+      {/* Grows to fit a long name instead of cutting it off; Enter does not add a new line. */}
+      <textarea className="editor-title" aria-label="Titlu" required rows={1} value={r.title} placeholder="Numele rețetei" ref={(el) => fitHeight(el)}
+        onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
+        onChange={(e) => set('title', e.target.value.replace(/\s*\n\s*/g, ' '))} />
 
       <div className="editor-fields">
         <label>Categorie

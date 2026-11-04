@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { deleteRecipe, getRecipe } from '../lib/db'
 import type { Recipe } from '../lib/types'
-import { useFileUrl } from '../lib/useFileUrl'
-import { scaleIngredient } from '../lib/scale'
+import { keepPhotos, useFileUrl } from '../lib/useFileUrl'
+import { isHeading, scaleIngredient } from '../lib/scale'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { formatMinutes } from '../lib/format'
 import { getProgress } from '../lib/cooking'
 import Sheet from '../components/Sheet'
 import { LoadError, Loading } from '../components/LoadState'
 import { useSyncedList } from '../lib/synced'
-import { addDays, addToShopping, dayKey, dayName, planRecipe, planStore, shortDate, today } from '../lib/plan'
+import { addDays, addToShopping, dayKey, dayName, forgetRecipe, planRecipe, planStore, shortDate, today } from '../lib/plan'
+import { useBack } from '../lib/back'
+import { useOnline } from '../lib/useOffline'
 
 /** Choose a day in the next two weeks; days that already have this recipe are marked. */
 function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; servings?: number; onDone: (msg: string) => void; onClose: () => void }) {
@@ -38,7 +40,6 @@ function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; servings?: num
 
 export default function RecipeView() {
   const { id } = useParams()
-  const nav = useNavigate()
   const [r, setR] = useState<Recipe | null>()
   const [have, setHave] = useState<Set<number>>(new Set())
   const [done, setDone] = useState<Set<number>>(new Set())
@@ -48,11 +49,31 @@ export default function RecipeView() {
   const [planning, setPlanning] = useState(false)
   const [note, setNote] = useState<{ text: string; to: string; link: string }>()
   const [failed, setFailed] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const online = useOnline()
+  // After deleting, step back to where the recipe was opened from rather than adding a page on
+  // top (Back would then lead to the deleted recipe).
+  const leave = useBack('/retete')
+  const remove = async (x: Recipe) => {
+    setDeleting(true); setDeleteError('')
+    try {
+      await deleteRecipe(x)
+      forgetRecipe(x.id)
+      leave()
+    } catch {
+      setDeleteError('Nu am putut șterge rețeta. Verifică internetul și încearcă din nou.')
+      setDeleting(false)
+    }
+  }
   const load = () => {
     getRecipe(id!).then((x) => { setR(x ?? null); setServings(x?.servings) }).catch(() => setFailed(true))
   }
   useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   const img = useFileUrl(r?.photoKey)
+  // Step photos too, so cooking mode shows them without internet later.
+  const stepKeys = r?.stepPhotoKeys?.join('|') ?? ''
+  useEffect(() => { if (stepKeys) keepPhotos(stepKeys.split('|')) }, [stepKeys])
   if (failed) return <LoadError text="Nu am putut deschide rețeta. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
   if (r === undefined) return <Loading />
   if (r === null) return (
@@ -63,6 +84,7 @@ export default function RecipeView() {
     </div>
   )
 
+  const toBuy = r.ingredients.filter((x) => !isHeading(x)).length
   const toggle = (set: typeof setHave) => (i: number) => set((s) => { const n = new Set(s); if (n.has(i)) n.delete(i); else n.add(i); return n })
   const factor = r.servings && servings ? servings / r.servings : 1
 
@@ -84,7 +106,7 @@ export default function RecipeView() {
         {r.steps.length > 0 && (() => {
           const saved = getProgress(r.id)
           return (
-            <Link to={`/retete/${r.id}/gateste`} className="btn primary big cook-cta">
+            <Link to={`/retete/${r.id}/gateste`} state={{ fromRecipe: true }} className="btn primary big cook-cta">
               {saved != null && saved > 0 && saved < r.steps.length ? `Continuă de la pasul ${saved + 1}` : 'Gătește pas cu pas'}
             </Link>
           )
@@ -103,7 +125,7 @@ export default function RecipeView() {
               setNote({ text: n ? `Am pus ${n} ${n === 1 ? 'ingredient' : 'ingrediente'} în listă.` : 'Sunt deja în listă.', to: '/cumparaturi', link: 'Vezi lista' })
             }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01" /></svg>
-              Pune în listă{have.size > 0 && r.ingredients.length > have.size ? ` (${r.ingredients.length - have.size})` : ''}
+              Pune în listă{have.size > 0 && toBuy > have.size ? ` (${toBuy - have.size})` : ''}
             </button>
           )}
           {note && <p className="recipe-plan-note" role="status">{note.text} <Link to={note.to}>{note.link}</Link></p>}
@@ -123,7 +145,10 @@ export default function RecipeView() {
               ) : null}
             </div>
             <ul className="checklist">
-              {r.ingredients.map((x, i) => (
+              {r.ingredients.map((x, i) => isHeading(x) ? (
+                // "Pentru dresat:" groups the lines under it; nothing to tick.
+                <li key={i} className="checklist-heading">{x.trim().replace(/:\s*$/, '')}</li>
+              ) : (
                 <li key={i}>
                   <label className={have.has(i) ? 'done' : ''}>
                     <input type="checkbox" checked={have.has(i)} onChange={() => toggle(setHave)(i)} />
@@ -154,7 +179,7 @@ export default function RecipeView() {
 
       </div>
       {menu && (
-        <Sheet title="Rețeta" onClose={() => { setMenu(false); setConfirming(false) }}>
+        <Sheet title="Rețeta" onClose={() => { setMenu(false); setConfirming(false); setDeleteError('') }}>
           <div className="menu-list">
             <Link to={`/retete/${r.id}/editeaza`} className="btn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /></svg>
@@ -162,8 +187,11 @@ export default function RecipeView() {
             </Link>
             {confirming ? (
               <div className="menu-confirm">
-                <p>Ștergi rețeta „{r.title}”? Nu se mai poate recupera.</p>
-                <button type="button" className="btn danger" onClick={async () => { await deleteRecipe(r); nav('/retete') }}>Da, șterge</button>
+                {online ? <>
+                  <p>Ștergi rețeta „{r.title}”? Nu se mai poate recupera.</p>
+                  {deleteError && <p className="error" role="alert">{deleteError}</p>}
+                  <button type="button" className="btn danger" disabled={deleting} onClick={() => remove(r)}>{deleting ? 'Se șterge…' : 'Da, șterge'}</button>
+                </> : <p role="alert">Ești offline. Poți șterge rețeta când ai din nou internet.</p>}
                 <button type="button" className="btn" onClick={() => setConfirming(false)}>Nu</button>
               </div>
             ) : (

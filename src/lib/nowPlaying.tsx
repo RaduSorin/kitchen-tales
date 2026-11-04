@@ -73,6 +73,10 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const [error, setError] = useState<string>()
   // Whether the current audio comes from this device (true) or from the internet (false).
   const fromDevice = useRef(false)
+  // When the internet link was signed: it stops working after an hour (the sign-in's credentials
+  // expire), so a story paused longer than that gets a fresh link before it plays again.
+  const signedAt = useRef(0)
+  const resigned = useRef(false)
   const [sleep, setSleep] = useState<Sleep>(() => ([1, 2, 3, 5].includes(readNum(SLEEP_KEY, 1)) ? readNum(SLEEP_KEY, 1) : 1) as Sleep)
   const [shuffle, setShuffle] = useState(() => readNum(SHUFFLE_KEY, 0) === 1)
   const played = useRef(0) // stories finished in this run, for "stop after N stories"
@@ -117,6 +121,8 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     : idx >= 0 && idx < queue.length - 1 ? queue[idx + 1] : undefined
   const nextRef = useRef<Story>(undefined)
   nextRef.current = next
+  const prevRef = useRef<Story>(undefined)
+  prevRef.current = prev
   const sleepRef = useRef(sleep)
   sleepRef.current = sleep
 
@@ -132,7 +138,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
       if (!live) return
       fromDevice.current = !!blob
       if (blob) { blobUrl = URL.createObjectURL(blob); setUrl(blobUrl) }
-      else if (story.audioKey) { const u = await fileUrl(story.audioKey); if (live) setUrl(u) }
+      else if (story.audioKey) { const u = await fileUrl(story.audioKey); if (live) { signedAt.current = Date.now(); resigned.current = false; setUrl(u) } }
     })().catch(() => { if (live) setError(NOT_REACHABLE) })
     return () => { live = false; if (blobUrl) URL.revokeObjectURL(blobUrl) }
     // Only a different story needs new audio; cover or title edits keep playing.
@@ -152,8 +158,39 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     setStory(s)
   }, [])
 
+  /**
+   * Swaps in a freshly signed link for the current internet story, keeping the place
+   * (loadedmetadata seeks back to the saved position) and playing on if asked.
+   */
+  const resign = useCallback(async (play: boolean) => {
+    const a = audio.current
+    const cur = storyRef.current
+    if (!a || !cur?.audioKey || fromDevice.current) return false
+    setPosition(cur.id, a.currentTime)
+    try {
+      const u = await fileUrl(cur.audioKey)
+      if (storyRef.current?.id !== cur.id || u === a.src) return false
+      signedAt.current = Date.now()
+      autoplay.current = play
+      setError(undefined)
+      setUrl(u)
+      return true
+    } catch { return false }
+  }, [])
+  // Play, first renewing an internet link that is about to expire (50 min, before the hour is up).
+  const play = useCallback(() => {
+    const a = audio.current
+    if (!a || isKidLocked()) return
+    setEnded(false)
+    if (!fromDevice.current && signedAt.current && Date.now() - signedAt.current > 50 * 60_000) {
+      resign(true).then((ok) => { if (!ok) a.play().catch(() => {}) })
+      return
+    }
+    a.play().catch(() => {})
+  }, [resign])
+
   const update = useCallback((s: Story) => { if (storyRef.current?.id === s.id) setStory(s) }, [])
-  const toggle = useCallback(() => { const a = audio.current; if (!a || (a.paused && isKidLocked())) return; setEnded(false); if (a.paused) a.play().catch(() => {}); else a.pause() }, [])
+  const toggle = useCallback(() => { const a = audio.current; if (!a) return; if (a.paused) play(); else a.pause() }, [play])
   const skip = useCallback((d: number) => { const a = audio.current; if (a) a.currentTime = Math.max(0, Math.min(a.duration || 0, a.currentTime + d)) }, [])
   const seek = useCallback((sec: number) => { if (audio.current) { audio.current.currentTime = sec; setT(sec) } }, [])
   const restart = useCallback(() => { const a = audio.current; if (!a || isKidLocked()) return; setEnded(false); a.currentTime = 0; a.play().catch(() => {}) }, [])
@@ -187,15 +224,24 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     if (!('mediaSession' in navigator)) return
     const ms = navigator.mediaSession
     const set = (action: MediaSessionAction, h: MediaSessionActionHandler | null) => { try { ms.setActionHandler(action, h) } catch { /* unsupported action */ } }
-    const actions: MediaSessionAction[] = ['play', 'pause', 'seekbackward', 'seekforward', 'seekto']
+    const actions: MediaSessionAction[] = ['play', 'pause', 'seekbackward', 'seekforward', 'seekto', 'nexttrack', 'previoustrack']
     if (!hasStory) { actions.forEach((x) => set(x, null)); return }
-    set('play', () => { const a = audio.current; if (a && !isKidLocked()) { setEnded(false); a.play().catch(() => {}) } })
+    set('play', play)
     set('pause', () => audio.current?.pause())
     set('seekbackward', (d) => skip(-(d.seekOffset || 15)))
     set('seekforward', (d) => skip(d.seekOffset || 15))
     set('seekto', (d) => { if (d.seekTime != null) seek(d.seekTime) })
+    // Headphones (double / triple press) and car stereos: next and previous story of the folder.
+    set('nexttrack', () => { const n = nextRef.current; if (n && !isKidLocked()) load(n, { autoplay: true, continued: true }) })
+    set('previoustrack', () => {
+      const a = audio.current
+      // Like music apps: a few seconds in, "previous" starts the story again.
+      if (a && a.currentTime > 5) { a.currentTime = 0; return }
+      const p = prevRef.current
+      if (p && !isKidLocked()) load(p, { autoplay: true, continued: true })
+    })
     return () => actions.forEach((x) => set(x, null))
-  }, [hasStory, skip, seek])
+  }, [hasStory, skip, seek, play, load])
 
   // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
   const coverUrl = useCoverUrl(story?.coverKey)
@@ -208,7 +254,13 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     if (!('mediaSession' in navigator)) return
     const ms = navigator.mediaSession
     const s = storyRef.current
-    if (!artKey || !s) { ms.metadata = null; ms.playbackState = 'none'; return }
+    if (!artKey || !s) {
+      // iOS keeps the last audio app on the lock screen for a while even after it stops. With no
+      // metadata it draws our icon on a white tile (white corners), so give it the full square icon.
+      ms.metadata = new MediaMetadata({ title: 'Bucătăria cu povești', artwork: [{ src: new URL('/icon-512.png', location.href).href, sizes: '512x512', type: 'image/png' }] })
+      ms.playbackState = 'none'
+      return
+    }
     let live = true
     const plain = () => { if (live && ms.metadata?.title !== s.title) ms.metadata = new MediaMetadata({ title: s.title, artist: 'Bucătăria cu povești' }) }
     const show = (cover?: string) => storyArtwork(s, cover).then((src) => {
@@ -238,6 +290,13 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const onError = (e: React.SyntheticEvent<HTMLAudioElement>) => {
     if (!url || e.currentTarget.src !== url) return
     setPlaying(false)
+    // An internet link that stopped working (expired): sign it again once and carry on.
+    if (!fromDevice.current && !resigned.current && navigator.onLine) {
+      resigned.current = true
+      const wasPlaying = !e.currentTarget.paused || playing
+      resign(wasPlaying).then((ok) => { if (!ok) setError(NOT_REACHABLE) })
+      return
+    }
     setError(fromDevice.current ? BROKEN_FILE : NOT_REACHABLE)
   }
 
@@ -250,7 +309,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
         onPlay={(e) => {
           // Time is up in kid mode: nothing plays, not even from the lock-screen or headphone buttons.
           if (isKidLocked()) { e.currentTarget.pause(); return }
-          setPlaying(true); setEnded(false); setError(undefined)
+          setPlaying(true); setEnded(false); setError(undefined); resigned.current = false
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing' }}
         onPause={(e) => { setPlaying(false); if ('mediaSession' in navigator && e.currentTarget.src) navigator.mediaSession.playbackState = 'paused'; if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
         onEnded={onEnded}

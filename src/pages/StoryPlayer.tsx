@@ -40,6 +40,7 @@ function StoryPlayer() {
   const [dim, setDim] = useState(false)
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [msg, setMsg] = useState('')
   const [coverOpen, setCoverOpen] = useState(false)
   const [coverBusy, setCoverBusy] = useState(false)
@@ -145,10 +146,15 @@ function StoryPlayer() {
         <button type="button" className="night-btn" aria-label={`Înapoi la ${folderOf(s)}`} onClick={back}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
         </button>
-        <button type="button" className={`night-btn fav-btn${s.favorite ? ' on' : ''}`} aria-pressed={!!s.favorite}
-          aria-label={s.favorite ? 'Scoate din favorite' : 'Pune la favorite'} disabled={!online} onClick={toggleFavorite}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill={s.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" /></svg>
-        </button>
+        {/* Favourites are the family's list: in kid mode the heart only shows, it can't be changed. */}
+        {kid ? (
+          s.favorite ? <span className="night-btn fav-btn on fav-static" role="img" aria-label="Preferată"><svg width="22" height="22" viewBox="0 0 24 24" fill={s.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" /></svg></span> : <span className="fav-static" aria-hidden="true" />
+        ) : (
+          <button type="button" className={`night-btn fav-btn${s.favorite ? ' on' : ''}`} aria-pressed={!!s.favorite}
+            aria-label={s.favorite ? 'Scoate din favorite' : 'Pune la favorite'} disabled={!online} onClick={toggleFavorite}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill={s.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" /></svg>
+          </button>
+        )}
       </div>
       <StoryCover story={s} round className={playing ? 'playing' : ''} />
       <div className="player-title">
@@ -216,7 +222,18 @@ function StoryPlayer() {
             {online && <button className="btn small span-all" onClick={() => setMoveOpen(true)}>Mută în folder</button>}
             {online && (confirmDelete ? (
               <span className="confirm span-all">Ștergi povestea?
-                <button className="btn danger small" onClick={async () => { if (current) player.close(); await deleteStory(s); nav('/povesti') }}>Da, șterge</button>
+                <button className="btn danger small" disabled={deleting} onClick={async () => {
+                  setDeleting(true); setMsg('')
+                  try {
+                    await deleteStory(s)
+                    if (current) player.close()
+                    // Step back (or open the folder in place), so Back never leads to the deleted story.
+                    back()
+                  } catch {
+                    setMsg('Nu am putut șterge povestea. Verifică internetul și încearcă din nou.')
+                    setDeleting(false)
+                  }
+                }}>{deleting ? 'Se șterge…' : 'Da, șterge'}</button>
                 <button className="btn small" onClick={() => setConfirmDelete(false)}>Nu</button>
               </span>
             ) : <button className="btn danger small span-all" onClick={() => setConfirmDelete(true)}>Șterge povestea</button>)}
@@ -237,6 +254,7 @@ function StoryPlayer() {
             </div>
           )}
           {isSaved && <small>Salvată pe acest dispozitiv, merge și fără internet.</small>}
+          {!online && <p className="parents-offline">Fără internet poți asculta poveștile salvate. Coperta, mutarea și ștergerea revin când ai din nou internet.</p>}
           {msg && <p className="error">{msg}</p>}
         </div>
       </details>}

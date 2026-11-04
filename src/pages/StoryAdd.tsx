@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { errorText } from '../lib/errors'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { cachedFolders, createStory, fileUrl, listFolders, listStories, generateStory, removeFile, saveFoundCover, uploadFile, type StoryBrief } from '../lib/db'
 import { saveAudio, saveCover } from '../lib/offline'
@@ -11,7 +12,7 @@ import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
 import { groupFolders } from '../lib/stories'
-import { useLeaveGuard } from '../lib/leaveGuard'
+import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { showToast } from '../lib/toast'
 
 const LEAVE_UNSAVED = {
@@ -77,6 +78,8 @@ export default function StoryAdd() {
       .catch(() => {})
   }, [])
   const [saving, setSaving] = useState(false)
+  // Share of the audio sent so far while saving (big files take a while on mobile data).
+  const [sent, setSent] = useState<number>()
   const localPreview = useBlobUrl(audio)
   const [brief, setBrief] = useState<StoryBrief>(() => ({ length: 'medium', ...loadBrief() }))
   const setB = <K extends keyof StoryBrief>(k: K, v: StoryBrief[K]) => setBrief((b) => ({ ...b, [k]: v }))
@@ -89,6 +92,11 @@ export default function StoryAdd() {
   const ready = !!(audio || generated) && mode === MODE_OF[source]
   // A finished recording that isn't saved yet only lives on this screen, so leaving asks first.
   useLeaveGuard(source === 'recording' && !!audio && !saving, LEAVE_UNSAVED)
+
+  // A generated story's audio is already in the cloud: leaving without saving deletes it.
+  const unsavedAudio = useRef<string>(undefined)
+  useEffect(() => { unsavedAudio.current = generated?.audioKey }, [generated])
+  useEffect(() => () => { if (unsavedAudio.current) removeFile(unsavedAudio.current).catch(() => {}) }, [])
 
   const choose = (m?: Mode) => {
     setError('')
@@ -130,7 +138,7 @@ export default function StoryAdd() {
       setGenerated({ ...g, url: await fileUrl(g.audioKey) })
       setAudio(undefined); setSource('generated'); setSeconds(undefined)
     } catch (err) {
-      setError(`Nu am putut crea povestea: ${(err as Error).message}`)
+      setError(`Nu am putut crea povestea: ${errorText(err)}`)
     }
     setGenerating(false)
   }
@@ -141,7 +149,7 @@ export default function StoryAdd() {
     if (!ready) return
     setSaving(true); setError('')
     try {
-      const audioKey = generated ? generated.audioKey : await uploadFile('stories', audio!, 'webm')
+      const audioKey = generated ? generated.audioKey : await uploadFile('stories', audio!, 'webm', setSent)
       let coverKey: string | undefined
       if (cover?.url) coverKey = await saveFoundCover(cover.url).catch(() => undefined)
       else if (cover?.blob) {
@@ -150,12 +158,14 @@ export default function StoryAdd() {
         saveCover(coverKey, small).catch(() => {})
       }
       const id = await createStory({ title: title.trim(), emoji, coverKey, collection: collection || undefined, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
+      unsavedAudio.current = undefined // it belongs to the story now
       // Our own recordings and files are already on this device, so keep them for offline listening.
       if (audio) await saveAudio(id, audio).catch(() => {})
+      await guardedWorkDone()
       nav(`/povesti/${id}`, { replace: true })
     } catch (err) {
-      setError(`Nu am putut salva povestea: ${(err as Error).message}`)
-      setSaving(false)
+      setError(`Nu am putut salva povestea: ${errorText(err)}`)
+      setSaving(false); setSent(undefined)
     }
   }
 
@@ -320,7 +330,8 @@ export default function StoryAdd() {
               </select>
             </label>
           )}
-          <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? 'Se salvează…' : 'Pune pe raft'}</button>
+          <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? (sent !== undefined && sent < 1 ? `Se încarcă… ${Math.round(sent * 100)}%` : 'Se salvează…') : 'Pune pe raft'}</button>
+          {saving && sent !== undefined && sent < 1 && <progress className="upload-progress" max={1} value={sent} aria-label="Încărcare" />}
           {source !== 'generated' && <p className="rec-hint">Se salvează și pe acest dispozitiv, merge și fără internet.</p>}
         </div>
       )}

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { listRecipes } from '../lib/db'
 import type { PlanEntry, Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
-import { norm } from '../lib/format'
+import { matchesQuery } from '../lib/format'
 import { useSyncedList } from '../lib/synced'
 import { addDays, addPlanToShopping, dayKey, dayName, mondayOf, planRecipe, planStore, shortDate, today, weekDays, weekLabel } from '../lib/plan'
 import PlatePlaceholder from '../components/PlatePlaceholder'
@@ -38,7 +38,7 @@ function Planned({ e, r, loaded }: { e: PlanEntry; r?: Recipe; loaded: boolean }
 
 function RecipePicker({ day, recipes, onClose }: { day: Date; recipes: Recipe[]; onClose: () => void }) {
   const [q, setQ] = useState('')
-  const shown = recipes.filter((r) => !q || norm([r.title, r.category, ...r.ingredients].join(' ')).includes(norm(q.trim())))
+  const shown = recipes.filter((r) => matchesQuery([r.title, r.category, ...r.ingredients].join(' '), q))
     .sort((a, b) => a.title.localeCompare(b.title, 'ro'))
   return (
     <Sheet title={`${dayName(day)}, ${shortDate(day)}`} onClose={onClose}>
@@ -113,7 +113,7 @@ export default function Week() {
             <li key={k} className={`week-day${k === todayKey ? ' today' : ''}${k < todayKey ? ' past' : ''}`}>
               <div className="week-day-head">
                 <span><b>{dayName(d)}</b> <small>{shortDate(d)}{k === todayKey ? ' · azi' : ''}</small></span>
-                <button type="button" className="btn small" onClick={() => setPicking(d)}>+ Adaugă</button>
+                <button type="button" className="btn small day-add" onClick={() => setPicking(d)}>+ Adaugă</button>
               </div>
               {entries.length > 0 && <ul className="planned-list">{entries.map((e) => <Planned key={e.id} e={e} r={byId.get(e.recipeId)} loaded={loaded} />)}</ul>}
             </li>

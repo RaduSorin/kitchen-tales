@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getRecipe } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
@@ -7,6 +7,7 @@ import { detectDuration, formatClock, getProgress, ingredientsForStep, setProgre
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { ringAlarm, unlockAlarm } from '../lib/alarm'
 import { canGoBack } from '../lib/back'
+import { isHeading } from '../lib/scale'
 import { alarmId, cancelAlarm, pushProblem, scheduleAlarm } from '../lib/timerPush'
 
 /**
@@ -65,6 +66,15 @@ function StepBackground({ photoKey, recipePhotoKey, seed, index }: { photoKey?: 
 export default function CookMode() {
   const { id } = useParams()
   const nav = useNavigate()
+  const location = useLocation()
+  // Closing goes back to the recipe page this was opened from, instead of adding a second copy
+  // of it (then Back would open cooking mode again). From elsewhere (Home, a notification) it
+  // takes this screen's place.
+  const fromRecipe = !!(location.state as { fromRecipe?: boolean } | null)?.fromRecipe
+  const close = useCallback(() => {
+    if (fromRecipe && canGoBack()) nav(-1)
+    else nav(`/retete/${id}`, { replace: true })
+  }, [fromRecipe, nav, id])
   const [r, setR] = useState<Recipe | null>()
   const [i, setI] = useState(0)
   const [finished, setFinished] = useState(false)
@@ -104,11 +114,11 @@ export default function CookMode() {
       else if (e.key === 'ArrowLeft') go(-1)
       else if (e.key === 'ArrowUp') setSheet(true)
       else if (e.key === 'ArrowDown') setSheet(false)
-      else if (e.key === 'Escape') { if (sheet) setSheet(false); else nav(`/retete/${id}`) }
+      else if (e.key === 'Escape') { if (sheet) setSheet(false); else close() }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [go, sheet, nav, id])
+  }, [go, sheet, close])
 
   // One tick redraws every running timer, so they keep counting while you move between steps.
   // A timer that ran out (also while the app was away) rings once and stops.
@@ -198,7 +208,7 @@ export default function CookMode() {
           <h1>Poftă bună!</h1>
           <p>Ai terminat {r.title}.</p>
           <div className="cook-done-actions">
-            <button className="btn big" onClick={() => nav(`/retete/${r.id}`, { replace: true })}>Gata</button>
+            <button className="btn big" onClick={close}>Gata</button>
             <button className="btn" onClick={() => go(-1)}>Înapoi la ultimul pas</button>
           </div>
         </div>
@@ -211,7 +221,7 @@ export default function CookMode() {
             </div>
             <div className="cook-head">
               <span className="cook-name"><span className="cook-title">{r.title}</span> <span className="cook-pos">{i + 1} din {count}</span></span>
-              <button className="cook-close" aria-label="Închide modul de gătit" onClick={() => nav(`/retete/${r.id}`)}>
+              <button className="cook-close" aria-label="Închide modul de gătit" onClick={close}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
               {otherRunning.length > 0 && <span className="cook-timers">{otherRunning.map(([k, t]) => (
@@ -260,7 +270,12 @@ export default function CookMode() {
                 <ul className="checklist">
                   {[...r.ingredients.entries()]
                     .sort(([, a], [, b]) => Number(forStep.includes(b)) - Number(forStep.includes(a)))
-                    .map(([k, x], pos) => (
+                    .map(([k, x], pos) => isHeading(x) ? (
+                      <li key={k}>
+                        {pos === forStep.length && forStep.length > 0 && <p className="set-label">Toată rețeta</p>}
+                        <p className="checklist-heading">{x.trim().replace(/:\s*$/, '')}</p>
+                      </li>
+                    ) : (
                       <li key={k} className={forStep.includes(x) ? 'now' : ''}>
                         {pos === forStep.length && forStep.length > 0 && <p className="set-label">Toată rețeta</p>}
                         <label className={have.has(k) ? 'done' : ''}>

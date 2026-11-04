@@ -5,7 +5,7 @@ import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
 import type { SharedSettings } from './settings'
 import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
-import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, saveAudio } from './offline'
+import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, removePhoto, saveAudio } from './offline'
 import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
 import { folderOf } from './stories'
 
@@ -68,9 +68,16 @@ const extFor = (blob: Blob, fallback: string) => {
   return t ? t.replace('mpeg', 'mp3').replace('x-m4a', 'm4a') : fallback
 }
 
-export async function uploadFile(prefix: 'recipe-photos' | 'stories' | 'story-covers', blob: Blob, fallbackExt: string) {
+/** Uploads a file; `onProgress` gets the share sent so far (0 to 1), for big audio files. */
+export async function uploadFile(prefix: 'recipe-photos' | 'stories' | 'story-covers', blob: Blob, fallbackExt: string, onProgress?: (share: number) => void) {
   const path = `${prefix}/${newId()}.${extFor(blob, fallbackExt)}`
-  await uploadData({ path, data: blob, options: { contentType: blob.type || undefined } }).result
+  await uploadData({
+    path, data: blob,
+    options: {
+      contentType: blob.type || undefined,
+      onProgress: onProgress && (({ transferredBytes, totalBytes }) => { if (totalBytes) onProgress(transferredBytes / totalBytes) }),
+    },
+  }).result
   return path
 }
 
@@ -79,7 +86,9 @@ export async function fileUrl(path: string) {
 }
 
 async function removeFile(path?: string) {
-  if (path) await remove({ path }).catch(() => {})
+  if (!path) return
+  await remove({ path }).catch(() => {})
+  removePhoto(path).catch(() => {})
 }
 
 // ---- recipes ----
@@ -118,7 +127,8 @@ export async function saveRecipe(r: Recipe, isNew: boolean) {
 }
 
 export async function deleteRecipe(r: Recipe) {
-  await client.models.Recipe.delete({ id: r.id })
+  const res = await client.models.Recipe.delete({ id: r.id })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   await removeFile(r.photoKey)
   await Promise.all((r.stepPhotoKeys ?? []).map((k) => removeFile(k || undefined)))
 }
@@ -176,7 +186,8 @@ export async function createStory(s: Omit<Story, 'id' | 'createdAt'>) {
 }
 
 export async function deleteStory(s: Story) {
-  await client.models.Story.delete({ id: s.id })
+  const res = await client.models.Story.delete({ id: s.id })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   await removeFile(s.audioKey)
   await removeFile(s.coverKey)
   await removeAudio(s.id).catch(() => {})

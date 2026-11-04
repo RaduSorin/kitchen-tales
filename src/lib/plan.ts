@@ -1,6 +1,7 @@
 // The week plan and the shopping list, shared by the whole family.
 import { newId, planApi, shoppingApi } from './db'
-import { scaleIngredient } from './scale'
+import { isHeading, scaleIngredient } from './scale'
+import { norm } from './format'
 import { createSyncedList } from './synced'
 import type { PlanEntry, Recipe, ShoppingItem } from './types'
 
@@ -36,19 +37,37 @@ export function planRecipe(recipe: Recipe, day: string, servings?: number) {
   planStore.create({ id: newId(), day, recipeId: recipe.id, servings: servings && servings !== recipe.servings ? servings : undefined })
 }
 
+/**
+ * A recipe was deleted: take it off every day of the plan and drop its lines from the shopping
+ * list that are not bought yet (bought ones stay until the list is cleared).
+ */
+export function forgetRecipe(recipeId: string) {
+  for (const e of planStore.get()) if (e.recipeId === recipeId) planStore.remove(e.id)
+  for (const s of shoppingStore.get()) if (s.recipeId === recipeId && !s.checked) shoppingStore.remove(s.id)
+}
+
 // ---- shopping ----
 
-/** Lines that are headings ("Pentru sos:") rather than things to buy. */
-const isHeading = (line: string) => /:\s*$/.test(line.trim())
 
-/** Puts a recipe's ingredients on the list (scaled to the servings); skips lines already there and not yet bought. Returns how many were added. */
+/** The ingredient without its amount, to tell "500 g carne" and "750 g carne" are the same line. */
+const withoutAmount = (line: string) => norm(line).replace(/^[\d\s.,/½¼¾⅓⅔⅛\-–]+/, '').replace(/\s+/g, ' ').trim()
+
+/**
+ * Puts a recipe's ingredients on the list (scaled to the servings); skips lines already there
+ * and not yet bought. The same recipe added again for another number of servings replaces its
+ * amounts instead of adding them on top. Returns how many lines were added or changed.
+ */
 export function addToShopping(recipe: Recipe, servings?: number, only?: string[]) {
   const factor = recipe.servings && servings ? servings / recipe.servings : 1
   const lines = (only ?? recipe.ingredients).filter((l) => l.trim() && !isHeading(l)).map((l) => scaleIngredient(l.trim(), factor))
-  const open = new Set(shoppingStore.get().filter((s) => !s.checked && s.recipeId === recipe.id).map((s) => s.text))
+  const mine = shoppingStore.get().filter((s) => !s.checked && s.recipeId === recipe.id)
+  const open = new Set(mine.map((s) => s.text))
   let added = 0
   for (const text of lines) {
     if (open.has(text)) continue
+    // The same ingredient at another amount (other servings): the new amount takes its place.
+    const key = withoutAmount(text)
+    for (const s of mine) if (s.text !== text && open.has(s.text) && withoutAmount(s.text) === key) { shoppingStore.remove(s.id); open.delete(s.text) }
     open.add(text)
     shoppingStore.create({ id: newId(), text, checked: false, recipeId: recipe.id, recipeTitle: recipe.title, createdAt: new Date().toISOString() })
     added++

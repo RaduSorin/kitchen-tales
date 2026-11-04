@@ -199,19 +199,30 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
 
   // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
   const coverUrl = useCoverUrl(story?.coverKey)
+  // Car stereos (Bluetooth) often read the cover only once, with the first title they get, so the
+  // metadata is set once with its artwork: we wait for the cover (at most ~1.5 s) instead of sending
+  // a title without a picture first and the picture later.
+  const artKey = story ? `${story.id}|${story.title}|${story.emoji ?? ''}` : ''
+  const waitCover = !!story?.coverKey && !coverUrl
   useEffect(() => {
     if (!('mediaSession' in navigator)) return
-    if (!story) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; return }
+    const ms = navigator.mediaSession
+    const s = storyRef.current
+    if (!artKey || !s) { ms.metadata = null; ms.playbackState = 'none'; return }
     let live = true
-    navigator.mediaSession.metadata = new MediaMetadata({ title: story.title, artist: 'Bucătăria cu povești' })
-    storyArtwork(story, coverUrl).then((src) => {
-      if (!live || !src) return
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: story.title, artist: 'Bucătăria cu povești', artwork: [{ src, sizes: '512x512', type: 'image/png' }],
+    const plain = () => { if (live && ms.metadata?.title !== s.title) ms.metadata = new MediaMetadata({ title: s.title, artist: 'Bucătăria cu povești' }) }
+    const show = (cover?: string) => storyArtwork(s, cover).then((src) => {
+      if (!live) return
+      if (!src) { plain(); return }
+      ms.metadata = new MediaMetadata({
+        title: s.title, artist: 'Bucătăria cu povești', artwork: [{ src, sizes: '512x512', type: 'image/jpeg' }],
       })
-    }).catch(() => {})
-    return () => { live = false }
-  }, [story, coverUrl])
+    }).catch(plain)
+    // Cover still loading (or failing): after a moment, show the emoji tile rather than nothing.
+    const fallback = waitCover ? setTimeout(() => { if (ms.metadata?.title !== s.title) show() }, 1500) : undefined
+    if (!waitCover) show(coverUrl)
+    return () => { live = false; clearTimeout(fallback) }
+  }, [artKey, coverUrl, waitCover])
 
   // When a story ends: play the next one until the chosen number of stories is reached.
   const onEnded = () => {

@@ -225,6 +225,24 @@ function KidSettings() {
   )
 }
 
+/** The bookshelf in each folder: a soft click while leafing through the books. */
+function ShelfSettings() {
+  const { shelfClick } = useSettings()
+  return (
+    <div className="set-group">
+      <h2 className="set-label">Raftul cu povești</h2>
+      <div className="set-box">
+        <label className="set-row">
+          <span>Clic când răsfoiești cărțile</span>
+          <input type="checkbox" className="switch" id="shelf-click" checked={shelfClick}
+            onChange={(e) => updateSettings({ shelfClick: e.target.checked })} />
+        </label>
+      </div>
+      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte nouă aleasă face un clic discret. Pe Android telefonul vibrează și puțin. Se aplică doar pe acest dispozitiv.</p>
+    </div>
+  )
+}
+
 function StorySettings() {
   const { child } = useSettings()
   const age = childAge(child)
@@ -263,6 +281,7 @@ function StorySettings() {
         <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează în cont, la fel pe toate dispozitivele familiei.</p>
       </div>
       <SkySettings />
+      <ShelfSettings />
       <OfflineStorage />
     </>
   )

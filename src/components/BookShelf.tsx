@@ -150,6 +150,24 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
     return () => window.removeEventListener('keydown', key)
   })
 
+  // Upright, the window is pinned at the top; it gets a background only once the shelves pass under it.
+  const vitrine = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = vitrine.current
+    if (wide || !el) return
+    let frame = 0
+    const check = () => {
+      frame = 0
+      const top = parseFloat(getComputedStyle(el).top) || 0
+      el.classList.toggle('stuck', window.scrollY > 0 && el.getBoundingClientRect().top <= top + 1)
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(check) }
+    check()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll) }
+  }, [wide, !!sel])
+
   // ---------- A new book is put on the shelf ----------
   const busy = useRef(false)
   useEffect(() => {
@@ -190,7 +208,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
   if (!sel) return null
   return (
     <div className={`bookshelf${wide ? ' wide' : ''}`}>
-      <div className="vitrine">
+      <div className="vitrine" ref={vitrine}>
         <button type="button" className="vit-nav" disabled={idx <= 0 || !!now} onClick={() => step(-1)} aria-label="Povestea dinainte">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
         </button>

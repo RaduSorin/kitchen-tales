@@ -1043,7 +1043,9 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .spine-skin { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 5px 0 8px; overflow: hidden; color: var(--ink-c); font-family: var(--f-kids);
   background: linear-gradient(90deg, rgb(255 255 255 / .26) 0, rgb(255 255 255 / .04) 22%, rgb(0 0 0 / 0) 62%, rgb(0 0 0 / .3) 100%), var(--c); }
 .spine-cap { flex: none; width: calc(100% - 8px); aspect-ratio: 1; border-radius: 4px; overflow: hidden; display: grid; place-items: center; box-shadow: 0 1px 0 rgb(255 255 255 / .3); }
-.spine-cap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.spine-cap { position: relative; }
+/* Pinned to the box (not sized as a grid item), or Safari leaves a coloured band above a non-square cover. */
+.spine-cap img, .vit-pic img, .ff-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .spine-cap > span { font-size: 15px; line-height: 1; }
 .spine-band { flex: none; width: 100%; height: 5px; border-block: 1px solid color-mix(in srgb, var(--ink-c) 45%, transparent); opacity: .8; }
 .spine-title { flex: 1 1 auto; min-height: 0; writing-mode: vertical-rl; font-weight: 800; font-size: 14px; line-height: 1; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1056,6 +1058,14 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 /* Bookshelf with a window: the chosen cover above (left when sideways), the spines on shelves. */
 .bookshelf { display: flex; flex-direction: column; gap: 14px; }
 .vitrine { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+/* Upright, the window stays pinned under the top bar and the shelves scroll beneath it; once pinned
+   it gets the top bar's frosted background so the books passing under it don't show through. */
+.bookshelf:not(.wide) .vitrine { position: sticky; z-index: 5; top: var(--topbar-h, 60px); margin-inline: -16px; padding: 6px 16px 12px;
+  border-radius: 0 0 26px 26px; transition: top .25s ease, background .2s, box-shadow .2s; }
+.bookshelf:not(.wide) .vitrine.stuck { background: var(--topbar-bg); -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 10px 24px rgb(0 0 0 / .18); }
+:root[data-topbar-hidden] .bookshelf:not(.wide) .vitrine { top: env(safe-area-inset-top, 0px); }
+@media (min-width: 760px) { :root[data-topbar-hidden] .bookshelf:not(.wide) .vitrine { top: var(--topbar-h, 60px); } }
 .vit-nav { align-self: stretch; min-width: 44px; border: 0; background: none; color: var(--muted); display: grid; align-items: center; padding: 0 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .vit-nav:first-child { justify-items: end; }
 .vit-nav:nth-child(3) { justify-items: start; }
@@ -1063,7 +1073,6 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .vit-cover { position: relative; width: min(44vw, 180px); aspect-ratio: 1; border: 0; padding: 0; border-radius: 24px; overflow: hidden; cursor: pointer; background: none; box-shadow: 0 16px 34px rgb(0 0 0 / .4); }
 .vit-cover:focus-visible { outline: 3px solid var(--moon); outline-offset: 4px; }
 .vit-pic { position: absolute; inset: 0; display: grid; place-items: center; animation: vit-swap .35s ease; }
-.vit-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .vit-pic > span { font-size: 4rem; line-height: 1; }
 @keyframes vit-swap { from { transform: scale(.92) rotate(-2deg); opacity: .4; } }
 .vit-new, .flow-new { position: absolute; top: 8px; left: 8px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: .78rem; }
@@ -1100,7 +1109,6 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .ff-front { inset: 0; transform: translateZ(calc(var(--d) / 2)); border-radius: 3px 10px 10px 3px; overflow: hidden; background: var(--c); }
 .ff-front::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(0 0 0 / .28), rgb(255 255 255 / .1) 4%, rgb(0 0 0 / 0) 9%); }
 .ff-pic { position: absolute; inset: 0; display: grid; place-items: center; }
-.ff-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ff-pic > span { font-size: calc(var(--w) * .4); line-height: 1; }
 .ff-back { inset: 0; transform: rotateY(180deg) translateZ(calc(var(--d) / 2)); background: var(--cd); border-radius: 10px 3px 3px 10px; }
 .ff-spine { top: 0; height: 100%; width: var(--d); left: calc(50% - var(--d) / 2); transform: rotateY(-90deg) translateZ(calc(var(--w) / 2)); border-radius: 3px; }

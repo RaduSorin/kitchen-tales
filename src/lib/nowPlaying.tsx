@@ -208,7 +208,13 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     if (!('mediaSession' in navigator)) return
     const ms = navigator.mediaSession
     const s = storyRef.current
-    if (!artKey || !s) { ms.metadata = null; ms.playbackState = 'none'; return }
+    if (!artKey || !s) {
+      // iOS keeps the last audio app on the lock screen for a while even after it stops. With no
+      // metadata it draws our icon on a white tile (white corners), so give it the full square icon.
+      ms.metadata = new MediaMetadata({ title: 'Bucătăria cu povești', artwork: [{ src: new URL('/icon-512.png', location.href).href, sizes: '512x512', type: 'image/png' }] })
+      ms.playbackState = 'none'
+      return
+    }
     let live = true
     const plain = () => { if (live && ms.metadata?.title !== s.title) ms.metadata = new MediaMetadata({ title: s.title, artist: 'Bucătăria cu povești' }) }
     const show = (cover?: string) => storyArtwork(s, cover).then((src) => {

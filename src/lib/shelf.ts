@@ -120,7 +120,35 @@ export function bookMeta(story: Story) {
   return parts.join(' · ')
 }
 
-// ---------- The click (and a short buzz on Android) when the chosen book changes ----------
+// ---------- The click and a short buzz when the chosen book changes ----------
+
+/**
+ * A tiny buzz. Android has navigator.vibrate. Safari on iPhone does not, but since iOS 18 its
+ * native switch (<input type="checkbox" switch>) gives a haptic tick each time it flips, so we
+ * flip a hidden one. Older iPhones and desktops simply feel nothing.
+ */
+let hapticSwitch: HTMLLabelElement | undefined
+function buzz() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try { navigator.vibrate(6) } catch { /* not allowed right now */ }
+    return
+  }
+  try {
+    if (!hapticSwitch) {
+      const label = document.createElement('label')
+      label.setAttribute('aria-hidden', 'true')
+      label.style.display = 'none'
+      const input = document.createElement('input')
+      input.type = 'checkbox'
+      input.tabIndex = -1
+      input.setAttribute('switch', '')
+      label.append(input)
+      document.body.append(label)
+      hapticSwitch = label
+    }
+    hapticSwitch.click()
+  } catch { /* no DOM */ }
+}
 
 let audio: AudioContext | undefined
 /** Called from a tap so iOS lets the page make sounds afterwards. */
@@ -133,7 +161,7 @@ export function primeClick() {
 }
 export function shelfClick() {
   if (!getSettings().shelfClick) return
-  try { navigator.vibrate?.(6) } catch { /* not supported (iPhone) */ }
+  buzz()
   try {
     audio ??= new AudioContext()
     if (audio.state !== 'running') return

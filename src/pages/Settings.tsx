@@ -233,12 +233,12 @@ function ShelfSettings() {
       <h2 className="set-label">Raftul cu povești</h2>
       <div className="set-box">
         <label className="set-row">
-          <span>Clic când răsfoiești cărțile</span>
+          <span>Clic și vibrație când răsfoiești cărțile</span>
           <input type="checkbox" className="switch" id="shelf-click" checked={shelfClick}
             onChange={(e) => updateSettings({ shelfClick: e.target.checked })} />
         </label>
       </div>
-      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte nouă aleasă face un clic discret. Pe Android telefonul vibrează și puțin. Se aplică doar pe acest dispozitiv.</p>
+      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte aleasă face un clic discret și telefonul vibrează scurt (pe iPhone, de la iOS 18). Se aplică doar pe acest dispozitiv.</p>
     </div>
   )
 }

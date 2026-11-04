@@ -155,7 +155,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const update = useCallback((s: Story) => { if (storyRef.current?.id === s.id) setStory(s) }, [])
   const toggle = useCallback(() => { const a = audio.current; if (!a || (a.paused && isKidLocked())) return; setEnded(false); if (a.paused) a.play().catch(() => {}); else a.pause() }, [])
   const skip = useCallback((d: number) => { const a = audio.current; if (a) a.currentTime = Math.max(0, Math.min(a.duration || 0, a.currentTime + d)) }, [])
-  const seek = useCallback((sec: number) => { if (audio.current) audio.current.currentTime = sec }, [])
+  const seek = useCallback((sec: number) => { if (audio.current) { audio.current.currentTime = sec; setT(sec) } }, [])
   const restart = useCallback(() => { const a = audio.current; if (!a || isKidLocked()) return; setEnded(false); a.currentTime = 0; a.play().catch(() => {}) }, [])
   // iPhone ignores the volume set by a web page, so there it simply pauses at the end of the fade.
   const fadeOut = useCallback(async () => {
@@ -175,24 +175,54 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     const a = audio.current
     const cur = storyRef.current
     if (a && cur) { a.pause(); setPosition(cur.id, a.currentTime) }
+    // Unload the audio too: a paused element that still holds a source keeps the iPhone lock-screen player alive.
+    if (a) { a.removeAttribute('src'); a.load() }
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none'
     setStory(undefined); setEnded(false); played.current = 0
   }, [])
 
-  // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
-  const coverUrl = useCoverUrl(story?.coverKey)
+  // Lock-screen / headphone buttons: play, pause and 15 s skips like in the app. None when nothing is loaded.
+  const hasStory = !!story
   useEffect(() => {
     if (!('mediaSession' in navigator)) return
-    if (!story) { navigator.mediaSession.metadata = null; return }
+    const ms = navigator.mediaSession
+    const set = (action: MediaSessionAction, h: MediaSessionActionHandler | null) => { try { ms.setActionHandler(action, h) } catch { /* unsupported action */ } }
+    const actions: MediaSessionAction[] = ['play', 'pause', 'seekbackward', 'seekforward', 'seekto']
+    if (!hasStory) { actions.forEach((x) => set(x, null)); return }
+    set('play', () => { const a = audio.current; if (a && !isKidLocked()) { setEnded(false); a.play().catch(() => {}) } })
+    set('pause', () => audio.current?.pause())
+    set('seekbackward', (d) => skip(-(d.seekOffset || 15)))
+    set('seekforward', (d) => skip(d.seekOffset || 15))
+    set('seekto', (d) => { if (d.seekTime != null) seek(d.seekTime) })
+    return () => actions.forEach((x) => set(x, null))
+  }, [hasStory, skip, seek])
+
+  // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
+  const coverUrl = useCoverUrl(story?.coverKey)
+  // Car stereos (Bluetooth) often read the cover only once, with the first title they get, so the
+  // metadata is set once with its artwork: we wait for the cover (at most ~1.5 s) instead of sending
+  // a title without a picture first and the picture later.
+  const artKey = story ? `${story.id}|${story.title}|${story.emoji ?? ''}` : ''
+  const waitCover = !!story?.coverKey && !coverUrl
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+    const ms = navigator.mediaSession
+    const s = storyRef.current
+    if (!artKey || !s) { ms.metadata = null; ms.playbackState = 'none'; return }
     let live = true
-    navigator.mediaSession.metadata = new MediaMetadata({ title: story.title, artist: 'Bucătăria cu povești' })
-    storyArtwork(story, coverUrl).then((src) => {
-      if (!live || !src) return
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: story.title, artist: 'Bucătăria cu povești', artwork: [{ src, sizes: '512x512', type: 'image/png' }],
+    const plain = () => { if (live && ms.metadata?.title !== s.title) ms.metadata = new MediaMetadata({ title: s.title, artist: 'Bucătăria cu povești' }) }
+    const show = (cover?: string) => storyArtwork(s, cover).then((src) => {
+      if (!live) return
+      if (!src) { plain(); return }
+      ms.metadata = new MediaMetadata({
+        title: s.title, artist: 'Bucătăria cu povești', artwork: [{ src, sizes: '512x512', type: 'image/jpeg' }],
       })
-    }).catch(() => {})
-    return () => { live = false }
-  }, [story, coverUrl])
+    }).catch(plain)
+    // Cover still loading (or failing): after a moment, show the emoji tile rather than nothing.
+    const fallback = waitCover ? setTimeout(() => { if (ms.metadata?.title !== s.title) show() }, 1500) : undefined
+    if (!waitCover) show(coverUrl)
+    return () => { live = false; clearTimeout(fallback) }
+  }, [artKey, coverUrl, waitCover])
 
   // When a story ends: play the next one until the chosen number of stories is reached.
   const onEnded = () => {
@@ -220,8 +250,9 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
         onPlay={(e) => {
           // Time is up in kid mode: nothing plays, not even from the lock-screen or headphone buttons.
           if (isKidLocked()) { e.currentTarget.pause(); return }
-          setPlaying(true); setEnded(false); setError(undefined) }}
-        onPause={() => { setPlaying(false); if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
+          setPlaying(true); setEnded(false); setError(undefined)
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing' }}
+        onPause={(e) => { setPlaying(false); if ('mediaSession' in navigator && e.currentTarget.src) navigator.mediaSession.playbackState = 'paused'; if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
         onEnded={onEnded}
         onTimeUpdate={(e) => setT(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => {

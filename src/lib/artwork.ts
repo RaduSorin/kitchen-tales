@@ -4,7 +4,7 @@ import { coverColor } from './stories'
 const SIZE = 512
 
 /**
- * A square PNG (as a data URL) for the phone's lock screen / Now Playing: the story cover cropped to
+ * A square JPEG (as a data URL; small, which car stereos handle better than a large PNG) for the phone's lock screen / Now Playing: the story cover cropped to
  * a square, or the same colored tile with the emoji that the shelf shows when there is no cover.
  * Drawn locally so it works offline and never points at an expiring S3 link.
  */
@@ -27,7 +27,7 @@ export async function storyArtwork(story: Pick<Story, 'title' | 'emoji'>, coverU
     ctx.textBaseline = 'middle'
     ctx.fillText(story.emoji, SIZE / 2, SIZE / 2 + SIZE * 0.03)
   }
-  try { return canvas.toDataURL('image/png') } catch { return undefined }
+  try { return canvas.toDataURL('image/jpeg', 0.85) } catch { return undefined }
 }
 
 function loadImage(src: string) {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { deleteRecipe, getRecipe } from '../lib/db'
 import type { Recipe } from '../lib/types'
-import { useFileUrl } from '../lib/useFileUrl'
+import { keepPhotos, useFileUrl } from '../lib/useFileUrl'
 import { scaleIngredient } from '../lib/scale'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { formatMinutes } from '../lib/format'
@@ -71,6 +71,9 @@ export default function RecipeView() {
   }
   useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   const img = useFileUrl(r?.photoKey)
+  // Step photos too, so cooking mode shows them without internet later.
+  const stepKeys = r?.stepPhotoKeys?.join('|') ?? ''
+  useEffect(() => { if (stepKeys) keepPhotos(stepKeys.split('|')) }, [stepKeys])
   if (failed) return <LoadError text="Nu am putut deschide rețeta. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
   if (r === undefined) return <Loading />
   if (r === null) return (

@@ -5,7 +5,7 @@ import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
 import type { SharedSettings } from './settings'
 import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
-import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, saveAudio } from './offline'
+import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, removePhoto, saveAudio } from './offline'
 import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
 import { folderOf } from './stories'
 
@@ -79,7 +79,9 @@ export async function fileUrl(path: string) {
 }
 
 async function removeFile(path?: string) {
-  if (path) await remove({ path }).catch(() => {})
+  if (!path) return
+  await remove({ path }).catch(() => {})
+  removePhoto(path).catch(() => {})
 }
 
 // ---- recipes ----

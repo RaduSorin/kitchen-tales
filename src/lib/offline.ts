@@ -8,15 +8,18 @@ interface OfflineDB extends DBSchema {
   lists: { key: 'stories' | 'recipes'; value: Story[] | Recipe[] }
   /** Story cover pictures, keyed by their S3 path. Small, so every cover seen once is kept. */
   covers: { key: string; value: Blob }
+  /** Recipe and step photos, keyed by their S3 path (a changed photo gets a new path). */
+  photos: { key: string; value: Blob }
 }
 
-const dbPromise = openDB<OfflineDB>('kitchen-tales-offline', 2, {
+const dbPromise = openDB<OfflineDB>('kitchen-tales-offline', 3, {
   upgrade(db, oldVersion) {
     if (oldVersion < 1) {
       db.createObjectStore('audio', { keyPath: 'storyId' })
       db.createObjectStore('lists')
     }
     if (oldVersion < 2) db.createObjectStore('covers')
+    if (oldVersion < 3) db.createObjectStore('photos')
   },
 })
 
@@ -103,4 +106,16 @@ export async function saveCover(key: string, blob: Blob) {
 
 export async function removeCover(key: string) {
   await (await dbPromise).delete('covers', key)
+}
+
+export async function getPhoto(key: string) {
+  return (await dbPromise).get('photos', key)
+}
+
+export async function savePhoto(key: string, blob: Blob) {
+  await (await dbPromise).put('photos', blob, key)
+}
+
+export async function removePhoto(key: string) {
+  await (await dbPromise).delete('photos', key)
 }

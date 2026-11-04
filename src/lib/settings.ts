@@ -20,6 +20,8 @@ export interface Settings {
   city: string
   /** Kid mode (parental control): the family's PIN and choices, shared by all devices. */
   kid: KidSettings
+  /** A soft click when leafing through the books on a shelf (this device only). */
+  shelfClick: boolean
 }
 
 export interface KidSettings {
@@ -35,7 +37,7 @@ export interface KidSettings {
 const KEY = 'kt-settings'
 const LEGACY_BRIEF_KEY = 'kt-story-brief'
 const KID_DEFAULTS: KidSettings = { minutes: 30, folders: [] }
-const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [], city: 'București', kid: KID_DEFAULTS }
+const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [], city: 'București', kid: KID_DEFAULTS, shelfClick: true }
 
 // Earlier versions stored the age; turn it into a birth year once.
 function migrateChild(c: ChildProfile & { age?: number }): ChildProfile {

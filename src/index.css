@@ -426,6 +426,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 @media (prefers-reduced-motion: reduce) { .story-cover.round.playing > span, .story-cover.round.playing.has-img { animation: none; } }
 
 .shelf { display: grid; gap: 16px; }
+/* One column exactly as wide as the screen: a long title or the search row never makes the page wider. */
+.shelf { grid-template-columns: minmax(0, 1fr); }
 .shelf-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .shelf-head h1 { margin: 4px 0 0; font-size: 1.9rem; line-height: 1.1; }
 .shelf-sub { margin: 2px 0 0; color: var(--muted); }
@@ -1029,7 +1031,7 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 
 /* Bookshelf with a window: the chosen cover above (left when sideways), the spines on shelves. */
 .bookshelf { display: flex; flex-direction: column; gap: 14px; }
-.vitrine { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.vitrine { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
 .vit-nav { align-self: stretch; min-width: 44px; border: 0; background: none; color: var(--muted); display: grid; align-items: center; padding: 0 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .vit-nav:first-child { justify-items: end; }
 .vit-nav:nth-child(3) { justify-items: start; }

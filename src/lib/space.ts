@@ -82,3 +82,6 @@ export function rememberSpaceName(name: string | null | undefined) {
 
 /** Admins (Sorin) see the accounts and send invitations. */
 export const isAdmin = () => !!info?.admin
+
+/** The signed-in account's email, as this device last knew it. */
+export const myEmail = () => info?.email

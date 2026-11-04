@@ -1,3 +1,4 @@
+import { primeKeyboard } from '../lib/keyboard'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listRecipes, listStories } from '../lib/db'
@@ -94,6 +95,10 @@ export default function Home() {
         <h1>{greeting(now)}</h1>
         <small>{date.charAt(0).toUpperCase() + date.slice(1)}</small>
       </div>
+      {/* Search is not a tab any more: this opens the search page with the keyboard up. */}
+      <Link to="/cauta" className="search-box search-link" onClick={() => primeKeyboard('search-input')}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg><span>Caută rețete, ingrediente sau povești</span>
+      </Link>
 
       {evening && night}
 

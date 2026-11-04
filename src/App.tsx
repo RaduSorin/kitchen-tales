@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useBack } from './lib/back'
 import NotFound from './pages/NotFound'
 import ToastHost from './components/ToastHost'
@@ -17,7 +17,8 @@ import RecipeEdit from './pages/RecipeEdit'
 import StoryList from './pages/StoryList'
 import StoryPlayer from './pages/StoryPlayer'
 import StoryAdd from './pages/StoryAdd'
-import Settings from './pages/Settings'
+import Profile from './pages/Profile'
+import Avatar from './components/Avatar'
 import CookMode from './pages/CookMode'
 import MiniPlayer from './components/MiniPlayer'
 import { NowPlayingProvider } from './lib/nowPlaying'
@@ -51,19 +52,10 @@ function NightArea() {
   return night ? <SkyBackdrop /> : null
 }
 
-// The gear opens the settings that match where you are: stories, recipes, or general.
-function SettingsLink({ children }: { children: React.ReactNode }) {
-  const { pathname } = useLocation()
-  const night = useArea() === 'night'
-  // Inside settings the gear keeps you where you are.
-  const to = pathname.startsWith('/setari') ? pathname : night ? '/setari/povesti' : pathname.startsWith('/retete') ? '/setari/retete' : '/setari'
-  return <NavLink to={to} className={() => (pathname.startsWith('/setari') ? 'icon-link active' : 'icon-link')} aria-label="Setări" title="Setări">{children}</NavLink>
-}
-
 /** Where the top bar's back arrow leads on pages that are not one of the main tabs (undefined: no arrow). */
-function backFallback(pathname: string, night: boolean) {
+function backFallback(pathname: string) {
   if (/^\/retete\/[^/]+$/.test(pathname) && pathname !== '/retete/noua') return '/retete'
-  if (pathname.startsWith('/setari')) return night ? '/povesti/acasa' : '/'
+  if (pathname.startsWith('/profil/')) return '/profil'
   return undefined
 }
 
@@ -101,8 +93,7 @@ function useHideOnScroll(enabled: boolean) {
 function Shell() {
   const online = useOnline()
   const { pathname } = useLocation()
-  const night = useArea() === 'night'
-  const back = backFallback(pathname, night)
+  const back = backFallback(pathname)
   const player = isPlayerPage(pathname)
   const header = useRef<HTMLElement>(null)
   const kid = useKid().active
@@ -142,9 +133,8 @@ function Shell() {
           <NavLink to="/cumparaturi" className="wide-only day-only">Cumpărături</NavLink>
           {kid ? <KidLockButton /> : <>
           <AreaSwitch />
-          <SettingsLink>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
-          </SettingsLink>
+          {/* On phones the Profile is the last tab; wide screens have no tab bar, so it sits here. */}
+          <NavLink to="/profil" className="icon-link profile-link wide-only" aria-label="Profil și setări" title="Profil"><Avatar size={30} /></NavLink>
           </>}
         </nav>
       </header>}
@@ -164,8 +154,12 @@ function Shell() {
           <Route path="/cauta" element={<Search />} />
           <Route path="/saptamana" element={<Week />} />
           <Route path="/cumparaturi" element={<Shopping />} />
-          <Route path="/setari" element={<Settings />} />
-          <Route path="/setari/:tab" element={<Settings />} />
+          <Route path="/profil" element={<Profile />} />
+          <Route path="/profil/:page" element={<Profile />} />
+          {/* Old Settings links (bookmarks, notes) */}
+          <Route path="/setari" element={<Navigate to="/profil" replace />} />
+          <Route path="/setari/povesti" element={<Navigate to="/profil/copil" replace />} />
+          <Route path="/setari/retete" element={<Navigate to="/profil/bucatarie" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

@@ -1172,3 +1172,7 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
   display: flex; align-items: center; min-height: 44px; font-family: var(--f-display); font-size: 1.25rem; line-height: 1.1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); pointer-events: none; }
 :root[data-area="night"] .topbar-title { font-family: var(--f-kids); font-weight: 800; }
+
+/* The vibration test in the profile: the iPhone's own switch, left as the system draws it. */
+.haptic-native { flex: none; margin: 0; width: auto; height: auto; }
+.haptic-label { position: relative; cursor: pointer; -webkit-user-select: none; user-select: none; }

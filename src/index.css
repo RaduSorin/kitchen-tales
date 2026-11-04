@@ -1057,7 +1057,7 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 
 /* Bookshelf with a window: the chosen cover above (left when sideways), the spines on shelves. */
 .bookshelf { display: flex; flex-direction: column; gap: 14px; }
-.vitrine { display: grid; grid-template-columns: 112px minmax(0, 1fr); grid-template-areas: "cover text" "cover actions"; column-gap: 14px; row-gap: 10px; align-items: center; }
+.vitrine { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
 /* Upright, the window stays pinned under the top bar and the shelves scroll beneath it; once pinned
    it gets the top bar's frosted background so the books passing under it don't show through. */
 .bookshelf:not(.wide) .vitrine { position: sticky; z-index: 5; top: var(--topbar-h, 60px); margin-inline: -16px; padding: 6px 16px 12px;
@@ -1066,22 +1066,19 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
   box-shadow: 0 10px 24px rgb(0 0 0 / .18); }
 :root[data-topbar-hidden] .bookshelf:not(.wide) .vitrine { top: env(safe-area-inset-top, 0px); }
 @media (min-width: 760px) { :root[data-topbar-hidden] .bookshelf:not(.wide) .vitrine { top: var(--topbar-h, 60px); } }
-.vit-cover { grid-area: cover; position: relative; width: 112px; aspect-ratio: 1; border: 0; padding: 0; border-radius: 18px; overflow: hidden; cursor: pointer; background: none; box-shadow: 0 10px 24px rgb(0 0 0 / .3); }
+.vit-nav { align-self: stretch; min-width: 44px; border: 0; background: none; color: var(--muted); display: grid; align-items: center; padding: 0 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.vit-nav:first-child { justify-items: end; }
+.vit-nav:nth-child(3) { justify-items: start; }
+.vit-nav:disabled { opacity: .25; cursor: default; }
+.vit-cover { position: relative; width: min(44vw, 180px); aspect-ratio: 1; border: 0; padding: 0; border-radius: 24px; overflow: hidden; cursor: pointer; background: none; box-shadow: 0 16px 34px rgb(0 0 0 / .4); }
 .vit-cover:focus-visible { outline: 3px solid var(--moon); outline-offset: 4px; }
 .vit-pic { position: absolute; inset: 0; display: grid; place-items: center; animation: vit-swap .35s ease; }
-.vit-pic > span { font-size: 3rem; line-height: 1; }
+.vit-pic > span { font-size: 4rem; line-height: 1; }
 @keyframes vit-swap { from { transform: scale(.92) rotate(-2deg); opacity: .4; } }
 .vit-new, .flow-new { position: absolute; top: 8px; left: 8px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: .78rem; }
-.vit-text { grid-area: text; align-self: end; display: grid; gap: 2px; min-width: 0; }
-/* Up to two lines, then "…". */
-.vit-text b { font-weight: 800; font-size: 1.2rem; line-height: 1.15; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; }
+.vit-text { grid-column: 1 / -1; min-width: 0; padding-top: 10px; text-align: center; }
+.vit-text b { display: block; font-weight: 800; font-size: 1.25rem; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vit-text small { color: var(--muted); }
-.vit-actions { grid-area: actions; align-self: start; display: flex; align-items: center; gap: 8px; }
-.vit-play { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px 0 13px; border: 0; border-radius: 999px; background: var(--accent); color: var(--on-accent);
-  font: inherit; font-weight: 800; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.vit-nav { flex: none; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text); display: grid; place-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.vit-play + .vit-nav { margin-left: auto; }
-.vit-nav:disabled, .vit-play:disabled { opacity: .35; cursor: default; }
 .shelves { display: grid; gap: 16px; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .shelf-row { position: relative; overflow: hidden; padding-top: 22px; }
 /* A soft shadow behind the books, resting on the plank and fading out before the ends (no hard side edges). */
@@ -1139,11 +1136,8 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .shelf-wide .flow-stage { margin-inline: 0; }
 .shelf-wide > .bookshelf, .shelf-wide > .cover-flow { flex: 1; min-height: 0; }
 .bookshelf.wide { flex-direction: row; gap: 14px; }
-.bookshelf.wide .vitrine { flex: none; width: 230px; align-self: center; grid-template-columns: minmax(0, 1fr); grid-template-areas: "cover" "text" "actions"; justify-items: center; row-gap: 8px; }
-.bookshelf.wide .vit-cover { width: min(150px, 36dvh); }
-.bookshelf.wide .vit-text { text-align: center; }
-.bookshelf.wide .vit-text b { font-size: 1.1rem; }
-.bookshelf.wide .vit-play + .vit-nav { margin-left: 4px; }
+.bookshelf.wide .vitrine { flex: none; width: 250px; align-self: center; }
+.bookshelf.wide .vit-cover { width: min(170px, 42dvh); }
 .bookshelf.wide .shelves { flex: 1; min-width: 0; align-content: end; touch-action: none; }
 .cover-flow.wide .flow-stage { flex: 1; height: auto; touch-action: none; }
 .cover-flow.wide .flow-caption { min-height: 0; padding-top: 2px; }

@@ -111,13 +111,12 @@ export function spineHeight(title: string, full: number) {
 export const bookVars = (story: Pick<Story, 'durationSec'>, tint: Tint) =>
   ({ '--c': tint.spine, '--ink-c': tint.ink, '--cd': tint.dark, '--d': `${spineWidth(story)}px` }) as CSSProperties
 
-/** "12 min · continuă de la 3:12": what the shelves show with the chosen book (`hint`: how to listen). */
-export function bookMeta(story: Story, hint = true) {
+/** "12 min · continuă de la 3:12": what the shelves show under the chosen book. */
+export function bookMeta(story: Story) {
   const parts: string[] = []
   if (story.durationSec) parts.push(`${Math.max(1, Math.round(story.durationSec / 60))} min`)
   const pos = getPosition(story.id)
-  if (pos > 5) parts.push(`continuă de la ${fmtTime(pos)}`)
-  else if (hint) parts.push('apasă pe copertă ca s-o asculți')
+  parts.push(pos > 5 ? `continuă de la ${fmtTime(pos)}` : 'apasă pe copertă ca s-o asculți')
   return parts.join(' · ')
 }
 

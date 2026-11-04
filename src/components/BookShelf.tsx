@@ -152,7 +152,6 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
 
   // Upright, the window is pinned at the top; it gets a background only once the shelves pass under it.
   const vitrine = useRef<HTMLDivElement>(null)
-  const hasSel = !!sel
   useEffect(() => {
     const el = vitrine.current
     if (wide || !el) return
@@ -167,7 +166,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll) }
-  }, [wide, hasSel])
+  }, [wide, !!sel])
 
   // ---------- A new book is put on the shelf ----------
   const busy = useRef(false)
@@ -210,22 +209,16 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
   return (
     <div className={`bookshelf${wide ? ' wide' : ''}`}>
       <div className="vitrine" ref={vitrine}>
+        <button type="button" className="vit-nav" disabled={idx <= 0 || !!now} onClick={() => step(-1)} aria-label="Povestea dinainte">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
         <WindowCover story={sel} isNew={arrived.includes(sel.id) || now?.id === sel.id} onOpen={() => onOpen(sel)} />
+        <button type="button" className="vit-nav" disabled={idx >= list.length - 1 || !!now} onClick={() => step(1)} aria-label="Povestea următoare">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+        </button>
         <div className="vit-text" aria-live="polite">
           <b>{sel.title}</b>
-          <small>{now?.id === sel.id ? 'Nouă pe raft' : bookMeta(sel, false)}</small>
-        </div>
-        <div className="vit-actions">
-          <button type="button" className="vit-play" disabled={!!now} onClick={() => onOpen(sel)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>
-            Ascultă
-          </button>
-          <button type="button" className="vit-nav" disabled={idx <= 0 || !!now} onClick={() => step(-1)} aria-label="Povestea dinainte">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-          </button>
-          <button type="button" className="vit-nav" disabled={idx >= list.length - 1 || !!now} onClick={() => step(1)} aria-label="Povestea următoare">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-          </button>
+          <small>{now?.id === sel.id ? 'Nouă pe raft' : bookMeta(sel)}</small>
         </div>
       </div>
       <div className="shelves" ref={shelves} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>

@@ -439,7 +439,8 @@ function ProfileHome() {
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
   return (
     <section className="settings profile">
-      <h1>Profil</h1>
+      {/* The title shows in the top bar (App.tsx); this one is for screen readers. */}
+      <h1 className="sr-only">Profil</h1>
       <button type="button" className="prof-me" onClick={() => setEditName(true)}>
         <Avatar size={58} />
         <span className="prof-me-text">
@@ -507,16 +508,24 @@ const PAGES: Record<string, [string, ComponentType]> = {
   raft: ['Raftul cu povești', ShelfSettings],
 }
 
+/** The Profile page's title, shown in the top bar instead of the Rețete / Povești switch. */
+export function profileTitle(pathname: string, childName?: string) {
+  const page = pathname.split('/')[2]
+  if (!page) return 'Profil'
+  if (page === 'copil' && childName) return childName
+  return PAGES[page]?.[0] ?? 'Profil'
+}
+
 export default function Profile() {
   const { page } = useParams()
   const { child } = useSettings()
   if (!page) return <ProfileHome />
   const entry = PAGES[page]
   if (!entry) return <Navigate to="/profil" replace />
-  const [title, Page] = entry
+  const [, Page] = entry
   return (
     <section className="settings">
-      <h1>{page === 'copil' && child.name ? child.name : title}</h1>
+      <h1 className="sr-only">{profileTitle(`/profil/${page}`, child.name)}</h1>
       <Page />
     </section>
   )

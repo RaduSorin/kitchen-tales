@@ -7,8 +7,27 @@ import { detectDuration, formatClock, getProgress, ingredientsForStep, setProgre
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { ringAlarm, unlockAlarm } from '../lib/alarm'
 import { canGoBack } from '../lib/back'
+import { alarmId, cancelAlarm, pushProblem, scheduleAlarm } from '../lib/timerPush'
 
-type Timer = { total: number; left: number; running: boolean }
+/**
+ * A step's timer. While it runs, only its end time is kept and the seconds left are worked out
+ * from the clock, so it stays right after the phone was locked or the app was in the background
+ * (iOS pauses the page then). `push`: a notification is scheduled for the end.
+ */
+type Timer = { total: number; left: number; endsAt?: number; push?: boolean }
+const leftOf = (t: Timer, now = Date.now()) => (t.endsAt ? Math.max(0, Math.ceil((t.endsAt - now) / 1000)) : t.left)
+
+// Timers survive leaving cook mode (to look at the recipe) and reloading, per recipe.
+const timersKey = (id: string) => `kt-cook-timers-${id}`
+function loadTimers(id: string): Record<number, Timer> {
+  try { return JSON.parse(localStorage.getItem(timersKey(id)) ?? '{}') } catch { return {} }
+}
+function saveTimers(id: string, timers: Record<number, Timer>) {
+  try {
+    if (Object.keys(timers).length) localStorage.setItem(timersKey(id), JSON.stringify(timers))
+    else localStorage.removeItem(timersKey(id))
+  } catch { /* storage unavailable */ }
+}
 
 function useWakeLock() {
   useEffect(() => {
@@ -51,7 +70,9 @@ export default function CookMode() {
   const [finished, setFinished] = useState(false)
   const [sheet, setSheet] = useState(false)
   const [have, setHave] = useState<Set<number>>(new Set())
-  const [timers, setTimers] = useState<Record<number, Timer>>({})
+  const [timers, setTimersState] = useState<Record<number, Timer>>(() => (id ? loadTimers(id) : {}))
+  const setTimers = useCallback((next: Record<number, Timer>) => { setTimersState(next); if (id) saveTimers(id, next) }, [id])
+  const [now, setNow] = useState(() => Date.now())
   const touch = useRef<{ x: number; y: number }>(null)
   useWakeLock()
 
@@ -89,26 +110,29 @@ export default function CookMode() {
     return () => window.removeEventListener('keydown', onKey)
   }, [go, sheet, nav, id])
 
-  // One tick drives every running timer, so they keep counting while you move between steps.
+  // One tick redraws every running timer, so they keep counting while you move between steps.
+  // A timer that ran out (also while the app was away) rings once and stops.
   const timersRef = useRef(timers)
   useEffect(() => { timersRef.current = timers }, [timers])
-  const anyRunning = Object.values(timers).some((t) => t.running)
+  const anyRunning = Object.values(timers).some((t) => t.endsAt)
   useEffect(() => {
     if (!anyRunning) return
-    const h = setInterval(() => {
+    const tick = () => {
+      const now = Date.now()
+      let over = false
       const next = { ...timersRef.current }
-      let rang = false
       for (const [k, t] of Object.entries(next)) {
-        if (!t.running) continue
-        const left = Math.max(0, t.left - 1)
-        if (left === 0) rang = true
-        next[+k] = { ...t, left, running: left > 0 }
+        if (t.endsAt && t.endsAt <= now) { over = true; next[+k] = { total: t.total, left: 0 } }
       }
-      if (rang) ringAlarm()
-      setTimers(next)
-    }, 1000)
-    return () => clearInterval(h)
-  }, [anyRunning])
+      if (over) { ringAlarm(); setTimers(next) }
+      setNow(now)
+    }
+    tick()
+    const h = setInterval(tick, 1000)
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { clearInterval(h); document.removeEventListener('visibilitychange', onVisible) }
+  }, [anyRunning, setTimers])
 
   // Cooking mode hides the tab bar, so every dead end here needs its own way out.
   if (failed || r === null || (r && count === 0)) {
@@ -127,14 +151,32 @@ export default function CookMode() {
 
   const step = r.steps[i]
   const duration = detectDuration(step)
-  const timer = timers[i] ?? (duration ? { total: duration, left: duration, running: false } : undefined)
+  const saved = timers[i]
+  // A timer is kept only for the step's current duration (the recipe may have been edited since).
+  const timer = saved && saved.total === duration ? saved : duration ? { total: duration, left: duration } : undefined
+  const timerLeft = timer ? leftOf(timer, now) : 0
+  const running = !!timer?.endsAt
   const toggleTimer = () => {
     if (!timer) return
     unlockAlarm()
-    if (timer.left === 0) { setTimers({ ...timers, [i]: { ...timer, left: timer.total, running: false } }); return }
-    setTimers({ ...timers, [i]: { ...timer, running: !timer.running } })
+    const key = alarmId(r.id, i)
+    if (timerLeft === 0) { setTimers({ ...timers, [i]: { total: timer.total, left: timer.total } }); return }
+    if (running) {
+      cancelAlarm(key)
+      setTimers({ ...timers, [i]: { total: timer.total, left: Math.max(1, leftOf(timer)) } })
+      return
+    }
+    const endsAt = Date.now() + timerLeft * 1000
+    setTimers({ ...timers, [i]: { total: timer.total, left: timerLeft, endsAt } })
+    // Straight from the tap, so iOS may ask for notification permission.
+    scheduleAlarm(key, endsAt, r.title, `Pasul ${i + 1} e gata (${formatClock(timer.total)}).`, `/retete/${r.id}/gateste`)
+      .then((push) => {
+        const cur = timersRef.current[i]
+        if (cur?.endsAt === endsAt) setTimers({ ...timersRef.current, [i]: { ...cur, push } })
+      })
   }
-  const otherRunning = Object.entries(timers).filter(([k, t]) => +k !== i && (t.running || t.left === 0))
+  const problem = running && !timer?.push ? pushProblem() : ''
+  const otherRunning = Object.entries(timers).filter(([k, t]) => +k !== i && (t.endsAt || t.left === 0))
   const forStep = ingredientsForStep(step, r.ingredients)
 
   const onTouchStart = (e: React.TouchEvent) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }
@@ -173,8 +215,8 @@ export default function CookMode() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
               {otherRunning.length > 0 && <span className="cook-timers">{otherRunning.map(([k, t]) => (
-                <button key={k} className={t.left === 0 ? 'cook-mini ring' : 'cook-mini'} onClick={() => { setI(+k); setProgress(r.id, +k) }}>
-                  Pasul {+k + 1} · {t.left === 0 ? 'gata!' : formatClock(t.left)}
+                <button key={k} className={leftOf(t, now) === 0 ? 'cook-mini ring' : 'cook-mini'} onClick={() => { setI(+k); setProgress(r.id, +k) }}>
+                  Pasul {+k + 1} · {leftOf(t, now) === 0 ? 'gata!' : formatClock(leftOf(t, now))}
                 </button>
               ))}</span>}
             </div>
@@ -192,11 +234,16 @@ export default function CookMode() {
               <div className="cook-chips">{forStep.map((x) => <span key={x}>{x}</span>)}</div>
             )}
             {timer && (
-              <button className={timer.left === 0 ? 'cook-timer ring' : 'cook-timer'} onClick={toggleTimer}>
-                <b>{timer.left === 0 ? 'Gata!' : formatClock(timer.left)}</b>
-                <span>{timer.left === 0 ? 'Din nou' : timer.running ? 'Pauză' : timer.left < timer.total ? 'Continuă' : 'Pornește'}</span>
+              <button className={timerLeft === 0 ? 'cook-timer ring' : 'cook-timer'} onClick={toggleTimer}>
+                <b>{timerLeft === 0 ? 'Gata!' : formatClock(timerLeft)}</b>
+                <span>{timerLeft === 0 ? 'Din nou' : running ? 'Pauză' : timerLeft < timer.total ? 'Continuă' : 'Pornește'}</span>
               </button>
             )}
+            {running && (timer?.push
+              ? <small className="cook-timer-hint">Primești o notificare când e gata, chiar dacă ieși din aplicație.</small>
+              : problem === 'install' ? <small className="cook-timer-hint">Ca să primești alerta cu ecranul blocat, deschide aplicația de pe ecranul principal.</small>
+              : problem === 'denied' ? <small className="cook-timer-hint">Notificările sunt oprite, așa că alarma sună doar cu aplicația deschisă.</small>
+              : null)}
           </div>
           <button className="cook-up" onClick={() => setSheet(true)}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>

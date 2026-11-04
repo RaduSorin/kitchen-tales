@@ -441,3 +441,15 @@ export async function saveFamilySettings(s: SharedSettings) {
   // Not there yet (first save): create it instead.
   if (res.errors?.length || !res.data) check(await client.models.FamilySettings.create(row))
 }
+
+// ---- cooking timer alarms (push notifications) ----
+
+export async function scheduleTimerAlarm(args: { id: string; endsAt: string; title: string; body: string; url: string; subscription: string }) {
+  const res = await client.mutations.scheduleTimerAlarm(args)
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+}
+
+export async function cancelTimerAlarm(id: string) {
+  const res = await client.mutations.cancelTimerAlarm({ id })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+}

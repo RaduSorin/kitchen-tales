@@ -5,7 +5,11 @@ const NICE: [number, string][] = [[0.25, '¼'], [0.5, '½'], [0.75, '¾'], [1 / 
 // Matches "1 1/2", "1/2", "1,5", "1.5", "2", "1½" or "½" at the start of the line.
 const LEAD = /^\s*(?:(\d+)\s+(\d+)\/(\d+)|(\d+)\/(\d+)|(\d+(?:[.,]\d+)?)\s*([¼½¾⅓⅔])?|([¼½¾⅓⅔]))/
 
-export function parseQuantity(line: string): { value: number; rest: string } | undefined {
+// A range right after the first amount: "2-3", "2 – 3", "1,5-2".
+const RANGE = /^\s*[-–]\s*(\d+(?:[.,]\d+)?)/
+
+/** The amount at the start of a line; `max` is the upper end of a range like "2-3". */
+export function parseQuantity(line: string): { value: number; max?: number; rest: string } | undefined {
   const m = LEAD.exec(line)
   if (!m) return undefined
   let value: number
@@ -14,7 +18,12 @@ export function parseQuantity(line: string): { value: number; rest: string } | u
   else if (m[6]) value = parseFloat(m[6].replace(',', '.')) + (m[7] ? FRACTIONS[m[7]] : 0)
   else value = FRACTIONS[m[8]]
   if (!value || !isFinite(value)) return undefined
-  return { value, rest: line.slice(m[0].length) }
+  const rest = line.slice(m[0].length)
+  const r = RANGE.exec(rest)
+  const max = r ? parseFloat(r[1].replace(',', '.')) : undefined
+  if (!r) return { value, rest }
+  // "3-2" is not an amount we understand (a code, a date): leave the line as it is.
+  return max! > value ? { value, max, rest: rest.slice(r[0].length) } : undefined
 }
 
 export function formatQuantity(n: number): string {
@@ -34,5 +43,6 @@ export function scaleIngredient(line: string, factor: number): string {
   const q = parseQuantity(line)
   if (!q) return line
   const rest = q.rest.startsWith(' ') || q.rest === '' ? q.rest : ' ' + q.rest
-  return formatQuantity(q.value * factor) + rest
+  const amount = q.max ? `${formatQuantity(q.value * factor)}-${formatQuantity(q.max * factor)}` : formatQuantity(q.value * factor)
+  return amount + rest
 }

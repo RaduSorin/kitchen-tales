@@ -56,6 +56,34 @@ export function addToShopping(recipe: Recipe, servings?: number, only?: string[]
   return added
 }
 
+/**
+ * The week's ingredients on the list: each planned cooking counts (a dish planned twice needs
+ * twice the amounts), scaled to its servings. A recipe's lines not yet bought are replaced by
+ * the new totals, so pressing again never adds them twice. Returns how many lines were added.
+ */
+export function addPlanToShopping(entries: { recipe: Recipe; servings?: number }[]) {
+  const byRecipe = new Map<string, { recipe: Recipe; factor: number }>()
+  for (const { recipe, servings } of entries) {
+    const one = recipe.servings && servings ? servings / recipe.servings : 1
+    const cur = byRecipe.get(recipe.id)
+    byRecipe.set(recipe.id, { recipe, factor: (cur?.factor ?? 0) + one })
+  }
+  let added = 0
+  for (const { recipe, factor } of byRecipe.values()) {
+    const want = [...new Set(recipe.ingredients.filter((l) => l.trim() && !isHeading(l)).map((l) => scaleIngredient(l.trim(), factor)))]
+    const open = shoppingStore.get().filter((s) => !s.checked && s.recipeId === recipe.id)
+    const have = new Set(open.map((s) => s.text))
+    // Old amounts for this recipe (e.g. one cooking's worth) make way for the totals.
+    for (const s of open) if (!want.includes(s.text)) shoppingStore.remove(s.id)
+    for (const text of want) {
+      if (have.has(text)) continue
+      shoppingStore.create({ id: newId(), text, checked: false, recipeId: recipe.id, recipeTitle: recipe.title, createdAt: new Date().toISOString() })
+      added++
+    }
+  }
+  return added
+}
+
 export function addShoppingText(text: string) {
   const t = text.trim()
   if (t) shoppingStore.create({ id: newId(), text: t, checked: false, createdAt: new Date().toISOString() })

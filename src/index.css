@@ -210,6 +210,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .checklist input:checked { background: var(--accent); border-color: var(--accent); }
 .checklist input:checked::after { content: ""; width: 5px; height: 10px; border: solid var(--on-accent); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
 .checklist label.done span { color: var(--muted); text-decoration: line-through; }
+.checklist-heading { margin: 10px 4px 0; font-size: .82rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--muted); }
 .step-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .step-list button { display: grid; grid-template-columns: 30px 1fr; gap: 10px; width: 100%; text-align: left; border: 0; background: none; color: var(--text); font: inherit; line-height: 1.55; padding: 8px 4px; border-radius: 12px; cursor: pointer; }
 .step-no { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-weight: 600; font-size: .9rem; font-variant-numeric: tabular-nums; }
@@ -286,6 +287,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 /* Add recipe: choose a way */
 .add-recipe { max-width: 560px; display: grid; gap: 14px; }
 .add-recipe h1 { margin: 0; font-size: 2.2rem; }
+.add-recipe-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.add-recipe-head .link-btn { min-height: 44px; flex: none; }
+.add-recipe-back { justify-self: start; display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin: -8px 0 -8px -6px; padding: 0 6px; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
 .link-btn { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; padding: 8px 0; cursor: pointer; }
 .danger-text { color: var(--danger); }
 .ways { display: grid; gap: 10px; }
@@ -336,7 +340,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .editor-ai-busy { cursor: default; }
 .editor-ai-busy .spinner { width: 14px; height: 14px; border-width: 2px; border-color: rgb(255 255 255 / .3); border-top-color: #fff; }
 .editor-photo-btn { position: absolute; right: 12px; bottom: 12px; background: rgb(0 0 0 / .55); color: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: .9rem; }
-.editor input.editor-title { font-family: var(--f-display); font-size: 1.9rem; padding: 6px 2px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: none; }
+.editor .editor-title { font-family: var(--f-display); font-size: 1.9rem; line-height: 1.2; padding: 6px 2px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: none; resize: none; overflow: hidden; display: block; }
 .editor-fields { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
 @media (max-width: 480px) { .editor-fields { grid-template-columns: 1fr 1fr; } .editor-fields label:first-child { grid-column: 1 / -1; } }
 .editor label { display: grid; gap: 6px; font-weight: 600; font-size: .92rem; }
@@ -449,6 +453,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .folder-mosaic { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 4px; aspect-ratio: 1; border-radius: 28px; overflow: hidden; background: var(--surface); }
 .folder-mosaic .story-cover { border-radius: 0; }
 .folder-mosaic .story-cover > span { font-size: clamp(1.4rem, 6vw, 2.2rem); }
+/* Fewer than four stories still fill the square: one full size, two side by side, three with a tall first one. */
+.folder-mosaic .story-cover:only-child { grid-area: 1 / 1 / 3 / 3; }
+.folder-mosaic .story-cover:only-child > span { font-size: clamp(2.6rem, 12vw, 4.4rem); }
+.folder-mosaic .story-cover:first-child:nth-last-child(2), .folder-mosaic .story-cover:first-child:nth-last-child(2) + .story-cover { grid-row: span 2; }
+.folder-mosaic .story-cover:first-child:nth-last-child(3) { grid-row: span 2; }
+.folder-mosaic .story-cover { aspect-ratio: auto; min-height: 0; height: 100%; }
 .saved-dot { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 50%; background: rgb(23 26 69 / .72); color: #fff6d6; font-size: .85rem; display: grid; place-items: center; font-weight: 700; }
 .cover-slot { position: relative; }
 /* Favourite stories get a small heart on the cover, top-left (the download button is top-right). */
@@ -943,3 +953,23 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .kid-start { width: 100%; min-height: 50px; font-size: 1.05rem; border-radius: 14px; }
 .kid-guided ul { margin: 8px 0; padding-left: 20px; display: grid; gap: 4px; }
 .kid-folder-list { margin-top: 4px; }
+
+.fav-static { pointer-events: none; min-width: 44px; }
+
+/* The smallest phones (iPhone SE 1st gen, 320 px): nothing may stick out sideways. */
+.night-player, .recipe-sheet, .settings, .set-group, .set-box { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 359px) {
+  .topbar .back-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .topbar nav .area-switch a { padding: 7px 9px; gap: 4px; }
+  .topbar nav { gap: 2px; }
+  .night-controls { gap: 6px; }
+  .tab-label { font-size: .62rem; }
+}
+
+/* Touch targets of at least 44 px (Apple's minimum) without making the controls look bigger. */
+.day-add { position: relative; }
+.day-add::after { content: ''; position: absolute; inset: -4px -2px; }
+.topbar nav .area-switch a::after { content: ''; position: absolute; inset: -3px 0; }
+.seg > * { position: relative; }
+.seg > *::after { content: ''; position: absolute; inset: -4px 0; }
+.invite-row .btn { min-height: 44px; }

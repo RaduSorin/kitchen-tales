@@ -1,6 +1,6 @@
 // The week plan and the shopping list, shared by the whole family.
 import { newId, planApi, shoppingApi } from './db'
-import { scaleIngredient } from './scale'
+import { isHeading, scaleIngredient } from './scale'
 import { norm } from './format'
 import { createSyncedList } from './synced'
 import type { PlanEntry, Recipe, ShoppingItem } from './types'
@@ -48,8 +48,6 @@ export function forgetRecipe(recipeId: string) {
 
 // ---- shopping ----
 
-/** Lines that are headings ("Pentru sos:") rather than things to buy. */
-const isHeading = (line: string) => /:\s*$/.test(line.trim())
 
 /** The ingredient without its amount, to tell "500 g carne" and "750 g carne" are the same line. */
 const withoutAmount = (line: string) => norm(line).replace(/^[\d\s.,/½¼¾⅓⅔⅛\-–]+/, '').replace(/\s+/g, ' ').trim()

@@ -18,7 +18,7 @@ const TABS: { to: string; label: string; full?: string; end?: boolean; icon: str
   { to: '/cauta', label: 'Caută', icon: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4' },
   { to: '/retete', label: 'Rețete', full: 'Rețetele mele', icon: 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6' },
   { to: '/saptamana', label: 'Săptămâna', full: 'Săptămâna mea', icon: 'M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 2v4M16 2v4M8 14h2M14 14h2M8 17h2' },
-  { to: '/cumparaturi', label: 'Cumpărături', icon: 'M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01' },
+  { to: '/cumparaturi', label: 'Listă', full: 'Cumpărături', icon: 'M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01' },
 ]
 
 const HOME = TABS[0].icon

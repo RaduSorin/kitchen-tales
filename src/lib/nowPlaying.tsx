@@ -121,6 +121,8 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     : idx >= 0 && idx < queue.length - 1 ? queue[idx + 1] : undefined
   const nextRef = useRef<Story>(undefined)
   nextRef.current = next
+  const prevRef = useRef<Story>(undefined)
+  prevRef.current = prev
   const sleepRef = useRef(sleep)
   sleepRef.current = sleep
 
@@ -222,15 +224,24 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     if (!('mediaSession' in navigator)) return
     const ms = navigator.mediaSession
     const set = (action: MediaSessionAction, h: MediaSessionActionHandler | null) => { try { ms.setActionHandler(action, h) } catch { /* unsupported action */ } }
-    const actions: MediaSessionAction[] = ['play', 'pause', 'seekbackward', 'seekforward', 'seekto']
+    const actions: MediaSessionAction[] = ['play', 'pause', 'seekbackward', 'seekforward', 'seekto', 'nexttrack', 'previoustrack']
     if (!hasStory) { actions.forEach((x) => set(x, null)); return }
     set('play', play)
     set('pause', () => audio.current?.pause())
     set('seekbackward', (d) => skip(-(d.seekOffset || 15)))
     set('seekforward', (d) => skip(d.seekOffset || 15))
     set('seekto', (d) => { if (d.seekTime != null) seek(d.seekTime) })
+    // Headphones (double / triple press) and car stereos: next and previous story of the folder.
+    set('nexttrack', () => { const n = nextRef.current; if (n && !isKidLocked()) load(n, { autoplay: true, continued: true }) })
+    set('previoustrack', () => {
+      const a = audio.current
+      // Like music apps: a few seconds in, "previous" starts the story again.
+      if (a && a.currentTime > 5) { a.currentTime = 0; return }
+      const p = prevRef.current
+      if (p && !isKidLocked()) load(p, { autoplay: true, continued: true })
+    })
     return () => actions.forEach((x) => set(x, null))
-  }, [hasStory, skip, seek, play])
+  }, [hasStory, skip, seek, play, load])
 
   // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
   const coverUrl = useCoverUrl(story?.coverKey)

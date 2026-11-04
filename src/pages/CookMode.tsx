@@ -7,6 +7,7 @@ import { detectDuration, formatClock, getProgress, ingredientsForStep, setProgre
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { ringAlarm, unlockAlarm } from '../lib/alarm'
 import { canGoBack } from '../lib/back'
+import { isHeading } from '../lib/scale'
 import { alarmId, cancelAlarm, pushProblem, scheduleAlarm } from '../lib/timerPush'
 
 /**
@@ -269,7 +270,12 @@ export default function CookMode() {
                 <ul className="checklist">
                   {[...r.ingredients.entries()]
                     .sort(([, a], [, b]) => Number(forStep.includes(b)) - Number(forStep.includes(a)))
-                    .map(([k, x], pos) => (
+                    .map(([k, x], pos) => isHeading(x) ? (
+                      <li key={k}>
+                        {pos === forStep.length && forStep.length > 0 && <p className="set-label">Toată rețeta</p>}
+                        <p className="checklist-heading">{x.trim().replace(/:\s*$/, '')}</p>
+                      </li>
+                    ) : (
                       <li key={k} className={forStep.includes(x) ? 'now' : ''}>
                         {pos === forStep.length && forStep.length > 0 && <p className="set-label">Toată rețeta</p>}
                         <label className={have.has(k) ? 'done' : ''}>

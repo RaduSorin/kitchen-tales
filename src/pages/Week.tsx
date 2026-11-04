@@ -113,7 +113,7 @@ export default function Week() {
             <li key={k} className={`week-day${k === todayKey ? ' today' : ''}${k < todayKey ? ' past' : ''}`}>
               <div className="week-day-head">
                 <span><b>{dayName(d)}</b> <small>{shortDate(d)}{k === todayKey ? ' · azi' : ''}</small></span>
-                <button type="button" className="btn small" onClick={() => setPicking(d)}>+ Adaugă</button>
+                <button type="button" className="btn small day-add" onClick={() => setPicking(d)}>+ Adaugă</button>
               </div>
               {entries.length > 0 && <ul className="planned-list">{entries.map((e) => <Planned key={e.id} e={e} r={byId.get(e.recipeId)} loaded={loaded} />)}</ul>}
             </li>

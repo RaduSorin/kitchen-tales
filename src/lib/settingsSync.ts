@@ -8,6 +8,12 @@ import { getFamilySettings, saveFamilySettings } from './db'
 import { applySharedSettings, getSettings, onSharedChange, type SharedSettings } from './settings'
 
 const DIRTY_KEY = 'kt-settings-unsent'
+// The family's settings as last agreed with the cloud: what this device changed is what differs from it.
+const SYNCED_KEY = 'kt-settings-synced'
+const FIELDS = ['child', 'city', 'kitchenTools', 'kid'] as const
+
+const readSynced = (): SharedSettings | undefined => { try { return JSON.parse(localStorage.getItem(SYNCED_KEY) ?? 'null') ?? undefined } catch { return undefined } }
+const writeSynced = (v: SharedSettings) => { try { localStorage.setItem(SYNCED_KEY, JSON.stringify(v)) } catch { /* storage unavailable */ } }
 
 const isDirty = () => { try { return localStorage.getItem(DIRTY_KEY) === '1' } catch { return false } }
 const setDirty = (on: boolean) => {
@@ -27,10 +33,25 @@ let version = 0
 let timer: ReturnType<typeof setTimeout> | undefined
 let busy: Promise<void> | undefined
 
+/**
+ * Sends this device's changes. Only the fields changed here are taken over the cloud copy, so
+ * two phones editing different settings (one the child's name, the other the kitchen tools)
+ * no longer overwrite each other; the other phone's changes come back to this one.
+ */
 async function push() {
   const v = version
   try {
-    await saveFamilySettings(shared())
+    const local = shared()
+    const base = readSynced()
+    const changed = FIELDS.filter((f) => !base || JSON.stringify(local[f]) !== JSON.stringify(base[f]))
+    const server = await getFamilySettings()
+    const merged: SharedSettings = server
+      ? { child: server.child, kitchenTools: server.kitchenTools, city: server.city ?? local.city, kid: server.kid ?? local.kid }
+      : { ...local }
+    for (const f of changed) (merged as Record<string, unknown>)[f] = local[f]
+    await saveFamilySettings(merged)
+    writeSynced(merged)
+    if (v === version && JSON.stringify(merged) !== JSON.stringify(local)) applySharedSettings(merged)
     // Only clear the flag if nothing changed while it was being sent.
     if (v === version) setDirty(false)
   } catch (err) {
@@ -47,7 +68,11 @@ async function sync() {
       const server = await getFamilySettings()
       if (isDirty()) return // changed on this device while loading: that change wins
       // Rows saved before kid mode existed have no kid fields: keep this device's copy then.
-      if (server) applySharedSettings({ ...server, city: server.city ?? getSettings().city, kid: server.kid ?? getSettings().kid })
+      if (server) {
+        const next = { ...server, city: server.city ?? getSettings().city, kid: server.kid ?? getSettings().kid }
+        applySharedSettings(next)
+        writeSynced(shared())
+      }
       else if (hasAny(shared())) await push() // first time: keep what this device has
     } catch (err) {
       console.warn('settings: load failed', err)

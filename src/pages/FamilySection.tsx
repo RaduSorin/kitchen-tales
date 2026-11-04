@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { errorText } from '../lib/errors'
 import { inviteFamilyMember, listFamily, type FamilyMember } from '../lib/db'
 import { useOnline } from '../lib/useOffline'
 
@@ -12,7 +13,7 @@ export default function FamilySection({ me }: { me?: string }) {
 
   useEffect(() => {
     if (!online) return
-    listFamily().then(setMembers).catch((e) => setMsg({ ok: false, text: (e as Error).message }))
+    listFamily().then(setMembers).catch((e) => setMsg({ ok: false, text: errorText(e) }))
   }, [online])
 
   async function send(address: string, resend: boolean) {
@@ -24,7 +25,7 @@ export default function FamilySection({ me }: { me?: string }) {
       if (!resend) setEmail('')
       setMsg({ ok: true, text: `Am trimis invitația la ${m.email}. Primește pe email o parolă temporară.` })
     } catch (e) {
-      setMsg({ ok: false, text: (e as Error).message })
+      setMsg({ ok: false, text: errorText(e) })
     } finally {
       setBusy(undefined)
     }

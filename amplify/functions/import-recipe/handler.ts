@@ -1,6 +1,7 @@
 import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand, type ContentBlock, type ImageFormat } from '@aws-sdk/client-bedrock-runtime'
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { Schema } from '../../data/resource'
+import { safeFetch } from '../../shared/safeFetch'
 
 const bedrock = new BedrockRuntimeClient({})
 const s3 = new S3Client({})
@@ -124,12 +125,15 @@ export function imageUrlFrom(recipe: any, html: string, base: string): string | 
 
 async function savePhotoFrom(url: string): Promise<string | undefined> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) })
-    const type = res.headers.get('content-type') ?? ''
-    if (!res.ok || !type.startsWith('image/')) return undefined
+    const res = await safeFetch(url, { signal: AbortSignal.timeout(15_000) })
+    if (!res.ok) return undefined
     const body = Buffer.from(await res.arrayBuffer())
     if (body.length > 8_000_000) return undefined
-    const ext = type.split('/')[1].split(';')[0].replace('jpeg', 'jpg')
+    // Only real photos, recognised by their bytes (no SVG, which can carry scripts, or HTML).
+    const format = imageFormat(body)
+    if (!format) return undefined
+    const type = `image/${format}`
+    const ext = format === 'jpeg' ? 'jpg' : format
     const key = `recipe-photos/${crypto.randomUUID()}.${ext}`
     await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: body, ContentType: type }))
     return key
@@ -141,9 +145,8 @@ async function savePhotoFrom(url: string): Promise<string | undefined> {
 async function fromUrl(raw: string): Promise<Imported> {
   const url = new URL(raw)
   if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('Linkul trebuie să înceapă cu http:// sau https://')
-  const res = await fetch(url, {
+  const res = await safeFetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (KitchenTales recipe import)', 'Accept-Language': 'ro,en;q=0.8' },
-    redirect: 'follow',
     signal: AbortSignal.timeout(20_000),
   })
   if (res.status === 404) throw new Error('Pagina nu există. Verifică linkul.')

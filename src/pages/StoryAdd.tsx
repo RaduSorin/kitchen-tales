@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { errorText } from '../lib/errors'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { cachedFolders, createStory, fileUrl, listFolders, listStories, generateStory, removeFile, saveFoundCover, uploadFile, type StoryBrief } from '../lib/db'
 import { saveAudio, saveCover } from '../lib/offline'
@@ -92,6 +93,11 @@ export default function StoryAdd() {
   // A finished recording that isn't saved yet only lives on this screen, so leaving asks first.
   useLeaveGuard(source === 'recording' && !!audio && !saving, LEAVE_UNSAVED)
 
+  // A generated story's audio is already in the cloud: leaving without saving deletes it.
+  const unsavedAudio = useRef<string>(undefined)
+  useEffect(() => { unsavedAudio.current = generated?.audioKey }, [generated])
+  useEffect(() => () => { if (unsavedAudio.current) removeFile(unsavedAudio.current).catch(() => {}) }, [])
+
   const choose = (m?: Mode) => {
     setError('')
     const folder = params.get('folder')
@@ -132,7 +138,7 @@ export default function StoryAdd() {
       setGenerated({ ...g, url: await fileUrl(g.audioKey) })
       setAudio(undefined); setSource('generated'); setSeconds(undefined)
     } catch (err) {
-      setError(`Nu am putut crea povestea: ${(err as Error).message}`)
+      setError(`Nu am putut crea povestea: ${errorText(err)}`)
     }
     setGenerating(false)
   }
@@ -152,12 +158,13 @@ export default function StoryAdd() {
         saveCover(coverKey, small).catch(() => {})
       }
       const id = await createStory({ title: title.trim(), emoji, coverKey, collection: collection || undefined, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
+      unsavedAudio.current = undefined // it belongs to the story now
       // Our own recordings and files are already on this device, so keep them for offline listening.
       if (audio) await saveAudio(id, audio).catch(() => {})
       await guardedWorkDone()
       nav(`/povesti/${id}`, { replace: true })
     } catch (err) {
-      setError(`Nu am putut salva povestea: ${(err as Error).message}`)
+      setError(`Nu am putut salva povestea: ${errorText(err)}`)
       setSaving(false); setSent(undefined)
     }
   }

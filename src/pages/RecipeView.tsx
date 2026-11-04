@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { deleteRecipe, getRecipe } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { keepPhotos, useFileUrl } from '../lib/useFileUrl'
-import { scaleIngredient } from '../lib/scale'
+import { isHeading, scaleIngredient } from '../lib/scale'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { formatMinutes } from '../lib/format'
 import { getProgress } from '../lib/cooking'
@@ -84,6 +84,7 @@ export default function RecipeView() {
     </div>
   )
 
+  const toBuy = r.ingredients.filter((x) => !isHeading(x)).length
   const toggle = (set: typeof setHave) => (i: number) => set((s) => { const n = new Set(s); if (n.has(i)) n.delete(i); else n.add(i); return n })
   const factor = r.servings && servings ? servings / r.servings : 1
 
@@ -124,7 +125,7 @@ export default function RecipeView() {
               setNote({ text: n ? `Am pus ${n} ${n === 1 ? 'ingredient' : 'ingrediente'} în listă.` : 'Sunt deja în listă.', to: '/cumparaturi', link: 'Vezi lista' })
             }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01" /></svg>
-              Pune în listă{have.size > 0 && r.ingredients.length > have.size ? ` (${r.ingredients.length - have.size})` : ''}
+              Pune în listă{have.size > 0 && toBuy > have.size ? ` (${toBuy - have.size})` : ''}
             </button>
           )}
           {note && <p className="recipe-plan-note" role="status">{note.text} <Link to={note.to}>{note.link}</Link></p>}
@@ -144,7 +145,10 @@ export default function RecipeView() {
               ) : null}
             </div>
             <ul className="checklist">
-              {r.ingredients.map((x, i) => (
+              {r.ingredients.map((x, i) => isHeading(x) ? (
+                // "Pentru dresat:" groups the lines under it; nothing to tick.
+                <li key={i} className="checklist-heading">{x.trim().replace(/:\s*$/, '')}</li>
+              ) : (
                 <li key={i}>
                   <label className={have.has(i) ? 'done' : ''}>
                     <input type="checkbox" checked={have.has(i)} onChange={() => toggle(setHave)(i)} />

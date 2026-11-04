@@ -41,7 +41,7 @@ const PLURAL: Record<string, string> = { ceapă: 'cepe', ou: 'ouă', măr: 'mere
 
 const stem = (w: string) => (IRREGULAR[w] ?? w).replace(/(ii|ie|i|e|a|u)$/, '')
 
-interface Parsed { name: string; nameKey: string; unit?: Unit; amount?: number }
+interface Parsed { name: string; nameKey: string; unit?: Unit; amount?: number; range?: boolean }
 
 function parse(text: string): Parsed {
   const q = parseQuantity(text)
@@ -54,7 +54,7 @@ function parse(text: string): Parsed {
   }
   const core = plain(rest).replace(/\(.*?\)/g, ' ').split(/[,;]/)[0]
   const words = core.split(/[^a-z0-9-]+/).filter((w) => w && !SKIP.has(w))
-  return { name: rest, nameKey: words.map(stem).join(' '), unit, amount: q?.value }
+  return { name: rest, nameKey: words.map(stem).join(' '), unit, amount: q?.value, range: !!q?.max }
 }
 
 function plural(name: string) {
@@ -78,7 +78,8 @@ export function mergeShopping(items: ShoppingItem[]): ShoppingRow[] {
   for (const s of items) {
     const p = parse(s.text)
     // Lines without a clear name, or with an amount we cannot add up, stay on their own.
-    const key = p.nameKey ? `${p.nameKey}|${p.amount === undefined ? '-' : p.unit?.key ?? '#'}` : `id:${s.id}`
+    // A range ("2-3 căței") can't be added up with other amounts either.
+    const key = p.nameKey && !p.range ? `${p.nameKey}|${p.amount === undefined ? '-' : p.unit?.key ?? '#'}` : `id:${s.id}`
     const row = rows.get(key) ?? { items: [], parsed: [] }
     row.items.push(s)
     row.parsed.push(p)

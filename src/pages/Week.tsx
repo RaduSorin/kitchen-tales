@@ -5,7 +5,7 @@ import type { PlanEntry, Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import { norm } from '../lib/format'
 import { useSyncedList } from '../lib/synced'
-import { addDays, addToShopping, dayKey, dayName, mondayOf, planRecipe, planStore, shortDate, today, weekDays, weekLabel } from '../lib/plan'
+import { addDays, addPlanToShopping, dayKey, dayName, mondayOf, planRecipe, planStore, shortDate, today, weekDays, weekLabel } from '../lib/plan'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import Sheet from '../components/Sheet'
 import { showToast } from '../lib/toast'
@@ -79,13 +79,14 @@ export default function Week() {
   const todayKey = dayKey(today())
   const keys = new Set(days.map(dayKey))
   const inWeek = plan.filter((e) => keys.has(e.day))
+  // Days already past are cooked (or skipped): only today and later go on the list.
+  const upcoming = inWeek.filter((e) => e.day >= todayKey && byId.has(e.recipeId))
 
   const shopWeek = () => {
-    let added = 0
-    for (const e of inWeek) {
-      const r = byId.get(e.recipeId)
-      if (r) added += addToShopping(r, e.servings ?? r.servings)
-    }
+    const added = addPlanToShopping(upcoming.map((e) => {
+      const recipe = byId.get(e.recipeId)!
+      return { recipe, servings: e.servings ?? recipe.servings }
+    }))
     setNote(added ? `Am pus ${added} ${added === 1 ? 'ingredient' : 'ingrediente'} în lista de cumpărături.` : 'Ingredientele sunt deja în listă.')
   }
 
@@ -120,7 +121,7 @@ export default function Week() {
         })}
       </ol>
 
-      {inWeek.length > 0 && (
+      {upcoming.length > 0 && (
         <div className="week-shop">
           <button type="button" className="btn primary big" onClick={shopWeek}>Pune ingredientele săptămânii în listă</button>
           {note && <p className="week-note">{note} <Link to="/cumparaturi">Vezi lista</Link></p>}

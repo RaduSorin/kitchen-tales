@@ -13,7 +13,7 @@ import { focusField } from '../lib/keyboard'
 import { useKid } from '../lib/kidMode'
 
 import { matchesQuery, norm } from '../lib/format'
-import { folderView, isBookView, newLabel, renameFolderView, saveSeen, seenStories, setFolderView, useFolderViews, useLandscape } from '../lib/shelf'
+import { folderView, isBookView, newLabel, rememberShelfPick, renameFolderView, saveSeen, seenStories, setFolderView, shelfPick, useFolderViews, useLandscape } from '../lib/shelf'
 import ViewSwitch from '../components/ViewSwitch'
 import BookShelf from '../components/BookShelf'
 import CoverFlow from '../components/CoverFlow'
@@ -111,7 +111,9 @@ export default function StoryList() {
   }, [popping])
   const unseen = (items: Story[]) => (seen ? items.filter((s) => seen[s.id] !== folderOf(s)).length : 0)
   const pickView = (v: typeof view) => { if (open) setFolderView(open.name, v, landscape) }
-  const openStory = (s: Story) => nav(`/povesti/${s.id}`, { state: { fromFolder: true } })
+  // The chosen book, remembered per folder so it is still chosen after opening a story and coming back.
+  const pick = (id: string) => { setSelId(id); if (open) rememberShelfPick(open.name, id) }
+  const openStory = (s: Story) => { pick(s.id); nav(`/povesti/${s.id}`, { state: { fromFolder: true } }) }
   // Searching looks through every story (or only the open folder), ignoring diacritics.
   const query = norm(q.trim())
   const searching = !!query
@@ -273,8 +275,8 @@ export default function StoryList() {
         (() => {
           const props = {
             items: shown, // same order as the squares: the first square is the first book on the top shelf
-            selId: selId && shown.some((s) => s.id === selId) ? selId : shown.find((s) => s.id === lastId)?.id,
-            onSelect: setSelId, onOpen: openStory, onArrived: arrived, wide: wideShelf,
+            selId: [selId, open && shelfPick(open.name), lastId].find((id) => id && shown.some((s) => s.id === id)),
+            onSelect: pick, onOpen: openStory, onArrived: arrived, wide: wideShelf,
             arriving: searching ? [] : arriving,
           }
           return view === 'shelf' ? <BookShelf {...props} /> : <CoverFlow {...props} />
@@ -283,7 +285,7 @@ export default function StoryList() {
         <div className={view === 'list' ? 'story-rows' : 'covers'}>
           {shown.map((s) => (
             <div key={s.id} className={`${view === 'list' ? 'row-slot' : 'cover-slot'}${popping && arriving.includes(s.id) ? ' pop-in' : ''}`}>
-              <Link to={`/povesti/${s.id}`} state={{ fromFolder: true }} className={view === 'list' ? 'story-row' : 'cover-card'}>
+              <Link to={`/povesti/${s.id}`} state={{ fromFolder: true }} className={view === 'list' ? 'story-row' : 'cover-card'} onClick={() => pick(s.id)}>
                 <StoryCover story={s} />
                 <span className="row-text">
                   <span className="cover-title">{s.title}</span>

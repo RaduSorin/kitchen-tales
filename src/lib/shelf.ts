@@ -63,6 +63,19 @@ export function useFolderViews() {
   return useSyncExternalStore((l) => { viewListeners.add(l); return () => { viewListeners.delete(l) } }, () => version)
 }
 
+// ---------- The book last chosen in each folder (this device only) ----------
+// Opening a story leaves the folder page, so the chosen book is kept here: back in the folder, the
+// shelf and Cover Flow start from the book you opened or last looked at, not from the last one played.
+
+const PICKS = 'kt-folder-picks'
+let picks: Record<string, string> = readJson(PICKS) ?? {}
+export const shelfPick = (folder: string): string | undefined => picks[folder]
+export function rememberShelfPick(folder: string, id: string) {
+  if (picks[folder] === id) return
+  picks = { ...picks, [folder]: id }
+  writeJson(PICKS, picks)
+}
+
 // ---------- Phone turned sideways ----------
 
 // Phones only: a tablet on its side still has room for the usual layout.

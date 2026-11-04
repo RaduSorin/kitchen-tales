@@ -1,12 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { fmtTime } from '../lib/stories'
+import { keepAwake } from '../lib/keepAwake'
+import { useLeaveGuard } from '../lib/leaveGuard'
 
 const BARS = 44
 
-type Session = { mr: MediaRecorder; stream: MediaStream; ctx?: AudioContext; analyser?: AnalyserNode; keep: boolean }
+type Session = { mr: MediaRecorder; stream: MediaStream; ctx?: AudioContext; analyser?: AnalyserNode; discard: boolean; byUser: boolean }
 
-/** Voice recorder in the night style: live waveform, clock, pause/resume, start over and done. */
-export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: number) => void }) {
+const LEAVE = {
+  title: 'Oprești înregistrarea?',
+  text: 'Dacă pleci de pe acest ecran, ce ai înregistrat până acum se pierde.',
+  stay: 'Continuă înregistrarea',
+  leave: 'Pleacă și renunță',
+}
+
+/**
+ * Voice recorder in the night style: live waveform, clock, pause/resume, start over and done.
+ * `interrupted` is true when the phone stopped the microphone (a call, the screen locked anyway):
+ * what was recorded until then is handed over instead of being lost.
+ */
+export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: number, interrupted?: boolean) => void }) {
   const [state, setState] = useState<'idle' | 'rec' | 'paused'>('idle')
   const [sec, setSec] = useState(0)
   const [bars, setBars] = useState<number[]>([])
@@ -14,8 +27,27 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   const session = useRef<Session>(null)
   const secRef = useRef(0)
 
+  const onDoneRef = useRef(onDone)
+  onDoneRef.current = onDone
+
   // Stop the microphone if the parent leaves mid-recording; nothing is kept.
-  useEffect(() => () => { const s = session.current; if (s && s.mr.state !== 'inactive') s.mr.stop() }, [])
+  useEffect(() => () => { const s = session.current; if (s) { s.discard = true; if (s.mr.state !== 'inactive') s.mr.stop() } }, [])
+
+  // While a recording is open (also paused): the screen stays on, and leaving the screen asks first.
+  const open = state !== 'idle'
+  useEffect(() => (open ? keepAwake() : undefined), [open])
+  useLeaveGuard(open, LEAVE)
+
+  // The app went to the background: pause, so nothing odd is recorded; "Continuă" picks it up again.
+  useEffect(() => {
+    if (state !== 'rec') return
+    const onHide = () => {
+      const mr = session.current?.mr
+      if (document.visibilityState === 'hidden' && mr?.state === 'recording') { mr.pause(); setState('paused') }
+    }
+    document.addEventListener('visibilitychange', onHide)
+    return () => document.removeEventListener('visibilitychange', onHide)
+  }, [state])
 
   // While recording: a clock tick every second and a waveform bar every ~120 ms.
   useEffect(() => {
@@ -39,7 +71,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mr = new MediaRecorder(stream)
       const chunks: Blob[] = []
-      const s: Session = { mr, stream, keep: false }
+      const s: Session = { mr, stream, discard: false, byUser: false }
       try {
         s.ctx = new AudioContext()
         s.analyser = s.ctx.createAnalyser()
@@ -47,11 +79,18 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
         s.ctx.createMediaStreamSource(stream).connect(s.analyser)
       } catch { /* waveform is optional */ }
       mr.ondataavailable = (e) => chunks.push(e.data)
+      // "Gata" stops on purpose; anything else (the system took the microphone away) is an interruption.
       mr.onstop = () => {
         stream.getTracks().forEach((t) => t.stop())
         s.ctx?.close().catch(() => {})
-        if (s.keep) onDone(new Blob(chunks, { type: mr.mimeType }), secRef.current)
+        const interrupted = !s.byUser
+        if (session.current === s) { session.current = null; setState('idle') }
+        if (s.discard) return
+        if (chunks.length && secRef.current >= 1) onDoneRef.current(new Blob(chunks, { type: mr.mimeType }), secRef.current, interrupted)
+        else if (interrupted) { secRef.current = 0; setSec(0); setBars([]); setError('Înregistrarea s-a oprit. Apasă butonul roșu ca să începi din nou.') }
       }
+      // iOS ends the microphone track when it takes the mic away; stop cleanly and keep what we have.
+      stream.getAudioTracks().forEach((t) => { t.onended = () => { if (mr.state !== 'inactive') mr.stop() } })
       mr.start(1000)
       session.current = s
       secRef.current = 0; setSec(0); setBars([])
@@ -70,9 +109,10 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   const stop = (keep: boolean) => {
     const s = session.current
     if (!s) return
-    s.keep = keep
-    if (s.mr.state !== 'inactive') s.mr.stop()
+    s.discard = !keep
+    s.byUser = true
     session.current = null
+    if (s.mr.state !== 'inactive') s.mr.stop()
     secRef.current = keep ? secRef.current : 0
     setState('idle')
     if (!keep) { setSec(0); setBars([]) }

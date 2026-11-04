@@ -135,32 +135,42 @@ export function bookMeta(story: Story) {
 
 // ---------- The click and a short buzz when the chosen book changes ----------
 
+const canVibrate = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function'
+
 /**
- * A tiny buzz. Android has navigator.vibrate. Safari on iPhone does not, but since iOS 18 its
- * native switch (<input type="checkbox" switch>) gives a haptic tick each time it flips, so we
- * flip a hidden one. Older iPhones and desktops simply feel nothing.
+ * A haptic tick on iPhone. Safari has no navigator.vibrate, but since iOS 18 its native switch
+ * (<input type="checkbox" switch>) ticks each time it flips, so a hidden one is made and flipped
+ * (the way the ios-haptics library does it). iOS only allows it while handling the end of a touch
+ * or a click, so it does nothing while a finger slides; older iPhones feel nothing at all.
  */
-let hapticSwitch: HTMLLabelElement | undefined
-function buzz() {
-  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    try { navigator.vibrate(6) } catch { /* not allowed right now */ }
-    return
-  }
+function iphoneTick() {
   try {
-    if (!hapticSwitch) {
-      const label = document.createElement('label')
-      label.setAttribute('aria-hidden', 'true')
-      label.style.display = 'none'
-      const input = document.createElement('input')
-      input.type = 'checkbox'
-      input.tabIndex = -1
-      input.setAttribute('switch', '')
-      label.append(input)
-      document.body.append(label)
-      hapticSwitch = label
-    }
-    hapticSwitch.click()
+    const label = document.createElement('label')
+    label.setAttribute('aria-hidden', 'true')
+    label.style.display = 'none'
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.setAttribute('switch', '')
+    label.append(input)
+    document.head.append(label)
+    label.click()
+    label.remove()
   } catch { /* no DOM */ }
+}
+
+/** A tiny buzz: navigator.vibrate on Android, the switch trick on iPhone. */
+function buzz(ms = 10) {
+  if (!canVibrate) { iphoneTick(); return }
+  try { navigator.vibrate(ms) } catch { /* not allowed right now */ }
+}
+
+/**
+ * For the end of a touch on the shelves: a tap that chose a book already did so when the finger
+ * went down, and a slide chose books while it moved, but iOS only lets the page tick now. Android
+ * already buzzed for each book, so this is for iPhone only.
+ */
+export function touchEndTick() {
+  if (getSettings().shelfClick && !canVibrate) iphoneTick()
 }
 
 let audio: AudioContext | undefined
@@ -172,9 +182,13 @@ export function primeClick() {
     if (audio.state === 'suspended') audio.resume().catch(() => {})
   } catch { /* no Web Audio */ }
 }
-export function shelfClick() {
+/** The chosen book changed. `untilLift`: a finger is still down, so iPhone ticks when it is lifted instead. */
+export function shelfClick(untilLift = false) {
   if (!getSettings().shelfClick) return
-  buzz()
+  if (canVibrate || !untilLift) buzz()
+  playClick()
+}
+function playClick() {
   try {
     audio ??= new AudioContext()
     if (audio.state !== 'running') return
@@ -187,6 +201,16 @@ export function shelfClick() {
     osc.start(t)
     osc.stop(t + .06)
   } catch { /* no Web Audio */ }
+}
+
+/** The "Încearcă" button in the settings: a buzz and a click, whatever the setting says. */
+export async function tryShelfClick() {
+  buzz(30)
+  try {
+    audio ??= new AudioContext()
+    if (audio.state === 'suspended') await audio.resume()
+  } catch { /* no Web Audio */ }
+  playClick()
 }
 
 // ---------- Little helpers for the arrival animations ----------

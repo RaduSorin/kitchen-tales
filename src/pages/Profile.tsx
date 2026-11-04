@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CITIES, cityByName, sunTimes } from '../lib/sun'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
+import { tryShelfClick } from '../lib/shelf'
 import { PRESET_TOOLS } from '../lib/kitchenTools'
 import { onOfflineChange, removeAllAudio, savedAudioSummary } from '../lib/offline'
 import { listFolders, listStories } from '../lib/db'
@@ -238,8 +239,12 @@ function ShelfSettings() {
           <input type="checkbox" className="switch" id="shelf-click" checked={shelfClick}
             onChange={(e) => updateSettings({ shelfClick: e.target.checked })} />
         </label>
+        <div className="set-row">
+          <span>Simți vibrația pe acest telefon?</span>
+          <button type="button" className="btn small" onClick={() => { tryShelfClick() }}>Încearcă</button>
+        </div>
       </div>
-      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte aleasă face un clic discret și telefonul vibrează scurt (pe iPhone, de la iOS 18). Se aplică doar pe acest dispozitiv.</p>
+      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte aleasă face un clic discret și telefonul vibrează scurt. Pe iPhone (de la iOS 18) vibrează când ridici degetul, nu cât aluneci pe cotoare, iar clicul nu se aude pe silențios. Se aplică doar pe acest dispozitiv.</p>
     </div>
   )
 }

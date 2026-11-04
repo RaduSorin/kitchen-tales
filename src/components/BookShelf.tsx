@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from 
 import type { Story } from '../lib/types'
 import { useSpineArt } from '../lib/coverTint'
 import { useCoverUrl } from '../lib/useCoverUrl'
-import { bookMeta, bookVars, moonDust, nextFrame, primeClick, shelfClick, spineHeight, spineWidth, wait } from '../lib/shelf'
+import { bookMeta, bookVars, moonDust, nextFrame, primeClick, shelfClick, spineHeight, spineWidth, touchEndTick, wait } from '../lib/shelf'
 import { CoverPicture, SpineFace, type BookViewProps } from './Spine'
 
 type Arrival = { id: string; phase: 'zero' | 'room' | 'drop' }
@@ -95,15 +95,16 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
     t.style.transform = `translateX(${-pan.current}px)`
   })
 
-  const pick = (id: string | undefined) => {
+  // `untilLift`: chosen while a finger is down; iPhone ticks only when it is lifted (see touchEndTick).
+  const pick = (id: string | undefined, untilLift = false) => {
     if (!id || id === latest.current.sel?.id) return
     onSelect(id)
-    shelfClick()
+    shelfClick(untilLift)
   }
-  const step = (d: number) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; pick(l.list[i + d]?.id) }
+  const step = (d: number, untilLift = false) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; pick(l.list[i + d]?.id, untilLift) }
 
   // ---------- Gestures on the spines ----------
-  const drag = useRef<{ x: number; moved: boolean; start?: string; picked: boolean }>(undefined)
+  const drag = useRef<{ x: number; moved: boolean; start?: string; picked: boolean; from?: string }>(undefined)
   const edge = useRef<{ dir: number; timer?: number }>({ dir: 0 })
   const stopEdge = () => { clearInterval(edge.current.timer); edge.current = { dir: 0 } }
   useEffect(() => stopEdge, [])
@@ -114,28 +115,30 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
     e.currentTarget.setPointerCapture(e.pointerId)
     const id = idAt(e)
     const picked = !!id && id !== latest.current.sel?.id
-    drag.current = { x: e.clientX, moved: false, start: id, picked }
-    pick(id)
+    drag.current = { x: e.clientX, moved: false, start: id, picked, from: latest.current.sel?.id }
+    pick(id, true)
   }
   const move = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current
     if (!d) return
     if (!d.moved && Math.abs(e.clientX - d.x) < 4) return
     d.moved = true
-    pick(idAt(e))
+    pick(idAt(e), true)
     if (!wide) return
     // Near the end of the shelf it keeps going by itself.
     const r = e.currentTarget.getBoundingClientRect()
     const dir = e.clientX < r.left + 36 ? -1 : e.clientX > r.right - 36 ? 1 : 0
     if (dir !== edge.current.dir) {
       stopEdge()
-      if (dir) edge.current = { dir, timer: window.setInterval(() => step(dir), 150) }
+      if (dir) edge.current = { dir, timer: window.setInterval(() => step(dir, true), 150) }
     }
   }
   const up = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current
     drag.current = undefined
     stopEdge()
+    // iPhone can only tick now that the finger is lifted, if this touch chose another book.
+    if (e.type === 'pointerup' && d && d.from !== latest.current.sel?.id) touchEndTick()
     // A tap on the book that was already chosen opens it.
     if (e.type === 'pointerup' && d && !d.moved && !d.picked && d.start && d.start === latest.current.sel?.id) onOpen(latest.current.sel)
   }
@@ -152,6 +155,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
 
   // Upright, the window is pinned at the top; it gets a background only once the shelves pass under it.
   const vitrine = useRef<HTMLDivElement>(null)
+  const hasSel = !!sel
   useEffect(() => {
     const el = vitrine.current
     if (wide || !el) return
@@ -166,7 +170,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll) }
-  }, [wide, !!sel])
+  }, [wide, hasSel])
 
   // ---------- A new book is put on the shelf ----------
   const busy = useRef(false)

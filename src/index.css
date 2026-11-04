@@ -889,6 +889,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .folder-new .folder-mosaic { background: none; border: 2px dashed var(--border); color: var(--muted); }
 .folder-new .folder-plus { font-weight: 300; }
 .folder-more { flex: none; margin-left: auto; }
+/* The folder's name with a small line under it: how many stories, and the share switch. */
+.folder-title { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.folder-title h1 { margin: 0; }
+.folder-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--muted); font-size: .92rem; }
+.folder-sub .share-chip { position: relative; min-height: 30px; padding: 3px 11px 3px 9px; gap: 6px; font-size: .85rem; }
+.folder-sub .share-chip::after { content: ""; position: absolute; inset: -7px -2px; } /* keeps a ~44px tap area */
+.folder-sub .share-note { font-size: inherit; }
 .folder-form { display: grid; gap: 14px; }
 .folder-form .emoji-pick button { width: 48px; height: 48px; font-size: 1.5rem; }
 .folder-form .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -1018,6 +1025,20 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .view-switch button { width: 40px; height: 40px; border: 0; border-radius: 999px; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .view-switch button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 @media (max-width: 400px) { .view-switch button { width: 34px; } }
+/* Folded into one round button next to the search box. Opening it widens it to the left and the
+   search box gets narrower at the same pace; folding gives the room back. */
+.view-switch-wrap { --open-w: 166px; position: relative; flex: none; width: 46px; height: 46px; border-radius: 999px; overflow: hidden;
+  background: var(--surface); transition: width .32s cubic-bezier(.2, .8, .2, 1); }
+.view-switch-wrap.open { width: var(--open-w); }
+.view-toggle { position: absolute; top: 0; right: 0; z-index: 1; width: 46px; height: 46px; border: 0; border-radius: 50%; padding: 0; background: none; color: var(--text);
+  display: grid; place-items: center; cursor: pointer; transition: opacity .18s; -webkit-tap-highlight-color: transparent; }
+.view-switch-wrap.open .view-toggle { opacity: 0; pointer-events: none; }
+/* The four choices stay full size, anchored to the right; the widening reveals them. */
+.view-switch-wrap .view-switch { position: absolute; top: 0; right: 0; width: var(--open-w); height: 46px; align-items: center; background: none;
+  opacity: 0; transition: opacity .2s; }
+.view-switch-wrap.open .view-switch { opacity: 1; }
+.view-switch-wrap .view-switch button { width: 40px; }
+@media (prefers-reduced-motion: reduce) { .view-switch-wrap, .view-toggle, .view-switch-wrap .view-switch { transition: none; } }
 /* A folder with stories this device hasn't seen yet. */
 .folder-fresh { position: absolute; z-index: 1; top: 8px; left: 8px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--on-accent);
   font-weight: 800; font-size: .85rem; box-shadow: 0 2px 8px rgb(0 0 0 / .25); pointer-events: none; }

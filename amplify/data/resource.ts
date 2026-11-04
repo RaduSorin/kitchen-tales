@@ -6,7 +6,10 @@ import { findCover } from '../functions/find-cover/resource'
 import { family } from '../functions/family/resource'
 import { timerAlarm } from '../functions/timer-alarm/resource'
 
-// Every signed-in family member can read and edit everything.
+// Every row belongs to a space (a household): its Cognito group `space-<id>` is in `spaceGroups`
+// and its members can read and edit it. A recipe, story or folder that is shared also has the
+// group every account is in (`everyone`) in `readerGroups`, which lets other spaces read it.
+// Week plan, shopping list and settings are never shared. See amplify/shared/spaces.ts.
 const schema = a.schema({
   Recipe: a
     .model({
@@ -21,8 +24,13 @@ const schema = a.schema({
       notes: a.string(),
       sourceUrl: a.string(),
       photoKey: a.string(),
+      // Sharing: see the comment at the top. Recipes start private.
+      spaceGroups: a.string().array(),
+      readerGroups: a.string().array(),
+      // The owning space's name, shown to other spaces ("De la Sorin").
+      spaceName: a.string(),
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups'), allow.groupsDefinedIn('readerGroups').to(['read'])]),
 
   Story: a
     .model({
@@ -37,8 +45,14 @@ const schema = a.schema({
       text: a.string(),
       // The child's favourite stories (the "Favorite" tab); shared by the family.
       favorite: a.boolean(),
+      // Sharing: see the comment at the top. Stories start shared. `sharedDirect` means shared on its
+      // own, not only because its folder is shared, so it stays shared when moved out of that folder.
+      spaceGroups: a.string().array(),
+      readerGroups: a.string().array(),
+      sharedDirect: a.boolean(),
+      spaceName: a.string(),
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups'), allow.groupsDefinedIn('readerGroups').to(['read'])]),
 
   // A shelf folder the family made themselves (e.g. kids' music). Stories join it through
   // Story.collection = name, so a folder can exist before anything is moved into it.
@@ -46,8 +60,12 @@ const schema = a.schema({
     .model({
       name: a.string().required(),
       icon: a.string(),
+      // Sharing a folder shares every story in it (their readerGroups are set too).
+      spaceGroups: a.string().array(),
+      readerGroups: a.string().array(),
+      spaceName: a.string(),
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups'), allow.groupsDefinedIn('readerGroups').to(['read'])]),
 
   // A recipe planned for a day in "Săptămâna mea". `day` is a local date, YYYY-MM-DD.
   MealPlanEntry: a
@@ -55,8 +73,9 @@ const schema = a.schema({
       day: a.string().required(),
       recipeId: a.string().required(),
       servings: a.integer(),
+      spaceGroups: a.string().array(),
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
 
   // One line of the family shopping list, optionally from a recipe.
   ShoppingItem: a
@@ -65,11 +84,13 @@ const schema = a.schema({
       checked: a.boolean(),
       recipeId: a.string(),
       recipeTitle: a.string(),
+      spaceGroups: a.string().array(),
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
 
-  // The family's settings (the child, the city for the stories sky, the kitchen tools), kept
-  // in the cloud so they survive a cleared phone and are the same on every device. One row, id "family".
+  // A space's settings (the child, the city for the stories sky, the kitchen tools, kid mode), kept
+  // in the cloud so they survive a cleared phone and are the same on every device. One row per
+  // space, id = the space group (the old single row, id "family", is kept only as a backup).
   FamilySettings: a
     .model({
       childName: a.string(),
@@ -83,8 +104,9 @@ const schema = a.schema({
       kidPinSalt: a.string(),
       kidMinutes: a.integer(),
       kidFolders: a.string().array(),
+      spaceGroups: a.string().array(),
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
 
   ImportedRecipe: a.customType({
     title: a.string().required(),
@@ -185,21 +207,25 @@ const schema = a.schema({
     email: a.string().required(),
     pending: a.boolean().required(),
     createdAt: a.string(),
+    // The member's space group, and whether it is the caller's own space.
+    space: a.string(),
+    sameSpace: a.boolean(),
   }),
 
-  // Accounts that can sign in. Any family member can see them and invite more.
+  // Accounts that can sign in, with their space. Only admins (Sorin) see them and invite.
   listFamily: a
     .query()
     .returns(a.ref('FamilyMember').array())
-    .authorization((allow) => [allow.authenticated()])
+    .authorization((allow) => [allow.group('admins')])
     .handler(a.handler.function(family)),
 
   // Creates an account and emails a temporary password (resend: true sends it again).
+  // separate: true gives the account its own space; otherwise it joins the inviter's space.
   inviteFamilyMember: a
     .mutation()
-    .arguments({ email: a.string().required(), resend: a.boolean() })
+    .arguments({ email: a.string().required(), resend: a.boolean(), separate: a.boolean() })
     .returns(a.ref('FamilyMember'))
-    .authorization((allow) => [allow.authenticated()])
+    .authorization((allow) => [allow.group('admins')])
     .handler(a.handler.function(family)),
 
   // Cooking timers: a push notification when the timer ends, even with the app closed.

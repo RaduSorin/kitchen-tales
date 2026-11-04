@@ -1,5 +1,6 @@
-// Cloud storage via AWS Amplify: recipe/story records in DynamoDB,
-// photos and audio files in S3. Visible to every signed-in family member.
+// Cloud storage via AWS Amplify: recipe/story records in DynamoDB, photos and audio files in S3.
+// Rows belong to the signed-in account's space; shared ones are readable by every account
+// (see amplify/shared/spaces.ts and lib/space.ts).
 import { generateClient } from 'aws-amplify/data'
 import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
@@ -8,6 +9,7 @@ import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource }
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, removePhoto, saveAudio } from './offline'
 import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
 import { folderOf } from './stories'
+import { isMine, isShared, mySpaceGroup, readerGroupsFor, spaceReady } from './space'
 
 const client = generateClient<Schema>()
 
@@ -29,6 +31,9 @@ const toRecipe = (r: RecipeRow): Recipe => ({
   sourceUrl: r.sourceUrl ?? undefined,
   photoKey: r.photoKey ?? undefined,
   updatedAt: r.updatedAt,
+  mine: isMine(r.spaceGroups),
+  shared: isShared(r.readerGroups),
+  spaceName: r.spaceName ?? undefined,
 })
 
 const toStory = (s: StoryRow): Story => ({
@@ -43,11 +48,16 @@ const toStory = (s: StoryRow): Story => ({
   text: s.text ?? undefined,
   favorite: s.favorite ?? undefined,
   createdAt: s.createdAt,
+  mine: isMine(s.spaceGroups),
+  shared: isShared(s.readerGroups),
+  spaceName: s.spaceName ?? undefined,
 })
 
 type Page<T> = { data: T[]; nextToken?: string | null; errors?: { message: string }[] }
 
 async function listAll<T>(fetchPage: (nextToken?: string | null) => Promise<Page<T>>) {
+  // The token must carry the account's groups before the first list, or nothing is visible.
+  await spaceReady()
   const out: T[] = []
   let token: string | null | undefined
   do {
@@ -118,11 +128,14 @@ export async function getRecipe(id: string) {
 }
 
 export async function saveRecipe(r: Recipe, isNew: boolean) {
-  const { updatedAt: _, ...fields } = r
+  const { updatedAt: _, mine: _m, shared, spaceName: _n, ...fields } = r
   const input = { ...fields, category: fields.category || null, notes: fields.notes || null, sourceUrl: fields.sourceUrl || null,
     servings: fields.servings ?? null, minutes: fields.minutes ?? null, photoKey: fields.photoKey ?? null,
     stepPhotoKeys: fields.stepPhotoKeys?.some(Boolean) ? fields.stepPhotoKeys : null }
-  const res = isNew ? await client.models.Recipe.create(input) : await client.models.Recipe.update(input)
+  // A new recipe starts private to its space.
+  const res = isNew
+    ? await client.models.Recipe.create({ ...input, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(!!shared) })
+    : await client.models.Recipe.update(input)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
 }
 
@@ -179,8 +192,11 @@ export async function downloadStory(s: Story) {
 
 export { getAudio as getOfflineAudio, removeAudio as removeOfflineAudio }
 
-export async function createStory(s: Omit<Story, 'id' | 'createdAt'>) {
-  const res = await client.models.Story.create(s)
+export async function createStory(story: Omit<Story, 'id' | 'createdAt'>) {
+  const { mine: _m, shared, spaceName: _n, ...s } = story
+  // A new story starts shared with every account, unless asked otherwise.
+  const share = shared ?? true
+  const res = await client.models.Story.create({ ...s, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(share), sharedDirect: share })
   if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') ?? 'Eroare la salvare')
   return res.data.id
 }
@@ -210,7 +226,10 @@ const cacheFolders = (list: StoryFolder[]) => { try { localStorage.setItem(FOLDE
 export async function listFolders(): Promise<StoryFolder[]> {
   try {
     const rows = await listAll((nextToken) => client.models.StoryFolder.list({ nextToken, limit: 200 }))
-    const list = rows.map((r) => ({ id: r.id, name: r.name, icon: r.icon ?? undefined }))
+    const list = rows.map((r) => ({
+      id: r.id, name: r.name, icon: r.icon ?? undefined,
+      mine: isMine(r.spaceGroups), shared: isShared(r.readerGroups), spaceName: r.spaceName ?? undefined,
+    }))
     cacheFolders(list)
     return kidFolderRows(list)
   } catch {
@@ -231,7 +250,8 @@ export async function moveStory(s: Story, collection: string | null) {
 }
 
 export async function createFolder(name: string, icon?: string) {
-  const res = await client.models.StoryFolder.create({ name, icon: icon ?? null })
+  // Like stories, a new folder starts shared.
+  const res = await client.models.StoryFolder.create({ name, icon: icon ?? null, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(true) })
   errorsOf(res)
   if (!res.data) throw new Error('Nu am putut crea folderul.')
   cacheFolders([...cachedFolders(), { id: res.data.id, name, icon }])
@@ -359,7 +379,8 @@ export async function setStoryCover(s: Story, coverKey: string) {
 
 // ---- family accounts ----
 
-export type FamilyMember = { email: string; pending: boolean; createdAt?: string | null }
+/** An account; `sameSpace` = in the signed-in account's space (sees everything there). */
+export type FamilyMember = { email: string; pending: boolean; createdAt?: string | null; space?: string | null; sameSpace?: boolean | null }
 
 export async function listFamily(): Promise<FamilyMember[]> {
   const res = await client.queries.listFamily()
@@ -367,9 +388,12 @@ export async function listFamily(): Promise<FamilyMember[]> {
   return (res.data ?? []).filter((m): m is FamilyMember => !!m)
 }
 
-/** Creates the account and emails a temporary password; resend: true sends it again. */
-export async function inviteFamilyMember(email: string, resend = false): Promise<FamilyMember> {
-  const res = await client.mutations.inviteFamilyMember({ email, resend })
+/**
+ * Creates the account and emails a temporary password; resend: true sends it again.
+ * separate: true gives it its own space (it sees only what is shared); otherwise it joins ours.
+ */
+export async function inviteFamilyMember(email: string, resend = false, separate = false): Promise<FamilyMember> {
+  const res = await client.mutations.inviteFamilyMember({ email, resend, separate })
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data) throw new Error('Nu am putut trimite invitația.')
   return res.data
@@ -391,7 +415,7 @@ const toShopping = (s: ShoppingRow): ShoppingItem => ({
 
 export const planApi = {
   list: async () => (await listAll((nextToken) => client.models.MealPlanEntry.list({ nextToken, limit: 500 }))).map(toPlan),
-  create: async (p: PlanEntry) => check(await client.models.MealPlanEntry.create({ ...p, servings: p.servings ?? null })),
+  create: async (p: PlanEntry) => check(await client.models.MealPlanEntry.create({ ...p, servings: p.servings ?? null, spaceGroups: [await mySpaceGroup()] })),
   update: async (p: PlanEntry) => check(await client.models.MealPlanEntry.update({ ...p, servings: p.servings ?? null })),
   remove: async (id: string) => check(await client.models.MealPlanEntry.delete({ id })),
 }
@@ -400,19 +424,19 @@ export const shoppingApi = {
   list: async () => (await listAll((nextToken) => client.models.ShoppingItem.list({ nextToken, limit: 500 }))).map(toShopping),
   create: async (s: ShoppingItem) => {
     const { createdAt: _, ...fields } = s
-    check(await client.models.ShoppingItem.create({ ...fields, recipeId: fields.recipeId ?? null, recipeTitle: fields.recipeTitle ?? null }))
+    check(await client.models.ShoppingItem.create({
+      ...fields, recipeId: fields.recipeId ?? null, recipeTitle: fields.recipeTitle ?? null, spaceGroups: [await mySpaceGroup()],
+    }))
   },
   update: async (s: ShoppingItem) => check(await client.models.ShoppingItem.update({ id: s.id, text: s.text, checked: s.checked })),
   remove: async (id: string) => check(await client.models.ShoppingItem.delete({ id })),
 }
 
-// ---- family settings (one row shared by the family) ----
+// ---- space settings (one row per space, id = the space group) ----
 
-const SETTINGS_ID = 'family'
-
-/** The family's settings from the cloud, or null if they were never saved there. */
+/** The space's settings from the cloud, or null if they were never saved there. */
 export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid'> & { city?: string; kid?: SharedSettings['kid'] }) | null> {
-  const res = await client.models.FamilySettings.get({ id: SETTINGS_ID })
+  const res = await client.models.FamilySettings.get({ id: await mySpaceGroup() })
   check(res)
   const r = res.data
   if (!r) return null
@@ -435,8 +459,10 @@ export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' 
 }
 
 export async function saveFamilySettings(s: SharedSettings) {
+  const space = await mySpaceGroup()
   const row = {
-    id: SETTINGS_ID,
+    id: space,
+    spaceGroups: [space],
     childName: s.child.name,
     childBirthYear: s.child.birthYear ?? null,
     childGender: s.child.gender ?? null,

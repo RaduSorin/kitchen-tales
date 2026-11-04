@@ -3,8 +3,8 @@ import { family } from '../functions/family/resource'
 
 const APP_URL = 'https://main.d1b5q3cpreuzof.amplifyapp.com'
 
-// Email login. Self sign-up is disabled in backend.ts: accounts are created
-// by family members from the Family screen, so "authenticated" means "family member".
+// Email login. Self sign-up is disabled in backend.ts: accounts are created by an admin
+// from the Accounts screen, and each one is put in a space (see amplify/shared/spaces.ts).
 export const auth = defineAuth({
   loginWith: {
     email: {
@@ -25,6 +25,9 @@ export const auth = defineAuth({
       },
     },
   },
-  // The Family screen in Settings lists accounts and sends invitations.
-  access: (allow) => [allow.resource(family).to(['listUsers', 'createUser'])],
+  // Groups (`admins`, `everyone`, one `space-<id>` per household) are not declared here: the
+  // first ones were made with the data move before this deploy, and the family function makes
+  // a new space for a separate account. See amplify/shared/spaces.ts.
+  // The Accounts screen in Settings lists accounts with their space and sends invitations.
+  access: (allow) => [allow.resource(family).to(['listUsers', 'createUser', 'addUserToGroup', 'createGroup', 'listGroupsForUser'])],
 })

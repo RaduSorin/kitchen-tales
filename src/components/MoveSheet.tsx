@@ -15,7 +15,7 @@ const Row = ({ label, icon, count, on, busy, onPick }: { label: string; icon?: s
 )
 
 /** "Mută în folder": pick one of the shelf's folders for a story, or make a new one and move it there. */
-export default function MoveSheet({ story, onMoved, onClose }: { story: Story; onMoved: (collection: string | undefined) => void; onClose: () => void }) {
+export default function MoveSheet({ story, onMoved, onClose }: { story: Story; onMoved: (collection: string | undefined, shared?: boolean) => void; onClose: () => void }) {
   const [folders, setFolders] = useState<Folder[]>(() => groupFolders([], cachedFolders()))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -26,13 +26,13 @@ export default function MoveSheet({ story, onMoved, onClose }: { story: Story; o
   }, [])
 
   const own = builtinFolderOf(story)
-  const targets = folders.filter((f) => !f.builtin)
+  const targets = folders.filter((f) => !f.builtin && f.mine)
   const move = async (collection: string | undefined, create?: { name: string; icon: string }) => {
     setBusy(true); setError('')
     try {
       if (create) await createFolder(create.name, create.icon)
-      await moveStory(story, collection ?? null)
-      onMoved(collection)
+      const { shared } = await moveStory(story, collection ?? null)
+      onMoved(collection, shared)
       onClose()
     } catch {
       setError('Nu am putut muta povestea. Încearcă din nou.')

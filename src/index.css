@@ -973,3 +973,13 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .seg > * { position: relative; }
 .seg > *::after { content: ''; position: absolute; inset: -4px 0; }
 .invite-row .btn { min-height: 44px; }
+
+/* Sharing with other accounts (spaces) */
+.share-chip { justify-self: start; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: .92rem; font-weight: 600; padding: 6px 14px; cursor: pointer; }
+.share-chip[aria-pressed="true"] { background: var(--night-soft); color: var(--night); }
+.share-note { margin: 0; color: var(--muted); font-size: .92rem; }
+.share-toggle { gap: 8px; }
+.share-toggle[aria-pressed="true"] { background: var(--night-soft); color: var(--night); }
+.pill-shared { display: inline-flex; align-items: center; gap: 5px; }
+.private-mark { font-size: .8em; }
+.shared-mark { color: var(--muted); vertical-align: -2px; }

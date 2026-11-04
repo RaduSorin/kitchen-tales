@@ -4,17 +4,18 @@ import { listRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import PlatePlaceholder from '../components/PlatePlaceholder'
+import ShareIcon from '../components/ShareIcon'
 import { formatMinutes, matchesQuery } from '../lib/format'
 import { LoadError, Loading } from '../components/LoadState'
 
 export function RecipeRow({ r }: { r: Recipe }) {
   const img = useFileUrl(r.photoKey)
-  const meta = [r.category, r.minutes && formatMinutes(r.minutes), r.servings && `${r.servings} porții`].filter(Boolean).join(' · ')
+  const meta = [r.mine === false && `De la ${r.spaceName ?? 'alt cont'}`, r.category, r.minutes && formatMinutes(r.minutes), r.servings && `${r.servings} porții`].filter(Boolean).join(' · ')
   return (
     <Link to={`/retete/${r.id}`} className="recipe-row">
       <div className="recipe-thumb">{img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title} />}</div>
       <div className="recipe-row-text">
-        <span className="recipe-row-title">{r.title}</span>
+        <span className="recipe-row-title">{r.title}{r.mine && r.shared && <span className="shared-mark" title="Partajată cu toate conturile" aria-label="Partajată cu toate conturile"> <ShareIcon shared size={14} /></span>}</span>
         {meta && <small>{meta}</small>}
       </div>
     </Link>

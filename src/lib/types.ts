@@ -12,6 +12,11 @@ export interface Recipe {
   sourceUrl?: string
   photoKey?: string
   updatedAt?: string
+  /** Set when read from the cloud: in the signed-in account's space, and shared with every account. */
+  mine?: boolean
+  shared?: boolean
+  /** The owning space's name, shown on something another space shared. */
+  spaceName?: string
 }
 
 export type StorySource = 'upload' | 'recording' | 'generated'
@@ -31,6 +36,10 @@ export interface Story {
   /** One of the child's favourites (the "Favorite" tab). */
   favorite?: boolean
   createdAt?: string
+  /** Set when read from the cloud; see Recipe. A new story is shared unless `shared` is false. */
+  mine?: boolean
+  shared?: boolean
+  spaceName?: string
 }
 
 /** A shelf folder made by the family; its stories have `collection` equal to its name. */
@@ -39,6 +48,9 @@ export interface StoryFolder {
   name: string
   /** An emoji shown on the folder card, e.g. 🎵. */
   icon?: string
+  mine?: boolean
+  shared?: boolean
+  spaceName?: string
 }
 
 /** A recipe planned for a day of the week. `day` is a local date, YYYY-MM-DD. */

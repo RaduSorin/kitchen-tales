@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, uploadFile, setStoryFavorite } from '../lib/db'
+import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, setStoryShared, uploadFile, setStoryFavorite } from '../lib/db'
+import ShareIcon from '../components/ShareIcon'
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
@@ -45,6 +46,7 @@ function StoryPlayer() {
   const [coverOpen, setCoverOpen] = useState(false)
   const [coverBusy, setCoverBusy] = useState(false)
   const [moveOpen, setMoveOpen] = useState(false)
+  const [sharing, setSharing] = useState(false)
   // While the finger is on the progress bar we only move the bar; the audio seeks once, on release.
   // Seeking on every move made iOS re-fetch the stream each time and timeupdate pulled the thumb back.
   const [drag, setDrag] = useState<number | null>(null)
@@ -207,8 +209,21 @@ function StoryPlayer() {
         <summary>Pentru părinți</summary>
         <div className="parents-body">
           {s.text && <details className="story-text"><summary>Textul poveștii</summary><p>{s.text}</p></details>}
+          {s.mine === false && <p className="share-note">De la {s.spaceName ?? 'alt cont'}, doar ascultare.</p>}
           {/* Same-size buttons in two columns; delete spans the full width at the bottom. */}
           <div className="parents-actions">
+            {online && s.mine !== false && (
+              <button className="btn small span-all share-toggle" aria-pressed={!!s.shared} disabled={sharing} onClick={async () => {
+                setSharing(true); setMsg('')
+                const shared = !s.shared
+                try {
+                  await setStoryShared(s, shared)
+                  setS({ ...s, shared }); player.update({ ...s, shared })
+                  showToast(shared ? 'Povestea e partajată cu toate conturile' : 'Povestea e acum doar în spațiul nostru')
+                } catch { setMsg('Nu am putut schimba partajarea. Încearcă din nou.') }
+                setSharing(false)
+              }}><ShareIcon shared={!!s.shared} />{sharing ? 'Se salvează…' : s.shared ? 'Partajată cu toate conturile' : 'Doar în spațiul nostru'}</button>
+            )}
             {isSaved ? (
               <button className="btn small" onClick={() => removeOfflineAudio(s.id)}>Șterge de pe dispozitiv</button>
             ) : online ? (
@@ -218,9 +233,9 @@ function StoryPlayer() {
                 setSaving(false)
               }}>{saving ? 'Se salvează…' : 'Salvează offline'}</button>
             ) : null}
-            {online && !coverOpen && <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>}
-            {online && <button className="btn small span-all" onClick={() => setMoveOpen(true)}>Mută în folder</button>}
-            {online && (confirmDelete ? (
+            {online && s.mine !== false && !coverOpen && <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>}
+            {online && s.mine !== false && <button className="btn small span-all" onClick={() => setMoveOpen(true)}>Mută în folder</button>}
+            {online && s.mine !== false && (confirmDelete ? (
               <span className="confirm span-all">Ștergi povestea?
                 <button className="btn danger small" disabled={deleting} onClick={async () => {
                   setDeleting(true); setMsg('')
@@ -259,8 +274,8 @@ function StoryPlayer() {
         </div>
       </details>}
       {moveOpen && !kid && (
-        <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection) => {
-          const moved = { ...s, collection }
+        <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection, shared) => {
+          const moved = { ...s, collection, shared: shared ?? s.shared }
           setS(moved); player.update(moved)
           showToast(`Mutată în ${collection ?? builtinFolderOf(s)}`)
         }} />

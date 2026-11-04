@@ -8,7 +8,6 @@ import { isPlayerPage, useArea } from '../lib/area'
 import { mergeShopping } from '../lib/merge'
 import { primeKeyboard } from '../lib/keyboard'
 import { useKid } from '../lib/kidMode'
-import Avatar from './Avatar'
 
 const I = ({ d }: { d: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
@@ -28,14 +27,17 @@ const TABS: { to: string; label: string; full?: string; end?: boolean; icon: str
 /** The last tab on both sides: the account, its settings, the child, sharing. */
 const ProfileTab = () => (
   <NavLink to="/profil" className="tab tab-profile" aria-label="Profil și setări">
-    <span className="tab-icon"><Avatar /></span><span className="tab-label">Profil</span>
+    <span className="tab-icon"><I d={PROFILE} /></span><span className="tab-label">Profil</span>
   </NavLink>
 )
 
 const SHELF = 'M4 4h4v16H4zM10 4h4v16h-4zM15.5 5.2l3.8-1 3.7 15.5-3.8 1z'
 const PLUS = 'M12 5v14M5 12h14'
 const SPARKLE = 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z'
-const HEART = 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z'
+// Fills the 24px box like the other icons (the old heart sat in the lower half and looked small).
+const HEART = 'M12 21s-9-5.4-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.6-9 12-9 12z'
+/** Person in a circle: the account, drawn like the other outline icons. */
+export const PROFILE = 'M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zM12 7a3.2 3.2 0 1 0 0 6.4A3.2 3.2 0 0 0 12 7zM6.2 18.6a7 7 0 0 1 11.6 0'
 
 /** Hidden in full-screen cooking and on the story player, which has its own big controls. */
 const hidesTabBar = (path: string) => path.endsWith('/gateste') || isPlayerPage(path)

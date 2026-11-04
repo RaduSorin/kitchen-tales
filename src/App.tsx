@@ -18,11 +18,10 @@ import StoryList from './pages/StoryList'
 import StoryPlayer from './pages/StoryPlayer'
 import StoryAdd from './pages/StoryAdd'
 import Profile, { profileTitle } from './pages/Profile'
-import Avatar from './components/Avatar'
 import CookMode from './pages/CookMode'
 import MiniPlayer from './components/MiniPlayer'
 import { NowPlayingProvider } from './lib/nowPlaying'
-import TabBar from './components/TabBar'
+import TabBar, { PROFILE } from './components/TabBar'
 import AreaSwitch from './components/AreaSwitch'
 import { isPlayerPage, useArea } from './lib/area'
 import Search from './pages/Search'
@@ -138,7 +137,9 @@ function Shell() {
           {kid ? <KidLockButton /> : <>
           {!profile && <AreaSwitch />}
           {/* On phones the Profile is the last tab; wide screens have no tab bar, so it sits here. */}
-          <NavLink to="/profil" className="icon-link profile-link wide-only" aria-label="Profil și setări" title="Profil"><Avatar size={30} /></NavLink>
+          <NavLink to="/profil" className="icon-link profile-link wide-only" aria-label="Profil și setări" title="Profil">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={PROFILE} /></svg>
+          </NavLink>
           </>}
         </nav>
       </header>}

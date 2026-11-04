@@ -1,33 +1,39 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import type { Story } from '../lib/types'
-import { useSpineTint } from '../lib/coverTint'
+import { useSpineArt } from '../lib/coverTint'
+import { useCoverUrl } from '../lib/useCoverUrl'
 import { bookMeta, bookVars, moonDust, nextFrame, primeClick, shelfClick, spineWidth, wait } from '../lib/shelf'
 import { CoverPicture, SpineFace, type BookViewProps } from './Spine'
 
 type Arrival = { id: string; phase: 'enter' | 'float' | 'slot' }
 const GAP = 16, SPACE = 2, FLOOR = 46, STEP = 34
 
-/** How far from the middle book i stands when book `sel` is the one facing us. */
-function offset(list: Story[], i: number, sel: number, w: number) {
-  if (i === sel) return 0
-  if (i < sel) {
-    let x = -(w / 2 + GAP)
-    for (let k = sel - 1; k > i; k--) x -= spineWidth(list[k]) + SPACE
-    return x - spineWidth(list[i]) / 2
-  }
-  let x = w / 2 + GAP
-  for (let k = sel + 1; k < i; k++) x += spineWidth(list[k]) + SPACE
-  return x + spineWidth(list[i]) / 2
+/** Where each book stands, from the middle of the stage, when book `sel` is the one facing us. */
+function positions(list: Story[], sel: number, w: number) {
+  const xs: number[] = new Array(list.length)
+  xs[sel] = 0
+  let x = -(w / 2 + GAP)
+  for (let k = sel - 1; k >= 0; k--) { const d = spineWidth(list[k]); xs[k] = x - d / 2; x -= d + SPACE }
+  x = w / 2 + GAP
+  for (let k = sel + 1; k < list.length; k++) { const d = spineWidth(list[k]); xs[k] = x + d / 2; x += d + SPACE }
+  return xs
 }
 
-function FlowBook({ story, style, isNew, shine }: { story: Story; style: CSSProperties; isNew: boolean; shine: boolean }) {
-  const { url, tint } = useSpineTint(story)
+function FlowCover({ story, isNew }: { story: Story; isNew: boolean }) {
+  const url = useCoverUrl(story.coverKey)
+  return <div className="ff ff-front"><CoverPicture story={story} url={url} className="ff-pic" />{isNew && <span className="flow-new">Nouă</span>}</div>
+}
+
+/**
+ * One book. Only the few books near the middle (which can turn to face us) get a cover, back and
+ * pages; the others are just a spine and the top of the pages, to keep the iPhone's memory free.
+ */
+function FlowBook({ story, style, full, isNew, shine }: { story: Story; style: CSSProperties; full: boolean; isNew: boolean; shine: boolean }) {
+  const { thumb, tint } = useSpineArt(story)
   return (
     <div className={`flow-book${shine ? ' shine' : ''}`} data-id={story.id} style={{ ...bookVars(story, tint), ...style }} aria-hidden="true">
-      <div className="ff ff-front"><CoverPicture story={story} url={url} className="ff-pic" />{isNew && <span className="flow-new">Nouă</span>}</div>
-      <div className="ff ff-back" />
-      <div className="ff ff-spine spine-skin"><SpineFace story={story} url={url} /></div>
-      <div className="ff ff-edge" />
+      {full && <><FlowCover story={story} isNew={isNew} /><div className="ff ff-back" /><div className="ff ff-edge" /></>}
+      <div className="ff ff-spine spine-skin"><SpineFace story={story} url={thumb} /></div>
       <div className="ff ff-top" />
     </div>
   )
@@ -69,13 +75,17 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
 
   // While a new book floats in, the shelf opens up where it will go.
   const layoutSel = now?.phase === 'float' ? Math.max(0, list.findIndex((s) => s.id === now.id)) : selIdx
+  const xs = positions(list, layoutSel, W)
+  // Only the books on screen (and a little beyond, so they are ready when they slide in) are drawn.
+  const reach = (box.w || 900) / 2 + W
+  const drawn = (s: Story, i: number) => Math.abs(xs[i]) < reach || now?.id === s.id
   const styleFor = (s: Story, i: number): CSSProperties => {
     if (now?.id === s.id && now.phase === 'enter') return { transform: 'translateX(0px) translateY(-380px) translateZ(240px) rotateX(-28deg) rotateY(-24deg)', opacity: 0, transition: 'none', zIndex: 400 }
     if (now?.id === s.id && now.phase === 'float') return { transform: `translateX(0px) translateY(${-Math.min(60, W * .3)}px) translateZ(110px) rotateX(0deg) rotateY(0deg)`, zIndex: 400, transition: 'transform .85s cubic-bezier(.2, .9, .25, 1), opacity .35s' }
     const slot = now?.id === s.id && now.phase === 'slot' ? { transition: 'transform .75s cubic-bezier(.34, 1.36, .5, 1)' } : undefined
     const zIndex = 200 - Math.abs(i - layoutSel)
     if (i === layoutSel) return { transform: 'translateX(0px) translateY(-6px) translateZ(64px) rotateX(0deg) rotateY(0deg)', zIndex, ...slot }
-    return { transform: `translateX(${offset(list, i, layoutSel, W)}px) translateY(0px) translateZ(${-W / 2}px) rotateX(0deg) rotateY(90deg)`, zIndex, ...slot }
+    return { transform: `translateX(${xs[i]}px) translateY(0px) translateZ(${-W / 2}px) rotateX(0deg) rotateY(90deg)`, zIndex, ...slot }
   }
 
   const pick = (id: string | undefined) => {
@@ -174,7 +184,10 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
       <div className={`flow-stage${dragging ? ' dragging' : ''}`} ref={flow} style={{ '--w': `${W}px`, '--floor': `${FLOOR}px` } as CSSProperties}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
         <div className="flow-floor" aria-hidden="true" />
-        {list.map((s, i) => <FlowBook key={s.id} story={s} style={styleFor(s, i)} isNew={arrived.includes(s.id) || now?.id === s.id} shine={shine && now?.id === s.id} />)}
+        {list.map((s, i) => drawn(s, i) && (
+          <FlowBook key={s.id} story={s} style={styleFor(s, i)} full={Math.abs(i - layoutSel) <= 3 || now?.id === s.id}
+            isNew={arrived.includes(s.id) || now?.id === s.id} shine={shine && now?.id === s.id} />
+        ))}
         <div className="dust-layer" aria-hidden="true" />
       </div>
       <div className={`flow-caption${fresh ? ' fresh' : ''}`} aria-live="polite">

@@ -4,7 +4,7 @@ import { listRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import PlatePlaceholder from '../components/PlatePlaceholder'
-import { formatMinutes, norm } from '../lib/format'
+import { formatMinutes, matchesQuery } from '../lib/format'
 import { LoadError, Loading } from '../components/LoadState'
 
 export function RecipeRow({ r }: { r: Recipe }) {
@@ -37,7 +37,7 @@ export default function RecipeList() {
     .filter((r) => {
       if (cat && r.category !== cat) return false
       if (!q) return true
-      return norm([r.title, r.category, ...r.ingredients].join(' ')).includes(norm(q))
+      return matchesQuery([r.title, r.category, ...r.ingredients].join(' '), q)
     })
     .sort((a, b) => a.title.localeCompare(b.title, 'ro'))
 

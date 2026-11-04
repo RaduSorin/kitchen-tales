@@ -112,6 +112,9 @@ export default function RecipeEdit() {
   const [aiBusy, setAiBusy] = useState(false)
   const aiJob = useRef<Promise<string | undefined>>(undefined)
   const aiUnsaved = useRef<string>(undefined)
+  // Counts photos you chose yourself; an AI photo that finishes after one of them is thrown away.
+  const picked = useRef(0)
+  const pickPhoto = (f?: File) => { if (f) { picked.current++; setPhoto(f) } }
 
   const back = useBack(id ? `/retete/${id}` : '/retete')
   const [loadFailed, setLoadFailed] = useState<'error' | 'missing'>()
@@ -168,8 +171,11 @@ export default function RecipeEdit() {
   const makeAiPhoto = (title: string, ingredients: string[]) => {
     if (!title.trim() || aiJob.current) return
     setAiBusy(true)
+    const before = picked.current
     const job = generateRecipePhoto(title.trim(), ingredients)
       .then((key) => {
+        // You picked your own photo while the AI was drawing: yours stays.
+        if (picked.current !== before) { removeFile(key).catch(() => {}); return undefined }
         if (aiUnsaved.current) removeFile(aiUnsaved.current).catch(() => {})
         aiUnsaved.current = key
         setPhoto(undefined)
@@ -403,7 +409,7 @@ export default function RecipeEdit() {
         <label className="editor-photo">
           {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title || 'rețetă'} />}
           <span className="editor-photo-btn">{img ? 'Schimbă poza' : 'Adaugă o poză'}</span>
-          <input type="file" accept="image/*" hidden onChange={(e) => setPhoto(e.target.files?.[0])} />
+          <input type="file" accept="image/*" hidden onChange={(e) => pickPhoto(e.target.files?.[0])} />
         </label>
         {aiBusy
           ? <span className="editor-ai-busy"><span className="spinner" /> Generez o poză…</span>

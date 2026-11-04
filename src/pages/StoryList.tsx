@@ -11,7 +11,7 @@ import StoryCover from '../components/StoryCover'
 import { focusField } from '../lib/keyboard'
 import { useKid } from '../lib/kidMode'
 
-const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+import { matchesQuery, norm } from '../lib/format'
 
 const count = (n: number) => `${n} ${n === 1 ? 'poveste' : 'povești'}`
 
@@ -60,7 +60,7 @@ export default function StoryList() {
   const query = norm(q.trim())
   const searching = !!query
   const shown = searching
-    ? (inFolder ? open.items : available).filter((s) => norm(`${s.title} ${s.collection ?? ''}`).includes(query))
+    ? (inFolder ? open.items : available).filter((s) => matchesQuery(`${s.title} ${s.collection ?? ''}`, query))
     : open?.items ?? []
   const missing = (inFolder ? open.items : stories).filter((s) => !offline.has(s.id))
   const lastId = getLastStoryId()

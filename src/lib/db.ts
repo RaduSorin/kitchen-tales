@@ -68,9 +68,16 @@ const extFor = (blob: Blob, fallback: string) => {
   return t ? t.replace('mpeg', 'mp3').replace('x-m4a', 'm4a') : fallback
 }
 
-export async function uploadFile(prefix: 'recipe-photos' | 'stories' | 'story-covers', blob: Blob, fallbackExt: string) {
+/** Uploads a file; `onProgress` gets the share sent so far (0 to 1), for big audio files. */
+export async function uploadFile(prefix: 'recipe-photos' | 'stories' | 'story-covers', blob: Blob, fallbackExt: string, onProgress?: (share: number) => void) {
   const path = `${prefix}/${newId()}.${extFor(blob, fallbackExt)}`
-  await uploadData({ path, data: blob, options: { contentType: blob.type || undefined } }).result
+  await uploadData({
+    path, data: blob,
+    options: {
+      contentType: blob.type || undefined,
+      onProgress: onProgress && (({ transferredBytes, totalBytes }) => { if (totalBytes) onProgress(transferredBytes / totalBytes) }),
+    },
+  }).result
   return path
 }
 

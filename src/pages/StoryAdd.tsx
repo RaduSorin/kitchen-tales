@@ -77,6 +77,8 @@ export default function StoryAdd() {
       .catch(() => {})
   }, [])
   const [saving, setSaving] = useState(false)
+  // Share of the audio sent so far while saving (big files take a while on mobile data).
+  const [sent, setSent] = useState<number>()
   const localPreview = useBlobUrl(audio)
   const [brief, setBrief] = useState<StoryBrief>(() => ({ length: 'medium', ...loadBrief() }))
   const setB = <K extends keyof StoryBrief>(k: K, v: StoryBrief[K]) => setBrief((b) => ({ ...b, [k]: v }))
@@ -141,7 +143,7 @@ export default function StoryAdd() {
     if (!ready) return
     setSaving(true); setError('')
     try {
-      const audioKey = generated ? generated.audioKey : await uploadFile('stories', audio!, 'webm')
+      const audioKey = generated ? generated.audioKey : await uploadFile('stories', audio!, 'webm', setSent)
       let coverKey: string | undefined
       if (cover?.url) coverKey = await saveFoundCover(cover.url).catch(() => undefined)
       else if (cover?.blob) {
@@ -156,7 +158,7 @@ export default function StoryAdd() {
       nav(`/povesti/${id}`, { replace: true })
     } catch (err) {
       setError(`Nu am putut salva povestea: ${(err as Error).message}`)
-      setSaving(false)
+      setSaving(false); setSent(undefined)
     }
   }
 
@@ -321,7 +323,8 @@ export default function StoryAdd() {
               </select>
             </label>
           )}
-          <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? 'Se salvează…' : 'Pune pe raft'}</button>
+          <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? (sent !== undefined && sent < 1 ? `Se încarcă… ${Math.round(sent * 100)}%` : 'Se salvează…') : 'Pune pe raft'}</button>
+          {saving && sent !== undefined && sent < 1 && <progress className="upload-progress" max={1} value={sent} aria-label="Încărcare" />}
           {source !== 'generated' && <p className="rec-hint">Se salvează și pe acest dispozitiv, merge și fără internet.</p>}
         </div>
       )}

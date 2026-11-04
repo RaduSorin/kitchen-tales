@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { listRecipes, listStories } from '../lib/db'
 import type { Recipe, Story } from '../lib/types'
-import { norm } from '../lib/format'
+import { matchesQuery, norm } from '../lib/format'
 import StoryCover from '../components/StoryCover'
 import { RecipeRow } from './RecipeList'
 import { focusField } from '../lib/keyboard'
@@ -25,7 +25,7 @@ export default function Search() {
   const cats = useMemo(() => [...new Set((recipes ?? []).map((r) => r.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ro')), [recipes])
   const words = norm(q.trim()).split(/\s+/).filter(Boolean)
   // Every word must match somewhere, so "pui cartofi" finds dishes with both.
-  const hit = (text: string) => { const t = norm(text); return words.every((w) => t.includes(w)) }
+  const hit = (text: string) => matchesQuery(text, q)
   const foundRecipes = words.length ? (recipes ?? []).filter((r) => hit([r.title, r.category, ...r.ingredients].join(' '))).sort((a, b) => a.title.localeCompare(b.title, 'ro')) : []
   const foundStories = words.length ? stories.filter((s) => hit(s.title)) : []
 

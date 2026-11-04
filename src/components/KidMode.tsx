@@ -73,7 +73,7 @@ export function CheckPinSheet({ title, onClose, onOk }: { title: string; onClose
     <Sheet title={title} onClose={onClose}>
       {forgot ? (
         <div className="pin-forgot">
-          <p>Te deconectăm din cont. După ce te conectezi din nou cu parola, modul copil se oprește și poți alege un PIN nou din Setări.</p>
+          <p>Te deconectăm din cont. După ce te conectezi din nou cu parola, modul copil se oprește și poți alege un PIN nou din Profil.</p>
           <div className="row">
             <button type="button" className="btn primary" onClick={() => { markPinReset(); signOut() }}>Deconectează-mă</button>
             <button type="button" className="btn" onClick={() => setForgot(false)}>Renunță</button>

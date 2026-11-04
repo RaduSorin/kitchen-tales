@@ -237,7 +237,7 @@ export default function StoryAdd() {
                 <small>Povestea e pentru</small>
                 <b>{[known.childName, known.age && `${known.age} ${known.age === 1 ? 'an' : 'ani'}`, known.gender && (known.gender === 'girl' ? 'fetiță' : 'băiețel')].filter(Boolean).join(' · ')}</b>
               </span>
-              <Link to="/setari/povesti">Schimbă în Setări</Link>
+              <Link to="/profil/copil">Schimbă în Profil</Link>
             </div>
           )}
           {!known.childName && (
@@ -263,7 +263,7 @@ export default function StoryAdd() {
             </div>
           )}
           {!(known.childName && known.age && known.gender) && (
-            <p className="rec-hint">Completează în <Link to="/setari/povesti">Setări</Link> prenumele, anul nașterii și dacă e fetiță sau băiețel, ca să nu le mai alegi de fiecare dată.</p>
+            <p className="rec-hint">Completează în <Link to="/profil/copil">Profil</Link> prenumele, anul nașterii și dacă e fetiță sau băiețel, ca să nu le mai alegi de fiecare dată.</p>
           )}
           <div className="night-field">
             <span>Despre ce?</span>

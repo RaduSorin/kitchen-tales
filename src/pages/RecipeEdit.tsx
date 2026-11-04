@@ -258,7 +258,7 @@ export default function RecipeEdit() {
     ) : null}
     <p className="set-hint">
       {kitchenTools.length ? 'Atinge un aparat ca să nu fie folosit la această rețetă. ' : 'Doar aragaz și cuptor. '}
-      <Link to="/setari/retete">{kitchenTools.length ? 'Schimbă lista în Setări' : 'Adaugă aparatele tale în Setări'}</Link>
+      <Link to="/profil/bucatarie">{kitchenTools.length ? 'Schimbă lista în Profil' : 'Adaugă aparatele tale în Profil'}</Link>
     </p>
     </>
   )

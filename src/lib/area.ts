@@ -5,12 +5,11 @@ export type Area = 'day' | 'night'
 
 let lastArea: Area = 'day'
 
-/** Settings belong to the side you opened them from, so the colors and switch don't jump to recipes. */
+/** The Profile belongs to the side you opened it from, so the colors, switch and tab bar don't jump. */
 export function areaOf(pathname: string): Area {
   let area: Area
-  if (pathname.startsWith('/povesti') || pathname === '/setari/povesti') area = 'night'
-  else if (pathname === '/setari/retete') area = 'day'
-  else if (pathname.startsWith('/setari')) area = lastArea
+  if (pathname.startsWith('/povesti')) area = 'night'
+  else if (pathname.startsWith('/profil')) area = lastArea
   else area = 'day'
   lastArea = area
   return area

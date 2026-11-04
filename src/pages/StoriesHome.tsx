@@ -1,3 +1,4 @@
+import { primeKeyboard } from '../lib/keyboard'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listRecipes, listStories } from '../lib/db'
@@ -89,6 +90,9 @@ export default function StoriesHome() {
           <p className="shelf-sub">{evening ? 'E vremea de o poveste.' : 'Ce poveste ascultăm?'}</p>
         </div>
       </div>
+      <Link to="/povesti?cauta=1" className="search-box night-search search-link" onClick={() => primeKeyboard('story-search')}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg><span>Caută o poveste</span>
+      </Link>
 
       {failed && !stories ? <LoadError text="Nu am putut încărca poveștile. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
         : stories === undefined ? <Loading /> : !available.length ? kid ? <p className="empty">Nicio poveste aici încă.</p> : (

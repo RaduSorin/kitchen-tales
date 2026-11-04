@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { NavLink, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CITIES, cityByName, sunTimes } from '../lib/sun'
 import { useAuthenticator } from '@aws-amplify/ui-react'
-import FamilySection from './FamilySection'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
 import { PRESET_TOOLS } from '../lib/kitchenTools'
 import { onOfflineChange, removeAllAudio, savedAudioSummary } from '../lib/offline'
@@ -11,6 +10,14 @@ import { groupFolders } from '../lib/stories'
 import { startKid } from '../lib/kidMode'
 import { CheckPinSheet, NewPinSheet } from '../components/KidMode'
 import Sheet from '../components/Sheet'
+import Avatar from '../components/Avatar'
+import { Members, InviteForm, useFamily } from './FamilySection'
+import { listRecipes, setFolderShared, setRecipeShared } from '../lib/db'
+import { saveMyName, useMyName } from '../lib/me'
+import { myEmail, mySpaceName } from '../lib/space'
+import type { Recipe } from '../lib/types'
+import type { Folder } from '../lib/stories'
+import type { ComponentType, FormEvent } from 'react'
 
 const THEMES: [ThemeChoice, string][] = [['auto', 'Automat'], ['light', 'Luminos'], ['dark', 'Întunecat']]
 const THIS_YEAR = new Date().getFullYear()
@@ -32,7 +39,6 @@ function KitchenTools() {
 
   return (
     <div className="set-group">
-      <h2 className="set-label">Bucătăria mea</h2>
       <div className="set-box">
         <div className="set-row stack">
           <span id="tools-label">Aparate pe care le am</span>
@@ -77,7 +83,6 @@ function OfflineStorage() {
 
   return (
     <div className="set-group">
-      <h2 className="set-label">Fără internet</h2>
       <div className="set-box">
         <div className="set-row">
           <span>Povești salvate pe acest dispozitiv</span>
@@ -111,8 +116,6 @@ function OfflineStorage() {
   )
 }
 
-type Tab = 'povesti' | 'retete' | 'general'
-const TABS: [Tab, string, string][] = [['retete', 'Rețete', '/setari/retete'], ['povesti', 'Povești', '/setari/povesti'], ['general', 'General', '/setari']]
 
 function SkySettings() {
   const { city } = useSettings()
@@ -122,7 +125,6 @@ function SkySettings() {
   const hm = (d: Date) => d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
   return (
     <div className="set-group">
-      <h2 className="set-label">Cerul din povești</h2>
       <div className="set-box">
         <label className="set-row">
           <span>Orașul<small className="set-sub">Răsărit {hm(rise)} · apus {hm(set)}</small></span>
@@ -137,7 +139,7 @@ function SkySettings() {
 }
 
 const KID_TIMES: [number, string][] = [[15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 oră'], [0, 'Fără limită']]
-const Chevron = () => <svg className="set-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+export const Chevron = () => <svg className="set-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
 
 /** Kid mode: the PIN, the time limit, which folders the child sees, and the button that starts it. */
 function KidSettings() {
@@ -225,14 +227,14 @@ function KidSettings() {
   )
 }
 
-function StorySettings() {
+/** The child: name, age, gender and reading (used when creating stories), then kid mode. */
+function ChildSettings() {
   const { child } = useSettings()
   const age = childAge(child)
   return (
     <>
-      <KidSettings />
       <div className="set-group">
-        <h2 className="set-label">Copilul</h2>
+        <h2 className="set-label">Despre copil</h2>
         <div className="set-box">
           <label className="set-row">
             <span>Prenume</span>
@@ -262,61 +264,235 @@ function StorySettings() {
         </div>
         <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează în cont, la fel pe toate dispozitivele familiei.</p>
       </div>
-      <SkySettings />
-      <OfflineStorage />
+      <KidSettings />
     </>
   )
 }
 
-function GeneralSettings() {
+function ThemeSettings() {
   const { theme } = useSettings()
-  const { user, signOut } = useAuthenticator((c) => [c.user])
+  return (
+    <div className="set-group">
+      <div className="set-box">
+        <div className="set-row stack">
+          <span id="theme-label">Temă</span>
+          <div className="seg" role="group" aria-labelledby="theme-label">
+            {THEMES.map(([k, label]) => (
+              <button type="button" key={k} aria-pressed={theme === k} onClick={() => updateSettings({ theme: k })}>{label}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <p className="set-hint">Automat urmează setarea telefonului. Poveștile au mereu culorile cerului.</p>
+    </div>
+  )
+}
+
+/** Everything this space shares with the other accounts, with a switch for each recipe and folder. */
+function SharedSettings() {
+  const [recipes, setRecipes] = useState<Recipe[]>()
+  const [folders, setFolders] = useState<Folder[]>()
+  const [busy, setBusy] = useState<string>()
+  const [error, setError] = useState('')
+  const load = () => Promise.all([listRecipes(), listStories(), listFolders()]).then(([r, s, f]) => {
+    setRecipes(r.filter((x) => x.mine !== false).sort((a, b) => a.title.localeCompare(b.title, 'ro')))
+    setFolders(groupFolders(s.filter((x) => x.mine !== false), f.filter((x) => x.mine !== false)).filter((x) => x.mine))
+  }).catch(() => setError('Nu am putut încărca lista. Verifică internetul.'))
+  useEffect(() => { load() }, [])
+  const run = async (key: string, job: () => Promise<unknown>) => {
+    setBusy(key); setError('')
+    try { await job(); await load() } catch { setError('Nu am putut schimba partajarea. Încearcă din nou.') }
+    setBusy(undefined)
+  }
+  const stories = folders?.flatMap((f) => f.items) ?? []
   return (
     <>
+      <p className="set-hint prof-intro">Ce e partajat vede oricine are cont în aplicație. Cei din spațiul tău văd oricum tot.</p>
       <div className="set-group">
-        <h2 className="set-label">Aspect</h2>
+        <h2 className="set-label">Povești · {stories.filter((x) => x.shared).length} din {stories.length} partajate</h2>
         <div className="set-box">
-          <div className="set-row stack">
-            <span id="theme-label">Temă</span>
-            <div className="seg" role="group" aria-labelledby="theme-label">
-              {THEMES.map(([k, label]) => (
-                <button type="button" key={k} aria-pressed={theme === k} onClick={() => updateSettings({ theme: k })}>{label}</button>
-              ))}
-            </div>
-          </div>
+          {!folders ? <div className="set-row"><span className="muted">Se încarcă…</span></div> : folders.map((f) => (
+            <label className="set-row" key={f.name}>
+              <span>{f.icon ? `${f.icon} ` : ''}{f.name}<small className="set-sub">{f.items.length} {f.items.length === 1 ? 'poveste' : 'povești'}</small></span>
+              <input type="checkbox" className="switch" checked={f.shared} disabled={!!busy} onChange={(e) => run(`f:${f.name}`, () => setFolderShared(f, e.target.checked))} />
+            </label>
+          ))}
         </div>
-        <p className="set-hint">Automat urmează setarea telefonului.</p>
+        <p className="set-hint">Poveștile noi sunt partajate de la început. O poveste anume o partajezi din player.</p>
       </div>
-
-      <FamilySection me={user?.signInDetails?.loginId?.toLowerCase()} />
-
       <div className="set-group">
-        <h2 className="set-label">Cont</h2>
+        <h2 className="set-label">Rețete · {recipes?.filter((x) => x.shared).length ?? 0} din {recipes?.length ?? 0} partajate</h2>
         <div className="set-box">
-          <div className="set-row">
-            <span>{user?.signInDetails?.loginId ?? 'Conectat'}</span>
-            <button type="button" className="btn small" onClick={signOut}>Ieși din cont</button>
-          </div>
+          {!recipes ? <div className="set-row"><span className="muted">Se încarcă…</span></div> : !recipes.length ? <div className="set-row"><span className="muted">Nicio rețetă încă.</span></div> : recipes.map((r) => (
+            <label className="set-row" key={r.id}>
+              <span>{r.title}{r.category ? <small className="set-sub">{r.category}</small> : null}</span>
+              <input type="checkbox" className="switch" checked={!!r.shared} disabled={!!busy} onChange={(e) => run(`r:${r.id}`, () => setRecipeShared(r, e.target.checked))} />
+            </label>
+          ))}
         </div>
+        <p className="set-hint">Rețetele noi rămân doar în spațiul tău până le partajezi.</p>
       </div>
+      {error && <p className="set-hint error" role="alert">{error}</p>}
     </>
   )
 }
 
-export default function Settings() {
-  const { tab: param } = useParams()
-  const tab: Tab = param === 'povesti' || param === 'retete' ? param : 'general'
+function NameSheet({ onClose }: { onClose: () => void }) {
+  const current = useMyName()
+  const [name, setName] = useState(current)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const save = async (e: FormEvent) => {
+    e.preventDefault()
+    setBusy(true); setError('')
+    try { await saveMyName(name); onClose() } catch { setError('Nu am putut salva. Verifică internetul.'); setBusy(false) }
+  }
+  return (
+    <Sheet title="Numele tău" onClose={onClose}>
+      <form className="name-form" onSubmit={save}>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Prenume" aria-label="Numele tău" autoComplete="given-name" maxLength={40} autoFocus />
+        {error && <p className="set-hint error">{error}</p>}
+        <button type="submit" className="btn primary" disabled={busy}>{busy ? 'Se salvează…' : 'Salvează'}</button>
+      </form>
+    </Sheet>
+  )
+}
+
+const P = {
+  child: 'M12 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM6 20c0-3.3 2.7-6 6-6s6 2.7 6 6',
+  users: 'M9 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3 3 0 0 1 0 5.6M18 14.3c1.8.8 3 2.6 3 5.7',
+  mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
+  share: 'M12 3v12M7 8l5-5 5 5M5 13v7h14v-7',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  oven: 'M4 4h16v16H4zM4 9h16M8 6.5h.01M12 6.5h.01M8 13h8v4H8z',
+  moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+  down: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+  lock: 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+}
+
+/** One iOS-style row: colored icon, label (with an optional second line), current value, chevron. */
+function Row({ to, icon, color, label, sub, value }: { to: string; icon: keyof typeof P; color: string; label: string; sub?: string; value?: string }) {
+  return (
+    <Link to={to} className="set-row set-link prof-row">
+      <span className="prof-ic" style={{ background: color }}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P[icon]} /></svg>
+      </span>
+      <span className="prof-l">{label}{sub && <small className="set-sub">{sub}</small>}</span>
+      <span className="set-value">{value}<Chevron /></span>
+    </Link>
+  )
+}
+
+/** "loredana.lehadus@…" -> "Loredana" */
+const nameFromEmail = (email: string) => {
+  const w = email.split('@')[0].split(/[._\-+\d]/).find(Boolean) ?? email
+  return w.charAt(0).toUpperCase() + w.slice(1)
+}
+
+const THEME_LABEL: Record<ThemeChoice, string> = { auto: 'Automat', light: 'Luminos', dark: 'Întunecat' }
+
+/** The Profile tab: who you are, the child, people and sharing, preferences, this phone, sign out. */
+function ProfileHome() {
+  const { theme, child, kid, kitchenTools, city } = useSettings()
+  const { user, signOut } = useAuthenticator((c) => [c.user])
+  const email = user?.signInDetails?.loginId ?? myEmail()
+  const name = useMyName()
+  const { members, admin } = useFamily()
+  const [counts, setCounts] = useState<{ stories: number; recipes: number }>()
+  const [saved, setSaved] = useState<{ count: number; bytes: number }>()
+  const [editName, setEditName] = useState(false)
+  const nav = useNavigate()
+  useEffect(() => {
+    Promise.all([listStories(), listRecipes()]).then(([s, r]) => setCounts({
+      stories: s.filter((x) => x.mine !== false && x.shared).length,
+      recipes: r.filter((x) => x.mine !== false && x.shared).length,
+    })).catch(() => {})
+    const load = () => savedAudioSummary().then(setSaved).catch(() => {})
+    load()
+    return onOfflineChange(load)
+  }, [])
+  const age = childAge(child)
+  const others = members?.filter((m) => m.sameSpace && m.email !== email?.toLowerCase()).map((m) => nameFromEmail(m.email)) ?? []
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+  return (
+    <section className="settings profile">
+      <h1>Profil</h1>
+      <button type="button" className="prof-me" onClick={() => setEditName(true)}>
+        <Avatar size={58} />
+        <span className="prof-me-text">
+          <b>{name || 'Adaugă numele tău'}</b>
+          <small>{email}</small>
+          <span className="prof-chip">{admin && others.length ? `Spațiul tău · cu ${others.join(', ')}` : `Spațiul ${mySpaceName()}`}</span>
+        </span>
+        <Chevron />
+      </button>
+
+      <div className="set-group">
+        <h2 className="set-label">Copilul</h2>
+        <div className="set-box">
+          <Row to="/profil/copil" icon="child" color="#d9638a" label={child.name || 'Adaugă copilul'}
+            sub={[age ? `${age} ${age === 1 ? 'an' : 'ani'}` : '', kid.pinHash ? `modul copil: ${kid.minutes ? `${kid.minutes} min` : 'fără limită'}` : 'modul copil: oprit'].filter(Boolean).join(' · ')} />
+        </div>
+        {kid.pinHash && <button type="button" className="btn primary kid-start" onClick={() => { startKid(kid.minutes); nav('/povesti/acasa') }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P.lock} /></svg>
+          Dă-i telefonul copilului
+        </button>}
+      </div>
+
+      <div className="set-group">
+        <h2 className="set-label">{admin ? 'Familie și partajare' : 'Partajare'}</h2>
+        <div className="set-box">
+          {admin && <Row to="/profil/persoane" icon="users" color="#3e6a51" label="Persoane" value={members ? String(members.length) : ''} />}
+          {admin && <Row to="/profil/invita" icon="mail" color="#3a7fc4" label="Invită pe cineva" />}
+          <Row to="/profil/partajare" icon="share" color="#cf7f2a" label="Ce partajez"
+            value={counts ? `${plural(counts.stories, 'poveste', 'povești')} · ${plural(counts.recipes, 'rețetă', 'rețete')}` : ''} />
+        </div>
+      </div>
+
+      <div className="set-group">
+        <h2 className="set-label">Preferințe</h2>
+        <div className="set-box">
+          <Row to="/profil/aspect" icon="sun" color="#7d8a82" label="Aspect" value={THEME_LABEL[theme]} />
+          <Row to="/profil/bucatarie" icon="oven" color="#c4664a" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
+          <Row to="/profil/cer" icon="moon" color="#3b3290" label="Cerul din povești" value={cityByName(city).name} />
+        </div>
+      </div>
+
+      <div className="set-group">
+        <h2 className="set-label">Pe acest telefon</h2>
+        <div className="set-box">
+          <Row to="/profil/offline" icon="down" color="#2a9d8f" label="Povești fără internet" value={saved ? `${saved.count} · ${fmtSize(saved.bytes)}` : ''} />
+        </div>
+      </div>
+
+      <button type="button" className="prof-out" onClick={signOut}>Ieși din cont</button>
+      {editName && <NameSheet onClose={() => setEditName(false)} />}
+    </section>
+  )
+}
+
+const PAGES: Record<string, [string, ComponentType]> = {
+  copil: ['Copilul', ChildSettings],
+  persoane: ['Persoane', () => <Members me={myEmail()?.toLowerCase()} />],
+  invita: ['Invită pe cineva', InviteForm],
+  partajare: ['Ce partajez', SharedSettings],
+  aspect: ['Aspect', ThemeSettings],
+  bucatarie: ['Bucătăria mea', KitchenTools],
+  cer: ['Cerul din povești', SkySettings],
+  offline: ['Povești fără internet', OfflineStorage],
+}
+
+export default function Profile() {
+  const { page } = useParams()
+  const { child } = useSettings()
+  if (!page) return <ProfileHome />
+  const entry = PAGES[page]
+  if (!entry) return <Navigate to="/profil" replace />
+  const [title, Page] = entry
   return (
     <section className="settings">
-      <h1>Setări</h1>
-      <nav className="seg set-tabs" aria-label="Secțiuni setări">
-        {TABS.map(([k, label, to]) => (
-          <NavLink key={k} to={to} end replace aria-current={tab === k ? 'page' : undefined}>{label}</NavLink>
-        ))}
-      </nav>
-      {tab === 'povesti' && <StorySettings />}
-      {tab === 'retete' && <KitchenTools />}
-      {tab === 'general' && <GeneralSettings />}
+      <h1>{page === 'copil' && child.name ? child.name : title}</h1>
+      <Page />
     </section>
   )
 }

@@ -18,8 +18,8 @@ export default function AreaSwitch() {
     else nav(last.current[side])
   }
   useEffect(() => {
-    // Settings and the story player are not good places to come back to.
-    if (pathname.startsWith('/setari')) return
+    // The Profile and the story player are not good places to come back to.
+    if (pathname.startsWith('/profil')) return
     if (night) { if (pathname.startsWith('/povesti') && !/^\/povesti\/(?!adauga|acasa)[^/]+$/.test(pathname)) last.current.night = pathname + search }
     else last.current.day = pathname + search
   }, [pathname, search, night])

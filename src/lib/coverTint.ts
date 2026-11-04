@@ -4,7 +4,8 @@
 import { useEffect, useState } from 'react'
 import type { Story } from './types'
 import { coverColor } from './stories'
-import { useCoverUrl } from './useCoverUrl'
+import { loadCoverBlob } from './useCoverUrl'
+import { getCover, saveCover } from './offline'
 
 /** spine = the spine colour, ink = the title colour on it, dark = the back cover. */
 export type Tint = { spine: string; ink: string; dark: string }
@@ -107,23 +108,78 @@ function load(url: string) {
   })
 }
 
-/** The cover's picture URL (from the device cache) and the spine colours worked out from it. */
-export function useSpineTint(story: Pick<Story, 'title' | 'coverKey'>) {
-  const key = story.coverKey
-  const url = useCoverUrl(key)
-  const [found, setFound] = useState<{ key: string; tint: Tint }>()
-  useEffect(() => {
-    if (!key || !url || store()[key]) return
-    let live = true
-    load(url).then((img) => {
+// ---------- Small spine pictures ----------
+// A spine shows its cover at about 40 px. Drawing the full cover there for every book of a big
+// folder used up the iPhone's memory (Safari reloaded the page), so each spine gets a 96 px copy,
+// made once from the saved cover, kept on the device, and made a few at a time.
+
+const THUMB = 96
+const thumbs = new Map<string, string>()
+const thumbKey = (key: string) => `${key}#spine`
+let running = 0
+const waiting: (() => void)[] = []
+async function oneAtATime<T>(job: () => Promise<T>): Promise<T> {
+  if (running >= 2) await new Promise<void>((r) => waiting.push(r))
+  running++
+  try { return await job() } finally { running--; waiting.shift()?.() }
+}
+
+function toBlob(canvas: HTMLCanvasElement) {
+  return new Promise<Blob | undefined>((r) => canvas.toBlob((b) => r(b ?? undefined), 'image/jpeg', .82))
+}
+
+/** Makes the spine picture (and the spine colour, if not known yet) from the full cover. */
+async function makeSpineArt(key: string): Promise<string | undefined> {
+  const saved = await getCover(thumbKey(key)).catch(() => undefined)
+  if (saved && store()[key]) return URL.createObjectURL(saved)
+  const blob = await loadCoverBlob(key)
+  if (!blob) return undefined
+  const full = URL.createObjectURL(blob)
+  try {
+    const img = await load(full)
+    if (!store()[key]) {
       const c = dominantColor(img)
-      if (!c || !live) return
-      const tint = tintFrom(c)
-      remember(key, tint)
-      setFound({ key, tint })
-    }).catch(() => {})
+      if (c) remember(key, tintFrom(c))
+    }
+    if (saved) return URL.createObjectURL(saved)
+    // Cropped to a square, like the cover tiles.
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = THUMB
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return undefined
+    const side = Math.min(img.naturalWidth, img.naturalHeight)
+    ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, THUMB, THUMB)
+    const small = await toBlob(canvas)
+    if (!small) return undefined
+    saveCover(thumbKey(key), small).catch(() => {})
+    return URL.createObjectURL(small)
+  } finally {
+    URL.revokeObjectURL(full)
+  }
+}
+
+const pending = new Map<string, Promise<string | undefined>>()
+function spineArt(key: string) {
+  let p = pending.get(key)
+  if (!p) {
+    p = oneAtATime(() => makeSpineArt(key)).then((url) => { if (url) thumbs.set(key, url); return url }).catch(() => undefined)
+    pending.set(key, p)
+    p.finally(() => pending.delete(key))
+  }
+  return p
+}
+
+/** A small picture of the cover for a spine, and the spine colours worked out from the cover. */
+export function useSpineArt(story: Pick<Story, 'title' | 'coverKey'>) {
+  const key = story.coverKey
+  const [found, setFound] = useState<{ key: string; thumb?: string }>()
+  useEffect(() => {
+    if (!key || thumbs.has(key)) return
+    let live = true
+    spineArt(key).then((thumb) => { if (live) setFound({ key, thumb }) })
     return () => { live = false }
-  }, [key, url])
-  const tint = (key && (found?.key === key ? found.tint : store()[key])) || plainTint(story.title)
-  return { url, tint }
+  }, [key])
+  const thumb = key ? thumbs.get(key) ?? (found?.key === key ? found.thumb : undefined) : undefined
+  const tint = (key && store()[key]) || plainTint(story.title)
+  return { thumb, tint }
 }

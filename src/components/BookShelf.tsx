@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from 'react'
 import type { Story } from '../lib/types'
-import { useSpineTint } from '../lib/coverTint'
+import { useSpineArt } from '../lib/coverTint'
+import { useCoverUrl } from '../lib/useCoverUrl'
 import { bookMeta, bookVars, moonDust, nextFrame, primeClick, shelfClick, spineHeight, spineWidth, wait } from '../lib/shelf'
 import { CoverPicture, SpineFace, type BookViewProps } from './Spine'
 
@@ -8,18 +9,18 @@ type Arrival = { id: string; phase: 'zero' | 'room' | 'drop' }
 const GAP = 3
 
 function ShelfSpine({ story, on, width, height, arrival, wob }: { story: Story; on: boolean; width: number; height: number; arrival?: Arrival['phase']; wob?: number }) {
-  const { url, tint } = useSpineTint(story)
+  const { thumb, tint } = useSpineArt(story)
   const cls = `shelf-spine spine-skin${on ? ' on' : ''}${arrival === 'drop' ? ' drop' : ''}${wob ? ' wob' : ''}`
   return (
     <button type="button" className={cls} data-id={story.id} aria-label={story.title} aria-pressed={on}
       style={{ ...bookVars(story, tint), width, height, ['--dir' as string]: wob ?? 0 }}>
-      <SpineFace story={story} url={url} />
+      <SpineFace story={story} url={thumb} />
     </button>
   )
 }
 
 function WindowCover({ story, isNew, onOpen }: { story: Story; isNew: boolean; onOpen: () => void }) {
-  const { url } = useSpineTint(story)
+  const url = useCoverUrl(story.coverKey)
   return (
     <button type="button" className="vit-cover" onClick={onOpen} aria-label={`Ascultă „${story.title}”`}>
       <CoverPicture key={story.id} story={story} url={url} className="vit-pic" />

@@ -11,18 +11,24 @@ export function useCoverUrl(key?: string) {
     setUrl(undefined)
     if (!key) return
     ;(async () => {
-      let blob = await getCover(key).catch(() => undefined)
-      if (!blob) {
-        const res = await fetch(await fileUrl(key))
-        if (!res.ok) return
-        blob = await res.blob()
-        saveCover(key, blob).catch(() => {})
-      }
-      if (!live) return
+      const blob = await loadCoverBlob(key)
+      if (!blob || !live) return
       objectUrl = URL.createObjectURL(blob)
       setUrl(objectUrl)
     })().catch(() => {})
     return () => { live = false; if (objectUrl) URL.revokeObjectURL(objectUrl) }
   }, [key])
   return url
+}
+
+/** The cover picture from the device cache, or downloaded once from S3 and cached. */
+export async function loadCoverBlob(key: string) {
+  let blob = await getCover(key).catch(() => undefined)
+  if (!blob) {
+    const res = await fetch(await fileUrl(key))
+    if (!res.ok) return undefined
+    blob = await res.blob()
+    saveCover(key, blob).catch(() => {})
+  }
+  return blob
 }

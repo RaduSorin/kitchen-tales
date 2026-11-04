@@ -1081,7 +1081,6 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .ff-edge, .ff-top { background: repeating-linear-gradient(90deg, #f3ead0 0 2px, #ddd0ab 2px 3px); }
 .ff-edge { top: 2%; height: 96%; width: var(--d); left: calc(50% - var(--d) / 2); transform: rotateY(90deg) translateZ(calc(var(--w) / 2 - 2px)); }
 .ff-top { left: 2px; width: calc(100% - 4px); height: var(--d); top: calc(50% - var(--d) / 2); transform: rotateX(90deg) translateZ(calc(var(--w) / 2 - 2px)); }
-.ff-front, .ff-spine { -webkit-box-reflect: below 2px linear-gradient(transparent 62%, rgb(255 255 255 / .16)); }
 .flow-book.shine .ff-front::before { content: ""; position: absolute; z-index: 1; inset: -20%; background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / .55) 50%, transparent 60%); animation: flow-shine .9s ease-out; }
 @keyframes flow-shine { from { transform: translateX(-70%); } to { transform: translateX(70%); } }
 .flow-caption { min-height: 58px; padding-top: 8px; text-align: center; }

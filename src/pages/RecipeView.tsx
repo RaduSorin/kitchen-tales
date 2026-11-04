@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { deleteRecipe, getRecipe } from '../lib/db'
+import { deleteRecipe, getRecipe, setRecipeShared } from '../lib/db'
+import ShareIcon from '../components/ShareIcon'
+import { showToast } from '../lib/toast'
 import type { Recipe } from '../lib/types'
 import { keepPhotos, useFileUrl } from '../lib/useFileUrl'
 import { isHeading, scaleIngredient } from '../lib/scale'
@@ -51,6 +53,16 @@ export default function RecipeView() {
   const [failed, setFailed] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const [sharing, setSharing] = useState(false)
+  const share = async (x: Recipe, shared: boolean) => {
+    setSharing(true); setDeleteError('')
+    try {
+      await setRecipeShared(x, shared)
+      setR({ ...x, shared })
+      showToast(shared ? 'Rețeta e partajată cu toate conturile' : 'Rețeta e acum doar în spațiul nostru')
+    } catch { setDeleteError('Nu am putut schimba partajarea. Încearcă din nou.') }
+    setSharing(false)
+  }
   const online = useOnline()
   // After deleting, step back to where the recipe was opened from rather than adding a page on
   // top (Back would then lead to the deleted recipe).
@@ -101,6 +113,9 @@ export default function RecipeView() {
         <div className="pills">
           {r.minutes ? <span className="pill">{formatMinutes(r.minutes)}</span> : null}
           {r.category && <span className="pill">{r.category}</span>}
+          {r.mine === false
+            ? <span className="pill">De la {r.spaceName ?? 'alt cont'}</span>
+            : r.shared && <span className="pill pill-shared"><ShareIcon shared size={14} /> Partajată</span>}
         </div>
 
         {r.steps.length > 0 && (() => {
@@ -181,6 +196,15 @@ export default function RecipeView() {
       {menu && (
         <Sheet title="Rețeta" onClose={() => { setMenu(false); setConfirming(false); setDeleteError('') }}>
           <div className="menu-list">
+            {r.mine === false ? (
+              <p className="share-note">De la {r.spaceName ?? 'alt cont'}. O poți găti, planifica și pune pe listă, dar nu o poți modifica.</p>
+            ) : <>
+            {online && (
+              <button type="button" className="btn share-toggle" aria-pressed={!!r.shared} disabled={sharing} onClick={() => share(r, !r.shared)}>
+                <ShareIcon shared={!!r.shared} size={18} />
+                {sharing ? 'Se salvează…' : r.shared ? 'Partajată cu toate conturile' : 'Doar în spațiul nostru'}
+              </button>
+            )}
             <Link to={`/retete/${r.id}/editeaza`} className="btn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /></svg>
               Editează rețeta
@@ -200,6 +224,8 @@ export default function RecipeView() {
                 Șterge rețeta
               </button>
             )}
+            {!confirming && deleteError && <p className="error" role="alert">{deleteError}</p>}
+            </>}
           </div>
         </Sheet>
       )}

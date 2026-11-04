@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { cachedFolders, createFolder, deleteFolder, downloadStory, listFolders, listStories, saveFolder } from '../lib/db'
+import { cachedFolders, createFolder, deleteFolder, downloadStory, listFolders, listStories, saveFolder, setFolderShared } from '../lib/db'
 import type { Story, StoryFolder } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
@@ -8,6 +8,7 @@ import { builtinFolderOf, fmtTime, getLastStoryId, getPosition, groupFolders, SO
 import FolderSheet from '../components/FolderSheet'
 import { showToast } from '../lib/toast'
 import StoryCover from '../components/StoryCover'
+import ShareIcon from '../components/ShareIcon'
 import { focusField } from '../lib/keyboard'
 import { useKid } from '../lib/kidMode'
 
@@ -76,6 +77,18 @@ export default function StoryList() {
     setProgress(undefined)
   }
 
+  const [sharing, setSharing] = useState(false)
+  const shareFolder = async (shared: boolean) => {
+    if (!open) return
+    setSharing(true); setError('')
+    try {
+      await setFolderShared(open, shared)
+      await reload()
+      showToast(shared ? 'Folderul e partajat cu toate conturile' : 'Folderul e acum doar în spațiul nostru')
+    } catch { setError('Nu am putut schimba partajarea. Încearcă din nou.') }
+    setSharing(false)
+  }
+
   const downloadOne = async (s: Story) => {
     setError('')
     setSaving((prev) => new Set(prev).add(s.id))
@@ -101,7 +114,7 @@ export default function StoryList() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
             </button>
             <h1>{open.icon && <span className="folder-icon" aria-hidden="true">{open.icon} </span>}{open.name}</h1>
-            {parent && !open.builtin && (
+            {parent && !open.builtin && open.mine && (
               <button type="button" className="night-btn folder-more" aria-label={`Editează folderul ${open.name}`} onClick={() => setEditing('open')}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
               </button>
@@ -114,8 +127,16 @@ export default function StoryList() {
         {!favMode && (inFolder ? open.items.length : available.length) > 0 && (
           <span className="shelf-count">{count(inFolder ? open.items.length : available.length)}</span>
         )}
-        {parent && <Link to={inFolder && !open.builtin ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
+        {parent && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
+      {parent && inFolder && !favMode && (open.mine ? online && open.items.length > 0 && (
+        <button type="button" className="share-chip" aria-pressed={open.shared} disabled={sharing} onClick={() => shareFolder(!open.shared)}>
+          <ShareIcon shared={open.shared} />
+          {sharing ? 'Se salvează…' : open.shared ? 'Partajat cu toate conturile' : 'Doar în spațiul nostru'}
+        </button>
+      ) : (
+        <p className="share-note">De la {open.items[0]?.spaceName ?? open.row?.spaceName ?? 'alt cont'}, doar ascultare</p>
+      ))}
 
       {available.length > 0 && !favMode && (
         <label className="search-box night-search">
@@ -187,6 +208,7 @@ export default function StoryList() {
                 <StoryCover story={s} />
                 <span className="cover-title">{s.title}</span>
                 <small className="cover-meta">
+                  {s.mine && !s.shared && <span className="private-mark" title="Doar în spațiul nostru" aria-label="Doar în spațiul nostru">🔒 </span>}
                   {!s.collection && <><i style={{ background: SOURCE_COLOR[s.source] }} />{SOURCE_LABEL[s.source]}</>}
                   {s.durationSec ? `${s.collection ? '' : ' · '}${Math.max(1, Math.round(s.durationSec / 60))} min` : ''}
                 </small>

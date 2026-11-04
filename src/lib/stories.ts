@@ -14,24 +14,30 @@ export const SOURCE_COLOR: Record<StorySource, string> = { recording: '#74e0d0',
 
 // Shelf folder: the story's collection, otherwise how it was made.
 const SOURCE_FOLDER: Record<StorySource, string> = { generated: 'Povești create de noi', recording: 'Vocea noastră', upload: 'Fișierele mele' }
-export const folderOf = (s: Story) => s.collection || SOURCE_FOLDER[s.source]
+// A story another space shared sits in that space's folder, named so it never clashes with ours.
+export const receivedFolderName = (collection: string | undefined, spaceName: string | undefined) =>
+  collection ? `${collection} · ${spaceName || 'alt cont'}` : `Primite de la ${spaceName || 'alt cont'}`
+export const folderOf = (s: Story) => s.mine === false ? receivedFolderName(s.collection, s.spaceName) : s.collection || SOURCE_FOLDER[s.source]
 
 /** The three folders every story falls into by how it was made; they cannot be renamed or deleted. */
 export const isBuiltinFolder = (name: string) => Object.values(SOURCE_FOLDER).includes(name)
 export const builtinFolderOf = (s: Pick<Story, 'source'>) => SOURCE_FOLDER[s.source]
 
-export type Folder = { name: string; items: Story[]; icon?: string; row?: StoryFolder; builtin: boolean }
+/** `mine` is false for a folder another space shared; `shared` = every story in it is shared. */
+export type Folder = { name: string; items: Story[]; icon?: string; row?: StoryFolder; builtin: boolean; mine: boolean; shared: boolean }
 
-// Folders in shelf order (collections and our own folders first, alphabetically, then the built-in ones),
-// each with its stories. `rows` adds the family's own folders, even while they are still empty.
+// Folders in shelf order (collections and our own folders first, alphabetically, then the built-in ones,
+// then what other spaces shared), each with its stories. `rows` adds folders even while they are empty.
 export function groupFolders(stories: Story[], rows: StoryFolder[] = []): Folder[] {
   const map = new Map<string, Story[]>()
   for (const r of rows) map.set(r.name, [])
   for (const s of stories) map.set(folderOf(s), [...(map.get(folderOf(s)) ?? []), s])
   return [...map].map(([name, items]) => {
     const row = rows.find((r) => r.name === name)
-    return { name, items, icon: row?.icon, row, builtin: isBuiltinFolder(name) }
-  }).sort((a, b) => Number(a.builtin) - Number(b.builtin) || a.name.localeCompare(b.name, 'ro'))
+    const mine = row ? row.mine !== false : items.every((s) => s.mine !== false)
+    const shared = items.length ? items.every((s) => s.shared) : !!row?.shared
+    return { name, items, icon: row?.icon, row, builtin: mine && isBuiltinFolder(name), mine, shared }
+  }).sort((a, b) => Number(!a.mine) - Number(!b.mine) || Number(a.builtin) - Number(b.builtin) || a.name.localeCompare(b.name, 'ro'))
 }
 
 const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim()

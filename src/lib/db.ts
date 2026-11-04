@@ -8,8 +8,8 @@ import type { SharedSettings } from './settings'
 import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, removePhoto, saveAudio } from './offline'
 import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
-import { folderOf } from './stories'
-import { isMine, isShared, mySpaceGroup, readerGroupsFor, spaceReady } from './space'
+import { folderOf, receivedFolderName, type Folder } from './stories'
+import { isMine, isShared, mySpaceGroup, mySpaceName, readerGroupsFor, rememberSpaceName, spaceReady } from './space'
 
 const client = generateClient<Schema>()
 
@@ -134,7 +134,7 @@ export async function saveRecipe(r: Recipe, isNew: boolean) {
     stepPhotoKeys: fields.stepPhotoKeys?.some(Boolean) ? fields.stepPhotoKeys : null }
   // A new recipe starts private to its space.
   const res = isNew
-    ? await client.models.Recipe.create({ ...input, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(!!shared) })
+    ? await client.models.Recipe.create({ ...input, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(!!shared), spaceName: mySpaceName() })
     : await client.models.Recipe.update(input)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
 }
@@ -148,6 +148,13 @@ export async function deleteRecipe(r: Recipe) {
 
 export { removeFile }
 
+/** Shares a recipe with every account, or makes it private to our space again. */
+export async function setRecipeShared(r: Recipe, shared: boolean) {
+  errorsOf(await client.models.Recipe.update({ id: r.id, readerGroups: readerGroupsFor(shared), spaceName: mySpaceName() }))
+  const cached = await cachedList('recipes').catch(() => undefined)
+  if (cached) await cacheList('recipes', cached.map((x) => (x.id === r.id ? { ...x, shared } : x))).catch(() => {})
+}
+
 // ---- stories ----
 
 /** Every story, newest first (in kid mode only the folders the child may see). */
@@ -158,8 +165,13 @@ export async function listStories() {
 async function listAllStories() {
   try {
     const listedAt = Date.now()
-    const rows = await listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 }))
-    const list = rows.map(toStory).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+    const [rows, favs] = await Promise.all([
+      listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 })),
+      listAll((nextToken) => client.models.StoryFavorite.list({ nextToken, limit: 500 })),
+    ])
+    // Stories another space shared: our favourites of them are kept in our own space.
+    const favIds = new Set(favs.map((f) => f.storyId))
+    const list = rows.map(toStory).map((s) => (s.mine ? s : { ...s, favorite: favIds.has(s.id) })).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
     cacheList('stories', list).catch(() => {})
     // Free the space of stories deleted elsewhere; their audio would otherwise stay here forever.
     pruneAudio(new Set(list.map((s) => s.id)), listedAt).catch(() => {})
@@ -174,7 +186,8 @@ async function listAllStories() {
 export async function getStory(id: string) {
   try {
     const { data } = await client.models.Story.get({ id })
-    const s = data ? toStory(data) : undefined
+    let s = data ? toStory(data) : undefined
+    if (s && !s.mine) s = { ...s, favorite: !!(await client.models.StoryFavorite.get({ id: `${await mySpaceGroup()}:${s.id}` })).data }
     return s && kidAllowsFolder(folderOf(s)) ? s : undefined
   } catch (err) {
     const hit = (await cachedList('stories'))?.find((s) => s.id === id)
@@ -194,9 +207,12 @@ export { getAudio as getOfflineAudio, removeAudio as removeOfflineAudio }
 
 export async function createStory(story: Omit<Story, 'id' | 'createdAt'>) {
   const { mine: _m, shared, spaceName: _n, ...s } = story
-  // A new story starts shared with every account, unless asked otherwise.
-  const share = shared ?? true
-  const res = await client.models.Story.create({ ...s, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(share), sharedDirect: share })
+  // A new story starts shared with every account, unless asked otherwise or its folder is private.
+  const folder = s.collection ? cachedFolders().find((f) => f.mine !== false && f.name === s.collection) : undefined
+  const share = shared ?? folder?.shared ?? true
+  const res = await client.models.Story.create({
+    ...s, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(share), sharedDirect: share, spaceName: mySpaceName(),
+  })
   if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') ?? 'Eroare la salvare')
   return res.data.id
 }
@@ -226,10 +242,14 @@ const cacheFolders = (list: StoryFolder[]) => { try { localStorage.setItem(FOLDE
 export async function listFolders(): Promise<StoryFolder[]> {
   try {
     const rows = await listAll((nextToken) => client.models.StoryFolder.list({ nextToken, limit: 200 }))
-    const list = rows.map((r) => ({
-      id: r.id, name: r.name, icon: r.icon ?? undefined,
-      mine: isMine(r.spaceGroups), shared: isShared(r.readerGroups), spaceName: r.spaceName ?? undefined,
-    }))
+    // Another space's folder is shown under a name of its own (see receivedFolderName).
+    const list = rows.map((r) => {
+      const mine = isMine(r.spaceGroups)
+      return {
+        id: r.id, name: mine ? r.name : receivedFolderName(r.name, r.spaceName ?? undefined), icon: r.icon ?? undefined,
+        mine, shared: isShared(r.readerGroups), spaceName: r.spaceName ?? undefined,
+      }
+    })
     cacheFolders(list)
     return kidFolderRows(list)
   } catch {
@@ -243,18 +263,52 @@ async function patchCachedStories(change: (s: Story) => Story) {
   if (cached) await cacheList('stories', cached.map(change)).catch(() => {})
 }
 
-/** Puts a story in a folder (by name), or back in its own folder by how it was made (null). */
+/**
+ * Puts a story in a folder (by name), or back in its own folder by how it was made (null).
+ * A story moved into one of our folders takes that folder's sharing.
+ */
 export async function moveStory(s: Story, collection: string | null) {
-  errorsOf(await client.models.Story.update({ id: s.id, collection }))
-  await patchCachedStories((x) => (x.id === s.id ? { ...x, collection: collection ?? undefined } : x))
+  const folder = collection ? cachedFolders().find((f) => f.mine !== false && f.name === collection) : undefined
+  const shared = folder?.shared ?? s.shared
+  errorsOf(await client.models.Story.update({
+    id: s.id, collection, ...(folder ? { readerGroups: readerGroupsFor(!!shared), sharedDirect: !!shared, spaceName: mySpaceName() } : {}),
+  }))
+  await patchCachedStories((x) => (x.id === s.id ? { ...x, collection: collection ?? undefined, shared } : x))
+  return { shared }
+}
+
+/** Shares one story with every account, or makes it private to our space again. */
+export async function setStoryShared(s: Story, shared: boolean) {
+  errorsOf(await client.models.Story.update({ id: s.id, readerGroups: readerGroupsFor(shared), sharedDirect: shared, spaceName: mySpaceName() }))
+  await patchCachedStories((x) => (x.id === s.id ? { ...x, shared } : x))
+}
+
+/** Shares a whole folder (and every story in it) with every account, or makes it all private. */
+export async function setFolderShared(folder: Folder, shared: boolean) {
+  const readerGroups = readerGroupsFor(shared)
+  const spaceName = mySpaceName()
+  const ids = new Set(folder.items.filter((s) => s.mine !== false).map((s) => s.id))
+  await Promise.all([...ids].map(async (id) => errorsOf(await client.models.Story.update({ id, readerGroups, sharedDirect: shared, spaceName }))))
+  if (folder.row) {
+    errorsOf(await client.models.StoryFolder.update({ id: folder.row.id, readerGroups, spaceName }))
+    cacheFolders(cachedFolders().map((f) => (f.id === folder.row!.id ? { ...f, shared } : f)))
+  } else if (!folder.builtin) {
+    // A folder that only existed through its stories (a bought collection) gets a row, so it keeps its sharing.
+    const res = await client.models.StoryFolder.create({ name: folder.name, spaceGroups: [await mySpaceGroup()], readerGroups, spaceName })
+    errorsOf(res)
+    if (res.data) cacheFolders([...cachedFolders(), { id: res.data.id, name: folder.name, mine: true, shared }])
+  }
+  await patchCachedStories((x) => (ids.has(x.id) ? { ...x, shared } : x))
 }
 
 export async function createFolder(name: string, icon?: string) {
   // Like stories, a new folder starts shared.
-  const res = await client.models.StoryFolder.create({ name, icon: icon ?? null, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(true) })
+  const res = await client.models.StoryFolder.create({
+    name, icon: icon ?? null, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(true), spaceName: mySpaceName(),
+  })
   errorsOf(res)
   if (!res.data) throw new Error('Nu am putut crea folderul.')
-  cacheFolders([...cachedFolders(), { id: res.data.id, name, icon }])
+  cacheFolders([...cachedFolders(), { id: res.data.id, name, icon, mine: true, shared: true }])
   return res.data.id
 }
 
@@ -363,10 +417,23 @@ export async function saveFoundCover(url: string) {
   return res.data
 }
 
-/** Marks or unmarks a favourite story; also updates the offline copy of the list. */
+/**
+ * Marks or unmarks a favourite story; also updates the offline copy of the list. A story another
+ * space shared is marked in our own space (StoryFavorite), since we cannot change their row.
+ */
 export async function setStoryFavorite(s: Story, favorite: boolean) {
-  const res = await client.models.Story.update({ id: s.id, favorite })
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (s.mine === false) {
+    const space = await mySpaceGroup()
+    const id = `${space}:${s.id}`
+    if (favorite) {
+      const res = await client.models.StoryFavorite.create({ id, storyId: s.id, spaceGroups: [space] })
+      // Already there (marked on another device) is fine.
+      if (res.errors?.length && !res.errors.some((e) => /conditional/i.test(e.message))) errorsOf(res)
+    } else errorsOf(await client.models.StoryFavorite.delete({ id }))
+  } else {
+    const res = await client.models.Story.update({ id: s.id, favorite })
+    if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  }
   const cached = await cachedList('stories').catch(() => undefined)
   if (cached) await cacheList('stories', cached.map((x) => (x.id === s.id ? { ...x, favorite } : x))).catch(() => {})
 }
@@ -440,6 +507,7 @@ export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' 
   check(res)
   const r = res.data
   if (!r) return null
+  rememberSpaceName(r.spaceName)
   return {
     child: {
       name: r.childName ?? '',
@@ -473,6 +541,7 @@ export async function saveFamilySettings(s: SharedSettings) {
     kidPinSalt: s.kid.pinSalt ?? null,
     kidMinutes: s.kid.minutes,
     kidFolders: s.kid.folders,
+    spaceName: mySpaceName(),
   }
   const res = await client.models.FamilySettings.update(row)
   // Not there yet (first save): create it instead.

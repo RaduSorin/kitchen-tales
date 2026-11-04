@@ -4,7 +4,7 @@ import { fetchAuthSession } from 'aws-amplify/auth'
 import { ADMINS, EVERYONE, spaceOf } from '../../amplify/shared/spaces'
 import { cacheList } from './offline'
 
-type Info = { user: string; space?: string; admin: boolean }
+type Info = { user: string; space?: string; admin: boolean; email?: string; name?: string }
 
 const KEY = 'kt-space'
 // Device copies that belong to whoever was signed in; cleared when another account signs in here.
@@ -19,7 +19,8 @@ async function readToken(forceRefresh: boolean): Promise<Info | undefined> {
   const p = tokens?.accessToken.payload
   if (!p?.sub) return undefined
   const groups = (p['cognito:groups'] as string[] | undefined) ?? []
-  return { user: String(p.sub), space: spaceOf(groups), admin: groups.includes(ADMINS) }
+  const email = tokens?.idToken?.payload.email
+  return { user: String(p.sub), space: spaceOf(groups), admin: groups.includes(ADMINS), email: typeof email === 'string' ? email : undefined }
 }
 
 /** A different account signed in on this device: drop the previous account's lists. */
@@ -37,7 +38,7 @@ async function load(): Promise<Info | undefined> {
     if (next && !next.space) next = (await readToken(true).catch(() => undefined)) ?? next
     if (next) {
       if (info && info.user !== next.user) await forgetPreviousAccount()
-      info = next
+      info = { ...next, name: info?.user === next.user ? info.name : undefined }
       try { localStorage.setItem(KEY, JSON.stringify(info)) } catch { /* storage unavailable */ }
     }
   } catch { /* offline: keep what this device knew */ }
@@ -62,6 +63,22 @@ export const isMine = (spaceGroups?: (string | null)[] | null) => !!info?.space 
 export const isShared = (readerGroups?: (string | null)[] | null) => !!readerGroups?.includes(EVERYONE)
 
 export const readerGroupsFor = (shared: boolean) => (shared ? [EVERYONE] : [])
+
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(info)) } catch { /* storage unavailable */ } }
+
+/** The name other spaces see on what this space shares: the space's saved name, else from the email. */
+export function mySpaceName() {
+  if (info?.name) return info.name
+  const local = info?.email?.split('@')[0].split(/[._\-+\d]/).find(Boolean)
+  return local ? local[0].toUpperCase() + local.slice(1) : 'Alt cont'
+}
+
+/** Remembers the space's name, as read from its settings row. */
+export function rememberSpaceName(name: string | null | undefined) {
+  if (!info || !name || info.name === name) return
+  info = { ...info, name }
+  save()
+}
 
 /** Admins (Sorin) see the accounts and send invitations. */
 export const isAdmin = () => !!info?.admin

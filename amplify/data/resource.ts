@@ -67,6 +67,15 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.groupsDefinedIn('spaceGroups'), allow.groupsDefinedIn('readerGroups').to(['read'])]),
 
+  // A favourite story of a space, for a story another space shared (its own stories use
+  // Story.favorite). id = `<space group>:<story id>`, so it can be removed without a lookup.
+  StoryFavorite: a
+    .model({
+      storyId: a.string().required(),
+      spaceGroups: a.string().array(),
+    })
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
+
   // A recipe planned for a day in "Săptămâna mea". `day` is a local date, YYYY-MM-DD.
   MealPlanEntry: a
     .model({
@@ -104,6 +113,8 @@ const schema = a.schema({
       kidPinSalt: a.string(),
       kidMinutes: a.integer(),
       kidFolders: a.string().array(),
+      // The name other spaces see on what this space shares ("De la Sorin").
+      spaceName: a.string(),
       spaceGroups: a.string().array(),
     })
     .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),

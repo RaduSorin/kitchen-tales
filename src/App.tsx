@@ -6,7 +6,7 @@ import ToastHost from './components/ToastHost'
 import LeaveConfirm from './components/LeaveConfirm'
 import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
-import { applyTheme, setStatusBarColor } from './lib/settings'
+import { applyTheme, setStatusBarColor, useSettings } from './lib/settings'
 import { useSettingsSync } from './lib/settingsSync'
 import { useSkyPhase } from './lib/sky'
 import { SKY_TOP } from './lib/sun'
@@ -17,12 +17,11 @@ import RecipeEdit from './pages/RecipeEdit'
 import StoryList from './pages/StoryList'
 import StoryPlayer from './pages/StoryPlayer'
 import StoryAdd from './pages/StoryAdd'
-import Profile from './pages/Profile'
-import Avatar from './components/Avatar'
+import Profile, { profileTitle } from './pages/Profile'
 import CookMode from './pages/CookMode'
 import MiniPlayer from './components/MiniPlayer'
 import { NowPlayingProvider } from './lib/nowPlaying'
-import TabBar from './components/TabBar'
+import TabBar, { PROFILE } from './components/TabBar'
 import AreaSwitch from './components/AreaSwitch'
 import { isPlayerPage, useArea } from './lib/area'
 import Search from './pages/Search'
@@ -94,6 +93,9 @@ function Shell() {
   const online = useOnline()
   const { pathname } = useLocation()
   const back = backFallback(pathname)
+  // The Profile is the same on both sides: its title replaces the Rețete / Povești switch.
+  const profile = pathname.startsWith('/profil')
+  const childName = useSettings().child.name
   const player = isPlayerPage(pathname)
   const header = useRef<HTMLElement>(null)
   const kid = useKid().active
@@ -121,8 +123,9 @@ function Shell() {
     <>
       <NightArea />
       {!player && <div className="status-fill" aria-hidden="true" />}
-      {!player && <header className="topbar" ref={header}>
-        {back && !kid ? <BackButton to={back} /> : kid
+      {!player && <header className={profile ? 'topbar topbar-profile' : 'topbar'} ref={header}>
+        {profile && <div className="topbar-title" aria-hidden="true">{profileTitle(pathname, childName)}</div>}
+        {back && !kid ? <BackButton to={back} /> : profile ? <span /> : kid
           // Stories-only mode: nothing in the top bar points to the kitchen side, not even the name.
           ? <Link to="/povesti/acasa" className={home ? 'brand' : 'brand brand-sub'}><span>Povești</span></Link>
           : <Link to="/" className={home ? 'brand' : 'brand brand-sub'}><span>Bucătăria</span> <span>cu povești</span></Link>}
@@ -132,9 +135,11 @@ function Shell() {
           <NavLink to="/saptamana" className="wide-only day-only">Săptămâna</NavLink>
           <NavLink to="/cumparaturi" className="wide-only day-only">Cumpărături</NavLink>
           {kid ? <KidLockButton /> : <>
-          <AreaSwitch />
+          {!profile && <AreaSwitch />}
           {/* On phones the Profile is the last tab; wide screens have no tab bar, so it sits here. */}
-          <NavLink to="/profil" className="icon-link profile-link wide-only" aria-label="Profil și setări" title="Profil"><Avatar size={30} /></NavLink>
+          <NavLink to="/profil" className="icon-link profile-link wide-only" aria-label="Profil și setări" title="Profil">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={PROFILE} /></svg>
+          </NavLink>
           </>}
         </nav>
       </header>}

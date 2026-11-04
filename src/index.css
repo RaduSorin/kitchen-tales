@@ -995,8 +995,6 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .avatar { display: grid; place-items: center; flex: none; border-radius: 50%; background: linear-gradient(135deg, #e7a26b, #c4664a); color: #fff;
   font-family: var(--f-body); font-weight: 800; line-height: 1; letter-spacing: 0; }
 /* In the tab bar the selected tab's bubble is enough: no extra ring on the avatar. */
-.icon-link.profile-link.active { background: none; }
-.icon-link.profile-link.active .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
 .prof-me { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; border: 0; border-radius: 16px; background: var(--surface);
   color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .prof-me-text { flex: 1; min-width: 0; display: grid; gap: 1px; }
@@ -1167,3 +1165,10 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
   .flow-book, .shelf-track, .shelf-spine { transition-duration: .01s !important; }
   .shelf-spine.drop, .shelf-spine.wob, .pop-in, .vit-pic, .moon-dust, .flow-book.shine .ff-front::before { animation: none !important; }
 }
+
+/* Profile: the page title sits in the middle of the top bar, iOS style, instead of the switch. */
+.topbar-profile { min-height: calc(var(--topbar-min, 64px) + env(safe-area-inset-top) + min(env(safe-area-inset-top, 0px), 14px)); }
+.topbar-title { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 200px);
+  display: flex; align-items: center; min-height: 44px; font-family: var(--f-display); font-size: 1.25rem; line-height: 1.1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); pointer-events: none; }
+:root[data-area="night"] .topbar-title { font-family: var(--f-kids); font-weight: 800; }

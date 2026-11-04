@@ -63,6 +63,19 @@ export function useFolderViews() {
   return useSyncExternalStore((l) => { viewListeners.add(l); return () => { viewListeners.delete(l) } }, () => version)
 }
 
+// ---------- The book last chosen in each folder (this device only) ----------
+// Opening a story leaves the folder page, so the chosen book is kept here: back in the folder, the
+// shelf and Cover Flow start from the book you opened or last looked at, not from the last one played.
+
+const PICKS = 'kt-folder-picks'
+let picks: Record<string, string> = readJson(PICKS) ?? {}
+export const shelfPick = (folder: string): string | undefined => picks[folder]
+export function rememberShelfPick(folder: string, id: string) {
+  if (picks[folder] === id) return
+  picks = { ...picks, [folder]: id }
+  writeJson(PICKS, picks)
+}
+
 // ---------- Phone turned sideways ----------
 
 // Phones only: a tablet on its side still has room for the usual layout.
@@ -93,11 +106,14 @@ export const newLabel = (n: number) => `${n} ${n === 1 ? 'nouă' : 'noi'}`
 
 // ---------- Book sizes ----------
 
-/** A spine is thicker for a longer story (about 28 to 50 px); 36 px when the length is unknown. */
+/**
+ * A spine is thicker for a longer story: 22 px up to 3 minutes, then 2.5 px more per minute, up to
+ * 52 px from 15 minutes (so 6, 7 and 8 minutes are 30, 32 and 35 px); 36 px when the length is unknown.
+ */
 export function spineWidth(s: Pick<Story, 'durationSec'>) {
   if (!s.durationSec) return 36
-  const min = Math.min(20, Math.max(5, s.durationSec / 60))
-  return Math.round(28 + (min - 5) / 15 * 22)
+  const min = Math.min(15, Math.max(3, s.durationSec / 60))
+  return Math.round(22 + (min - 3) * 2.5)
 }
 
 /** Books on a shelf are not all the same height: 86–100% of the shelf's book height. */
@@ -122,32 +138,42 @@ export function bookMeta(story: Story) {
 
 // ---------- The click and a short buzz when the chosen book changes ----------
 
+const canVibrate = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function'
+
 /**
- * A tiny buzz. Android has navigator.vibrate. Safari on iPhone does not, but since iOS 18 its
- * native switch (<input type="checkbox" switch>) gives a haptic tick each time it flips, so we
- * flip a hidden one. Older iPhones and desktops simply feel nothing.
+ * A haptic tick on iPhone. Safari has no navigator.vibrate, but since iOS 18 its native switch
+ * (<input type="checkbox" switch>) ticks each time it flips, so a hidden one is made and flipped
+ * (the way the ios-haptics library does it). iOS only allows it while handling the end of a touch
+ * or a click, so it does nothing while a finger slides; older iPhones feel nothing at all.
  */
-let hapticSwitch: HTMLLabelElement | undefined
-function buzz() {
-  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    try { navigator.vibrate(6) } catch { /* not allowed right now */ }
-    return
-  }
+function iphoneTick() {
   try {
-    if (!hapticSwitch) {
-      const label = document.createElement('label')
-      label.setAttribute('aria-hidden', 'true')
-      label.style.display = 'none'
-      const input = document.createElement('input')
-      input.type = 'checkbox'
-      input.tabIndex = -1
-      input.setAttribute('switch', '')
-      label.append(input)
-      document.body.append(label)
-      hapticSwitch = label
-    }
-    hapticSwitch.click()
+    const label = document.createElement('label')
+    label.setAttribute('aria-hidden', 'true')
+    label.style.display = 'none'
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.setAttribute('switch', '')
+    label.append(input)
+    document.head.append(label)
+    label.click()
+    label.remove()
   } catch { /* no DOM */ }
+}
+
+/** A tiny buzz: navigator.vibrate on Android, the switch trick on iPhone. */
+function buzz(ms = 10) {
+  if (!canVibrate) { iphoneTick(); return }
+  try { navigator.vibrate(ms) } catch { /* not allowed right now */ }
+}
+
+/**
+ * For the end of a touch on the shelves: a tap that chose a book already did so when the finger
+ * went down, and a slide chose books while it moved, but iOS only lets the page tick now. Android
+ * already buzzed for each book, so this is for iPhone only.
+ */
+export function touchEndTick() {
+  if (getSettings().shelfClick && !canVibrate) iphoneTick()
 }
 
 let audio: AudioContext | undefined
@@ -159,9 +185,13 @@ export function primeClick() {
     if (audio.state === 'suspended') audio.resume().catch(() => {})
   } catch { /* no Web Audio */ }
 }
-export function shelfClick() {
+/** The chosen book changed. `untilLift`: a finger is still down, so iPhone ticks when it is lifted instead. */
+export function shelfClick(untilLift = false) {
   if (!getSettings().shelfClick) return
-  buzz()
+  if (canVibrate || !untilLift) buzz()
+  playClick()
+}
+function playClick() {
   try {
     audio ??= new AudioContext()
     if (audio.state !== 'running') return
@@ -174,6 +204,16 @@ export function shelfClick() {
     osc.start(t)
     osc.stop(t + .06)
   } catch { /* no Web Audio */ }
+}
+
+/** The "Încearcă" button in the settings: a buzz and a click, whatever the setting says. */
+export async function tryShelfClick() {
+  buzz(30)
+  try {
+    audio ??= new AudioContext()
+    if (audio.state === 'suspended') await audio.resume()
+  } catch { /* no Web Audio */ }
+  playClick()
 }
 
 // ---------- Little helpers for the arrival animations ----------

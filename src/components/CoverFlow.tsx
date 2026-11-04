@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import type { Story } from '../lib/types'
 import { useSpineArt } from '../lib/coverTint'
 import { useCoverUrl } from '../lib/useCoverUrl'
-import { bookMeta, bookVars, moonDust, nextFrame, primeClick, shelfClick, spineWidth, wait } from '../lib/shelf'
+import { bookMeta, bookVars, moonDust, nextFrame, primeClick, shelfClick, spineWidth, touchEndTick, wait } from '../lib/shelf'
 import { CoverPicture, SpineFace, type BookViewProps } from './Spine'
 
 type Arrival = { id: string; phase: 'enter' | 'float' | 'slot' }
@@ -88,12 +88,13 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
     return { transform: `translateX(${xs[i]}px) translateY(0px) translateZ(${-W / 2}px) rotateX(0deg) rotateY(90deg)`, zIndex, ...slot }
   }
 
-  const pick = (id: string | undefined) => {
+  // `untilLift`: chosen while a finger is down; iPhone ticks only when it is lifted (see touchEndTick).
+  const pick = (id: string | undefined, untilLift = false) => {
     if (!id || id === latest.current.sel?.id) return
     onSelect(id)
-    shelfClick()
+    shelfClick(untilLift)
   }
-  const step = (d: number) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; pick(l.list[i + d]?.id) }
+  const step = (d: number, untilLift = false) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; pick(l.list[i + d]?.id, untilLift) }
 
   // ---------- Gestures ----------
   const drag = useRef<{ x: number; idx: number; moved: boolean }>(undefined)
@@ -108,13 +109,15 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
     if (!d) return
     const dx = e.clientX - d.x
     if (!d.moved && Math.abs(dx) > 8) { d.moved = true; setDragging(true) }
-    if (d.moved) pick(list[Math.max(0, Math.min(list.length - 1, d.idx - Math.round(dx / STEP)))]?.id)
+    if (d.moved) pick(list[Math.max(0, Math.min(list.length - 1, d.idx - Math.round(dx / STEP)))]?.id, true)
   }
   const up = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current
     drag.current = undefined
     setDragging(false)
-    if (e.type !== 'pointerup' || !d || d.moved) return
+    if (e.type !== 'pointerup' || !d) return
+    // After a drag, iPhone can only tick now that the finger is lifted (taps tick in step()).
+    if (d.moved) { if (list[d.idx]?.id !== latest.current.sel?.id) touchEndTick(); return }
     const r = e.currentTarget.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2
     if (x < -W / 2) step(-1)
     else if (x > W / 2) step(1)

@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CITIES, cityByName, sunTimes } from '../lib/sun'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
+import { tryShelfClick } from '../lib/shelf'
 import { PRESET_TOOLS } from '../lib/kitchenTools'
 import { onOfflineChange, removeAllAudio, savedAudioSummary } from '../lib/offline'
 import { listFolders, listStories } from '../lib/db'
@@ -238,8 +239,12 @@ function ShelfSettings() {
           <input type="checkbox" className="switch" id="shelf-click" checked={shelfClick}
             onChange={(e) => updateSettings({ shelfClick: e.target.checked })} />
         </label>
+        <div className="set-row">
+          <span>Simți vibrația pe acest telefon?</span>
+          <button type="button" className="btn small" onClick={() => { tryShelfClick() }}>Încearcă</button>
+        </div>
       </div>
-      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte aleasă face un clic discret și telefonul vibrează scurt (pe iPhone, de la iOS 18). Se aplică doar pe acest dispozitiv.</p>
+      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte aleasă face un clic discret și telefonul vibrează scurt. Pe iPhone (de la iOS 18) vibrează când ridici degetul, nu cât aluneci pe cotoare, iar clicul nu se aude pe silențios. Se aplică doar pe acest dispozitiv.</p>
     </div>
   )
 }
@@ -434,7 +439,8 @@ function ProfileHome() {
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
   return (
     <section className="settings profile">
-      <h1>Profil</h1>
+      {/* The title shows in the top bar (App.tsx); this one is for screen readers. */}
+      <h1 className="sr-only">Profil</h1>
       <button type="button" className="prof-me" onClick={() => setEditName(true)}>
         <Avatar size={58} />
         <span className="prof-me-text">
@@ -502,16 +508,24 @@ const PAGES: Record<string, [string, ComponentType]> = {
   raft: ['Raftul cu povești', ShelfSettings],
 }
 
+/** The Profile page's title, shown in the top bar instead of the Rețete / Povești switch. */
+export function profileTitle(pathname: string, childName?: string) {
+  const page = pathname.split('/')[2]
+  if (!page) return 'Profil'
+  if (page === 'copil' && childName) return childName
+  return PAGES[page]?.[0] ?? 'Profil'
+}
+
 export default function Profile() {
   const { page } = useParams()
   const { child } = useSettings()
   if (!page) return <ProfileHome />
   const entry = PAGES[page]
   if (!entry) return <Navigate to="/profil" replace />
-  const [title, Page] = entry
+  const [, Page] = entry
   return (
     <section className="settings">
-      <h1>{page === 'copil' && child.name ? child.name : title}</h1>
+      <h1 className="sr-only">{profileTitle(`/profil/${page}`, child.name)}</h1>
       <Page />
     </section>
   )

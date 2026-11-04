@@ -93,8 +93,8 @@ export default function StoryList() {
   useEffect(() => {
     if (!seen || !openName || !freshKey) return
     const ids = freshKey.split(',')
-    // In shelf order: the newest last.
-    setArrivals({ folder: openName, ids: ids.reverse() })
+    // In shelf order, which is the folder's order (the newest first).
+    setArrivals({ folder: openName, ids })
     const next = { ...seen }
     ids.forEach((id) => { next[id] = openName })
     saveSeen(next)
@@ -272,7 +272,7 @@ export default function StoryList() {
       ) : books ? (
         (() => {
           const props = {
-            items: [...shown].reverse(), // on a shelf the newest book stands last
+            items: shown, // same order as the squares: the first square is the first book on the top shelf
             selId: selId && shown.some((s) => s.id === selId) ? selId : shown.find((s) => s.id === lastId)?.id,
             onSelect: setSelId, onOpen: openStory, onArrived: arrived, wide: wideShelf,
             arriving: searching ? [] : arriving,

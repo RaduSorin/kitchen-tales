@@ -168,7 +168,24 @@ export default function StoryList() {
             }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
             </button>
-            <h1>{open.icon && <span className="folder-icon" aria-hidden="true">{open.icon} </span>}{open.name}</h1>
+            <div className="folder-title">
+              <h1>{open.icon && <span className="folder-icon" aria-hidden="true">{open.icon} </span>}{open.name}</h1>
+              {/* Upright: how many stories and who can see them, in one small line under the name. */}
+              {!favMode && !wideShelf && (
+                <div className="folder-sub">
+                  {open.items.length > 0 && <span>{count(open.items.length)}</span>}
+                  {parent && (open.mine ? online && open.items.length > 0 && (
+                    <button type="button" className="share-chip" aria-pressed={open.shared} disabled={sharing} onClick={() => shareFolder(!open.shared)}>
+                      <ShareIcon shared={open.shared} />
+                      {sharing ? 'Se salvează…' : open.shared ? 'Partajat' : 'Doar la noi'}
+                      <span className="sr-only">{open.shared ? ' cu toate conturile; apasă ca să rămână doar în spațiul nostru' : ' în spațiul nostru; apasă ca să-l partajezi cu toate conturile'}</span>
+                    </button>
+                  ) : (
+                    <span className="share-note">de la {open.items[0]?.spaceName ?? open.row?.spaceName ?? 'alt cont'}, doar ascultare</span>
+                  ))}
+                </div>
+              )}
+            </div>
             {parent && !open.builtin && open.mine && (
               <button type="button" className="night-btn folder-more" aria-label={`Editează folderul ${open.name}`} onClick={() => setEditing('open')}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
@@ -179,20 +196,12 @@ export default function StoryList() {
           <h1>Bibliotecă</h1>
         )}
         {/* The count sits at the right of the title row, to save vertical space. */}
-        {!favMode && (inFolder ? open.items.length : available.length) > 0 && (
+        {!favMode && (inFolder ? (wideShelf ? open.items.length : 0) : available.length) > 0 && (
           <span className="shelf-count">{count(inFolder ? open.items.length : available.length)}</span>
         )}
         {wideShelf && <ViewSwitch value={view} onChange={pickView} />}
         {parent && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
-      {parent && inFolder && !favMode && !wideShelf && (open.mine ? online && open.items.length > 0 && (
-        <button type="button" className="share-chip" aria-pressed={open.shared} disabled={sharing} onClick={() => shareFolder(!open.shared)}>
-          <ShareIcon shared={open.shared} />
-          {sharing ? 'Se salvează…' : open.shared ? 'Partajat cu toate conturile' : 'Doar în spațiul nostru'}
-        </button>
-      ) : (
-        <p className="share-note">De la {open.items[0]?.spaceName ?? open.row?.spaceName ?? 'alt cont'}, doar ascultare</p>
-      ))}
 
       {available.length > 0 && !favMode && !wideShelf && (
         <div className="search-row">

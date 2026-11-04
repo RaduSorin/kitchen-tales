@@ -889,6 +889,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .folder-new .folder-mosaic { background: none; border: 2px dashed var(--border); color: var(--muted); }
 .folder-new .folder-plus { font-weight: 300; }
 .folder-more { flex: none; margin-left: auto; }
+/* The folder's name with a small line under it: how many stories, and the share switch. */
+.folder-title { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.folder-title h1 { margin: 0; }
+.folder-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--muted); font-size: .92rem; }
+.folder-sub .share-chip { position: relative; min-height: 30px; padding: 3px 11px 3px 9px; gap: 6px; font-size: .85rem; }
+.folder-sub .share-chip::after { content: ""; position: absolute; inset: -7px -2px; } /* keeps a ~44px tap area */
+.folder-sub .share-note { font-size: inherit; }
 .folder-form { display: grid; gap: 14px; }
 .folder-form .emoji-pick button { width: 48px; height: 48px; font-size: 1.5rem; }
 .folder-form .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }

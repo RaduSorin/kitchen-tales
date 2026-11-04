@@ -1,6 +1,6 @@
 // How the stories in a folder are shown (squares, list, bookshelf, Cover Flow), which stories
 // this device has already seen on the shelf, and the small click when you leaf through the books.
-import { useSyncExternalStore, type CSSProperties } from 'react'
+import { useSyncExternalStore, type CSSProperties, type InputHTMLAttributes } from 'react'
 import type { Story } from './types'
 import type { Tint } from './coverTint'
 import { getSettings } from './settings'
@@ -140,41 +140,23 @@ export function bookMeta(story: Story) {
 
 const canVibrate = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function'
 
-/**
- * A haptic tick on iPhone. Safari has no navigator.vibrate, but since iOS 18 its native switch
- * (<input type="checkbox" switch>) ticks each time it flips, so a hidden one is made and flipped
- * (the way the ios-haptics library does it). iOS only allows it while handling the end of a touch
- * or a click, so it does nothing while a finger slides; older iPhones feel nothing at all.
- */
-function iphoneTick() {
-  try {
-    const label = document.createElement('label')
-    label.setAttribute('aria-hidden', 'true')
-    label.style.display = 'none'
-    const input = document.createElement('input')
-    input.type = 'checkbox'
-    input.setAttribute('switch', '')
-    label.append(input)
-    document.head.append(label)
-    label.click()
-    label.remove()
-  } catch { /* no DOM */ }
-}
-
-/** A tiny buzz: navigator.vibrate on Android, the switch trick on iPhone. */
+/** A tiny buzz on Android (iPhone has no navigator.vibrate; see the switch below). */
 function buzz(ms = 10) {
-  if (!canVibrate) { iphoneTick(); return }
+  if (!canVibrate) return
   try { navigator.vibrate(ms) } catch { /* not allowed right now */ }
 }
 
 /**
- * For the end of a touch on the shelves: a tap that chose a book already did so when the finger
- * went down, and a slide chose books while it moved, but iOS only lets the page tick now. Android
- * already buzzed for each book, so this is for iPhone only.
+ * iPhone ticks when its native switch (<input type="checkbox" switch>, iOS 18+) is flipped by the
+ * finger itself, and not when a script flips it. So the places you tap on the shelves (the spines,
+ * the Cover Flow stage, the ‹ › buttons) are labels of a hidden switch: a real tap on them flips it
+ * and the phone ticks. A slide is not a tap, so there is no tick while the finger slides.
+ * Spread these attributes into the hidden <input> (React does not know `switch`).
  */
-export function touchEndTick() {
-  if (getSettings().shelfClick && !canVibrate) iphoneTick()
-}
+export const NATIVE_SWITCH = { type: 'checkbox', switch: '', className: 'sr-only', tabIndex: -1, 'aria-hidden': true } as InputHTMLAttributes<HTMLInputElement>
+
+/** Whether a tap on a switch label may tick: the setting is on and the tap did something. */
+export const tickAllowed = (didSomething = true) => didSomething && getSettings().shelfClick
 
 let audio: AudioContext | undefined
 /** Called from a tap so iOS lets the page make sounds afterwards. */
@@ -185,10 +167,10 @@ export function primeClick() {
     if (audio.state === 'suspended') audio.resume().catch(() => {})
   } catch { /* no Web Audio */ }
 }
-/** The chosen book changed. `untilLift`: a finger is still down, so iPhone ticks when it is lifted instead. */
-export function shelfClick(untilLift = false) {
+/** The chosen book changed: a click, and a buzz on Android (iPhone ticks through the switch labels). */
+export function shelfClick() {
   if (!getSettings().shelfClick) return
-  if (canVibrate || !untilLift) buzz()
+  buzz()
   playClick()
 }
 function playClick() {
@@ -206,7 +188,7 @@ function playClick() {
   } catch { /* no Web Audio */ }
 }
 
-/** The "Încearcă" button in the settings: a buzz and a click, whatever the setting says. */
+/** The "Încearcă" button in the settings: a buzz (Android; iPhone ticks through its switch label) and a click. */
 export async function tryShelfClick() {
   buzz(30)
   try {

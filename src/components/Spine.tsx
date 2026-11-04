@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react'
 import type { Story } from '../lib/types'
+import { NATIVE_SWITCH, tickAllowed } from '../lib/shelf'
 import { coverColor, getPosition } from '../lib/stories'
 
 /** A small square of the cover picture (or the emoji on its colour while there is none). */
@@ -42,4 +44,23 @@ export interface BookViewProps {
   onArrived: (id: string) => void
   /** Phone turned sideways: the shelf fills the screen. */
   wide: boolean
+}
+
+/**
+ * A button that is the label of a hidden native switch, so a real tap on it flips the switch and
+ * an iPhone ticks (see NATIVE_SWITCH). Enter and Space work like on a button.
+ */
+export function TickButton({ className, label, disabled, onPress, children }: { className: string; label: string; disabled?: boolean; onPress: () => void; children: ReactNode }) {
+  return (
+    <label className={className} role="button" tabIndex={disabled ? -1 : 0} aria-label={label} aria-disabled={disabled || undefined}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).tagName === 'INPUT') return // the switch's own click, passed up
+        if (disabled || !tickAllowed()) e.preventDefault()
+        if (!disabled) onPress()
+      }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!disabled) onPress() } }}>
+      {children}
+      <input {...NATIVE_SWITCH} disabled={disabled} />
+    </label>
+  )
 }

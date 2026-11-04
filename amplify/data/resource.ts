@@ -4,6 +4,7 @@ import { generateStory } from '../functions/generate-story/resource'
 import { findCover } from '../functions/find-cover/resource'
 
 import { family } from '../functions/family/resource'
+import { timerAlarm } from '../functions/timer-alarm/resource'
 
 // Every signed-in family member can read and edit everything.
 const schema = a.schema({
@@ -200,6 +201,28 @@ const schema = a.schema({
     .returns(a.ref('FamilyMember'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(family)),
+
+  // Cooking timers: a push notification when the timer ends, even with the app closed.
+  scheduleTimerAlarm: a
+    .mutation()
+    .arguments({
+      id: a.string().required(),
+      endsAt: a.string().required(),
+      title: a.string(),
+      body: a.string(),
+      url: a.string(),
+      subscription: a.string().required(),
+    })
+    .returns(a.boolean())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(timerAlarm)),
+
+  cancelTimerAlarm: a
+    .mutation()
+    .arguments({ id: a.string().required() })
+    .returns(a.boolean())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(timerAlarm)),
 })
 
 export type Schema = ClientSchema<typeof schema>

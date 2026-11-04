@@ -253,6 +253,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .cook-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .cook-chips span { background: var(--surface-2); border-radius: 999px; padding: 4px 12px; font-size: .9rem; }
 .cook-timer { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; border: 0; border-radius: 16px; padding: 10px 10px 10px 16px; background: var(--text); color: var(--bg); font: inherit; cursor: pointer; }
+.cook-timer-hint { display: block; margin-top: 8px; font-size: 13px; line-height: 1.35; color: var(--muted); }
 .cook-timer b { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
 .cook-timer span { background: var(--gold); color: #1f2a24; font-weight: 700; border-radius: 12px; padding: 9px 16px; }
 .cook-timer.ring, .cook-mini.ring { animation: ring 1s ease-in-out infinite; }

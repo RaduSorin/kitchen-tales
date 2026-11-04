@@ -8,7 +8,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'] },
+      // push-sw.js adds the cooking-timer notifications to the generated service worker.
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'], importScripts: ['push-sw.js'] },
       manifest: {
         name: 'Bucătăria cu povești',
         short_name: 'Bucătăria',

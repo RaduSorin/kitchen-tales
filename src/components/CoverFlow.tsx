@@ -1,8 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
 import type { Story } from '../lib/types'
 import { useSpineArt } from '../lib/coverTint'
 import { useCoverUrl } from '../lib/useCoverUrl'
-import { bookMeta, bookVars, moonDust, nextFrame, primeClick, shelfClick, spineWidth, touchEndTick, wait } from '../lib/shelf'
+import { bookMeta, bookVars, moonDust, NATIVE_SWITCH, nextFrame, primeClick, shelfClick, spineWidth, tickAllowed, wait } from '../lib/shelf'
 import { CoverPicture, SpineFace, type BookViewProps } from './Spine'
 
 type Arrival = { id: string; phase: 'enter' | 'float' | 'slot' }
@@ -60,7 +60,7 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
   const live = useRef(true)
   useEffect(() => { live.current = true; return () => { live.current = false } }, [])
 
-  const flow = useRef<HTMLDivElement>(null)
+  const flow = useRef<HTMLLabelElement>(null)
   const [box, setBox] = useState({ w: 0, h: 0 })
   useLayoutEffect(() => {
     const el = flow.current
@@ -88,40 +88,50 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
     return { transform: `translateX(${xs[i]}px) translateY(0px) translateZ(${-W / 2}px) rotateX(0deg) rotateY(90deg)`, zIndex, ...slot }
   }
 
-  // `untilLift`: chosen while a finger is down; iPhone ticks only when it is lifted (see touchEndTick).
-  const pick = (id: string | undefined, untilLift = false) => {
-    if (!id || id === latest.current.sel?.id) return
+  /** Chooses a book; false when it was already the chosen one (or there is none). */
+  const pick = (id: string | undefined) => {
+    if (!id || id === latest.current.sel?.id) return false
     onSelect(id)
-    shelfClick(untilLift)
+    shelfClick()
+    return true
   }
-  const step = (d: number, untilLift = false) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; pick(l.list[i + d]?.id, untilLift) }
+  const step = (d: number) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; return pick(l.list[i + d]?.id) }
 
   // ---------- Gestures ----------
   const drag = useRef<{ x: number; idx: number; moved: boolean }>(undefined)
-  const down = (e: PointerEvent<HTMLDivElement>) => {
+  const down = (e: PointerEvent<HTMLLabelElement>) => {
     if (now) return
+    tickNext.current = false
     primeClick()
     e.currentTarget.setPointerCapture(e.pointerId)
     drag.current = { x: e.clientX, idx: selIdx, moved: false }
   }
-  const move = (e: PointerEvent<HTMLDivElement>) => {
+  const move = (e: PointerEvent<HTMLLabelElement>) => {
     const d = drag.current
     if (!d) return
     const dx = e.clientX - d.x
     if (!d.moved && Math.abs(dx) > 8) { d.moved = true; setDragging(true) }
-    if (d.moved) pick(list[Math.max(0, Math.min(list.length - 1, d.idx - Math.round(dx / STEP)))]?.id, true)
+    if (d.moved) pick(list[Math.max(0, Math.min(list.length - 1, d.idx - Math.round(dx / STEP)))]?.id)
   }
-  const up = (e: PointerEvent<HTMLDivElement>) => {
+  // The stage is the label of a hidden switch: the tap's click (after pointerup) flips it and an
+  // iPhone ticks, but only if the tap chose or opened a book.
+  const tickNext = useRef(false)
+  const up = (e: PointerEvent<HTMLLabelElement>) => {
     const d = drag.current
     drag.current = undefined
     setDragging(false)
+    tickNext.current = false
     if (e.type !== 'pointerup' || !d) return
-    // After a drag, iPhone can only tick now that the finger is lifted (taps tick in step()).
-    if (d.moved) { if (list[d.idx]?.id !== latest.current.sel?.id) touchEndTick(); return }
+    if (d.moved) { tickNext.current = list[d.idx]?.id !== latest.current.sel?.id; return }
     const r = e.currentTarget.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2
-    if (x < -W / 2) step(-1)
-    else if (x > W / 2) step(1)
-    else if (sel) onOpen(sel)
+    if (x < -W / 2) tickNext.current = step(-1)
+    else if (x > W / 2) tickNext.current = step(1)
+    else if (sel) { onOpen(sel); tickNext.current = true }
+  }
+  const click = (e: MouseEvent<HTMLLabelElement>) => {
+    if ((e.target as HTMLElement).tagName === 'INPUT') return // the switch's own click, passed up
+    if (!tickAllowed(tickNext.current)) e.preventDefault()
+    tickNext.current = false
   }
 
   useEffect(() => {
@@ -184,15 +194,16 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
   const caption = fresh ? list.find((s) => s.id === now.id) : sel
   return (
     <div className={`cover-flow${wide ? ' wide' : ''}`}>
-      <div className={`flow-stage${dragging ? ' dragging' : ''}`} ref={flow} style={{ '--w': `${W}px`, '--floor': `${FLOOR}px` } as CSSProperties}
-        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+      <label className={`flow-stage${dragging ? ' dragging' : ''}`} ref={flow} style={{ '--w': `${W}px`, '--floor': `${FLOOR}px` } as CSSProperties}
+        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={click}>
+        <input {...NATIVE_SWITCH} />
         <div className="flow-floor" aria-hidden="true" />
         {list.map((s, i) => drawn(s, i) && (
           <FlowBook key={s.id} story={s} style={styleFor(s, i)} full={Math.abs(i - layoutSel) <= 3 || now?.id === s.id}
             isNew={arrived.includes(s.id) || now?.id === s.id} shine={shine && now?.id === s.id} />
         ))}
         <div className="dust-layer" aria-hidden="true" />
-      </div>
+      </label>
       <div className={`flow-caption${fresh ? ' fresh' : ''}`} aria-live="polite">
         <b>{fresh ? 'Poveste nouă!' : sel.title}</b>
         <small>{fresh ? caption?.title : bookMeta(sel)}</small>

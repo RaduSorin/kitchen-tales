@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CITIES, cityByName, sunTimes } from '../lib/sun'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
-import { tryShelfClick } from '../lib/shelf'
+import { NATIVE_SWITCH, tryShelfClick } from '../lib/shelf'
 import { PRESET_TOOLS } from '../lib/kitchenTools'
 import { onOfflineChange, removeAllAudio, savedAudioSummary } from '../lib/offline'
 import { listFolders, listStories } from '../lib/db'
@@ -228,9 +228,6 @@ function KidSettings() {
   )
 }
 
-/** iPhone's native switch (Safari 17.4+); React does not know the attribute, so it is spread in. */
-const NATIVE_SWITCH = { switch: '' } as Record<string, string>
-
 /** The bookshelf in each folder: a soft click while leafing through the books (this device only). */
 function ShelfSettings() {
   const { shelfClick } = useSettings()
@@ -242,28 +239,18 @@ function ShelfSettings() {
           <input type="checkbox" className="switch" id="shelf-click" checked={shelfClick}
             onChange={(e) => updateSettings({ shelfClick: e.target.checked })} />
         </label>
-      </div>
-      {/* Which way of making an iPhone tick works on this phone: the native switch touched directly,
-          a switch flipped by the app (what the shelves use), or a switch flipped by a tap on its label. */}
-      <h3 className="set-label">Test de vibrație</h3>
-      <div className="set-box">
-        <label className="set-row">
-          <span>1. Comutatorul iPhone-ului<small className="set-sub">Atinge-l: se simte o vibrație?</small></span>
-          <input type="checkbox" className="haptic-native" {...NATIVE_SWITCH} />
-        </label>
         <div className="set-row">
-          <span>2. Vibrația din aplicație<small className="set-sub">Ce folosesc acum rafturile</small></span>
-          <button type="button" className="btn small" onClick={() => { tryShelfClick() }}>Încearcă</button>
-        </div>
-        <div className="set-row">
-          <span>3. Prin atingere<small className="set-sub">Butonul e chiar un comutator ascuns</small></span>
-          <label className="btn small haptic-label">
-            <input type="checkbox" className="sr-only" tabIndex={-1} {...NATIVE_SWITCH} />
+          <span>Simți vibrația pe acest telefon?</span>
+          {/* The label of a hidden switch, so an iPhone ticks on the tap itself (see NATIVE_SWITCH). */}
+          <label className="btn small haptic-label" role="button" tabIndex={0}
+            onClick={(e) => { if ((e.target as HTMLElement).tagName !== 'INPUT') tryShelfClick() }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tryShelfClick() } }}>
             Încearcă
+            <input {...NATIVE_SWITCH} />
           </label>
         </div>
       </div>
-      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte aleasă face un clic discret și telefonul vibrează scurt. Pe iPhone (de la iOS 18) vibrează când ridici degetul, nu cât aluneci pe cotoare, iar clicul nu se aude pe silențios. Se aplică doar pe acest dispozitiv.</p>
+      <p className="set-hint">Pe raft și în Cover Flow, fiecare carte aleasă face un clic discret și telefonul vibrează scurt. Pe iPhone (de la iOS 18) vibrează la fiecare atingere, dar nu cât aluneci cu degetul peste cotoare, iar clicul nu se aude pe silențios. Se aplică doar pe acest dispozitiv.</p>
     </div>
   )
 }

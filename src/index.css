@@ -1088,7 +1088,9 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .vit-nav { align-self: stretch; min-width: 44px; border: 0; background: none; color: var(--muted); display: grid; align-items: center; padding: 0 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .vit-nav:first-child { justify-items: end; }
 .vit-nav:nth-child(3) { justify-items: start; }
-.vit-nav:disabled { opacity: .25; cursor: default; }
+.vit-nav { position: relative; }
+.vit-nav[aria-disabled="true"] { opacity: .25; cursor: default; }
+.vit-nav:focus-visible { outline: 3px solid var(--moon); outline-offset: -3px; border-radius: 12px; }
 .vit-cover { position: relative; width: min(44vw, 180px); aspect-ratio: 1; border: 0; padding: 0; border-radius: 24px; overflow: hidden; cursor: pointer; background: none; box-shadow: 0 16px 34px rgb(0 0 0 / .4); }
 .vit-cover:focus-visible { outline: 3px solid var(--moon); outline-offset: 4px; }
 .vit-pic { position: absolute; inset: 0; display: grid; place-items: center; animation: vit-swap .35s ease; }
@@ -1098,7 +1100,7 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .vit-text { grid-column: 1 / -1; min-width: 0; padding-top: 10px; text-align: center; }
 .vit-text b { display: block; font-weight: 800; font-size: 1.25rem; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vit-text small { color: var(--muted); }
-.shelves { display: grid; gap: 16px; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.shelves { position: relative; display: grid; gap: 16px; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .shelf-row { position: relative; overflow: hidden; padding-top: 22px; }
 /* A soft shadow behind the books, resting on the plank and fading out before the ends (no hard side edges). */
 .shelf-row::before { content: ""; position: absolute; z-index: 0; left: 0; right: 0; bottom: 13px; height: 75%; pointer-events: none;
@@ -1173,6 +1175,5 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); pointer-events: none; }
 :root[data-area="night"] .topbar-title { font-family: var(--f-kids); font-weight: 800; }
 
-/* The vibration test in the profile: the iPhone's own switch, left as the system draws it. */
-.haptic-native { flex: none; margin: 0; width: auto; height: auto; }
+/* A button that is the label of a hidden switch (the iPhone tick). */
 .haptic-label { position: relative; cursor: pointer; -webkit-user-select: none; user-select: none; }

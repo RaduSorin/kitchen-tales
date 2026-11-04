@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import type { Story } from '../lib/types'
 import { useSpineArt } from '../lib/coverTint'
 import { useCoverUrl } from '../lib/useCoverUrl'
-import { bookMeta, bookVars, moonDust, nextFrame, primeClick, shelfClick, spineHeight, spineWidth, touchEndTick, wait } from '../lib/shelf'
-import { CoverPicture, SpineFace, type BookViewProps } from './Spine'
+import { bookMeta, bookVars, moonDust, NATIVE_SWITCH, nextFrame, primeClick, shelfClick, spineHeight, spineWidth, tickAllowed, wait } from '../lib/shelf'
+import { CoverPicture, SpineFace, TickButton, type BookViewProps } from './Spine'
 
 type Arrival = { id: string; phase: 'zero' | 'room' | 'drop' }
 const GAP = 3
@@ -12,10 +12,12 @@ function ShelfSpine({ story, on, width, height, arrival, wob }: { story: Story; 
   const { thumb, tint } = useSpineArt(story)
   const cls = `shelf-spine spine-skin${on ? ' on' : ''}${arrival === 'drop' ? ' drop' : ''}${wob ? ' wob' : ''}`
   return (
-    <button type="button" className={cls} data-id={story.id} aria-label={story.title} aria-pressed={on}
+    // Not a <button>: the whole shelf is the label of a hidden switch (for the iPhone tick), and a
+    // button inside a label would keep the tap from reaching the switch.
+    <span role="button" className={cls} data-id={story.id} aria-label={story.title} aria-pressed={on}
       style={{ ...bookVars(story, tint), width, height, ['--dir' as string]: wob ?? 0 }}>
       <SpineFace story={story} url={thumb} />
-    </button>
+    </span>
   )
 }
 
@@ -50,7 +52,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
   useEffect(() => { live.current = true; return () => { live.current = false } }, [])
 
   // Room on the shelves: the width sets how many books fit on a shelf, the height (sideways) how tall they are.
-  const shelves = useRef<HTMLDivElement>(null)
+  const shelves = useRef<HTMLLabelElement>(null)
   const [box, setBox] = useState({ w: 0, h: 0 })
   useLayoutEffect(() => {
     const el = shelves.current
@@ -95,13 +97,12 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
     t.style.transform = `translateX(${-pan.current}px)`
   })
 
-  // `untilLift`: chosen while a finger is down; iPhone ticks only when it is lifted (see touchEndTick).
-  const pick = (id: string | undefined, untilLift = false) => {
+  const pick = (id: string | undefined) => {
     if (!id || id === latest.current.sel?.id) return
     onSelect(id)
-    shelfClick(untilLift)
+    shelfClick()
   }
-  const step = (d: number, untilLift = false) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; pick(l.list[i + d]?.id, untilLift) }
+  const step = (d: number) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; pick(l.list[i + d]?.id) }
 
   // ---------- Gestures on the spines ----------
   const drag = useRef<{ x: number; moved: boolean; start?: string; picked: boolean; from?: string }>(undefined)
@@ -109,38 +110,47 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
   const stopEdge = () => { clearInterval(edge.current.timer); edge.current = { dir: 0 } }
   useEffect(() => stopEdge, [])
   const idAt = (e: PointerEvent) => (document.elementFromPoint(e.clientX, e.clientY)?.closest('.shelf-spine') as HTMLElement | null)?.dataset.id
-  const down = (e: PointerEvent<HTMLDivElement>) => {
+  const down = (e: PointerEvent<HTMLLabelElement>) => {
     if (now) return
+    tickNext.current = false
     primeClick()
     e.currentTarget.setPointerCapture(e.pointerId)
     const id = idAt(e)
     const picked = !!id && id !== latest.current.sel?.id
     drag.current = { x: e.clientX, moved: false, start: id, picked, from: latest.current.sel?.id }
-    pick(id, true)
+    pick(id)
   }
-  const move = (e: PointerEvent<HTMLDivElement>) => {
+  const move = (e: PointerEvent<HTMLLabelElement>) => {
     const d = drag.current
     if (!d) return
     if (!d.moved && Math.abs(e.clientX - d.x) < 4) return
     d.moved = true
-    pick(idAt(e), true)
+    pick(idAt(e))
     if (!wide) return
     // Near the end of the shelf it keeps going by itself.
     const r = e.currentTarget.getBoundingClientRect()
     const dir = e.clientX < r.left + 36 ? -1 : e.clientX > r.right - 36 ? 1 : 0
     if (dir !== edge.current.dir) {
       stopEdge()
-      if (dir) edge.current = { dir, timer: window.setInterval(() => step(dir, true), 150) }
+      if (dir) edge.current = { dir, timer: window.setInterval(() => step(dir), 150) }
     }
   }
-  const up = (e: PointerEvent<HTMLDivElement>) => {
+  // The tap's click (after pointerup) reaches the shelf's hidden switch only if it chose or opened a book.
+  const tickNext = useRef(false)
+  const up = (e: PointerEvent<HTMLLabelElement>) => {
     const d = drag.current
     drag.current = undefined
     stopEdge()
-    // iPhone can only tick now that the finger is lifted, if this touch chose another book.
-    if (e.type === 'pointerup' && d && d.from !== latest.current.sel?.id) touchEndTick()
+    if (e.type !== 'pointerup' || !d) return
     // A tap on the book that was already chosen opens it.
-    if (e.type === 'pointerup' && d && !d.moved && !d.picked && d.start && d.start === latest.current.sel?.id) onOpen(latest.current.sel)
+    const opens = !d.moved && !d.picked && !!d.start && d.start === latest.current.sel?.id
+    tickNext.current = opens || d.from !== latest.current.sel?.id
+    if (opens && latest.current.sel) onOpen(latest.current.sel)
+  }
+  const click = (e: MouseEvent<HTMLLabelElement>) => {
+    if ((e.target as HTMLElement).tagName === 'INPUT') return // the switch's own click, passed up
+    if (!tickAllowed(tickNext.current)) e.preventDefault()
+    tickNext.current = false
   }
 
   useEffect(() => {
@@ -213,19 +223,20 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
   return (
     <div className={`bookshelf${wide ? ' wide' : ''}`}>
       <div className="vitrine" ref={vitrine}>
-        <button type="button" className="vit-nav" disabled={idx <= 0 || !!now} onClick={() => step(-1)} aria-label="Povestea dinainte">
+        <TickButton className="vit-nav" disabled={idx <= 0 || !!now} onPress={() => step(-1)} label="Povestea dinainte">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-        </button>
+        </TickButton>
         <WindowCover story={sel} isNew={arrived.includes(sel.id) || now?.id === sel.id} onOpen={() => onOpen(sel)} />
-        <button type="button" className="vit-nav" disabled={idx >= list.length - 1 || !!now} onClick={() => step(1)} aria-label="Povestea următoare">
+        <TickButton className="vit-nav" disabled={idx >= list.length - 1 || !!now} onPress={() => step(1)} label="Povestea următoare">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-        </button>
+        </TickButton>
         <div className="vit-text" aria-live="polite">
           <b>{sel.title}</b>
           <small>{now?.id === sel.id ? 'Nouă pe raft' : bookMeta(sel)}</small>
         </div>
       </div>
-      <div className="shelves" ref={shelves} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+      <label className="shelves" ref={shelves} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={click}>
+        <input {...NATIVE_SWITCH} />
         {rows.map((row, r) => (
           <div key={r} className="shelf-row">
             <div className="shelf-track" ref={wide ? track : undefined}>
@@ -238,7 +249,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
             <div className="dust-layer" aria-hidden="true" />
           </div>
         ))}
-      </div>
+      </label>
     </div>
   )
 }

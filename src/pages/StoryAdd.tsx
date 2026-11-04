@@ -11,6 +11,15 @@ import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
 import { groupFolders } from '../lib/stories'
+import { useLeaveGuard } from '../lib/leaveGuard'
+import { showToast } from '../lib/toast'
+
+const LEAVE_UNSAVED = {
+  title: 'Pleci fără să salvezi?',
+  text: 'Înregistrarea ta nu e salvată încă. Dacă pleci acum, se pierde.',
+  stay: 'Rămân să o salvez',
+  leave: 'Pleacă și renunță',
+}
 
 const BRIEF_KEY = 'kt-story-brief'
 const loadBrief = (): StoryBrief => {
@@ -78,6 +87,8 @@ export default function StoryAdd() {
   const preview = generated?.url ?? localPreview
   // What's ready belongs to the screen that made it, so switching screens shows that screen's own start.
   const ready = !!(audio || generated) && mode === MODE_OF[source]
+  // A finished recording that isn't saved yet only lives on this screen, so leaving asks first.
+  useLeaveGuard(source === 'recording' && !!audio && !saving, LEAVE_UNSAVED)
 
   const choose = (m?: Mode) => {
     setError('')
@@ -150,7 +161,7 @@ export default function StoryAdd() {
 
   const head = (
     <div className="parent-head">
-      <button type="button" className="night-btn" aria-label="Înapoi" onClick={() => (mode ? choose() : nav('/povesti'))}>
+      <button type="button" className="night-btn" aria-label="Înapoi" data-leaves={mode === 'record' && !ready ? '' : undefined} onClick={() => (mode ? choose() : nav('/povesti'))}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
       </button>
       <div>
@@ -187,7 +198,10 @@ export default function StoryAdd() {
       {mode === 'record' && !ready && (
         <>
           <p className="parent-sub">Citește în ritmul tău, ca la culcare. Poți face pauză oricând și continui de unde ai rămas.</p>
-          <Recorder onDone={(blob, s) => { reset(); setAudio(blob); setSeconds(s); setSource('recording') }} />
+          <Recorder onDone={(blob, s, interrupted) => {
+            reset(); setAudio(blob); setSeconds(s); setSource('recording')
+            if (interrupted) showToast('Înregistrarea s-a oprit, dar am păstrat ce ai citit până acum.')
+          }} />
         </>
       )}
 

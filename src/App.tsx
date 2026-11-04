@@ -3,6 +3,7 @@ import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-
 import { useBack } from './lib/back'
 import NotFound from './pages/NotFound'
 import ToastHost from './components/ToastHost'
+import LeaveConfirm from './components/LeaveConfirm'
 import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
 import { applyTheme, setStatusBarColor } from './lib/settings'
@@ -172,6 +173,7 @@ function Shell() {
       <MiniPlayer />
       <TabBar />
       <ToastHost />
+      <LeaveConfirm />
     </>
   )
 }

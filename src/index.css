@@ -1080,10 +1080,13 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .vit-text b { display: block; font-weight: 800; font-size: 1.25rem; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vit-text small { color: var(--muted); }
 .shelves { display: grid; gap: 16px; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.shelf-row { position: relative; overflow: hidden; padding-top: 22px; border-radius: 10px 10px 4px 4px; background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / .22)); }
+.shelf-row { position: relative; overflow: hidden; padding-top: 22px; }
+/* A soft shadow behind the books, resting on the plank and fading out before the ends (no hard side edges). */
+.shelf-row::before { content: ""; position: absolute; z-index: 0; left: 0; right: 0; bottom: 13px; height: 75%; pointer-events: none;
+  background: radial-gradient(ellipse 58% 100% at 50% 100%, rgb(0 0 0 / .2), rgb(0 0 0 / .07) 55%, rgb(0 0 0 / 0) 100%); }
 .shelf-row::after { content: ""; position: relative; z-index: 2; display: block; height: 13px; border-radius: 3px;
   background: linear-gradient(#b07d55, #74472b 45%, #4a2c1a); box-shadow: 0 8px 14px rgb(0 0 0 / .35); }
-.shelf-track { display: flex; align-items: flex-end; gap: 3px; padding: 0 10px; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.shelf-track { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 3px; padding: 0 10px; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
 .shelf-spine { flex: none; position: relative; border: 0; font: inherit; border-radius: 5px 5px 2px 2px; transform-origin: 50% 100%; cursor: pointer; -webkit-tap-highlight-color: transparent;
   transition: transform .22s cubic-bezier(.3, 1.4, .5, 1), box-shadow .22s, width .4s cubic-bezier(.2, .8, .2, 1); box-shadow: 1px 0 0 rgb(0 0 0 / .25); }
 .shelf-spine.on { z-index: 1; transform: translateY(-18px); box-shadow: 0 0 0 2px var(--accent), 0 12px 22px rgb(0 0 0 / .45); }

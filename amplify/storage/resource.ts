@@ -3,21 +3,15 @@ import { importRecipe } from '../functions/import-recipe/resource'
 import { generateStory } from '../functions/generate-story/resource'
 import { findCover } from '../functions/find-cover/resource'
 
-// S3 bucket for recipe photos and story audio, private to signed-in family members.
+// S3 bucket for recipe photos, story audio and covers. Signed-in accounts get no direct access:
+// they read, upload and delete through the files function (functions/files, granted in
+// backend.ts), which checks the caller's space, so a separate account only reaches what is
+// shared with it. New files sit in a folder per space (see amplify/shared/files.ts).
 export const storage = defineStorage({
   name: 'kitchenTalesFiles',
   access: (allow) => ({
-    'recipe-photos/*': [
-      allow.authenticated.to(['read', 'write', 'delete']),
-      allow.resource(importRecipe).to(['read', 'write']),
-    ],
-    'stories/*': [
-      allow.authenticated.to(['read', 'write', 'delete']),
-      allow.resource(generateStory).to(['write']),
-    ],
-    'story-covers/*': [
-      allow.authenticated.to(['read', 'write', 'delete']),
-      allow.resource(findCover).to(['write']),
-    ],
+    'recipe-photos/*': [allow.resource(importRecipe).to(['read', 'write'])],
+    'stories/*': [allow.resource(generateStory).to(['write'])],
+    'story-covers/*': [allow.resource(findCover).to(['write'])],
   }),
 })

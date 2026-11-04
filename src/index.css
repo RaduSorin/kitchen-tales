@@ -1177,3 +1177,7 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 
 /* A button that is the label of a hidden switch (the iPhone tick). */
 .haptic-label { position: relative; cursor: pointer; -webkit-user-select: none; user-select: none; }
+.sheet-text { margin: 0 0 14px; color: var(--muted); line-height: 1.45; }
+.add-share { justify-self: start; }
+/* A big folder has many shelves: the browser skips the work for those off screen. */
+.bookshelf:not(.wide) .shelf-row { content-visibility: auto; contain-intrinsic-size: auto 260px; }

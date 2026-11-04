@@ -1,8 +1,8 @@
-// Cloud storage via AWS Amplify: recipe/story records in DynamoDB, photos and audio files in S3.
+// Cloud storage via AWS Amplify: recipe/story records in DynamoDB, photos and audio files in S3
+// (reached only through the files function, which checks the space; see amplify/functions/files).
 // Rows belong to the signed-in account's space; shared ones are readable by every account
 // (see amplify/shared/spaces.ts and lib/space.ts).
 import { generateClient } from 'aws-amplify/data'
-import { getUrl, remove, uploadData } from 'aws-amplify/storage'
 import type { Schema } from '../../amplify/data/resource'
 import type { SharedSettings } from './settings'
 import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
@@ -18,7 +18,7 @@ type StoryRow = Schema['Story']['type']
 
 const clean = (xs?: (string | null)[] | null) => (xs ?? []).filter((x): x is string => !!x)
 
-const toRecipe = (r: RecipeRow): Recipe => ({
+const toRecipe = (r: RecipeRow): Recipe => (fileOwner(`Recipe:${r.id}`, r.photoKey, ...(r.stepPhotoKeys ?? [])), {
   id: r.id,
   title: r.title,
   category: r.category ?? '',
@@ -36,7 +36,7 @@ const toRecipe = (r: RecipeRow): Recipe => ({
   spaceName: r.spaceName ?? undefined,
 })
 
-const toStory = (s: StoryRow): Story => ({
+const toStory = (s: StoryRow): Story => (fileOwner(`Story:${s.id}`, s.audioKey, s.coverKey), {
   id: s.id,
   title: s.title,
   emoji: s.emoji ?? '⭐',
@@ -53,7 +53,12 @@ const toStory = (s: StoryRow): Story => ({
   spaceName: s.spaceName ?? undefined,
 })
 
-type Page<T> = { data: T[]; nextToken?: string | null; errors?: { message: string }[] }
+type GqlError = { message: string; path?: readonly (string | number)[] }
+type Page<T> = { data: T[]; nextToken?: string | null; errors?: GqlError[] }
+
+// Another space's rows come without their space group (the server hides it, see data/resource.ts),
+// which shows up as an error per row; the rows themselves are fine.
+const hiddenSpace = (e: GqlError) => (e as { errorType?: string }).errorType === 'Unauthorized' && e.path?.[e.path.length - 1] === 'spaceGroups'
 
 async function listAll<T>(fetchPage: (nextToken?: string | null) => Promise<Page<T>>) {
   // The token must carry the account's groups before the first list, or nothing is visible.
@@ -62,7 +67,8 @@ async function listAll<T>(fetchPage: (nextToken?: string | null) => Promise<Page
   let token: string | null | undefined
   do {
     const page = await fetchPage(token)
-    if (page.errors?.length) throw new Error(page.errors.map((e) => e.message).join('; '))
+    const errors = page.errors?.filter((e) => !hiddenSpace(e))
+    if (errors?.length) throw new Error(errors.map((e) => e.message).join('; '))
     out.push(...page.data)
     token = page.nextToken
   } while (token)
@@ -78,26 +84,73 @@ const extFor = (blob: Blob, fallback: string) => {
   return t ? t.replace('mpeg', 'mp3').replace('x-m4a', 'm4a') : fallback
 }
 
-/** Uploads a file; `onProgress` gets the share sent so far (0 to 1), for big audio files. */
+// Which row points at each file ("Story:<id>", "Recipe:<id>"): the files function needs it to let
+// another space read a shared file, and for files stored before spaces had their own folders.
+const owners = new Map<string, string>()
+function fileOwner(ref: string, ...paths: (string | null | undefined)[]) {
+  for (const p of paths) if (p) owners.set(p, ref)
+}
+let ownersFromCache: Promise<void> | undefined
+/** Rows known only from this device's copy (offline start): learn their files once. */
+const learnCachedOwners = () => (ownersFromCache ??= (async () => {
+  const [stories, recipes] = await Promise.all([cachedList('stories').catch(() => undefined), cachedList('recipes').catch(() => undefined)])
+  for (const s of stories ?? []) if (!owners.has(s.audioKey)) fileOwner(`Story:${s.id}`, s.audioKey, s.coverKey)
+  for (const r of recipes ?? []) fileOwner(`Recipe:${r.id}`, r.photoKey, ...(r.stepPhotoKeys ?? []))
+})())
+
+/** Uploads a file into our space's folder; `onProgress` gets the share sent so far (0 to 1), for big audio files. */
 export async function uploadFile(prefix: 'recipe-photos' | 'stories' | 'story-covers', blob: Blob, fallbackExt: string, onProgress?: (share: number) => void) {
-  const path = `${prefix}/${newId()}.${extFor(blob, fallbackExt)}`
-  await uploadData({
-    path, data: blob,
-    options: {
-      contentType: blob.type || undefined,
-      onProgress: onProgress && (({ transferredBytes, totalBytes }) => { if (totalBytes) onProgress(transferredBytes / totalBytes) }),
-    },
-  }).result
+  const res = await client.mutations.uploadUrl({ prefix, ext: extFor(blob, fallbackExt), contentType: blob.type || null })
+  if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') || 'Nu am putut încărca fișierul.')
+  const { path, url } = res.data
+  await new Promise<void>((resolve, reject) => {
+    // XMLHttpRequest rather than fetch: it reports upload progress.
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', url)
+    if (blob.type) xhr.setRequestHeader('Content-Type', blob.type)
+    if (onProgress) xhr.upload.onprogress = (e) => { if (e.lengthComputable && e.total) onProgress(e.loaded / e.total) }
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Încărcarea a eșuat (${xhr.status})`)))
+    xhr.onerror = () => reject(new Error('Încărcarea a eșuat'))
+    xhr.send(blob)
+  })
   return path
 }
 
-export async function fileUrl(path: string) {
-  return (await getUrl({ path, options: { expiresIn: 3600 } })).url.toString()
+// Links are asked for in small batches: a shelf of covers is one call, not fifty.
+type Ask = { path: string; resolve: (url: string) => void; reject: (err: unknown) => void }
+let asks: Ask[] = []
+let flushTimer: ReturnType<typeof setTimeout> | undefined
+async function flushAsks() {
+  flushTimer = undefined
+  const batch = asks.splice(0, 100)
+  if (asks.length) flushTimer = setTimeout(flushAsks, 0)
+  try {
+    if (batch.some((a) => !owners.has(a.path))) await learnCachedOwners()
+    const paths = [...new Set(batch.map((a) => a.path))]
+    const res = await client.queries.fileUrls({ paths, refs: paths.map((p) => owners.get(p) ?? null) })
+    if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') || 'Nu am putut deschide fișierul.')
+    const urls = new Map(paths.map((p, i) => [p, res.data?.[i] ?? '']))
+    for (const a of batch) {
+      const url = urls.get(a.path)
+      if (url) a.resolve(url)
+      else a.reject(new Error('Fișierul nu e disponibil pentru acest cont.'))
+    }
+  } catch (err) {
+    batch.forEach((a) => a.reject(err))
+  }
+}
+
+/** A signed link (valid one hour) to read a stored file. */
+export function fileUrl(path: string) {
+  return new Promise<string>((resolve, reject) => {
+    asks.push({ path, resolve, reject })
+    flushTimer ??= setTimeout(flushAsks, 10)
+  })
 }
 
 async function removeFile(path?: string) {
   if (!path) return
-  await remove({ path }).catch(() => {})
+  await client.mutations.deleteFiles({ paths: [path], refs: [owners.get(path) ?? null] }).catch(() => {})
   removePhoto(path).catch(() => {})
 }
 
@@ -140,10 +193,11 @@ export async function saveRecipe(r: Recipe, isNew: boolean) {
 }
 
 export async function deleteRecipe(r: Recipe) {
-  const res = await client.models.Recipe.delete({ id: r.id })
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  // Files first: an older file may only be deleted through the row that still points at it.
   await removeFile(r.photoKey)
   await Promise.all((r.stepPhotoKeys ?? []).map((k) => removeFile(k || undefined)))
+  const res = await client.models.Recipe.delete({ id: r.id })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
 }
 
 export { removeFile }
@@ -218,10 +272,11 @@ export async function createStory(story: Omit<Story, 'id' | 'createdAt'>) {
 }
 
 export async function deleteStory(s: Story) {
-  const res = await client.models.Story.delete({ id: s.id })
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  // Files first: an older file may only be deleted through the row that still points at it.
   await removeFile(s.audioKey)
   await removeFile(s.coverKey)
+  const res = await client.models.Story.delete({ id: s.id })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   await removeAudio(s.id).catch(() => {})
 }
 
@@ -274,7 +329,7 @@ export async function moveStory(s: Story, collection: string | null) {
     id: s.id, collection, ...(folder ? { readerGroups: readerGroupsFor(!!shared), sharedDirect: !!shared, spaceName: mySpaceName() } : {}),
   }))
   await patchCachedStories((x) => (x.id === s.id ? { ...x, collection: collection ?? undefined, shared } : x))
-  return { shared }
+  return { shared, changed: !!shared !== !!s.shared }
 }
 
 /** Shares one story with every account, or makes it private to our space again. */
@@ -301,14 +356,14 @@ export async function setFolderShared(folder: Folder, shared: boolean) {
   await patchCachedStories((x) => (ids.has(x.id) ? { ...x, shared } : x))
 }
 
-export async function createFolder(name: string, icon?: string) {
-  // Like stories, a new folder starts shared.
+/** A new folder starts shared, like stories, unless `shared` says otherwise. */
+export async function createFolder(name: string, icon?: string, shared = true) {
   const res = await client.models.StoryFolder.create({
-    name, icon: icon ?? null, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(true), spaceName: mySpaceName(),
+    name, icon: icon ?? null, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(shared), spaceName: mySpaceName(),
   })
   errorsOf(res)
   if (!res.data) throw new Error('Nu am putut crea folderul.')
-  cacheFolders([...cachedFolders(), { id: res.data.id, name, icon, mine: true, shared: true }])
+  cacheFolders([...cachedFolders(), { id: res.data.id, name, icon, mine: true, shared }])
   return res.data.id
 }
 
@@ -439,9 +494,12 @@ export async function setStoryFavorite(s: Story, favorite: boolean) {
 }
 
 export async function setStoryCover(s: Story, coverKey: string) {
+  const old = s.coverKey && s.coverKey !== coverKey ? s.coverKey : undefined
+  if (old) owners.set(old, `Story:${s.id}`)
   const res = await client.models.Story.update({ id: s.id, coverKey })
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
-  if (s.coverKey && s.coverKey !== coverKey) await removeFile(s.coverKey)
+  fileOwner(`Story:${s.id}`, coverKey)
+  if (old) await removeFile(old)
 }
 
 // ---- family accounts ----
@@ -501,6 +559,23 @@ export const shoppingApi = {
 
 // ---- space settings (one row per space, id = the space group) ----
 
+let namesChecked = false
+/**
+ * Other spaces show what we share under our space's name, as saved on each row. If the name
+ * changed since something was shared, put the new one on those rows (once per app start), so
+ * the others' "Primite de la …" folders don't split in two.
+ */
+async function refreshSharedNames(name: string | undefined) {
+  if (namesChecked || !name) return
+  namesChecked = true
+  const stale = <T extends { mine?: boolean; shared?: boolean; spaceName?: string }>(xs?: T[]) => (xs ?? []).filter((x) => x.mine && x.shared && x.spaceName && x.spaceName !== name)
+  const [stories, recipes] = await Promise.all([cachedList('stories').catch(() => undefined), cachedList('recipes').catch(() => undefined)])
+  for (const s of stale(stories)) errorsOf(await client.models.Story.update({ id: s.id, spaceName: name }))
+  for (const r of stale(recipes)) errorsOf(await client.models.Recipe.update({ id: r.id, spaceName: name }))
+  if (!stale(stories).length && !stale(recipes).length) return
+  for (const f of cachedFolders().filter((f) => f.mine !== false && f.shared)) errorsOf(await client.models.StoryFolder.update({ id: f.id, spaceName: name }))
+}
+
 /** The space's settings from the cloud, or null if they were never saved there. */
 export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid'> & { city?: string; kid?: SharedSettings['kid'] }) | null> {
   const res = await client.models.FamilySettings.get({ id: await mySpaceGroup() })
@@ -508,6 +583,7 @@ export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' 
   const r = res.data
   if (!r) return null
   rememberSpaceName(r.spaceName)
+  refreshSharedNames(r.spaceName ?? undefined).catch(() => {})
   return {
     child: {
       name: r.childName ?? '',

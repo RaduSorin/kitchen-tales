@@ -6,12 +6,14 @@ import { generateStory } from './functions/generate-story/resource'
 import { findCover } from './functions/find-cover/resource'
 import { family } from './functions/family/resource'
 import { timerAlarm } from './functions/timer-alarm/resource'
+import { files } from './functions/files/resource'
+import { FILE_PREFIXES } from './shared/files'
 import { IMAGE_MODEL_ID, IMAGE_MODEL_REGION, MODEL_ID } from './shared/model'
 import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { storage } from './storage/resource'
 
-const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover, family, timerAlarm })
+const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover, family, timerAlarm, files })
 
 // Invite-only: nobody can create an account from the app.
 // Family members invite each other from Settings (see functions/family).
@@ -67,3 +69,18 @@ alarmFn.addToRolePolicy(new PolicyStatement({
   resources: [`arn:aws:scheduler:${alarmStack.region}:${alarmStack.account}:schedule/default/kt-*`],
 }))
 alarmFn.addToRolePolicy(new PolicyStatement({ actions: ['iam:PassRole'], resources: [schedulerRole.roleArn] }))
+
+// Files: the files function is the app's only way to the bucket. It reads the Story and Recipe
+// rows to check who may read a file, and signs links to read, upload and delete.
+const filesFn = backend.files.resources.lambda
+const bucket = backend.storage.resources.bucket
+backend.files.addEnvironment('BUCKET_NAME', bucket.bucketName)
+filesFn.addToRolePolicy(new PolicyStatement({
+  actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject'],
+  resources: FILE_PREFIXES.map((p) => `${bucket.bucketArn}/${p}/*`),
+}))
+for (const [model, env] of [['Story', 'STORY_TABLE'], ['Recipe', 'RECIPE_TABLE']] as const) {
+  const table = backend.data.resources.tables[model]
+  backend.files.addEnvironment(env, table.tableName)
+  filesFn.addToRolePolicy(new PolicyStatement({ actions: ['dynamodb:BatchGetItem', 'dynamodb:GetItem'], resources: [table.tableArn] }))
+}

@@ -29,7 +29,7 @@ export default function ViewSwitch({ value, onChange, collapsible }: { value: Sh
   useEffect(() => {
     if (!open) return
     // Opened from the keyboard: move to the current choice.
-    if (document.activeElement === toggle.current) wrap.current?.querySelector<HTMLButtonElement>('.view-switch [aria-pressed="true"]')?.focus()
+    if (document.activeElement === toggle.current) wrap.current?.querySelector<HTMLButtonElement>('.view-switch [aria-pressed="true"]')?.focus({ preventScroll: true })
     const outside = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false) }
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); toggle.current?.focus() } }
     const scroll = () => setOpen(false)

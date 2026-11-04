@@ -23,7 +23,7 @@ function Planned({ e, r, loaded }: { e: PlanEntry; r?: Recipe; loaded: boolean }
   const body = (
     <>
       <span className="planned-thumb"><Thumb r={r} /></span>
-      <span className="planned-title">{r?.title ?? (loaded ? 'Rețetă ștearsă' : '…')}{e.servings ? <small> · {e.servings} porții</small> : null}</span>
+      <span className="planned-title">{r?.title ?? (loaded ? 'Rețeta nu mai e disponibilă' : '…')}{e.servings ? <small> · {e.servings} porții</small> : null}</span>
     </>
   )
   return (

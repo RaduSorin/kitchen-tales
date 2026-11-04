@@ -11,6 +11,7 @@ export function errorText(err: unknown): string {
   if (/[ăâîșțĂÂÎȘȚ]/.test(msg)) return msg
   if (/network|failed to fetch|load failed|timed? ?out/i.test(`${name} ${msg}`)) return 'Nu am putut ajunge la server. Verifică internetul și încearcă din nou.'
   if (/\burl\b/i.test(msg)) return 'Linkul nu pare bun. Verifică-l și încearcă din nou.'
+  if (/not authori[sz]ed|unauthori[sz]ed/i.test(msg)) return 'E de la alt cont: o poți vedea, dar nu o poți modifica.'
   if (/throttl|rate exceeded|too many/i.test(msg)) return 'Serviciul e ocupat acum. Încearcă din nou peste un minut.'
   return 'A apărut o problemă. Încearcă din nou.'
 }

@@ -118,7 +118,8 @@ export async function saveRecipe(r: Recipe, isNew: boolean) {
 }
 
 export async function deleteRecipe(r: Recipe) {
-  await client.models.Recipe.delete({ id: r.id })
+  const res = await client.models.Recipe.delete({ id: r.id })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   await removeFile(r.photoKey)
   await Promise.all((r.stepPhotoKeys ?? []).map((k) => removeFile(k || undefined)))
 }
@@ -176,7 +177,8 @@ export async function createStory(s: Omit<Story, 'id' | 'createdAt'>) {
 }
 
 export async function deleteStory(s: Story) {
-  await client.models.Story.delete({ id: s.id })
+  const res = await client.models.Story.delete({ id: s.id })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   await removeFile(s.audioKey)
   await removeFile(s.coverKey)
   await removeAudio(s.id).catch(() => {})

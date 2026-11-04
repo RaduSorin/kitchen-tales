@@ -13,7 +13,8 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import MicButton from '../components/MicButton'
 import { spokenIngredientLines } from '../lib/spokenIngredients'
 import { useSettings } from '../lib/settings'
-import { useBack } from '../lib/back'
+import { canGoBack, useBack } from '../lib/back'
+import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { LoadError, Loading } from '../components/LoadState'
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
@@ -25,6 +26,16 @@ const empty = (): Recipe => ({ id: newId(), title: '', category: '', ingredients
 const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
 const toSteps = (texts: string[], photos: string[] = []): Step[] =>
   texts.map((text, k) => ({ uid: newId(), text, photoKey: photos[k] || undefined }))
+/** Everything the editor would save, to tell whether anything changed since it opened. */
+const snap = (r: Recipe, ing: string, steps: Step[], photo?: Blob) =>
+  JSON.stringify([{ ...r, id: '' }, ing, steps.map((s) => [s.text, s.photoKey ?? '', !!s.photoBlob]), !!photo])
+
+const LEAVE_EDITS = {
+  title: 'Renunți la modificări?',
+  text: 'Ce ai schimbat la rețetă nu e salvat. Dacă pleci acum, se pierde.',
+  stay: 'Continuă editarea',
+  leave: 'Renunță la modificări',
+}
 
 function Icon({ d }: { d: string }) {
   return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
@@ -87,6 +98,8 @@ export default function RecipeEdit() {
   const [importing, setImporting] = useState('')
   const [found, setFound] = useState<string>()
   const [saving, setSaving] = useState(false)
+  // What the recipe looked like when the editor opened (blank for a new one).
+  const [base, setBase] = useState(() => snap(empty(), '', []))
   const [error, setError] = useState('')
   const { kitchenTools } = useSettings()
   const [idea, setIdea] = useState('')
@@ -106,11 +119,16 @@ export default function RecipeEdit() {
     if (!id) { setR(empty()); return }
     getRecipe(id).then((x) => {
       if (!x) { setLoadFailed('missing'); return }
+      const st = toSteps(x.steps, x.stepPhotoKeys)
       setR(x); setOriginal(x)
-      setIng(x.ingredients.join('\n')); setSteps(toSteps(x.steps, x.stepPhotoKeys))
+      setIng(x.ingredients.join('\n')); setSteps(st)
+      setBase(snap(x, x.ingredients.join('\n'), st))
     }).catch(() => setLoadFailed('error'))
   }
   useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Unsaved changes: "Renunță", the tab bar and the iPhone swipe back ask first.
+  const dirty = mode === 'edit' && !!r && snap(r, ing, steps, photo) !== base
+  useLeaveGuard(dirty && !saving, LEAVE_EDITS)
   const newPhotoUrl = useBlobUrl(photo)
   const savedPhotoUrl = useFileUrl(photo ? undefined : r?.photoKey)
   const img = newPhotoUrl ?? savedPhotoUrl
@@ -262,7 +280,10 @@ export default function RecipeEdit() {
       if (original?.photoKey && original.photoKey !== photoKey) await removeFile(original.photoKey)
       if (aiUnsaved.current && aiUnsaved.current !== photoKey) await removeFile(aiUnsaved.current)
       for (const old of original?.stepPhotoKeys ?? []) if (old && !stepPhotoKeys.includes(old)) await removeFile(old)
-      nav(`/retete/${r.id}`, { replace: true })
+      await guardedWorkDone()
+      // An edit goes back to the recipe page it came from (no second copy of it in history).
+      if (id && canGoBack()) nav(-1)
+      else nav(`/retete/${r.id}`, { replace: true })
     } catch (err) {
       setError(`Nu am putut salva rețeta: ${(err as Error).message}`)
       setSaving(false)
@@ -371,7 +392,7 @@ export default function RecipeEdit() {
   return (
     <form className="editor" onSubmit={save}>
       <div className="editor-bar">
-        <button type="button" className="link-btn" onClick={back}>Renunță</button>
+        <button type="button" className="link-btn" data-leaves onClick={back}>Renunță</button>
         <span className="editor-bar-title">{id ? 'Editează' : 'Rețetă nouă'}</span>
         <button type="submit" className="btn primary small" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
       </div>

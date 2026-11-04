@@ -36,6 +36,15 @@ export function planRecipe(recipe: Recipe, day: string, servings?: number) {
   planStore.create({ id: newId(), day, recipeId: recipe.id, servings: servings && servings !== recipe.servings ? servings : undefined })
 }
 
+/**
+ * A recipe was deleted: take it off every day of the plan and drop its lines from the shopping
+ * list that are not bought yet (bought ones stay until the list is cleared).
+ */
+export function forgetRecipe(recipeId: string) {
+  for (const e of planStore.get()) if (e.recipeId === recipeId) planStore.remove(e.id)
+  for (const s of shoppingStore.get()) if (s.recipeId === recipeId && !s.checked) shoppingStore.remove(s.id)
+}
+
 // ---- shopping ----
 
 /** Lines that are headings ("Pentru sos:") rather than things to buy. */

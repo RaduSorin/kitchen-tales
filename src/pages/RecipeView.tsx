@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { deleteRecipe, getRecipe } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
@@ -10,7 +10,9 @@ import { getProgress } from '../lib/cooking'
 import Sheet from '../components/Sheet'
 import { LoadError, Loading } from '../components/LoadState'
 import { useSyncedList } from '../lib/synced'
-import { addDays, addToShopping, dayKey, dayName, planRecipe, planStore, shortDate, today } from '../lib/plan'
+import { addDays, addToShopping, dayKey, dayName, forgetRecipe, planRecipe, planStore, shortDate, today } from '../lib/plan'
+import { useBack } from '../lib/back'
+import { useOnline } from '../lib/useOffline'
 
 /** Choose a day in the next two weeks; days that already have this recipe are marked. */
 function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; servings?: number; onDone: (msg: string) => void; onClose: () => void }) {
@@ -38,7 +40,6 @@ function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; servings?: num
 
 export default function RecipeView() {
   const { id } = useParams()
-  const nav = useNavigate()
   const [r, setR] = useState<Recipe | null>()
   const [have, setHave] = useState<Set<number>>(new Set())
   const [done, setDone] = useState<Set<number>>(new Set())
@@ -48,6 +49,23 @@ export default function RecipeView() {
   const [planning, setPlanning] = useState(false)
   const [note, setNote] = useState<{ text: string; to: string; link: string }>()
   const [failed, setFailed] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const online = useOnline()
+  // After deleting, step back to where the recipe was opened from rather than adding a page on
+  // top (Back would then lead to the deleted recipe).
+  const leave = useBack('/retete')
+  const remove = async (x: Recipe) => {
+    setDeleting(true); setDeleteError('')
+    try {
+      await deleteRecipe(x)
+      forgetRecipe(x.id)
+      leave()
+    } catch {
+      setDeleteError('Nu am putut șterge rețeta. Verifică internetul și încearcă din nou.')
+      setDeleting(false)
+    }
+  }
   const load = () => {
     getRecipe(id!).then((x) => { setR(x ?? null); setServings(x?.servings) }).catch(() => setFailed(true))
   }
@@ -84,7 +102,7 @@ export default function RecipeView() {
         {r.steps.length > 0 && (() => {
           const saved = getProgress(r.id)
           return (
-            <Link to={`/retete/${r.id}/gateste`} className="btn primary big cook-cta">
+            <Link to={`/retete/${r.id}/gateste`} state={{ fromRecipe: true }} className="btn primary big cook-cta">
               {saved != null && saved > 0 && saved < r.steps.length ? `Continuă de la pasul ${saved + 1}` : 'Gătește pas cu pas'}
             </Link>
           )
@@ -154,7 +172,7 @@ export default function RecipeView() {
 
       </div>
       {menu && (
-        <Sheet title="Rețeta" onClose={() => { setMenu(false); setConfirming(false) }}>
+        <Sheet title="Rețeta" onClose={() => { setMenu(false); setConfirming(false); setDeleteError('') }}>
           <div className="menu-list">
             <Link to={`/retete/${r.id}/editeaza`} className="btn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /></svg>
@@ -162,8 +180,11 @@ export default function RecipeView() {
             </Link>
             {confirming ? (
               <div className="menu-confirm">
-                <p>Ștergi rețeta „{r.title}”? Nu se mai poate recupera.</p>
-                <button type="button" className="btn danger" onClick={async () => { await deleteRecipe(r); nav('/retete') }}>Da, șterge</button>
+                {online ? <>
+                  <p>Ștergi rețeta „{r.title}”? Nu se mai poate recupera.</p>
+                  {deleteError && <p className="error" role="alert">{deleteError}</p>}
+                  <button type="button" className="btn danger" disabled={deleting} onClick={() => remove(r)}>{deleting ? 'Se șterge…' : 'Da, șterge'}</button>
+                </> : <p role="alert">Ești offline. Poți șterge rețeta când ai din nou internet.</p>}
                 <button type="button" className="btn" onClick={() => setConfirming(false)}>Nu</button>
               </div>
             ) : (

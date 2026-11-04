@@ -11,7 +11,7 @@ import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
 import { groupFolders } from '../lib/stories'
-import { useLeaveGuard } from '../lib/leaveGuard'
+import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { showToast } from '../lib/toast'
 
 const LEAVE_UNSAVED = {
@@ -152,6 +152,7 @@ export default function StoryAdd() {
       const id = await createStory({ title: title.trim(), emoji, coverKey, collection: collection || undefined, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
       // Our own recordings and files are already on this device, so keep them for offline listening.
       if (audio) await saveAudio(id, audio).catch(() => {})
+      await guardedWorkDone()
       nav(`/povesti/${id}`, { replace: true })
     } catch (err) {
       setError(`Nu am putut salva povestea: ${(err as Error).message}`)

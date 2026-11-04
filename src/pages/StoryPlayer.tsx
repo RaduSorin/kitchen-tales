@@ -40,6 +40,7 @@ function StoryPlayer() {
   const [dim, setDim] = useState(false)
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [msg, setMsg] = useState('')
   const [coverOpen, setCoverOpen] = useState(false)
   const [coverBusy, setCoverBusy] = useState(false)
@@ -216,7 +217,18 @@ function StoryPlayer() {
             {online && <button className="btn small span-all" onClick={() => setMoveOpen(true)}>Mută în folder</button>}
             {online && (confirmDelete ? (
               <span className="confirm span-all">Ștergi povestea?
-                <button className="btn danger small" onClick={async () => { if (current) player.close(); await deleteStory(s); nav('/povesti') }}>Da, șterge</button>
+                <button className="btn danger small" disabled={deleting} onClick={async () => {
+                  setDeleting(true); setMsg('')
+                  try {
+                    await deleteStory(s)
+                    if (current) player.close()
+                    // Step back (or open the folder in place), so Back never leads to the deleted story.
+                    back()
+                  } catch {
+                    setMsg('Nu am putut șterge povestea. Verifică internetul și încearcă din nou.')
+                    setDeleting(false)
+                  }
+                }}>{deleting ? 'Se șterge…' : 'Da, șterge'}</button>
                 <button className="btn small" onClick={() => setConfirmDelete(false)}>Nu</button>
               </span>
             ) : <button className="btn danger small span-all" onClick={() => setConfirmDelete(true)}>Șterge povestea</button>)}
@@ -237,6 +249,7 @@ function StoryPlayer() {
             </div>
           )}
           {isSaved && <small>Salvată pe acest dispozitiv, merge și fără internet.</small>}
+          {!online && <p className="parents-offline">Fără internet poți asculta poveștile salvate. Coperta, mutarea și ștergerea revin când ai din nou internet.</p>}
           {msg && <p className="error">{msg}</p>}
         </div>
       </details>}

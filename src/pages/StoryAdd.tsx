@@ -12,6 +12,7 @@ import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
 import { groupFolders } from '../lib/stories'
+import ShareIcon from '../components/ShareIcon'
 import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { showToast } from '../lib/toast'
 
@@ -71,10 +72,15 @@ export default function StoryAdd() {
   const [error, setError] = useState('')
   // The shelf folder for the new story: opened from a folder, it goes there; '' = by how it was made.
   const [collection, setCollection] = useState(params.get('folder') ?? '')
-  const [folderNames, setFolderNames] = useState(() => cachedFolders().map((f) => f.name))
+  const [folderNames, setFolderNames] = useState(() => cachedFolders().filter((f) => f.mine !== false).map((f) => f.name))
+  // Who sees the new story: what the parent picked, else the folder's sharing, else every account.
+  const [shareChoice, setShareChoice] = useState<boolean>()
+  const folderShared = collection ? cachedFolders().find((f) => f.mine !== false && f.name === collection)?.shared : undefined
+  const share = shareChoice ?? folderShared ?? true
   useEffect(() => {
     Promise.all([listStories(), listFolders()])
-      .then(([stories, rows]) => setFolderNames(groupFolders(stories, rows).filter((f) => !f.builtin).map((f) => f.name)))
+      // Only our own folders: a folder another space shared can't take new stories.
+      .then(([stories, rows]) => setFolderNames(groupFolders(stories, rows).filter((f) => !f.builtin && f.mine).map((f) => f.name)))
       .catch(() => {})
   }, [])
   const [saving, setSaving] = useState(false)
@@ -157,7 +163,7 @@ export default function StoryAdd() {
         coverKey = await uploadFile('story-covers', small, 'jpg')
         saveCover(coverKey, small).catch(() => {})
       }
-      const id = await createStory({ title: title.trim(), emoji, coverKey, collection: collection || undefined, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
+      const id = await createStory({ title: title.trim(), emoji, coverKey, collection: collection || undefined, shared: share, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
       unsavedAudio.current = undefined // it belongs to the story now
       // Our own recordings and files are already on this device, so keep them for offline listening.
       if (audio) await saveAudio(id, audio).catch(() => {})
@@ -324,12 +330,17 @@ export default function StoryAdd() {
           </div>
           {folderNames.length > 0 && (
             <label className="night-field">Folderul
-              <select className="night-select" value={collection} onChange={(e) => setCollection(e.target.value)}>
+              <select className="night-select" value={collection} onChange={(e) => { setCollection(e.target.value); setShareChoice(undefined) }}>
                 <option value="">Automat, după cum a fost făcută</option>
                 {[...new Set([...folderNames, ...(collection ? [collection] : [])])].sort((a, b) => a.localeCompare(b, 'ro')).map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
           )}
+          <button type="button" className="btn small share-toggle add-share" aria-pressed={share} onClick={() => setShareChoice(!share)}>
+            <ShareIcon shared={share} />
+            {share ? 'Partajată cu toate conturile' : 'Doar în spațiul nostru'}
+            <span className="sr-only">. Apasă ca să schimbi.</span>
+          </button>
           <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? (sent !== undefined && sent < 1 ? `Se încarcă… ${Math.round(sent * 100)}%` : 'Se salvează…') : 'Pune pe raft'}</button>
           {saving && sent !== undefined && sent < 1 && <progress className="upload-progress" max={1} value={sent} aria-label="Încărcare" />}
           {source !== 'generated' && <p className="rec-hint">Se salvează și pe acest dispozitiv, merge și fără internet.</p>}

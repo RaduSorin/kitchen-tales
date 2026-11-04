@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import { memo, useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import type { Story } from '../lib/types'
 import { useSpineArt } from '../lib/coverTint'
 import { useCoverUrl } from '../lib/useCoverUrl'
@@ -8,18 +8,20 @@ import { CoverPicture, SpineFace, TickButton, type BookViewProps } from './Spine
 type Arrival = { id: string; phase: 'zero' | 'room' | 'drop' }
 const GAP = 3
 
-function ShelfSpine({ story, on, width, height, arrival, wob }: { story: Story; on: boolean; width: number; height: number; arrival?: Arrival['phase']; wob?: number }) {
+// Memoised: a step on a shelf of a hundred books re-renders only the two books that change.
+const ShelfSpine = memo(function ShelfSpine({ story, on, width, height, arrival, wob }: { story: Story; on: boolean; width: number; height: number; arrival?: Arrival['phase']; wob?: number }) {
   const { thumb, tint } = useSpineArt(story)
   const cls = `shelf-spine spine-skin${on ? ' on' : ''}${arrival === 'drop' ? ' drop' : ''}${wob ? ' wob' : ''}`
   return (
     // Not a <button>: the whole shelf is the label of a hidden switch (for the iPhone tick), and a
     // button inside a label would keep the tap from reaching the switch.
-    <span role="button" className={cls} data-id={story.id} aria-label={story.title} aria-pressed={on}
+    // The chosen book is the one stop for Tab (arrows move between books, Enter opens it).
+    <span role="button" className={cls} data-id={story.id} aria-label={story.title} aria-pressed={on} tabIndex={on ? 0 : -1}
       style={{ ...bookVars(story, tint), width, height, ['--dir' as string]: wob ?? 0 }}>
       <SpineFace story={story} url={thumb} />
     </span>
   )
-}
+})
 
 function WindowCover({ story, isNew, onOpen }: { story: Story; isNew: boolean; onOpen: () => void }) {
   const url = useCoverUrl(story.coverKey)
@@ -102,7 +104,22 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
     onSelect(id)
     shelfClick()
   }
-  const step = (d: number) => { const l = latest.current; const i = l.sel ? l.list.indexOf(l.sel) : 0; pick(l.list[i + d]?.id) }
+  const step = (d: number) => {
+    const l = latest.current
+    const i = l.sel ? l.list.indexOf(l.sel) : 0
+    const next = l.list[i + d]?.id
+    pick(next)
+    // Stepping from the keyboard on a book: the focus goes along to the new one.
+    if (next && (document.activeElement as HTMLElement | null)?.classList.contains('shelf-spine')) {
+      requestAnimationFrame(() => shelves.current?.querySelector<HTMLElement>(`[data-id="${CSS.escape(next)}"]`)?.focus({ preventScroll: false }))
+    }
+  }
+  const onKey = (e: React.KeyboardEvent<HTMLLabelElement>) => {
+    if ((e.key === 'Enter' || e.key === ' ') && (e.target as HTMLElement).classList.contains('shelf-spine') && latest.current.sel) {
+      e.preventDefault()
+      onOpen(latest.current.sel)
+    }
+  }
 
   // ---------- Gestures on the spines ----------
   const drag = useRef<{ x: number; moved: boolean; start?: string; picked: boolean; from?: string }>(undefined)
@@ -235,7 +252,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
           <small>{now?.id === sel.id ? 'Nouă pe raft' : bookMeta(sel)}</small>
         </div>
       </div>
-      <label className="shelves" ref={shelves} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={click}>
+      <label className="shelves" ref={shelves} onKeyDown={onKey} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={click}>
         <input {...NATIVE_SWITCH} />
         {rows.map((row, r) => (
           <div key={r} className="shelf-row">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { cachedFolders, createFolder, deleteFolder, downloadStory, listFolders, listStories, saveFolder, setFolderShared } from '../lib/db'
 import type { Story, StoryFolder } from '../lib/types'
@@ -6,6 +6,7 @@ import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
 import { builtinFolderOf, fmtTime, folderOf, getLastStoryId, getPosition, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
 import FolderSheet from '../components/FolderSheet'
+import Sheet from '../components/Sheet'
 import { showToast } from '../lib/toast'
 import StoryCover from '../components/StoryCover'
 import ShareIcon from '../components/ShareIcon'
@@ -88,7 +89,17 @@ export default function StoryList() {
     setSeen(all)
   }, [loading, kid, seen, stories, error])
   const openName = open?.name
-  const freshIds = seen && open && !favMode ? open.items.filter((s) => seen[s.id] !== open.name).map((s) => s.id) : []
+  // A folder opens at its top (not at the grid's scroll offset); back on the grid, where it was.
+  const gridScroll = useRef(0)
+  const shownFolder = useRef(inFolder ? openName : undefined)
+  useLayoutEffect(() => {
+    const now = inFolder ? openName : undefined
+    if (now === shownFolder.current) return
+    window.scrollTo(0, now ? 0 : gridScroll.current)
+    shownFolder.current = now
+  }, [inFolder, openName])
+  // By story, not by folder: a renamed folder, or one deleted, doesn't make its stories new again.
+  const freshIds = seen && open && !favMode ? open.items.filter((s) => !(s.id in seen)).map((s) => s.id) : []
   const freshKey = freshIds.join(',')
   useEffect(() => {
     if (!seen || !openName || !freshKey) return
@@ -109,7 +120,7 @@ export default function StoryList() {
     const t = setTimeout(() => setArrivals(undefined), 900)
     return () => clearTimeout(t)
   }, [popping])
-  const unseen = (items: Story[]) => (seen ? items.filter((s) => seen[s.id] !== folderOf(s)).length : 0)
+  const unseen = (items: Story[]) => (seen ? items.filter((s) => !(s.id in seen)).length : 0)
   const pickView = (v: typeof view) => { if (open) setFolderView(open.name, v, landscape) }
   // The chosen book, remembered per folder so it is still chosen after opening a story and coming back.
   const pick = (id: string) => { setSelId(id); if (open) rememberShelfPick(open.name, id) }
@@ -135,8 +146,10 @@ export default function StoryList() {
   }
 
   const [sharing, setSharing] = useState(false)
+  const [askShare, setAskShare] = useState(false)
   const shareFolder = async (shared: boolean) => {
     if (!open) return
+    setAskShare(false)
     setSharing(true); setError('')
     try {
       await setFolderShared(open, shared)
@@ -177,10 +190,10 @@ export default function StoryList() {
                 <div className="folder-sub">
                   {open.items.length > 0 && <span>{count(open.items.length)}</span>}
                   {parent && (open.mine ? online && open.items.length > 0 && (
-                    <button type="button" className="share-chip" aria-pressed={open.shared} disabled={sharing} onClick={() => shareFolder(!open.shared)}>
-                      <ShareIcon shared={open.shared} />
-                      {sharing ? 'Se salvează…' : open.shared ? 'Partajat' : 'Doar la noi'}
-                      <span className="sr-only">{open.shared ? ' cu toate conturile; apasă ca să rămână doar în spațiul nostru' : ' în spațiul nostru; apasă ca să-l partajezi cu toate conturile'}</span>
+                    <button type="button" className="share-chip" aria-pressed={open.shared} aria-haspopup="dialog" disabled={sharing} onClick={() => setAskShare(true)}>
+                      <ShareIcon shared={open.sharedCount > 0} />
+                      {sharing ? 'Se salvează…' : open.shared ? 'Partajat' : open.sharedCount ? 'Parțial partajat' : 'Doar la noi'}
+                      <span className="sr-only">{open.shared ? ' cu toate conturile' : open.sharedCount ? `: ${open.sharedCount} din ${open.items.length} povești sunt partajate` : ' în spațiul nostru'}. Apasă ca să alegi cine vede folderul.</span>
                     </button>
                   ) : (
                     <span className="share-note">de la {open.items[0]?.spaceName ?? open.row?.spaceName ?? 'alt cont'}, doar ascultare</span>
@@ -202,7 +215,7 @@ export default function StoryList() {
           <span className="shelf-count">{count(inFolder ? open.items.length : available.length)}</span>
         )}
         {wideShelf && <ViewSwitch value={view} onChange={pickView} />}
-        {parent && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
+        {parent && (!inFolder || open.mine) && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
 
       {available.length > 0 && !favMode && !wideShelf && (
@@ -251,7 +264,7 @@ export default function StoryList() {
       ) : !open && !searching ? (
         <div className="covers">
           {folders.map((f) => (
-            <button key={f.name} type="button" className="cover-card folder-card" onClick={() => setParams({ folder: f.name }, { state: { fromShelf: true } })}>
+            <button key={f.name} type="button" className="cover-card folder-card" onClick={() => { gridScroll.current = window.scrollY; setParams({ folder: f.name }, { state: { fromShelf: true } }) }}>
               {unseen(f.items) > 0 && <span className="folder-fresh">{newLabel(unseen(f.items))}</span>}
               <span className="folder-mosaic" aria-hidden="true">
                 {f.items.length === 0
@@ -333,6 +346,32 @@ export default function StoryList() {
             setParams({ folder: name }, { state: { fromShelf: true } })
           }} />
       )}
+      {askShare && inFolder && (() => {
+        // Who sees the folder: a choice in a sheet, never a single tap, and it says what changes.
+        const total = open.items.length
+        const privateCount = total - open.sharedCount
+        const many = (n: number) => (n === 1 ? 'o poveste' : `${n} povești`)
+        return (
+          <Sheet title="Cine vede folderul?" onClose={() => setAskShare(false)}>
+            <p className="sheet-text">
+              {open.shared ? `Toate cele ${many(total)} sunt partajate cu toate conturile.`
+                : open.sharedCount ? `${open.sharedCount} din ${total} povești sunt partajate cu toate conturile, ${privateCount === 1 ? "una e" : `${privateCount} sunt`} doar în spațiul nostru.`
+                : `${total === 1 ? 'Povestea e' : `Toate cele ${total} povești sunt`} doar în spațiul nostru.`}
+            </p>
+            <div className="menu-list">
+              <button type="button" className="btn share-toggle" aria-pressed={open.shared} disabled={open.shared} onClick={() => shareFolder(true)}>
+                <ShareIcon shared size={18} />
+                {open.shared ? 'Partajat cu toate conturile' : `Partajează cu toate conturile${privateCount && open.sharedCount ? ` (încă ${many(privateCount)})` : ''}`}
+              </button>
+              <button type="button" className="btn share-toggle" aria-pressed={!open.sharedCount} disabled={!open.sharedCount} onClick={() => shareFolder(false)}>
+                <ShareIcon shared={false} size={18} />
+                {open.sharedCount ? 'Doar în spațiul nostru' : 'Doar în spațiul nostru (acum)'}
+              </button>
+              <p className="share-note">Partajarea se aplică folderului și fiecărei povești din el. Poveștile adăugate apoi în folder îi iau partajarea.</p>
+            </div>
+          </Sheet>
+        )
+      })()}
       {editing === 'open' && inFolder && (() => {
         const sources = new Set(open.items.map(builtinFolderOf))
         return (

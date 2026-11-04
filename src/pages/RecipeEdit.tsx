@@ -134,6 +134,8 @@ export default function RecipeEdit() {
     if (!id) { setR(empty()); return }
     getRecipe(id).then((x) => {
       if (!x) { setLoadFailed('missing'); return }
+      // Another space's recipe can be read, not changed: show it instead of an editor that can't save.
+      if (x.mine === false) { nav(`/retete/${x.id}`, { replace: true }); return }
       const st = toSteps(x.steps, x.stepPhotoKeys)
       setR(x); setOriginal(x)
       setIng(x.ingredients.join('\n')); setSteps(st)

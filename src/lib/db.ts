@@ -329,7 +329,7 @@ export async function moveStory(s: Story, collection: string | null) {
     id: s.id, collection, ...(folder ? { readerGroups: readerGroupsFor(!!shared), sharedDirect: !!shared, spaceName: mySpaceName() } : {}),
   }))
   await patchCachedStories((x) => (x.id === s.id ? { ...x, collection: collection ?? undefined, shared } : x))
-  return { shared }
+  return { shared, changed: !!shared !== !!s.shared }
 }
 
 /** Shares one story with every account, or makes it private to our space again. */
@@ -356,14 +356,14 @@ export async function setFolderShared(folder: Folder, shared: boolean) {
   await patchCachedStories((x) => (ids.has(x.id) ? { ...x, shared } : x))
 }
 
-export async function createFolder(name: string, icon?: string) {
-  // Like stories, a new folder starts shared.
+/** A new folder starts shared, like stories, unless `shared` says otherwise. */
+export async function createFolder(name: string, icon?: string, shared = true) {
   const res = await client.models.StoryFolder.create({
-    name, icon: icon ?? null, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(true), spaceName: mySpaceName(),
+    name, icon: icon ?? null, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(shared), spaceName: mySpaceName(),
   })
   errorsOf(res)
   if (!res.data) throw new Error('Nu am putut crea folderul.')
-  cacheFolders([...cachedFolders(), { id: res.data.id, name, icon, mine: true, shared: true }])
+  cacheFolders([...cachedFolders(), { id: res.data.id, name, icon, mine: true, shared }])
   return res.data.id
 }
 
@@ -559,6 +559,23 @@ export const shoppingApi = {
 
 // ---- space settings (one row per space, id = the space group) ----
 
+let namesChecked = false
+/**
+ * Other spaces show what we share under our space's name, as saved on each row. If the name
+ * changed since something was shared, put the new one on those rows (once per app start), so
+ * the others' "Primite de la …" folders don't split in two.
+ */
+async function refreshSharedNames(name: string | undefined) {
+  if (namesChecked || !name) return
+  namesChecked = true
+  const stale = <T extends { mine?: boolean; shared?: boolean; spaceName?: string }>(xs?: T[]) => (xs ?? []).filter((x) => x.mine && x.shared && x.spaceName && x.spaceName !== name)
+  const [stories, recipes] = await Promise.all([cachedList('stories').catch(() => undefined), cachedList('recipes').catch(() => undefined)])
+  for (const s of stale(stories)) errorsOf(await client.models.Story.update({ id: s.id, spaceName: name }))
+  for (const r of stale(recipes)) errorsOf(await client.models.Recipe.update({ id: r.id, spaceName: name }))
+  if (!stale(stories).length && !stale(recipes).length) return
+  for (const f of cachedFolders().filter((f) => f.mine !== false && f.shared)) errorsOf(await client.models.StoryFolder.update({ id: f.id, spaceName: name }))
+}
+
 /** The space's settings from the cloud, or null if they were never saved there. */
 export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid'> & { city?: string; kid?: SharedSettings['kid'] }) | null> {
   const res = await client.models.FamilySettings.get({ id: await mySpaceGroup() })
@@ -566,6 +583,7 @@ export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' 
   const r = res.data
   if (!r) return null
   rememberSpaceName(r.spaceName)
+  refreshSharedNames(r.spaceName ?? undefined).catch(() => {})
   return {
     child: {
       name: r.childName ?? '',

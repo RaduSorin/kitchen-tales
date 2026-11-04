@@ -274,10 +274,11 @@ function StoryPlayer() {
         </div>
       </details>}
       {moveOpen && !kid && (
-        <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection, shared) => {
+        <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection, shared, changed) => {
           const moved = { ...s, collection, shared: shared ?? s.shared }
           setS(moved); player.update(moved)
-          showToast(`Mutată în ${collection ?? builtinFolderOf(s)}`)
+          // Say so when the folder changed who can see the story.
+          showToast(`Mutată în ${collection ?? builtinFolderOf(s)}${changed ? (moved.shared ? ' · acum e partajată cu toate conturile' : ' · acum e doar în spațiul nostru') : ''}`)
         }} />
       )}
     </div>

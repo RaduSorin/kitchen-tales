@@ -23,8 +23,11 @@ export const folderOf = (s: Story) => s.mine === false ? receivedFolderName(s.co
 export const isBuiltinFolder = (name: string) => Object.values(SOURCE_FOLDER).includes(name)
 export const builtinFolderOf = (s: Pick<Story, 'source'>) => SOURCE_FOLDER[s.source]
 
-/** `mine` is false for a folder another space shared; `shared` = every story in it is shared. */
-export type Folder = { name: string; items: Story[]; icon?: string; row?: StoryFolder; builtin: boolean; mine: boolean; shared: boolean }
+/**
+ * `mine` is false for a folder another space shared; `shared` = every story in it is shared;
+ * `sharedCount` = how many of its stories are shared (some but not all: partly shared).
+ */
+export type Folder = { name: string; items: Story[]; icon?: string; row?: StoryFolder; builtin: boolean; mine: boolean; shared: boolean; sharedCount: number }
 
 // Folders in shelf order (collections and our own folders first, alphabetically, then the built-in ones,
 // then what other spaces shared), each with its stories. `rows` adds folders even while they are empty.
@@ -36,7 +39,8 @@ export function groupFolders(stories: Story[], rows: StoryFolder[] = []): Folder
     const row = rows.find((r) => r.name === name)
     const mine = row ? row.mine !== false : items.every((s) => s.mine !== false)
     const shared = items.length ? items.every((s) => s.shared) : !!row?.shared
-    return { name, items, icon: row?.icon, row, builtin: mine && isBuiltinFolder(name), mine, shared }
+    const sharedCount = items.filter((s) => s.shared).length
+    return { name, items, icon: row?.icon, row, builtin: mine && isBuiltinFolder(name), mine, shared, sharedCount }
   }).sort((a, b) => Number(!a.mine) - Number(!b.mine) || Number(a.builtin) - Number(b.builtin) || a.name.localeCompare(b.name, 'ro'))
 }
 

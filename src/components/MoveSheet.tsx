@@ -4,18 +4,20 @@ import { cachedFolders, createFolder, listFolders, listStories, moveStory } from
 import { builtinFolderOf, FOLDER_ICONS, folderNameProblem, groupFolders, type Folder } from '../lib/stories'
 import type { Story } from '../lib/types'
 
-const Row = ({ label, icon, count, on, busy, onPick }: { label: string; icon?: string; count?: number; on: boolean; busy: boolean; onPick: () => void }) => (
+// `note`: the folder's sharing, shown when moving there would change who sees the story.
+const Row = ({ label, icon, count, on, busy, onPick, note }: { label: string; icon?: string; count?: number; on: boolean; busy: boolean; onPick: () => void; note?: string }) => (
   <li>
     <button type="button" className="move-row" aria-pressed={on} disabled={busy || on} onClick={onPick}>
       <span className="move-icon" aria-hidden="true">{icon ?? '📁'}</span>
-      <span className="move-name">{label}{count !== undefined && <small>{count === 1 ? '1 poveste' : `${count} povești`}</small>}</span>
+      <span className="move-name">{label}{count !== undefined && <small>{count === 1 ? '1 poveste' : `${count} povești`}{note && ` · ${note}`}</small>}</span>
       {on && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-label="Aici e acum"><path d="M5 12.5l4.5 4.5L19 7" /></svg>}
     </button>
   </li>
 )
 
 /** "Mută în folder": pick one of the shelf's folders for a story, or make a new one and move it there. */
-export default function MoveSheet({ story, onMoved, onClose }: { story: Story; onMoved: (collection: string | undefined, shared?: boolean) => void; onClose: () => void }) {
+/** `onMoved` gets the new folder, the story's sharing now, and whether the move changed it. */
+export default function MoveSheet({ story, onMoved, onClose }: { story: Story; onMoved: (collection: string | undefined, shared: boolean | undefined, changed: boolean) => void; onClose: () => void }) {
   const [folders, setFolders] = useState<Folder[]>(() => groupFolders([], cachedFolders()))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -30,9 +32,10 @@ export default function MoveSheet({ story, onMoved, onClose }: { story: Story; o
   const move = async (collection: string | undefined, create?: { name: string; icon: string }) => {
     setBusy(true); setError('')
     try {
-      if (create) await createFolder(create.name, create.icon)
-      const { shared } = await moveStory(story, collection ?? null)
-      onMoved(collection, shared)
+      // A folder made here keeps the story's sharing: a private story never becomes shared by a move.
+      if (create) await createFolder(create.name, create.icon, !!story.shared)
+      const { shared, changed } = await moveStory(story, collection ?? null)
+      onMoved(collection, shared, changed)
       onClose()
     } catch {
       setError('Nu am putut muta povestea. Încearcă din nou.')
@@ -67,7 +70,8 @@ export default function MoveSheet({ story, onMoved, onClose }: { story: Story; o
             </button>
           </li>
           {targets.map((f) => (
-            <Row key={f.name} label={f.name} icon={f.icon} count={f.items.length} on={story.collection === f.name} busy={busy} onPick={() => move(f.name)} />
+            <Row key={f.name} label={f.name} icon={f.icon} count={f.items.length} on={story.collection === f.name} busy={busy} onPick={() => move(f.name)}
+              note={f.row && !!f.row.shared !== !!story.shared ? (f.row.shared ? 'partajat cu toate conturile' : 'doar în spațiul nostru') : undefined} />
           ))}
           <Row label={own} icon="🏠" on={!story.collection} busy={busy} onPick={() => move(undefined)} />
         </ul>

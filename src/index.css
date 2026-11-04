@@ -987,8 +987,7 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 /* Profile tab and page (replaces the gear and the Settings tabs) */
 .avatar { display: grid; place-items: center; flex: none; border-radius: 50%; background: linear-gradient(135deg, #e7a26b, #c4664a); color: #fff;
   font-family: var(--f-body); font-weight: 800; line-height: 1; letter-spacing: 0; }
-.tab-profile.active .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
-:root[data-area="night"] .tab-profile.active .avatar { box-shadow: 0 0 0 2px #171a45, 0 0 0 4px var(--moon-ink); }
+/* In the tab bar the selected tab's bubble is enough: no extra ring on the avatar. */
 .icon-link.profile-link.active { background: none; }
 .icon-link.profile-link.active .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
 .prof-me { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; border: 0; border-radius: 16px; background: var(--surface);

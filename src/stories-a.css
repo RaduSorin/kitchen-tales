@@ -707,3 +707,49 @@
 .cs-own { color: var(--muted); font-weight: 700; justify-self: center; }
 .cs-next { color: var(--muted); font-size: .85rem; }
 @media (prefers-reduced-motion: reduce) { .cs-body { animation: none; } }
+
+/* "Citește tu" (concepts D + F): before starting, the invitation, three tips and a gold microphone;
+   once recording, the whole screen: big clock, rings breathing with the voice, Reia and Gata. */
+.parent-head.stacked { flex-direction: column; align-items: flex-start; gap: 18px; }
+.parent-head.stacked h1 { font-size: 2rem; }
+.rec-tips { list-style: none; margin: 0; padding: 14px 16px; display: grid; gap: 10px; border-radius: 20px; background: var(--surface); border: 1px solid rgb(255 255 255 / .08);
+  font-size: .9rem; font-weight: 600; color: #d8d1dd; }
+.rec-tips li { display: flex; gap: 10px; align-items: center; }
+.rec-tips svg { color: var(--accent); flex: none; }
+.recorder { gap: 12px; padding: 22px 0 8px; }
+.rec-clock.idle { font-size: 2.8rem; color: rgb(244 239 230 / .55); }
+.rec-start { width: 116px; height: 116px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center;
+  background: radial-gradient(circle, rgb(242 200 121 / .22), rgb(242 200 121 / .06) 70%); box-shadow: 0 0 0 2px var(--accent), 0 0 40px rgb(242 200 121 / .3); }
+.rec-start span { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
+.rec-start:active { transform: scale(.96); }
+.rec-start-label { color: var(--accent); font-weight: 800; font-size: .9rem; }
+
+.rec-full { position: fixed; inset: 0; z-index: 25; display: grid; grid-template-rows: auto auto 1fr auto auto; justify-items: center; gap: 10px;
+  padding: calc(18px + var(--status-h, env(safe-area-inset-top, 0px))) 16px calc(24px + env(safe-area-inset-bottom));
+  background: radial-gradient(80% 50% at 50% 52%, rgb(242 200 121 / .14), transparent 70%), radial-gradient(120% 45% at 10% 0%, rgb(116 66 150 / .35), transparent 70%), var(--night-bg, #0f0e13);
+  color: var(--text); font-family: var(--f-body); animation: rec-in .25s ease-out; }
+@keyframes rec-in { from { opacity: 0; } }
+.rec-kicker { font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); padding-top: 12px; }
+.rec-now { display: grid; justify-items: center; gap: 8px; margin-top: 4vh; }
+.rec-status { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 800; color: #ff8f8f; }
+.rec-status i { width: 8px; height: 8px; border-radius: 50%; background: #ff6b6b; animation: rec-blink 1.4s ease-in-out infinite; }
+.rec-status.paused { color: var(--muted); }
+.rec-status.paused i { background: var(--muted); animation: none; }
+@keyframes rec-blink { 50% { opacity: .3; } }
+.rec-full .rec-clock { font-size: clamp(3.4rem, 18vw, 4.6rem); line-height: 1; }
+.rec-orb { --lvl: 0; position: relative; align-self: center; width: 116px; height: 116px; display: grid; place-items: center; }
+.rec-orb .ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; translate: -50% -50%; transition: scale .15s ease-out; }
+.rec-orb .r1 { width: 184px; height: 184px; border: 2px solid rgb(242 200 121 / .4); background: rgb(242 200 121 / .05); scale: calc(1 + var(--lvl) * .12); }
+.rec-orb .r2 { width: 240px; height: 240px; border: 1px solid rgb(242 200 121 / .22); background: rgb(242 200 121 / .03); scale: calc(1 + var(--lvl) * .2); }
+.rec-orb .r3 { width: 300px; height: 300px; border: 1px solid rgb(242 200 121 / .12); scale: calc(1 + var(--lvl) * .28); }
+.rec-main { position: relative; width: 116px; height: 116px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; color: #ff6b6b;
+  background: #1c1922; box-shadow: 0 0 0 3px var(--accent), 0 0 40px rgb(242 200 121 / .35); }
+.rec-main i { width: 40px; height: 40px; border-radius: 50%; background: #ff6b6b; }
+.rec-main:active { transform: scale(.96); }
+.rec-full .rec-hint { font-size: .95rem; line-height: 1.45; }
+.rec-actions { width: 100%; max-width: 480px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rec-again, .rec-done { height: 56px; border-radius: 28px; font: inherit; font-weight: 800; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.rec-again { border: 1px solid rgb(255 255 255 / .1); background: rgb(255 255 255 / .07); color: var(--text); }
+.rec-done { border: 0; background: var(--accent); color: var(--on-accent); }
+.rec-done:disabled { opacity: .45; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .rec-full, .rec-status i { animation: none; } .rec-orb .ring { transition: none; } }

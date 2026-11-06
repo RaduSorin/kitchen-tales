@@ -327,14 +327,16 @@ export default function StoryAdd() {
     )
   }
 
+  // "Citește tu" before the recording: the invitation as the title (the recorder takes the whole screen once it starts).
+  const recordStart = mode === 'record' && !ready
   const head = (
-    <div className="parent-head">
+    <div className={`parent-head${recordStart ? ' stacked' : ''}`}>
       <button type="button" className="night-btn" aria-label="Înapoi" data-leaves={mode === 'record' && !ready ? '' : undefined} onClick={() => (mode ? back() : nav('/povesti'))}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
       </button>
       <div>
-        <span className="pbadge">Mod părinte</span>
-        <h1>{mode ? TITLES[mode] : 'Poveste nouă'}</h1>
+        <span className="pbadge">{recordStart ? 'Citește tu' : 'Mod părinte'}</span>
+        <h1>{recordStart ? 'Ia cartea și citește cu glas tare' : mode ? TITLES[mode] : 'Poveste nouă'}</h1>
       </div>
     </div>
   )
@@ -359,13 +361,17 @@ export default function StoryAdd() {
   return (
     <form className="parent" onSubmit={save}>
       {head}
-      {(mode !== 'create' || ready) && <label className="night-field">Titlul poveștii
+      {(mode === 'upload' || ready) && <label className="night-field">Titlul poveștii
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={mode === 'create' ? 'Ursulețul curajos' : 'Vulpița Fifi'} />
       </label>}
 
       {mode === 'record' && !ready && (
         <>
-          <p className="parent-sub">Citește în ritmul tău, ca la culcare. Poți face pauză oricând și continui de unde ai rămas.</p>
+          <ul className="rec-tips">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3" /></svg>Ține telefonul la o palmă de gură</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>Poți face pauză oricând și continui</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" /></svg>Titlul și coperta le alegi la final</li>
+          </ul>
           <Recorder onDone={(blob, s, interrupted) => {
             reset(); setAudio(blob); setSeconds(s); setSource('recording')
             if (interrupted) showToast('Înregistrarea s-a oprit, dar am păstrat ce ai citit până acum.')

@@ -573,3 +573,20 @@
   box-shadow: inset 0 1px 0 rgb(242 200 121 / .55), 0 10px 18px rgb(0 0 0 / .6);
 }
 .moon-dust { background: var(--accent); }
+
+/* The pinned window of the bookshelf: one even blur from its bottom edge up behind the clock, so the
+   books scrolling under it don't show through at the very top. The blur lives on a pseudo-element
+   that reaches into the status bar area (a filter on the window itself would stop at its top). */
+@media (max-width: 759px) {
+  .bookshelf:not(.wide) .vitrine.stuck { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .bookshelf:not(.wide) .vitrine::before {
+    content: ''; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0;
+    top: calc(-1 * env(safe-area-inset-top, 0px) - 2px);
+    border-radius: inherit; pointer-events: none;
+    background: rgb(15 14 19 / .72);
+    -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+    opacity: 0; transition: opacity .2s;
+  }
+  .bookshelf:not(.wide) .vitrine.stuck::before { opacity: 1; }
+  :root:has(.vitrine.stuck) .status-fill { background: none; }
+}

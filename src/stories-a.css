@@ -628,3 +628,6 @@
 :root[data-area="night"] .play-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; gap: 8px; }
 :root[data-area="night"] .play-opts .opt-chip { min-width: 0; max-width: 100%; }
 :root[data-area="night"] .play-opts .opt-chip > span:last-child { white-space: nowrap; }
+/* The speed fits inside its circle and sits in the middle of it, also with three digits ("1,25×"). */
+.opt-icon .opt-rate { height: auto !important; padding: 0 !important; border-radius: 0 !important; line-height: 1; display: block !important; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.opt-icon .opt-rate.long { font-size: .74rem !important; letter-spacing: -.03em; }

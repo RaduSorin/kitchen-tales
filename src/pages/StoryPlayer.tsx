@@ -265,7 +265,7 @@ function StoryPlayer() {
       {/* Round buttons with a label: tap "Stop după" to cycle 1 → 2 → 3 → 5 stories, the other one to shuffle. */}
       <div className="play-opts">
         <button type="button" className="opt-chip" onClick={player.cycleRate} aria-label={`Viteză ${fmtRate(player.rate)}. Atinge ca să schimbi.`}>
-          <span className="opt-icon"><b className="opt-rate">{fmtRate(player.rate)}</b></span>
+          <span className="opt-icon"><b className={fmtRate(player.rate).length > 3 ? 'opt-rate long' : 'opt-rate'}>{fmtRate(player.rate)}</b></span>
           <span>Viteză</span>
         </button>
         <button type="button" className="opt-chip" onClick={() => { const all: Sleep[] = [1, 2, 3, 5]; chooseSleep(all[(all.indexOf(sleep) + 1) % all.length]) }}

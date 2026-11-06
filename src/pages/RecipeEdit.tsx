@@ -17,6 +17,7 @@ import { useSettings } from '../lib/settings'
 import { canGoBack, useBack } from '../lib/back'
 import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { LoadError, Loading } from '../components/LoadState'
+import AddArt from '../components/AddArt'
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 
@@ -43,10 +44,6 @@ const LEAVE_EDITS = {
   text: 'Ce ai schimbat la rețetă nu e salvat. Dacă pleci acum, se pierde.',
   stay: 'Continuă editarea',
   leave: 'Renunță la modificări',
-}
-
-function Icon({ d }: { d: string }) {
-  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
 }
 
 function StepItem({ n, step, total, onChange, onMove, onRemove }: {
@@ -327,6 +324,7 @@ export default function RecipeEdit() {
           <h1>Rețetă nouă</h1>
           <button type="button" className="link-btn" onClick={back}>Renunță</button>
         </div>
+        {mode === 'choose' && !importing && <p className="add-sub">De unde vine rețeta?</p>}
         {importing ? (
           <p className="importing"><span className="spinner" /> {importing}</p>
         ) : mode === 'link' ? (
@@ -389,29 +387,30 @@ export default function RecipeEdit() {
           </div>
         ) : (
           <div className="ways">
-            <button type="button" className="way" onClick={() => setMode('edit')}>
-              <span className="way-ic"><Icon d="M4 20h4L19 9l-4-4L4 16z" /></span>
-              <span><b>Scriu eu</b><small>Titlu, ingrediente și pași</small></span>
-            </button>
+            {/* The imports most used come first. */}
             <button type="button" className="way" onClick={() => setMode('link')}>
-              <span className="way-ic"><Icon d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1" /></span>
+              <AddArt kind="link" />
               <span><b>Din link</b><small>De pe un blog sau un site</small></span>
             </button>
             <label className="way">
-              <span className="way-ic"><Icon d="M3 9a2 2 0 0 1 2-2h2l1.5-3h7L17 7h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 10a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" /></span>
+              <AddArt kind="cam" />
               <span><b>Din poză</b><small>O pagină din carte sau din caiet</small></span>
               <input type="file" accept="image/*" hidden onChange={(e) => importPhoto(e.target.files?.[0])} />
             </label>
+            <button type="button" className="way" onClick={() => setMode('edit')}>
+              <AddArt kind="pen" />
+              <span><b>Scriu eu</b><small>Titlu, ingrediente și pași</small></span>
+            </button>
             <button type="button" className="way" onClick={() => setMode('fridge')}>
-              <span className="way-ic"><Icon d="M6 2h12a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM5 10h14M9 5v2M9 13v3" /></span>
+              <AddArt kind="fridge" />
               <span><b>Din frigider</b><small>Scrii ce ai, primești idei de rețete</small></span>
             </button>
             <button type="button" className="way" onClick={() => setMode('generate')}>
-              <span className="way-ic"><Icon d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9zM5 15l.6 1.4L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6z" /></span>
+              <AddArt kind="gen" />
               <span><b>Generează</b><small>Spui ce ai chef, ținem cont de aparatele tale</small></span>
             </button>
             <button type="button" className="way" onClick={() => setMode('text')}>
-              <span className="way-ic"><Icon d="M8 4h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 4V2h6v2M9 10h6M9 14h6" /></span>
+              <AddArt kind="text" />
               <span><b>Din text sau voce</b><small>O notiță copiată sau o rețetă dictată</small></span>
             </button>
           </div>

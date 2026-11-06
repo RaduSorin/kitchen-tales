@@ -13,6 +13,7 @@ import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
 import { groupFolders } from '../lib/stories'
 import ShareIcon from '../components/ShareIcon'
+import AddArt, { type AddArtKind } from '../components/AddArt'
 import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { showToast } from '../lib/toast'
 
@@ -42,12 +43,13 @@ const MODE_OF: Record<StorySource, Mode> = { recording: 'record', generated: 'cr
 const TITLES: Record<Mode, string> = { record: 'Citește tu', create: 'Creează o poveste', upload: 'Încarcă un fișier' }
 
 const Icon = ({ d }: { d: string }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#171a45" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
 )
-const OPTIONS: { mode: Mode; color: string; icon: string; text: string }[] = [
-  { mode: 'record', color: '#ff9fb8', icon: 'M9 6a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3', text: 'Înregistrează-ți vocea citind o carte' },
-  { mode: 'create', color: '#ffd76a', icon: 'M12 3l2.2 5.5L20 9l-4.5 3.8L17 19l-5-3.2L7 19l1.5-6.2L4 9l5.8-.5z', text: 'Spui eroul și tema, aplicația o scrie și o citește' },
-  { mode: 'upload', color: '#74e0d0', icon: 'M12 15V4M7 9l5-5 5 5M5 20h14', text: 'MP3 sau M4A de pe telefon sau calculator' },
+// Creating comes first: it is the one that needs nothing ready.
+const OPTIONS: { mode: Mode; art: AddArtKind; text: string }[] = [
+  { mode: 'create', art: 'create', text: 'Spui eroul și tema, aplicația o scrie și o citește' },
+  { mode: 'record', art: 'record', text: 'Înregistrează-ți vocea citind o carte' },
+  { mode: 'upload', art: 'upload', text: 'MP3 sau M4A de pe telefon sau calculator' },
 ]
 
 export default function StoryAdd() {
@@ -191,11 +193,11 @@ export default function StoryAdd() {
     return (
       <div className="parent">
         {head}
-        <p className="parent-sub">Poveștile noi apar pe raftul copilului imediat ce le salvezi.</p>
+        <p className="parent-sub">Apare pe raftul copilului imediat ce o salvezi.</p>
         <div className="add-opts">
           {OPTIONS.map((o) => (
             <button key={o.mode} type="button" className="add-opt" onClick={() => choose(o.mode)}>
-              <span className="ic" style={{ background: o.color }}><Icon d={o.icon} /></span>
+              <AddArt kind={o.art} />
               <span><b>{TITLES[o.mode]}</b><small>{o.text}</small></span>
             </button>
           ))}

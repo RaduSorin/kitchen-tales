@@ -263,7 +263,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   // Car stereos (Bluetooth) often read the cover only once, with the first title they get, so the
   // metadata is set once with its artwork: we wait for the cover (at most ~1.5 s) instead of sending
   // a title without a picture first and the picture later.
-  const artKey = story ? `${story.id}|${story.title}|${story.emoji ?? ''}` : ''
+  const artKey = story ? `${story.id}|${story.title}|${story.emoji ?? ''}|${story.scene ?? ''}` : ''
   const waitCover = !!story?.coverKey && !coverUrl
   useEffect(() => {
     if (!('mediaSession' in navigator)) return

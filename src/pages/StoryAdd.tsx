@@ -11,7 +11,8 @@ import { childAge, useSettings } from '../lib/settings'
 import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
-import { groupFolders } from '../lib/stories'
+import { groupFolders, SCENES, sceneIndex } from '../lib/stories'
+import CoverScene from '../components/CoverScene'
 import Sheet from '../components/Sheet'
 import { fmtTime } from '../lib/stories'
 import AddArt, { type AddArtKind } from '../components/AddArt'
@@ -89,6 +90,8 @@ export default function StoryAdd() {
   const known = { childName: child.name.trim() || undefined, age: childAge(child), gender: child.gender }
   const [title, setTitle] = useState('')
   const [emoji, setEmoji] = useState(EMOJIS[0])
+  // The drawn cover's colours; undefined until picked (then the title decides, as before).
+  const [scene, setScene] = useState<number>()
   // Cover picture: found inside the audio file, found online by title, or a photo the parent picked. The emoji is the fallback.
   const [cover, setCover] = useState<{ blob?: Blob; url?: string; from: 'file' | 'photo' | 'web' }>()
   const coverBlobUrl = useBlobUrl(cover?.blob)
@@ -204,7 +207,7 @@ export default function StoryAdd() {
         coverKey = await uploadFile('story-covers', small, 'jpg')
         saveCover(coverKey, small).catch(() => {})
       }
-      const id = await createStory({ title: title.trim(), emoji, coverKey, collection: collection || undefined, shared: share, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
+      const id = await createStory({ title: title.trim(), emoji, scene: coverKey ? undefined : scene ?? sceneIndex(title.trim()), coverKey, collection: collection || undefined, shared: share, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
       unsavedAudio.current = undefined // it belongs to the story now
       // Our own recordings and files are already on this device, so keep them for offline listening.
       if (audio) await saveAudio(id, audio).catch(() => {})
@@ -428,7 +431,7 @@ export default function StoryAdd() {
         <div className="add-finish">
           {/* The story as it will look: cover, title (tap to change) and a small player to listen first. */}
           <div className="fin-hero">
-            <StoryCover story={{ title: title || 'Poveste', emoji }} src={coverUrl} className="fin-cover" />
+            <StoryCover story={{ title: title || 'Poveste', emoji, scene }} src={coverUrl} className="fin-cover" />
             <label className="fin-title">
               <span className="sr-only">Titlul poveștii</span>
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titlul poveștii" />
@@ -467,6 +470,18 @@ export default function StoryAdd() {
             {!cover && (
               <div className="emoji-pick fin-emoji" role="group" aria-label="Desenul de pe copertă">
                 {EMOJIS.map((x) => <button type="button" key={x} className={x === emoji ? 'on' : ''} aria-pressed={x === emoji} onClick={() => setEmoji(x)}>{x}</button>)}
+              </div>
+            )}
+            {!cover && (
+              <div className="fin-scenes" role="radiogroup" aria-label="Culorile copertei">
+                {SCENES.map((_, i) => {
+                  const on = (scene ?? sceneIndex(title || 'Poveste')) === i
+                  return (
+                    <button type="button" key={i} role="radio" aria-checked={on} aria-label={`Culorile ${i + 1}`} className={on ? 'on' : undefined} onClick={() => setScene(i)}>
+                      <CoverScene title="" scene={i} />
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>

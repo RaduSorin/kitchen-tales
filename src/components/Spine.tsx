@@ -5,10 +5,10 @@ import { COVER_IMG_BG, coverColor, getPosition } from '../lib/stories'
 import CoverScene from './CoverScene'
 
 /** A small square of the cover picture (or the emoji on its colour while there is none). */
-export function CoverPicture({ story, url, className }: { story: Pick<Story, 'title' | 'emoji'>; url?: string; className: string }) {
+export function CoverPicture({ story, url, className }: { story: Pick<Story, 'title' | 'emoji' | 'scene'>; url?: string; className: string }) {
   return (
-    <span className={className} style={{ background: url ? COVER_IMG_BG : coverColor(story.title) }} aria-hidden="true">
-      {url ? <img src={url} alt="" draggable={false} /> : <><CoverScene title={story.title} /><span>{story.emoji}</span></>}
+    <span className={className} style={{ background: url ? COVER_IMG_BG : coverColor(story.title, story.scene) }} aria-hidden="true">
+      {url ? <img src={url} alt="" draggable={false} /> : <><CoverScene title={story.title} scene={story.scene} /><span>{story.emoji}</span></>}
     </span>
   )
 }

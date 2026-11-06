@@ -8,12 +8,12 @@ const SIZE = 512
  * a square, or the same illustrated cover (sky, hills, emoji) that the shelf shows when there is none.
  * Drawn locally so it works offline and never points at an expiring S3 link.
  */
-export async function storyArtwork(story: Pick<Story, 'title' | 'emoji'>, coverUrl?: string): Promise<string | undefined> {
+export async function storyArtwork(story: Pick<Story, 'title' | 'emoji' | 'scene'>, coverUrl?: string): Promise<string | undefined> {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = SIZE
   const ctx = canvas.getContext('2d')
   if (!ctx) return undefined
-  drawScene(ctx, story.title)
+  drawScene(ctx, story.title, story.scene)
   const img = coverUrl ? await loadImage(coverUrl).catch(() => undefined) : undefined
   if (img) {
     // Cream under the picture, so a transparent drawing doesn't show the sky through it.
@@ -33,8 +33,8 @@ export async function storyArtwork(story: Pick<Story, 'title' | 'emoji'>, coverU
 }
 
 /** The illustrated cover (components/CoverScene.tsx) drawn on the canvas, in the same 0-100 units. */
-function drawScene(ctx: CanvasRenderingContext2D, title: string) {
-  const s = coverScene(title), k = SIZE / 100
+function drawScene(ctx: CanvasRenderingContext2D, title: string, scene?: number) {
+  const s = coverScene(title, scene), k = SIZE / 100
   const sky = ctx.createLinearGradient(0, 0, 0, SIZE)
   sky.addColorStop(0, s.top); sky.addColorStop(1, s.bottom)
   ctx.fillStyle = sky

@@ -25,6 +25,8 @@ export interface Story {
   id: string
   title: string
   emoji: string
+  /** Colours of the drawn cover (index into SCENES); undefined = picked from the title. */
+  scene?: number
   /** Cover picture in S3 (from the audio file's tags or chosen by a parent); emoji is the fallback. */
   coverKey?: string
   /** Shelf folder for a set of stories added together; without it the folder follows `source`. */

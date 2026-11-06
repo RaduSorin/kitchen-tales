@@ -41,6 +41,8 @@ const schema = a.schema({
     .model({
       title: a.string().required(),
       emoji: a.string(),
+      // The drawn cover's colours (an index into SCENES in src/lib/stories.ts); none: picked from the title.
+      scene: a.integer(),
       coverKey: a.string(),
       // Shelf folder for a set of stories added together (e.g. a bought collection).
       collection: a.string(),

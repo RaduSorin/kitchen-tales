@@ -10,7 +10,7 @@ import { useCoverUrl } from '../lib/useCoverUrl'
 // Once the picture has loaded the emoji is removed and the tile turns neutral, so a transparent
 // PNG doesn't show the emoji through it.
 export default function StoryCover({ story, round, className, src }: {
-  story: Pick<Story, 'title' | 'emoji' | 'coverKey'>
+  story: Pick<Story, 'title' | 'emoji' | 'coverKey' | 'scene'>
   round?: boolean
   className?: string
   /** A local preview (e.g. while adding a story) instead of the saved cover. */
@@ -22,8 +22,8 @@ export default function StoryCover({ story, round, className, src }: {
   const [failed, setFailed] = useState<string>()
   const shown = !!url && loaded === url
   return (
-    <span className={`story-cover${round ? ' round' : ''}${shown ? ' has-img' : ''}${className ? ` ${className}` : ''}`} style={{ background: shown ? COVER_IMG_BG : coverColor(story.title) }} aria-hidden="true">
-      {!shown && <CoverScene title={story.title} />}
+    <span className={`story-cover${round ? ' round' : ''}${shown ? ' has-img' : ''}${className ? ` ${className}` : ''}`} style={{ background: shown ? COVER_IMG_BG : coverColor(story.title, story.scene) }} aria-hidden="true">
+      {!shown && <CoverScene title={story.title} scene={story.scene} />}
       {!shown && <span>{story.emoji}</span>}
       {!shown && <b className="cover-name">{story.title}</b>}
       {url && failed !== url && (

@@ -3,11 +3,11 @@ import type { Story, StoryFolder, StorySource } from './types'
 
 /**
  * The illustrated cover of a story without a picture (design "Seară de lux"): a sky from `top`
- * to `bottom`, a soft `glow` behind the emoji and two hills in `hill`. Picked from the title, so
- * a story always gets the same one.
+ * to `bottom`, a soft `glow` behind the emoji and two hills in `hill`. Chosen when the story is
+ * added (`Story.scene`), otherwise picked from the title, so a story always gets the same one.
  */
 export interface CoverScene { top: string; bottom: string; glow: string; hill: string }
-const SCENES: CoverScene[] = [
+export const SCENES: CoverScene[] = [
   { top: '#c8324a', bottom: '#5a1630', glow: '#ff9fb0', hill: '#3a0f22' },
   { top: '#3f7fd0', bottom: '#16245e', glow: '#bfe3ff', hill: '#0e1a44' },
   { top: '#e08a3a', bottom: '#7a3415', glow: '#ffd9a0', hill: '#4a1f0c' },
@@ -21,15 +21,21 @@ const SCENES: CoverScene[] = [
 /** Shown behind a cover picture, so a transparent PNG doesn't let the coloured emoji tile show through. */
 export const COVER_IMG_BG = '#f4efe6'
 
-export function coverScene(title: string) {
+export function coverScene(title: string, scene?: number) {
+  if (scene != null && SCENES[scene]) return SCENES[scene]
+  return SCENES[sceneIndex(title)]
+}
+
+/** The scene a title gets when none was chosen. */
+export function sceneIndex(title: string) {
   let h = 0
   for (const c of title) h = (h * 31 + c.codePointAt(0)!) | 0
-  return SCENES[Math.abs(h) % SCENES.length]
+  return Math.abs(h) % SCENES.length
 }
 
 /** The main colour of a story's illustrated cover (its sky), e.g. for a spine or the glow. */
-export function coverColor(title: string) {
-  return coverScene(title).top
+export function coverColor(title: string, scene?: number) {
+  return coverScene(title, scene).top
 }
 
 export const SOURCE_LABEL: Record<StorySource, string> = { recording: 'vocea noastră', generated: 'poveste nouă', upload: 'fișier audio' }

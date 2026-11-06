@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { listStories } from '../lib/db'
 import { getLastStoryId } from '../lib/stories'
@@ -9,9 +9,18 @@ import { mergeShopping } from '../lib/merge'
 import { primeKeyboard } from '../lib/keyboard'
 import { useKid } from '../lib/kidMode'
 
+/**
+ * A tab icon: the outline, and a solid version shown while the tab is open (design "Seară de
+ * lux": a solid dark glyph inside the gold bubble). Details cut out of a solid glyph are drawn
+ * in the bubble's colour.
+ */
 const I = ({ d }: { d: string }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path className="ic-line" d={d} />
+    <g className="ic-fill">{SOLID[d] ?? <path d={d} fill="currentColor" />}</g>
+  </svg>
 )
+const CUT = 'var(--accent)'
 
 const HOME = 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z'
 const SEARCH = 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4'
@@ -38,6 +47,19 @@ const SPARKLE = 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15
 const HEART = 'M12 21s-9-5.4-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.6-9 12-9 12z'
 /** Person in a circle: the account, drawn like the other outline icons. */
 export const PROFILE = 'M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zM12 7a3.2 3.2 0 1 0 0 6.4A3.2 3.2 0 0 0 12 7zM6.2 18.6a7 7 0 0 1 11.6 0'
+
+const CAL = TABS[1].icon, BOOK = TABS[2].icon, CART = TABS[3].icon
+/** Solid versions of the outline icons (the rest are simply filled in). */
+const SOLID: Record<string, ReactNode> = {
+  [HOME]: <path d="M12 2.6 2.6 10.4V20a1.4 1.4 0 0 0 1.4 1.4h5.2v-6.2h5.6v6.2H20a1.4 1.4 0 0 0 1.4-1.4v-9.6z" fill="currentColor" strokeWidth="1.2" />,
+  [CAL]: <><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="currentColor" /><path d="M8 2v4M16 2v4" /><path d="M4 10h16M8 14h2M14 14h2M8 17h2" stroke={CUT} /></>,
+  [BOOK]: <><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" fill="currentColor" /><path d="M7.4 17.6a1.6 1.6 0 0 1 1.4-1.2H19M9 8h6" stroke={CUT} /></>,
+  [CART]: <><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2z" fill="currentColor" /><circle cx="9.5" cy="20.5" r="1.6" fill="currentColor" stroke="none" /><circle cx="17" cy="20.5" r="1.6" fill="currentColor" stroke="none" /></>,
+  [PROFILE]: <><circle cx="12" cy="12" r="10" fill="currentColor" stroke="none" /><circle cx="12" cy="10.2" r="3.3" fill={CUT} stroke="none" /><path d="M6.4 18.4a7 7 0 0 1 11.2 0" stroke={CUT} strokeWidth="2.6" /></>,
+  [SHELF]: <path d={SHELF} fill="currentColor" strokeWidth="1" />,
+  [PLUS]: <path d={PLUS} strokeWidth="2.8" />,
+  [SEARCH]: <path d={SEARCH} strokeWidth="2.8" />,
+}
 
 /** Hidden in full-screen cooking and on the story player, which has its own big controls. */
 const hidesTabBar = (path: string) => path.endsWith('/gateste') || isPlayerPage(path)

@@ -136,7 +136,7 @@
 :root[data-area="night"] .folder-sub .share-chip { background: rgb(0 0 0 / .28); }
 
 /* ---------- Player ---------- */
-:root[data-area="night"][data-fullscreen] main { padding-top: calc(6px + env(safe-area-inset-top)); }
+:root[data-area="night"][data-fullscreen] main { padding-top: calc(20px + env(safe-area-inset-top)); }
 :root[data-area="night"] .night-player { justify-items: stretch; text-align: left; gap: min(12px, 1.5dvh); }
 :root[data-area="night"] .player-top { display: grid !important; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; gap: 8px; }
 :root[data-area="night"] .player-top .night-btn { background: rgb(0 0 0 / .18); }
@@ -398,3 +398,15 @@
 .folder-menu-row + .folder-menu-row { box-shadow: 0 -1px 0 rgb(255 255 255 / .07); }
 .folder-menu-row.done { color: var(--muted); cursor: default; }
 .folder-menu-row svg { flex: none; opacity: .85; }
+
+/* Player: clear of the soft band under the clock, and the speed / sleep / order buttons at the
+   bottom of the screen with room to breathe instead of right under the controls. */
+:root[data-area="night"][data-fullscreen] main { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+:root[data-area="night"][data-fullscreen] .night-player { display: flex; flex-direction: column; align-items: stretch;
+  min-height: calc(100dvh - 38px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+:root[data-area="night"][data-fullscreen] .night-player > .story-cover.player-art { align-self: center; }
+:root[data-area="night"][data-fullscreen] .play-opts { margin-top: auto; padding-top: min(28px, 3dvh); margin-bottom: min(14px, 1.5dvh); }
+@media (max-height: 700px) {
+  :root[data-area="night"][data-fullscreen] .story-cover.player-art { width: min(82vw, 340px, 32dvh); }
+  :root[data-area="night"][data-fullscreen] .play-opts { padding-top: 6px; }
+}

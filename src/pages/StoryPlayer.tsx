@@ -198,7 +198,7 @@ function StoryPlayer() {
             ? <svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1.5" fill="currentColor" /><rect x="14" y="4" width="4" height="16" rx="1.5" fill="currentColor" /></svg>
             : <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>}
         </button>
-        <button aria-label={`Înainte ${SKIP_FWD} de secunde`} onClick={() => skip(SKIP_FWD)}>
+        <button aria-label={`Înainte ${SKIP_FWD} secunde`} onClick={() => skip(SKIP_FWD)}>
           <SkipIcon sec={SKIP_FWD} />
         </button>
         <button className="track" aria-label={next ? `Povestea următoare: ${next.title}` : 'Povestea următoare'} disabled={!next} onClick={() => next && goTo(next)}>
@@ -310,7 +310,7 @@ const fmtRate = (r: number) => `${String(r).replace('.', ',')}×`
 
 /** Seconds jumped by the skip buttons: back a little, forward a bit more. */
 const SKIP = 15
-const SKIP_FWD = 30
+const SKIP_FWD = 15
 
 /** A curved arrow around the number of seconds it skips (mirrored for "back"). */
 function SkipIcon({ sec, back }: { sec: number; back?: boolean }) {

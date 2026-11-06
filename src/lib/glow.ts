@@ -4,7 +4,8 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import type { Story } from './types'
 
-export type GlowStory = Pick<Story, 'id' | 'title' | 'coverKey'>
+/** A story (its cover) or, on the recipes side, a recipe (its dish photo, as photoKey). */
+export type GlowStory = Pick<Story, 'id' | 'title' | 'coverKey'> & { photoKey?: string }
 
 let current: GlowStory | undefined
 const listeners = new Set<() => void>()
@@ -17,14 +18,14 @@ export function useGlowStory() {
 
 /** A screen's choice of story for the background glow, for as long as the screen is open. */
 export function useGlow(story: GlowStory | undefined) {
-  const id = story?.id, key = story?.coverKey, title = story?.title
+  const id = story?.id, key = story?.coverKey, photo = story?.photoKey, title = story?.title
   useEffect(() => {
     if (!id || title === undefined) return
-    const mine = { id, title, coverKey: key }
+    const mine = { id, title, coverKey: key, photoKey: photo }
     current = mine
     emit()
     return () => { if (current === mine) { current = undefined; emit() } }
-  }, [id, key, title])
+  }, [id, key, photo, title])
 }
 
 // ---------- Is this picture colourful enough to glow? ----------

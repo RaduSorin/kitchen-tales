@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CITIES, cityByName, sunTimes } from '../lib/sun'
 import { useAuthenticator } from '@aws-amplify/ui-react'
-import { childAge, updateSettings, useSettings, type ThemeChoice } from '../lib/settings'
+import { childAge, updateSettings, useSettings } from '../lib/settings'
 import { NATIVE_SWITCH, tryShelfClick } from '../lib/shelf'
 import { PRESET_TOOLS } from '../lib/kitchenTools'
 import { onOfflineChange, removeAllAudio, savedAudioSummary } from '../lib/offline'
@@ -20,7 +20,6 @@ import type { Recipe } from '../lib/types'
 import type { Folder } from '../lib/stories'
 import type { ComponentType, FormEvent } from 'react'
 
-const THEMES: [ThemeChoice, string][] = [['auto', 'Automat'], ['light', 'Luminos'], ['dark', 'Întunecat']]
 const THIS_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 15 }, (_, i) => THIS_YEAR - i)
 
@@ -134,7 +133,7 @@ function SkySettings() {
           </select>
         </label>
       </div>
-      <p className="set-hint">După răsăritul și apusul din orașul tău, aplicația știe când e „Povestea de diseară”, iar cerul de pe cardul cu povești din Acasă (la Rețete) se schimbă ca afară: zi, apus, noapte cu stele.</p>
+      <p className="set-hint">După răsăritul și apusul din orașul tău, aplicația știe când e seară: atunci Acasă îți propune „Povestea de diseară”, iar la Rețete cardul cu povestea urcă mai sus.</p>
     </div>
   )
 }
@@ -297,25 +296,6 @@ function ChildSettings() {
   )
 }
 
-function ThemeSettings() {
-  const { theme } = useSettings()
-  return (
-    <div className="set-group">
-      <div className="set-box">
-        <div className="set-row stack">
-          <span id="theme-label">Temă</span>
-          <div className="seg" role="group" aria-labelledby="theme-label">
-            {THEMES.map(([k, label]) => (
-              <button type="button" key={k} aria-pressed={theme === k} onClick={() => updateSettings({ theme: k })}>{label}</button>
-            ))}
-          </div>
-        </div>
-      </div>
-      <p className="set-hint">Automat urmează setarea telefonului. Poveștile au mereu culorile cerului.</p>
-    </div>
-  )
-}
-
 /** Everything this space shares with the other accounts, with a switch for each recipe and folder. */
 function SharedSettings() {
   const [recipes, setRecipes] = useState<Recipe[]>()
@@ -418,11 +398,10 @@ const nameFromEmail = (email: string) => {
   return w.charAt(0).toUpperCase() + w.slice(1)
 }
 
-const THEME_LABEL: Record<ThemeChoice, string> = { auto: 'Automat', light: 'Luminos', dark: 'Întunecat' }
 
 /** The Profile tab: who you are, the child, people and sharing, preferences, this phone, sign out. */
 function ProfileHome() {
-  const { theme, child, kid, kitchenTools, city, shelfClick } = useSettings()
+  const { child, kid, kitchenTools, city, shelfClick } = useSettings()
   const { user, signOut } = useAuthenticator((c) => [c.user])
   const email = user?.signInDetails?.loginId ?? myEmail()
   const name = useMyName()
@@ -445,8 +424,8 @@ function ProfileHome() {
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
   return (
     <section className="settings profile">
-      {/* The title shows in the top bar (App.tsx); this one is for screen readers. */}
-      <h1 className="sr-only">Profil</h1>
+      {/* Wide screens show the title in the top bar (App.tsx); phones have none, so it shows here. */}
+      <h1 className="profile-h1">Profil</h1>
       <button type="button" className="prof-me" onClick={() => setEditName(true)}>
         <Avatar size={58} />
         <span className="prof-me-text">
@@ -482,7 +461,6 @@ function ProfileHome() {
       <div className="set-group">
         <h2 className="set-label">Preferințe</h2>
         <div className="set-box">
-          <Row to="/profil/aspect" icon="sun" color="#7d8a82" label="Aspect" value={THEME_LABEL[theme]} />
           <Row to="/profil/bucatarie" icon="oven" color="#c4664a" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
           <Row to="/profil/cer" icon="moon" color="#3b3290" label="Cerul din povești" value={cityByName(city).name} />
         </div>
@@ -507,7 +485,6 @@ const PAGES: Record<string, [string, ComponentType]> = {
   persoane: ['Persoane', () => <Members me={myEmail()?.toLowerCase()} />],
   invita: ['Invită pe cineva', InviteForm],
   partajare: ['Ce partajez', SharedSettings],
-  aspect: ['Aspect', ThemeSettings],
   bucatarie: ['Bucătăria mea', KitchenTools],
   cer: ['Cerul din povești', SkySettings],
   offline: ['Povești fără internet', OfflineStorage],
@@ -531,7 +508,7 @@ export default function Profile() {
   const [, Page] = entry
   return (
     <section className="settings">
-      <h1 className="sr-only">{profileTitle(`/profil/${page}`, child.name)}</h1>
+      <h1 className="profile-h1">{profileTitle(`/profil/${page}`, child.name)}</h1>
       <Page />
     </section>
   )

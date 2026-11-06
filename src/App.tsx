@@ -23,7 +23,6 @@ import { NowPlayingProvider } from './lib/nowPlaying'
 import TabBar, { PROFILE } from './components/TabBar'
 import AreaSwitch from './components/AreaSwitch'
 import { isPlayerPage, useArea } from './lib/area'
-import { primeKeyboard } from './lib/keyboard'
 import Search from './pages/Search'
 import StoriesHome from './pages/StoriesHome'
 import Week from './pages/Week'
@@ -34,8 +33,8 @@ import { applyPinReset, useKid } from './lib/kidMode'
 /** The stories background (also the iPhone status bar colour there). */
 const NIGHT_BG = '#0f0e13'
 
-// The stories area always uses its own dark palette, whatever the app theme is, with the
-// cover of the story in focus glowing behind it (components/CoverGlow).
+// Both sides use the dark "Seară de lux" palette; the stories side has its own tones. Behind
+// every screen glows the cover of the story in focus, or on the recipes side the dish's photo.
 function NightArea() {
   const night = useArea() === 'night'
   useEffect(() => {
@@ -48,7 +47,8 @@ function NightArea() {
       applyTheme()
     }
   }, [night])
-  return night ? <CoverGlow /> : null
+  // key: the glow starts fresh when you switch sides.
+  return <CoverGlow key={night ? 'night' : 'day'} recipes={!night} />
 }
 
 /** Where the top bar's back arrow leads on pages that are not one of the main tabs (undefined: no arrow). */
@@ -101,9 +101,6 @@ function Shell() {
   const kid = useKid().active
   // The name only on the two home screens; elsewhere each page's big title says where you are.
   const home = pathname === '/' || pathname === '/povesti/acasa'
-  // Stories side (design A): a small Rețete / Povești switch on the left and a search button on
-  // the right; the page's big title says where you are, so no app name.
-  const storiesBar = useArea() === 'night' && !profile && !kid && !back
   useHideOnScroll(!player)
   // A new page starts with the bar showing.
   useEffect(() => { delete document.documentElement.dataset.topbarHidden }, [pathname])
@@ -117,7 +114,7 @@ function Shell() {
     const ro = new ResizeObserver(set)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [player, storiesBar])
+  }, [player, kid])
   useEffect(() => {
     if (player) document.documentElement.dataset.fullscreen = ''
     else delete document.documentElement.dataset.fullscreen
@@ -126,18 +123,8 @@ function Shell() {
     <>
       <NightArea />
       {!player && <div className="status-fill" aria-hidden="true" />}
-      {!player && storiesBar && <header className="topbar topbar-stories" ref={header}>
-        <nav><AreaSwitch /></nav>
-        <div className="topbar-actions">
-          <Link to="/povesti?cauta=1" className="topbar-icon" aria-label="Caută o poveste" onClick={() => primeKeyboard('story-search')}>
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-          </Link>
-          <NavLink to="/profil" className="topbar-icon wide-only" aria-label="Profil și setări" title="Profil">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={PROFILE} /></svg>
-          </NavLink>
-        </div>
-      </header>}
-      {!player && !storiesBar && <header className={profile ? 'topbar topbar-profile' : 'topbar'} ref={header}>
+      {/* Phones: no top bar (pages use the whole screen, like the design); wide screens and kid mode keep it. */}
+      {!player && <header className={`topbar${profile ? ' topbar-profile' : ''}${kid ? '' : ' topbar-wide'}`} ref={header}>
         {profile && <div className="topbar-title" aria-hidden="true">{profileTitle(pathname, childName)}</div>}
         {back && !kid ? <BackButton to={back} /> : profile ? <span /> : kid
           // Stories-only mode: nothing in the top bar points to the kitchen side, not even the name.
@@ -159,6 +146,8 @@ function Shell() {
       </header>}
       {!online && <div className="offline-banner">Ești offline. Vezi rețetele și poveștile salvate pe acest dispozitiv.</div>}
       <main>
+        {/* Phones have no top bar: pages that need a way back get the arrow at the top of the page. */}
+        {back && !kid && !player && <div className={back === '/retete' ? 'page-back over' : 'page-back'}><BackButton to={back} /></div>}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/retete" element={<RecipeList />} />

@@ -14,6 +14,7 @@ import { LoadError, Loading } from '../components/LoadState'
 import { useGlow } from '../lib/glow'
 import { useSkyPhase } from '../lib/sky'
 import { useKid } from '../lib/kidMode'
+import HomeHead from '../components/HomeHead'
 
 const Play = () => <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>
 
@@ -117,6 +118,7 @@ export default function StoriesHome() {
 
   return (
     <section className="stories-home">
+      {!kid && <HomeHead search="/povesti?cauta=1" label="Caută o poveste" field="story-search" />}
       <h1 className="sa-greeting">{evening && hour >= 12 ? 'Bună seara' : greeting()}{child.name ? `, ${child.name}` : ''}</h1>
 
       {failed && !stories ? <LoadError text="Nu am putut încărca poveștile. Verifică internetul." onRetry={() => { setFailed(false); load() }} />

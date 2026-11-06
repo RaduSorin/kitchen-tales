@@ -225,3 +225,121 @@
 .opt-rate { position: static !important; background: none !important; color: inherit !important; font-size: .95rem !important; min-width: 0 !important; }
 .player-from b { font-size: .92rem; }
 :root[data-area="night"] .sheet .parents-body { margin-top: 4px; color: var(--text); }
+
+/* ======================================================================================
+   Round 3: like the concepts on both sides.
+   ====================================================================================== */
+
+/* ---------- Recipes side: the same "Seară de lux" mood, a little warmer ---------- */
+:root:not([data-area="night"]) {
+  --bg: #13100e; --surface: #1e1a17; --surface-2: #2a2521; --text: #f4efe6; --muted: #a89f95; --border: rgb(255 255 255 / .09);
+  --accent: #f2c879; --accent-soft: rgb(242 200 121 / .15); --on-accent: #1a1410; --gold: #f2c879; --danger: #ff8f7a;
+  --night: #f2c879; --night-soft: rgb(255 255 255 / .08); --moon: #f2c879; --moon-ink: #f2c879; --on-text: #1a1410;
+  --track: rgb(255 255 255 / .2); --knob: #f4efe6;
+  --glass-bg: rgb(30 27 25 / .8); --glass-edge: rgb(255 255 255 / .09); --glass-shine: rgb(255 255 255 / .1); --glass-shadow: rgb(0 0 0 / .5);
+  --glass-pill: rgb(242 200 121 / .16);
+  --topbar-bg: rgb(19 16 14 / .6); --statusbar: #13100e;
+  --f-display: 'Fraunces', Georgia, serif; --f-title: 'Fraunces', Georgia, serif;
+  color-scheme: dark;
+}
+:root:not([data-area="night"]) body { background: var(--bg); }
+:root:not([data-area="night"]) h1, :root:not([data-area="night"]) h2 { font-family: var(--f-title); font-weight: 600; letter-spacing: -.01em; }
+:root:not([data-area="night"]) .cover-glow { background: var(--bg); }
+/* No dish photo: a soft warm light, like a kitchen lamp. */
+:root:not([data-area="night"]) .cover-glow::before { background: radial-gradient(90% 60% at 15% 0, rgb(170 96 40 / .45), transparent 70%), radial-gradient(80% 55% at 95% 10%, rgb(120 70 40 / .35), transparent 70%); }
+:root:not([data-area="night"]) .glow-fade { background: linear-gradient(180deg, transparent 0, rgb(19 16 14 / .45) 32vh, var(--bg) 66vh); }
+:root:not([data-area="night"]) .cover-glow img.on { opacity: .8; }
+:root:not([data-area="night"]) .recipe-row-title { font-family: var(--f-body); font-weight: 700; font-size: 1.05rem; }
+:root:not([data-area="night"]) .btn.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+
+/* ---------- Phones: no top bar, every page uses the whole screen ---------- */
+@media (max-width: 759px) {
+  .topbar-wide { display: none !important; }
+  /* Nothing under the clock but the page's own colour fading out. */
+  :root .status-fill { background: linear-gradient(180deg, var(--bg) 55%, transparent); height: calc(env(safe-area-inset-top, 0px) + 10px); }
+  :root:not([data-fullscreen]) main { padding-top: calc(8px + var(--status-h)); }
+  :root .editor-bar, :root .bookshelf:not(.wide) .vitrine { top: env(safe-area-inset-top, 0px); }
+}
+@media (min-width: 760px) {
+  .home-head .area-switch, .page-back { display: none; }
+  .profile-h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+/* No line or frosted band under the bar on wide screens either: it melts into the page. */
+:root .topbar { border-bottom-color: transparent; background: linear-gradient(180deg, var(--bg) 30%, transparent); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+.page-back { margin: -4px 0 2px; }
+.page-back .back-btn { color: var(--text); }
+.page-back .back-btn svg { color: var(--accent); }
+.profile-h1 { margin: 6px 0 14px; font-size: 2.05rem; }
+
+/* The top of the two Acasă screens: the small switch and the round search button. */
+.home-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; }
+.home-head .area-switch { margin: 0; background: rgb(0 0 0 / .28); box-shadow: none; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.home-head .area-switch svg { display: none; }
+.home-head .area-switch .area-thumb, .home-head .area-switch.night .area-thumb { background: rgb(255 255 255 / .16); box-shadow: none; }
+.home-head .area-switch a { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 6px 14px; min-height: 36px;
+  border-radius: 999px; color: var(--muted); font-weight: 700; font-size: .9rem; text-decoration: none; transition: color .3s; }
+.home-head .area-switch a.on { color: var(--text); }
+.home-search { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: rgb(0 0 0 / .28);
+  border: 1px solid rgb(255 255 255 / .06); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); text-decoration: none; }
+.home-search:active { background: rgb(255 255 255 / .12); }
+:root[data-area="night"] .stories-home .sa-greeting, .home .sa-greeting { margin: 2px 0 0; }
+
+/* ---------- Recipes Acasă ---------- */
+.home { gap: 18px; }
+.ra-hero { position: relative; display: block; height: 196px; border-radius: 22px; overflow: hidden; isolation: isolate; color: #fff; text-decoration: none;
+  box-shadow: 0 16px 36px rgb(0 0 0 / .45); }
+.ra-hero-img { position: absolute; inset: 0; z-index: -2; }
+.ra-hero-img > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ra-hero::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgb(0 0 0 / 0) 25%, rgb(10 8 6 / .82)); }
+.ra-hero-text { position: absolute; left: 16px; right: 16px; bottom: 14px; display: grid; gap: 2px; }
+.ra-hero-text b { font-family: var(--f-title); font-weight: 600; font-size: 1.55rem; line-height: 1.08; text-shadow: 0 2px 10px rgb(0 0 0 / .4); }
+.ra-hero .sa-hero-btn { margin-top: 8px; padding: 8px 16px; }
+.ra-rows { display: grid; gap: 12px; }
+.ra-row { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 14px; align-items: center; color: var(--text); text-decoration: none; }
+.ra-thumb { width: 60px; height: 60px; border-radius: 14px; overflow: hidden; background: var(--surface-2); }
+.ra-thumb > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ra-row-text { display: grid; gap: 2px; min-width: 0; }
+.ra-row-text b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ra-row-text small { color: var(--muted); font-size: .85rem; font-weight: 600; }
+.home .sh-sec-head a { color: var(--accent); font-size: .9rem; }
+.home .sh-sec-head h2 { font-size: 1.3rem; margin-bottom: 10px; }
+.home .home-sec { display: grid; }
+.home .home-empty { border-color: rgb(255 255 255 / .14); }
+.ra-story { display: grid; grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 14px; align-items: center; padding: 12px; border-radius: 20px;
+  background: linear-gradient(135deg, #241d33, #171320); color: var(--text); text-decoration: none; }
+.ra-story .story-cover { border-radius: 12px; }
+.ra-story .story-cover > span { font-size: 2rem; }
+.ra-story-text { display: grid; gap: 2px; min-width: 0; }
+.ra-story-text b { font-family: var(--f-title); font-weight: 600; font-size: 1.2rem; line-height: 1.1; overflow-wrap: anywhere; }
+.ra-story-text small:last-child { color: var(--muted); font-weight: 600; font-size: .85rem; }
+.ra-story-play { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); }
+.ra-story:only-child, .ra-story:has(> .ra-story-text:first-child) { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- Tab bar: a solid dark bar, the open tab a solid gold bubble (concept) ---------- */
+@media (max-width: 759px) {
+  :root .tabbar { background: rgb(26 24 30 / .94); box-shadow: 0 12px 34px rgb(0 0 0 / .55), inset 0 0 0 1px rgb(255 255 255 / .06); }
+  :root:not([data-area="night"]) .tabbar { background: rgb(30 26 23 / .94); }
+  :root .tab { color: var(--muted); }
+  :root .tabbar .tab.active, :root .night-tabbar .tab.active { color: var(--on-accent); background: var(--accent); box-shadow: 0 4px 16px rgb(242 200 121 / .3); opacity: 1; }
+  :root .tabbar .tab.active .tab-icon, :root .tabbar .tab.active .tab-label { color: var(--on-accent); }
+}
+
+/* Profile group labels stay small caps in the body font, not the title serif. */
+:root h2.set-label { font-family: var(--f-body); font-weight: 700; letter-spacing: .1em; }
+
+/* A recipe: the photo runs up under the clock; a round back arrow floats over it, like the ⋯ button. */
+@media (max-width: 759px) {
+  .recipe { margin-top: calc(-8px - var(--status-h)); }
+  .recipe-hero { height: calc(clamp(220px, 42vw, 380px) + var(--status-h)); }
+  .recipe .hero-more { top: calc(10px + var(--status-h)); }
+  .page-back.over { position: absolute; z-index: 6; left: 12px; top: calc(10px + var(--status-h)); margin: 0; }
+  .page-back.over .back-btn { width: 44px; height: 44px; min-height: 0; margin: 0; padding: 0; justify-content: center; border-radius: 50%; color: #fff;
+    border: 1px solid rgb(255 255 255 / .35); background: rgb(20 16 14 / .45); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
+  .page-back.over .back-btn svg { color: #fff; margin-left: -2px; }
+  .page-back.over .back-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  /* The fade under the clock would cover the photo. */
+  :root:has(.recipe-hero) .status-fill { background: none; }
+}
+.home-search { margin-left: auto; }
+@media (max-width: 380px) { :root .tab-label { font-size: .6rem; letter-spacing: -.01em; } }

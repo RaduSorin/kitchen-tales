@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react'
-import { SKY_TOP, type SkyPhase } from './sun'
 
 export type ThemeChoice = 'auto' | 'light' | 'dark'
 
@@ -116,14 +115,13 @@ export function useSettings() {
   return useSyncExternalStore((l) => { listeners.add(l); return () => { listeners.delete(l) } }, getSettings)
 }
 
-const media = typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)') : undefined
-
-/** Sets data-theme on <html> and the browser's theme-color to match the chosen theme. */
+/**
+ * The app is always dark now (design "Seară de lux", like the concepts): data-theme stays "dark"
+ * so the dark-only rules apply. The old Aspect choice is kept in settings but no longer used.
+ */
 export function applyTheme() {
-  const dark = current.theme === 'dark' || (current.theme === 'auto' && !!media?.matches)
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-  const { area, sky } = document.documentElement.dataset
-  setStatusBarColor(area === 'night' ? SKY_TOP[(sky as SkyPhase) ?? 'night'] ?? '#171a45' : dark ? '#131915' : '#f2f3ee')
+  document.documentElement.dataset.theme = 'dark'
+  setStatusBarColor(document.documentElement.dataset.area === 'night' ? '#0f0e13' : '#13100e')
 }
 
 /**
@@ -140,4 +138,3 @@ export function setStatusBarColor(color: string) {
   document.head.appendChild(meta)
 }
 
-media?.addEventListener('change', applyTheme)

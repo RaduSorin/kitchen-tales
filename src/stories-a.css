@@ -382,22 +382,22 @@
 
 /* ---------- The folder's ⋯ menu (concept A3, alternative): views as tiles, then the actions ---------- */
 .folder-more-wrap { position: relative; flex: none; margin-left: auto; }
-.folder-menu { position: absolute; z-index: 30; right: 0; top: calc(100% + 8px); width: min(272px, calc(100vw - 32px)); padding: 12px; border-radius: 20px;
+.pop-menu { position: absolute; z-index: 30; right: 0; top: calc(100% + 8px); width: min(272px, calc(100vw - 32px)); padding: 12px; border-radius: 20px;
   display: grid; gap: 2px; background: rgb(36 33 44 / .94); border: 1px solid rgb(255 255 255 / .08); box-shadow: 0 18px 44px rgb(0 0 0 / .55);
-  -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); animation: menu-in .16s ease-out; transform-origin: top right; }
+  -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); animation: menu-in .16s ease-out; transform-origin: top right; text-align: left; }
 @keyframes menu-in { from { opacity: 0; transform: scale(.94); } }
-@media (prefers-reduced-motion: reduce) { .folder-menu { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .pop-menu { animation: none; } }
 .folder-menu-label { color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; padding: 0 4px 6px; }
 .folder-menu-views { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid rgb(255 255 255 / .08); }
 .folder-menu-views button { display: grid; justify-items: center; gap: 4px; padding: 9px 2px 7px; border: 0; border-radius: 12px; background: rgb(255 255 255 / .08);
   color: var(--text); font: inherit; font-size: .68rem; font-weight: 700; line-height: 1.1; cursor: pointer; }
 .folder-menu-views button.on { background: var(--accent); color: var(--on-accent); }
-.folder-menu-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 0 6px; border: 0; border-radius: 10px;
+.menu-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 0 6px; border: 0; border-radius: 10px;
   background: none; color: var(--text); font: inherit; font-weight: 600; font-size: .95rem; text-align: left; cursor: pointer; }
-.folder-menu-row:active { background: rgb(255 255 255 / .08); }
-.folder-menu-row + .folder-menu-row { box-shadow: 0 -1px 0 rgb(255 255 255 / .07); }
-.folder-menu-row.done { color: var(--muted); cursor: default; }
-.folder-menu-row svg { flex: none; opacity: .85; }
+.menu-row:active { background: rgb(255 255 255 / .08); }
+.menu-row + .menu-row { box-shadow: 0 -1px 0 rgb(255 255 255 / .07); }
+.menu-row.done { color: var(--muted); cursor: default; }
+.menu-row svg { flex: none; opacity: .85; }
 
 /* Player: clear of the soft band under the clock, and the speed / sleep / order buttons at the
    bottom of the screen with room to breathe instead of right under the controls. */
@@ -410,3 +410,11 @@
   :root[data-area="night"][data-fullscreen] .story-cover.player-art { width: min(82vw, 340px, 32dvh); }
   :root[data-area="night"][data-fullscreen] .play-opts { padding-top: 6px; }
 }
+.menu-row.danger { color: var(--danger); }
+.menu-row:disabled { opacity: .5; }
+.menu-note { margin: 4px 6px 2px; color: var(--muted); font-size: .8rem; line-height: 1.35; }
+.menu-confirm { display: grid; gap: 8px; padding: 8px 6px 4px; font-weight: 700; }
+.menu-confirm div { display: flex; gap: 8px; }
+.menu-confirm .btn { flex: 1; }
+/* The player's ⋯ menu opens from the button at the top right. */
+.player-top .menu-anchor { position: relative; justify-self: end; }

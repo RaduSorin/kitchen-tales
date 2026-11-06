@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, setStoryShared, uploadFile, setStoryFavorite } from '../lib/db'
-import ShareIcon from '../components/ShareIcon'
+import PopMenu, { MENU_ICON, MenuRow } from '../components/PopMenu'
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
@@ -49,6 +49,8 @@ function StoryPlayer() {
   const [coverBusy, setCoverBusy] = useState(false)
   const [moveOpen, setMoveOpen] = useState(false)
   const [parentsOpen, setParentsOpen] = useState(false)
+  const [textOpen, setTextOpen] = useState(false)
+  const closeMenu = useCallback(() => setParentsOpen(false), [])
   const [sharing, setSharing] = useState(false)
   // While the finger is on the progress bar we only move the bar; the audio seeks once, on release.
   // Seeking on every move made iOS re-fetch the stream each time and timeupdate pulled the thumb back.
@@ -155,9 +157,64 @@ function StoryPlayer() {
         </button>
         <span className="player-from" aria-hidden="true"><small>Din {folderOf(s)}</small><b>{s.title}</b></span>
         {kid ? <span aria-hidden="true" /> : (
-          <button type="button" className="night-btn" aria-label="Pentru părinți: partajare, offline, copertă, folder, ștergere" onClick={() => setParentsOpen(true)}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
-          </button>
+          <span className="menu-anchor">
+            <button type="button" className="night-btn" aria-label="Pentru părinți: partajare, offline, copertă, folder, ștergere" aria-haspopup="menu" aria-expanded={parentsOpen}
+              onClick={() => { setParentsOpen((o) => !o); setConfirmDelete(false); setMsg('') }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+            </button>
+            {parentsOpen && (
+              <PopMenu label="Pentru părinți" onClose={closeMenu}>
+                <small className="folder-menu-label">Pentru părinți{s.mine !== false && ` · ${s.shared ? 'partajată' : 'doar la noi'}`}</small>
+                {s.mine === false && <p className="menu-note">De la {s.spaceName ?? 'alt cont'}, doar ascultare.</p>}
+                {online && s.mine !== false && (
+                  <MenuRow icon={MENU_ICON.share} disabled={sharing} onClick={async () => {
+                    setSharing(true); setMsg('')
+                    const shared = !s.shared
+                    try {
+                      await setStoryShared(s, shared)
+                      setS({ ...s, shared }); player.update({ ...s, shared })
+                      showToast(shared ? 'Povestea e partajată cu toate conturile' : 'Povestea e acum doar în spațiul nostru')
+                    } catch { setMsg('Nu am putut schimba partajarea. Încearcă din nou.') }
+                    setSharing(false)
+                  }}>{sharing ? 'Se salvează…' : s.shared ? 'Oprește partajarea' : 'Partajează cu toate conturile'}</MenuRow>
+                )}
+                {isSaved ? (
+                  <MenuRow icon={MENU_ICON.phone} onClick={() => removeOfflineAudio(s.id)}>Șterge de pe dispozitiv</MenuRow>
+                ) : online ? (
+                  <MenuRow icon={MENU_ICON.down} disabled={saving} onClick={async () => {
+                    setSaving(true); setMsg('')
+                    try { await downloadStory(s) } catch { setMsg('Descărcarea a eșuat. Încearcă din nou.') }
+                    setSaving(false)
+                  }}>{saving ? 'Se salvează…' : 'Salvează offline'}</MenuRow>
+                ) : null}
+                {online && s.mine !== false && <MenuRow icon={MENU_ICON.image} onClick={() => { closeMenu(); setCoverOpen(true) }}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</MenuRow>}
+                {online && s.mine !== false && <MenuRow icon={MENU_ICON.folder} onClick={() => { closeMenu(); setMoveOpen(true) }}>Mută în folder</MenuRow>}
+                {s.text && <MenuRow icon={MENU_ICON.text} onClick={() => { closeMenu(); setTextOpen(true) }}>Textul poveștii</MenuRow>}
+                {online && s.mine !== false && (confirmDelete ? (
+                  <div className="menu-confirm">Ștergi povestea?
+                    <div>
+                      <button className="btn danger small" disabled={deleting} onClick={async () => {
+                        setDeleting(true); setMsg('')
+                        try {
+                          await deleteStory(s)
+                          if (current) player.close()
+                          // Step back (or open the folder in place), so Back never leads to the deleted story.
+                          back()
+                        } catch {
+                          setMsg('Nu am putut șterge povestea. Verifică internetul și încearcă din nou.')
+                          setDeleting(false)
+                        }
+                      }}>{deleting ? 'Se șterge…' : 'Da, șterge'}</button>
+                      <button className="btn small" onClick={() => setConfirmDelete(false)}>Nu</button>
+                    </div>
+                  </div>
+                ) : <MenuRow icon={MENU_ICON.trash} danger onClick={() => setConfirmDelete(true)}>Șterge povestea</MenuRow>)}
+                {isSaved && <p className="menu-note">Salvată pe acest telefon, merge și fără internet.</p>}
+                {!online && <p className="menu-note">Fără internet poți asculta poveștile salvate. Coperta, mutarea și ștergerea revin când ai internet.</p>}
+                {msg && <p className="error menu-note">{msg}</p>}
+              </PopMenu>
+            )}
+          </span>
         )}
       </div>
       <StoryCover story={s} className={`player-art${playing ? ' playing' : ''}`} />
@@ -226,73 +283,25 @@ function StoryPlayer() {
         </button>
       </div>
 
-      {!kid && parentsOpen && <Sheet title="Pentru părinți" onClose={() => setParentsOpen(false)}>
-        <div className="parents-body">
-          {s.text && <details className="story-text"><summary>Textul poveștii</summary><p>{s.text}</p></details>}
-          {s.mine === false && <p className="share-note">De la {s.spaceName ?? 'alt cont'}, doar ascultare.</p>}
-          {/* Same-size buttons in two columns; delete spans the full width at the bottom. */}
-          <div className="parents-actions">
-            {online && s.mine !== false && (
-              <button className="btn small span-all share-toggle" aria-pressed={!!s.shared} disabled={sharing} onClick={async () => {
-                setSharing(true); setMsg('')
-                const shared = !s.shared
-                try {
-                  await setStoryShared(s, shared)
-                  setS({ ...s, shared }); player.update({ ...s, shared })
-                  showToast(shared ? 'Povestea e partajată cu toate conturile' : 'Povestea e acum doar în spațiul nostru')
-                } catch { setMsg('Nu am putut schimba partajarea. Încearcă din nou.') }
-                setSharing(false)
-              }}><ShareIcon shared={!!s.shared} />{sharing ? 'Se salvează…' : s.shared ? 'Partajată cu toate conturile' : 'Doar în spațiul nostru'}</button>
+      {!kid && coverOpen && online && (
+        <Sheet title={s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'} onClose={() => setCoverOpen(false)}>
+          <div className="cover-change">
+            {coverBusy ? <p className="importing"><span className="spinner" /> Salvez coperta…</p> : (
+              <>
+                <CoverSearch title={s.title} auto onPick={(c) => changeCover(() => saveFoundCover(c.url))} />
+                <div className="row">
+                  <label className="btn small file-btn">Alege o poză
+                    <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) coverFromPhoto(f) }} />
+                  </label>
+                  <button className="btn small" onClick={() => setCoverOpen(false)}>Renunță</button>
+                </div>
+              </>
             )}
-            {isSaved ? (
-              <button className="btn small" onClick={() => removeOfflineAudio(s.id)}>Șterge de pe dispozitiv</button>
-            ) : online ? (
-              <button className="btn small" disabled={saving} onClick={async () => {
-                setSaving(true); setMsg('')
-                try { await downloadStory(s) } catch { setMsg('Descărcarea a eșuat. Încearcă din nou.') }
-                setSaving(false)
-              }}>{saving ? 'Se salvează…' : 'Salvează offline'}</button>
-            ) : null}
-            {online && s.mine !== false && !coverOpen && <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>}
-            {online && s.mine !== false && <button className="btn small span-all" onClick={() => { setParentsOpen(false); setMoveOpen(true) }}>Mută în folder</button>}
-            {online && s.mine !== false && (confirmDelete ? (
-              <span className="confirm span-all">Ștergi povestea?
-                <button className="btn danger small" disabled={deleting} onClick={async () => {
-                  setDeleting(true); setMsg('')
-                  try {
-                    await deleteStory(s)
-                    if (current) player.close()
-                    // Step back (or open the folder in place), so Back never leads to the deleted story.
-                    back()
-                  } catch {
-                    setMsg('Nu am putut șterge povestea. Verifică internetul și încearcă din nou.')
-                    setDeleting(false)
-                  }
-                }}>{deleting ? 'Se șterge…' : 'Da, șterge'}</button>
-                <button className="btn small" onClick={() => setConfirmDelete(false)}>Nu</button>
-              </span>
-            ) : <button className="btn danger small span-all" onClick={() => setConfirmDelete(true)}>Șterge povestea</button>)}
+            {msg && <p className="error">{msg}</p>}
           </div>
-          {online && coverOpen && (
-            <div className="cover-change">
-              {coverBusy ? <p className="importing"><span className="spinner" /> Salvez coperta…</p> : (
-                <>
-                  <CoverSearch title={s.title} auto onPick={(c) => changeCover(() => saveFoundCover(c.url))} />
-                  <div className="row">
-                    <label className="btn small file-btn">Alege o poză
-                      <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) coverFromPhoto(f) }} />
-                    </label>
-                    <button className="btn small" onClick={() => setCoverOpen(false)}>Renunță</button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-          {isSaved && <small>Salvată pe acest dispozitiv, merge și fără internet.</small>}
-          {!online && <p className="parents-offline">Fără internet poți asculta poveștile salvate. Coperta, mutarea și ștergerea revin când ai din nou internet.</p>}
-          {msg && <p className="error">{msg}</p>}
-        </div>
-      </Sheet>}
+        </Sheet>
+      )}
+      {!kid && textOpen && s.text && <Sheet title="Textul poveștii" onClose={() => setTextOpen(false)}><p className="story-text-body">{s.text}</p></Sheet>}
       {moveOpen && !kid && (
         <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection, shared, changed) => {
           const moved = { ...s, collection, shared: shared ?? s.shared }

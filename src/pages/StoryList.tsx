@@ -237,7 +237,7 @@ export default function StoryList() {
               )}
             </div>
             {parent && (
-              <span className="folder-more-wrap">
+              <span className="folder-more-wrap menu-anchor">
                 <button type="button" className="night-btn folder-more" aria-label={`Mai multe pentru folderul ${open.name}`} aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
                 </button>

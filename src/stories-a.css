@@ -836,3 +836,4 @@
 .fin-scenes button svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .fin-scenes button span { position: relative; font-size: 1.9rem; line-height: 1; filter: drop-shadow(0 3px 5px rgb(0 0 0 / .3)); }
 .fin-scenes button.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+.mic-detail { display: block; margin-top: 4px; color: var(--muted); font-size: .75rem; overflow-wrap: anywhere; }

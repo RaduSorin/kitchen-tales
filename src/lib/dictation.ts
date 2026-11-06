@@ -84,6 +84,8 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
   let wakeUp: (() => void) | undefined
   const push = (c: Uint8Array | null) => { queue.push(c); wakeUp?.() }
   let stopped = false
+  let early: Error | undefined
+  const failEarly = (e: Error) => { early = e; stop() }
   const stop = () => {
     if (stopped) return
     stopped = true
@@ -96,12 +98,21 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
   const carry = { buf: [] as number[] }
   tap.port.onmessage = (e: MessageEvent<Float32Array>) => {
     if (stopped) return
+    heard = true
     let peak = 0
     for (const v of e.data) peak = Math.max(peak, Math.abs(v))
     h.onLevel?.(Math.min(1, peak * 3))
     for (const c of toPcm16(e.data, ctx.sampleRate, carry)) push(c)
   }
   source.connect(tap)
+  // No samples at all after a couple of seconds: the microphone is held by something else (a call,
+  // another app) or the audio thread never started. Say so instead of waiting for a timeout.
+  let heard = false
+  const noAudio = setTimeout(() => {
+    if (heard || stopped) return
+    const e = new Error('Microfonul nu a trimis niciun sunet în 3 secunde'); e.name = 'NoAudioError'
+    failEarly(e)
+  }, 3000)
   // Some browsers only pull audio through nodes that reach the output; keep it silent.
   const mute = ctx.createGain()
   mute.gain.value = 0
@@ -144,11 +155,12 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
         }
       }
       h.onText([...segments], '')
-      h.onEnd()
+      h.onEnd(early)
     } catch (err) {
       h.onText([...segments], '')
-      h.onEnd(err as Error)
+      h.onEnd(early ?? (err as Error))
     } finally {
+      clearTimeout(noAudio)
       stopped = true
       cleanup()
     }

@@ -6,11 +6,20 @@ const MAX_SECONDS = 5 * 60
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
-function why(err: unknown) {
-  const name = (err as Error)?.name
-  if (name === 'NotAllowedError' || name === 'SecurityError') return 'Nu am acces la microfon. Permite-l din Setări › Safari › Microfon.'
-  if (name === 'NotFoundError') return 'Nu găsesc niciun microfon.'
-  return 'Dictarea s-a oprit. Verifică internetul și încearcă din nou.'
+/** What went wrong, in words, plus the technical name and message (small, to tell us). */
+function why(err: unknown): { text: string; detail?: string } {
+  const e = err as Error | undefined
+  const name = e?.name ?? ''
+  const msg = e?.message ?? String(err ?? '')
+  const detail = [name, msg].filter(Boolean).join(': ').slice(0, 160) || undefined
+  if (name === 'NotAllowedError' || name === 'SecurityError') return { text: 'Nu am acces la microfon. Permite-l din Setări › Safari › Microfon.' }
+  if (name === 'NotFoundError') return { text: 'Nu găsesc niciun microfon.' }
+  if (name === 'NoAudioError') return { text: 'Microfonul nu trimite sunet. Închide alte aplicații care îl folosesc (un apel, o înregistrare) și încearcă din nou.', detail }
+  if (/no new audio|timed out/i.test(msg)) return { text: 'Dictarea s-a oprit pentru că n-a mai auzit nimic. Apasă microfonul și vorbește din nou.', detail }
+  if (/Expired|UnrecognizedClient|InvalidSignature|AccessDenied|not authorized|Nu ești conectat/i.test(name + msg)) return { text: 'Sesiunea a expirat. Ieși din cont și intră din nou, apoi încearcă iar.', detail }
+  if (/LimitExceeded|Throttl/i.test(name + msg)) return { text: 'Serviciul de dictare e ocupat acum. Încearcă din nou peste câteva secunde.', detail }
+  if (/socket|network|fetch|connect/i.test(name + msg)) return { text: 'Nu mă pot conecta la serviciul de dictare. Unele rețele mobile îl blochează: încearcă pe Wi‑Fi.', detail }
+  return { text: 'Dictarea s-a oprit. Încearcă din nou.', detail }
 }
 
 /**
@@ -37,6 +46,8 @@ export default function MicButton({ value, onChange, onDictated, onStart, asLine
   const [sec, setSec] = useState(0)
   const [level, setLevel] = useState(0)
   const [error, setError] = useState('')
+  const [detail, setDetail] = useState<string>()
+  const fail = (err: unknown) => { const w = why(err); console.error('Dictare:', err); setError(w.text); setDetail(w.detail) }
   const online = useOnline()
   const session = useRef<Dictation>(undefined)
 
@@ -53,7 +64,7 @@ export default function MicButton({ value, onChange, onDictated, onStart, asLine
   }, [state])
 
   const start = async () => {
-    setError(''); setSec(0); setState('starting')
+    setError(''); setDetail(undefined); setSec(0); setState('starting')
     // New words go after what is already in the box.
     const base = value.trim()
     onStart?.()
@@ -71,14 +82,14 @@ export default function MicButton({ value, onChange, onDictated, onStart, asLine
         onEnd: (err) => {
           session.current = undefined
           setState('idle'); setLevel(0)
-          if (err) setError(why(err))
+          if (err) fail(err)
         },
       })
       setState((s) => (s === 'starting' ? 'on' : s))
     } catch (err) {
       session.current = undefined
       setState('idle')
-      setError(why(err))
+      fail(err)
     }
   }
 
@@ -104,7 +115,7 @@ export default function MicButton({ value, onChange, onDictated, onStart, asLine
     </span>
   )
   const below = (state === 'on' && hint) || error
-    ? <p className={`set-hint mic-hint${error ? ' error' : ''}`}>{error || hint}</p> : null
+    ? <p className={`set-hint mic-hint${error ? ' error' : ''}`}>{error || hint}{error && detail && <small className="mic-detail">{detail}</small>}</p> : null
 
   // With a text box inside: the mic sits in its bottom-right corner, like the iPhone keyboard's.
   if (children) return <><div className="mic-field">{children}{mic}</div>{below}</>

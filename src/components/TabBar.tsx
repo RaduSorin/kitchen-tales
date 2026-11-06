@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { listStories } from '../lib/db'
 import { getLastStoryId } from '../lib/stories'
@@ -64,9 +64,39 @@ const SOLID: Record<string, ReactNode> = {
 /** Hidden in full-screen cooking and on the story player, which has its own big controls. */
 const hidesTabBar = (path: string) => path.endsWith('/gateste') || isPlayerPage(path)
 
+
+/**
+ * The gold bubble behind the open tab is one element that slides from tab to tab (instead of
+ * each tab painting its own). It follows the `.tab.active` link, also when the bar resizes; with
+ * no open tab (e.g. a page that isn't a tab) it fades out where it was.
+ */
+function useTabBubble(key: string) {
+  const bar = useRef<HTMLElement>(null)
+  const [pos, setPos] = useState<{ x: number; y: number; w: number; h: number; on: boolean }>()
+  const [ready, setReady] = useState(false)
+  useLayoutEffect(() => {
+    const el = bar.current
+    if (!el) return
+    const place = () => {
+      const tab = el.querySelector<HTMLElement>('.tab.active')
+      if (tab) setPos({ x: tab.offsetLeft, y: tab.offsetTop, w: tab.offsetWidth, h: tab.offsetHeight, on: true })
+      else setPos((p) => p && { ...p, on: false })
+    }
+    place()
+    const ro = new ResizeObserver(place)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [key])
+  // No slide on the first placement, only between tabs.
+  useEffect(() => { if (pos && !ready) requestAnimationFrame(() => setReady(true)) }, [pos, ready])
+  const style = pos && ({ width: pos.w, height: pos.h, transform: `translate(${pos.x}px, ${pos.y}px)`, opacity: pos.on ? 1 : 0 } as CSSProperties)
+  return { bar, bubble: <span className={`tab-bubble${ready ? ' ready' : ''}`} style={style} aria-hidden="true" /> }
+}
+
 /** The stories side: Acasă, Favorite, Bibliotecă, Adaugă, Profil. The open one is a filled bubble. */
 function StoryTabs() {
   const { pathname, search } = useLocation()
+  const { bar, bubble } = useTabBubble(pathname + search)
   const q = new URLSearchParams(search)
   const onShelf = pathname === '/povesti'
   const searching = onShelf && q.has('cauta')
@@ -85,7 +115,8 @@ function StoryTabs() {
   return (
     <>
       <div className="tabbar-spacer" aria-hidden="true" />
-      <nav className="tabbar night-tabbar" aria-label="Meniu povești">
+      <nav className="tabbar night-tabbar" aria-label="Meniu povești" ref={bar}>
+        {bubble}
         <NavLink to="/povesti/acasa" className="tab"><span className="tab-icon"><I d={HOME} /></span><span className="tab-label">Acasă</span></NavLink>
         <Link to="/povesti?favorite=1" className={`tab${favorites ? ' active' : ''}`} aria-current={favorites ? 'page' : undefined}>
           <span className="tab-icon"><I d={HEART} /></span><span className="tab-label">Favorite</span>
@@ -154,7 +185,8 @@ function useTypingFlag() {
 }
 
 export default function TabBar() {
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
+  const { bar, bubble } = useTabBubble(pathname + search)
   const hidden = hidesTabBar(pathname)
   const stories = useArea() === 'night'
   const shopping = useSyncedList(shoppingStore)
@@ -169,7 +201,8 @@ export default function TabBar() {
   return (
     <>
       <div className="tabbar-spacer" aria-hidden="true" />
-      <nav className="tabbar" aria-label="Meniu">
+      <nav className="tabbar" aria-label="Meniu" ref={bar}>
+        {bubble}
         {TABS.map((t) => (
           <NavLink key={t.to} to={t.to} end={t.end} className="tab" aria-label={t.full}>
             <span className="tab-icon">

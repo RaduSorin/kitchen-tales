@@ -418,3 +418,15 @@
 .menu-confirm .btn { flex: 1; }
 /* The player's ⋯ menu opens from the button at the top right. */
 .player-top .menu-anchor { position: relative; justify-self: end; }
+
+/* The gold bubble slides from tab to tab (TabBar useTabBubble); the tabs themselves stay clear. */
+.tab-bubble { display: none; }
+@media (max-width: 759px) {
+  .tab-bubble { display: block; position: absolute; left: 0; top: 0; z-index: 0; border-radius: 25px; background: var(--accent);
+    box-shadow: 0 4px 16px rgb(242 200 121 / .3); pointer-events: none; }
+  .tab-bubble.ready { transition: transform .42s cubic-bezier(.32, .72, .25, 1.12), width .42s cubic-bezier(.32, .72, .25, 1.12), opacity .2s; }
+  :root .tabbar .tab { z-index: 1; }
+  :root .tabbar .tab.active, :root .night-tabbar .tab.active { background: none; box-shadow: none; }
+  :root .tabbar .tab .tab-icon, :root .tabbar .tab .tab-label { transition: color .25s; }
+}
+@media (max-width: 759px) and (prefers-reduced-motion: reduce) { .tab-bubble.ready { transition: opacity .2s; } }

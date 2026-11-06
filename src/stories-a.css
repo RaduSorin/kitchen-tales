@@ -544,3 +544,8 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-icon, [data-amplify-authenticator] [data-amplify-router] { animation: none; }
 }
+/* As in the concept: only the fields, the placeholder says what goes in. Labels stay for screen readers. */
+[data-amplify-authenticator] .amplify-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+[data-amplify-authenticator] [data-amplify-authenticator-signin] fieldset { gap: 12px; }

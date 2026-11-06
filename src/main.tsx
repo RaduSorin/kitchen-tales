@@ -37,7 +37,7 @@ I18n.putVocabulariesForLanguage('ro', {
   'Sign in': 'Intră în cont',
   'Signing in': 'Se intră în cont',
   Email: 'Email',
-  'Enter your Email': 'Adresa de email',
+  'Enter your Email': 'Email',
   Password: 'Parolă',
   'Enter your Password': 'Parola',
   'Forgot your password?': 'Ai uitat parola?',

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteRecipe, getRecipe, setRecipeShared } from '../lib/db'
 import ShareIcon from '../components/ShareIcon'
 import { showToast } from '../lib/toast'
@@ -10,6 +10,7 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import { formatMinutes } from '../lib/format'
 import { getProgress } from '../lib/cooking'
 import Sheet from '../components/Sheet'
+import PopMenu, { MENU_ICON, MenuRow } from '../components/PopMenu'
 import { LoadError, Loading } from '../components/LoadState'
 import { useSyncedList } from '../lib/synced'
 import { addDays, addToShopping, dayKey, dayName, forgetRecipe, planRecipe, planStore, shortDate, today } from '../lib/plan'
@@ -64,6 +65,8 @@ export default function RecipeView() {
     setSharing(false)
   }
   const online = useOnline()
+  const navigate = useNavigate()
+  const closeMenu = useCallback(() => { setMenu(false); setConfirming(false); setDeleteError('') }, [])
   // After deleting, step back to where the recipe was opened from rather than adding a page on
   // top (Back would then lead to the deleted recipe).
   const leave = useBack('/retete')
@@ -104,10 +107,39 @@ export default function RecipeView() {
     <article className="recipe">
       <div className="recipe-hero">
         {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title} />}
-        <button type="button" className="hero-more" aria-label="Opțiuni rețetă" onClick={() => setMenu(true)}>
+      </div>
+      {/* The ⋯ menu opens under its button, like the story player's. */}
+      <span className="menu-anchor hero-more-anchor">
+        <button type="button" className="hero-more" aria-label="Opțiuni rețetă" aria-haspopup="menu" aria-expanded={menu}
+          onClick={() => { setMenu((o) => !o); setConfirming(false); setDeleteError('') }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
         </button>
-      </div>
+        {menu && (
+          <PopMenu label="Opțiuni rețetă" onClose={closeMenu}>
+            <small className="folder-menu-label">Rețeta{r.mine !== false && ` · ${r.shared ? 'partajată' : 'doar la noi'}`}</small>
+            {r.mine === false ? (
+              <p className="menu-note">De la {r.spaceName ?? 'alt cont'}. O poți găti, planifica și pune pe listă, dar nu o poți modifica.</p>
+            ) : <>
+              {online && (
+                <MenuRow icon={MENU_ICON.share} disabled={sharing} onClick={() => share(r, !r.shared)}>
+                  {sharing ? 'Se salvează…' : r.shared ? 'Oprește partajarea' : 'Partajează cu toate conturile'}
+                </MenuRow>
+              )}
+              <MenuRow icon={MENU_ICON.pen} onClick={() => { closeMenu(); navigate(`/retete/${r.id}/editeaza`) }}>Editează rețeta</MenuRow>
+              {online && (confirming ? (
+                <div className="menu-confirm">Ștergi rețeta? Nu se mai poate recupera.
+                  <div>
+                    <button type="button" className="btn danger small" disabled={deleting} onClick={() => remove(r)}>{deleting ? 'Se șterge…' : 'Da, șterge'}</button>
+                    <button type="button" className="btn small" onClick={() => setConfirming(false)}>Nu</button>
+                  </div>
+                </div>
+              ) : <MenuRow icon={MENU_ICON.trash} danger onClick={() => setConfirming(true)}>Șterge rețeta</MenuRow>)}
+              {!online && <p className="menu-note">Fără internet poți edita rețeta. Partajarea și ștergerea revin când ai internet.</p>}
+              {deleteError && <p className="error menu-note" role="alert">{deleteError}</p>}
+            </>}
+          </PopMenu>
+        )}
+      </span>
       <div className="recipe-sheet">
         <h1>{r.title}</h1>
         <div className="pills">
@@ -193,42 +225,6 @@ export default function RecipeView() {
         {r.sourceUrl && <p><a href={r.sourceUrl} target="_blank" rel="noreferrer">Sursa originală</a></p>}
 
       </div>
-      {menu && (
-        <Sheet title="Rețeta" onClose={() => { setMenu(false); setConfirming(false); setDeleteError('') }}>
-          <div className="menu-list">
-            {r.mine === false ? (
-              <p className="share-note">De la {r.spaceName ?? 'alt cont'}. O poți găti, planifica și pune pe listă, dar nu o poți modifica.</p>
-            ) : <>
-            {online && (
-              <button type="button" className="btn share-toggle" aria-pressed={!!r.shared} disabled={sharing} onClick={() => share(r, !r.shared)}>
-                <ShareIcon shared={!!r.shared} size={18} />
-                {sharing ? 'Se salvează…' : r.shared ? 'Partajată cu toate conturile' : 'Doar în spațiul nostru'}
-              </button>
-            )}
-            <Link to={`/retete/${r.id}/editeaza`} className="btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /></svg>
-              Editează rețeta
-            </Link>
-            {confirming ? (
-              <div className="menu-confirm">
-                {online ? <>
-                  <p>Ștergi rețeta „{r.title}”? Nu se mai poate recupera.</p>
-                  {deleteError && <p className="error" role="alert">{deleteError}</p>}
-                  <button type="button" className="btn danger" disabled={deleting} onClick={() => remove(r)}>{deleting ? 'Se șterge…' : 'Da, șterge'}</button>
-                </> : <p role="alert">Ești offline. Poți șterge rețeta când ai din nou internet.</p>}
-                <button type="button" className="btn" onClick={() => setConfirming(false)}>Nu</button>
-              </div>
-            ) : (
-              <button type="button" className="btn danger" onClick={() => setConfirming(true)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>
-                Șterge rețeta
-              </button>
-            )}
-            {!confirming && deleteError && <p className="error" role="alert">{deleteError}</p>}
-            </>}
-          </div>
-        </Sheet>
-      )}
       {planning && <DayPicker r={r} servings={servings} onClose={() => setPlanning(false)} onDone={(text) => { setPlanning(false); setNote({ text, to: '/saptamana', link: 'Vezi săptămâna' }) }} />}
     </article>
   )

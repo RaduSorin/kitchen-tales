@@ -763,3 +763,26 @@
 .drop b { font-size: 1.1rem; }
 .drop small { font-size: .9rem; }
 .drop-note { margin: -4px 4px 0; color: var(--muted); font-size: .9rem; line-height: 1.4; }
+
+/* ---------- Profile and settings in the new look: glass cards, gold line icons, gold labels ---------- */
+.settings { gap: 26px; }
+.settings .profile-h1 { font-family: var(--f-title, Fraunces, serif); font-weight: 600; }
+:root .settings h2.set-label { color: var(--accent); font-size: .72rem; font-weight: 800; letter-spacing: .14em; padding: 0 4px; }
+.settings .set-box { background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .08); border-radius: 20px; overflow: hidden;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .06); }
+.settings .set-row, .settings .set-link { border-top-color: rgb(255 255 255 / .07); min-height: 56px; }
+.settings .set-link:active, .settings .prof-row:active { background: rgb(255 255 255 / .06); }
+.settings .set-row select, .settings .set-row input[type=text] { background: rgb(0 0 0 / .25); border-color: rgb(255 255 255 / .1); border-radius: 12px; }
+.settings .set-hint { line-height: 1.45; }
+.settings .set-chev { color: var(--muted); }
+.prof-ic { width: 34px; height: 34px; border-radius: 50%; color: var(--accent); background: rgb(242 200 121 / .12); box-shadow: inset 0 0 0 1px rgb(242 200 121 / .3); }
+.prof-row { gap: 14px; }
+.prof-me { padding: 18px; border-radius: 22px; gap: 16px; background: linear-gradient(135deg, rgb(242 200 121 / .12), rgb(255 255 255 / .05) 60%);
+  border: 1px solid rgb(242 200 121 / .18); box-shadow: inset 0 1px 0 rgb(255 255 255 / .08); }
+.prof-me .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px rgb(242 200 121 / .7); }
+.prof-me-text b { font-family: var(--f-title, Fraunces, serif); font-weight: 600; font-size: 1.3rem; }
+.prof-chip { background: rgb(242 200 121 / .14); }
+.settings .kid-start { min-height: 52px; border-radius: 26px; background: var(--accent); color: var(--on-accent); border: 0; font-weight: 800; box-shadow: 0 10px 28px rgb(242 200 121 / .2); }
+.prof-out { background: rgb(255 255 255 / .05); border: 1px solid rgb(255 255 255 / .08); border-radius: 20px; font-weight: 700; }
+.settings .seg { background: rgb(0 0 0 / .25); }
+.settings .kid-guided summary { color: var(--accent); }

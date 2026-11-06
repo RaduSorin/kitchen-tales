@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { CITIES, cityByName, sunTimes } from '../lib/sun'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { childAge, updateSettings, useSettings } from '../lib/settings'
 import { NATIVE_SWITCH, tryShelfClick } from '../lib/shelf'
@@ -116,27 +115,6 @@ function OfflineStorage() {
   )
 }
 
-
-function SkySettings() {
-  const { city } = useSettings()
-  const { lat, lon } = cityByName(city)
-  const [today] = useState(() => new Date())
-  const { rise, set } = sunTimes(today, lat, lon)
-  const hm = (d: Date) => d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
-  return (
-    <div className="set-group">
-      <div className="set-box">
-        <label className="set-row">
-          <span>Orașul<small className="set-sub">Răsărit {hm(rise)} · apus {hm(set)}</small></span>
-          <select id="sky-city" value={cityByName(city).name} onChange={(e) => updateSettings({ city: e.target.value })}>
-            {CITIES.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
-          </select>
-        </label>
-      </div>
-      <p className="set-hint">După răsăritul și apusul din orașul tău, aplicația știe când e seară: atunci Acasă îți propune „Povestea de diseară”, iar la Rețete cardul cu povestea urcă mai sus.</p>
-    </div>
-  )
-}
 
 const KID_TIMES: [number, string][] = [[15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 oră'], [0, 'Fără limită']]
 export const Chevron = () => <svg className="set-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
@@ -254,7 +232,7 @@ function ShelfSettings() {
   )
 }
 
-/** The child: name, age, gender and reading (used when creating stories), then kid mode. */
+/** The child: name, age and gender (used when creating stories), then kid mode. */
 function ChildSettings() {
   const { child } = useSettings()
   const age = childAge(child)
@@ -283,11 +261,6 @@ function ChildSettings() {
               <button type="button" aria-pressed={child.gender === 'boy'} onClick={() => updateSettings({ child: { gender: child.gender === 'boy' ? undefined : 'boy' } })}>Băiețel</button>
             </div>
           </div>
-          <label className="set-row">
-            <span>Știe să citească</span>
-            <input type="checkbox" className="switch" id="child-can-read" checked={child.canRead}
-              onChange={(e) => updateSettings({ child: { canRead: e.target.checked } })} />
-          </label>
         </div>
         <p className="set-hint">Când creăm o poveste nouă, folosim automat prenumele, vârsta (din anul nașterii) și dacă e fetiță sau băiețel. Se salvează în cont, la fel pe toate dispozitivele familiei.</p>
       </div>
@@ -373,17 +346,16 @@ const P = {
   share: 'M12 3v12M7 8l5-5 5 5M5 13v7h14v-7',
   sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   oven: 'M4 4h16v16H4zM4 9h16M8 6.5h.01M12 6.5h.01M8 13h8v4H8z',
-  moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
   down: 'M12 4v11M7 10l5 5 5-5M5 20h14',
   lock: 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
   books: 'M4 4h4v16H4zM10 4h4v16h-4zM15.5 5.2l3.8-1 3.7 15.5-3.8 1z',
 }
 
-/** One iOS-style row: colored icon, label (with an optional second line), current value, chevron. */
-function Row({ to, icon, color, label, sub, value }: { to: string; icon: keyof typeof P; color: string; label: string; sub?: string; value?: string }) {
+/** One row: gold line icon, label (with an optional second line), current value, chevron. */
+function Row({ to, icon, label, sub, value }: { to: string; icon: keyof typeof P; label: string; sub?: string; value?: string }) {
   return (
     <Link to={to} className="set-row set-link prof-row">
-      <span className="prof-ic" style={{ background: color }}>
+      <span className="prof-ic">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P[icon]} /></svg>
       </span>
       <span className="prof-l">{label}{sub && <small className="set-sub">{sub}</small>}</span>
@@ -401,7 +373,7 @@ const nameFromEmail = (email: string) => {
 
 /** The Profile tab: who you are, the child, people and sharing, preferences, this phone, sign out. */
 function ProfileHome() {
-  const { child, kid, kitchenTools, city, shelfClick } = useSettings()
+  const { child, kid, kitchenTools, shelfClick } = useSettings()
   const { user, signOut } = useAuthenticator((c) => [c.user])
   const email = user?.signInDetails?.loginId ?? myEmail()
   const name = useMyName()
@@ -439,7 +411,7 @@ function ProfileHome() {
       <div className="set-group">
         <h2 className="set-label">Copilul</h2>
         <div className="set-box">
-          <Row to="/profil/copil" icon="child" color="#d9638a" label={child.name || 'Adaugă copilul'}
+          <Row to="/profil/copil" icon="child" label={child.name || 'Adaugă copilul'}
             sub={[age ? `${age} ${age === 1 ? 'an' : 'ani'}` : '', kid.pinHash ? `modul copil: ${kid.minutes ? `${kid.minutes} min` : 'fără limită'}` : 'modul copil: oprit'].filter(Boolean).join(' · ')} />
         </div>
         {kid.pinHash && <button type="button" className="btn primary kid-start" onClick={() => { startKid(kid.minutes); nav('/povesti/acasa') }}>
@@ -451,9 +423,9 @@ function ProfileHome() {
       <div className="set-group">
         <h2 className="set-label">{admin ? 'Familie și partajare' : 'Partajare'}</h2>
         <div className="set-box">
-          {admin && <Row to="/profil/persoane" icon="users" color="#3e6a51" label="Persoane" value={members ? String(members.length) : ''} />}
-          {admin && <Row to="/profil/invita" icon="mail" color="#3a7fc4" label="Invită pe cineva" />}
-          <Row to="/profil/partajare" icon="share" color="#cf7f2a" label="Ce partajez"
+          {admin && <Row to="/profil/persoane" icon="users" label="Persoane" value={members ? String(members.length) : ''} />}
+          {admin && <Row to="/profil/invita" icon="mail" label="Invită pe cineva" />}
+          <Row to="/profil/partajare" icon="share" label="Ce partajez"
             value={counts ? `${plural(counts.stories, 'poveste', 'povești')} · ${plural(counts.recipes, 'rețetă', 'rețete')}` : ''} />
         </div>
       </div>
@@ -461,16 +433,15 @@ function ProfileHome() {
       <div className="set-group">
         <h2 className="set-label">Preferințe</h2>
         <div className="set-box">
-          <Row to="/profil/bucatarie" icon="oven" color="#c4664a" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
-          <Row to="/profil/cer" icon="moon" color="#3b3290" label="Cerul din povești" value={cityByName(city).name} />
+          <Row to="/profil/bucatarie" icon="oven" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
         </div>
       </div>
 
       <div className="set-group">
         <h2 className="set-label">Pe acest telefon</h2>
         <div className="set-box">
-          <Row to="/profil/offline" icon="down" color="#2a9d8f" label="Povești fără internet" value={saved ? `${saved.count} · ${fmtSize(saved.bytes)}` : ''} />
-          <Row to="/profil/raft" icon="books" color="#8a6d3b" label="Clic pe raft" value={shelfClick ? 'Pornit' : 'Oprit'} />
+          <Row to="/profil/offline" icon="down" label="Povești fără internet" value={saved ? `${saved.count} · ${fmtSize(saved.bytes)}` : ''} />
+          <Row to="/profil/raft" icon="books" label="Clic pe raft" value={shelfClick ? 'Pornit' : 'Oprit'} />
         </div>
       </div>
 
@@ -486,7 +457,6 @@ const PAGES: Record<string, [string, ComponentType]> = {
   invita: ['Invită pe cineva', InviteForm],
   partajare: ['Ce partajez', SharedSettings],
   bucatarie: ['Bucătăria mea', KitchenTools],
-  cer: ['Cerul din povești', SkySettings],
   offline: ['Povești fără internet', OfflineStorage],
   raft: ['Raftul cu povești', ShelfSettings],
 }

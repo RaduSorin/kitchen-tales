@@ -32,15 +32,15 @@
 .cover-glow img.on { opacity: .95; }
 /* A cover without a picture glows from its drawn sky and emoji, blurred like a picture would be. */
 .glow-scene { position: absolute; left: -20%; top: -12%; width: 140%; height: 78vh; display: grid; place-items: center;
-  filter: blur(48px) saturate(1.5) brightness(.82); opacity: .95; animation: glow-in .9s ease; }
+  filter: blur(48px) saturate(1.8) brightness(1.08); opacity: .95; animation: glow-in .9s ease; }
 .glow-scene > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.glow-scene > span { position: relative; font-size: min(60vw, 46vh); line-height: 1; }
+.glow-scene > span { position: relative; font-size: min(40vw, 30vh); line-height: 1; }
 @keyframes glow-in { from { opacity: 0; } }
 .glow-fade { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0, rgb(15 14 19 / .4) 34vh, var(--night-bg) 72vh); }
 /* The player: the whole screen in the cover's colours. */
 :root[data-fullscreen] .cover-glow img { top: -10%; height: 120%; filter: blur(60px) saturate(1.6) brightness(.72); }
 :root[data-fullscreen] .cover-glow::before { height: 100%; }
-:root[data-fullscreen] .glow-scene { top: -10%; height: 120%; filter: blur(60px) saturate(1.6) brightness(.72); }
+:root[data-fullscreen] .glow-scene { top: -10%; height: 120%; filter: blur(60px) saturate(1.9) brightness(1.02); }
 :root[data-fullscreen] .glow-fade { background: linear-gradient(180deg, rgb(0 0 0 / .08), rgb(0 0 0 / .32) 55%, rgb(0 0 0 / .72)); }
 @media (prefers-reduced-motion: reduce) { .cover-glow img { transition: none; } .glow-scene { animation: none; } }
 

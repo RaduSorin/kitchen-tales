@@ -38,6 +38,8 @@ I18n.putVocabulariesForLanguage('ro', {
   'Signing in': 'Se intră în cont',
   Email: 'Email',
   'Enter your Email': 'Email',
+  Username: 'Email',
+  'Enter your Username': 'Email',
   Password: 'Parolă',
   'Enter your Password': 'Parola',
   'Forgot your password?': 'Ai uitat parola?',

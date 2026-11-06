@@ -8,9 +8,12 @@ const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '
 
 /** What went wrong, in words, plus the technical name and message (small, to tell us). */
 function why(err: unknown): { text: string; detail?: string } {
-  const e = err as Error | undefined
-  const name = e?.name ?? ''
-  const msg = e?.message ?? String(err ?? '')
+  const e = err as (Error & { $metadata?: { websocketSynthetic500Error?: boolean; httpStatusCode?: number }; type?: string }) | undefined
+  // The SDK rejects with a bare object when the WebSocket doesn't open in time, and with an Event
+  // when the socket fails; give both a readable name.
+  if (e?.$metadata?.websocketSynthetic500Error) return { text: 'Nu mă pot conecta la serviciul de dictare. Încearcă din nou.', detail: 'WebSocket: conexiunea nu s-a deschis la timp' }
+  const name = e?.name ?? (e?.type ? `WebSocket ${e.type}` : '')
+  const msg = e?.message ?? (e?.type ? '' : String(err ?? ''))
   const detail = [name, msg].filter(Boolean).join(': ').slice(0, 160) || undefined
   if (name === 'NotAllowedError' || name === 'SecurityError') return { text: 'Nu am acces la microfon. Permite-l din Setări › Safari › Microfon.' }
   if (name === 'NotFoundError') return { text: 'Nu găsesc niciun microfon.' }

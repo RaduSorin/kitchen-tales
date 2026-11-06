@@ -134,6 +134,11 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
       const { TranscribeStreamingClient, StartStreamTranscriptionCommand } = await import('@aws-sdk/client-transcribe-streaming')
       const client = new TranscribeStreamingClient({
         region: outputs.auth.aws_region,
+        // The SDK gives the WebSocket only 3 s to open and then retries with the same audio stream,
+        // half used already, which can only fail. On a phone the connection (port 8443) can take
+        // longer than that, so: more time to open, and no retries (a new tap starts over cleanly).
+        requestHandler: { connectionTimeout: 15_000 },
+        maxAttempts: 1,
         credentials: async () => {
           const c = (await fetchAuthSession()).credentials
           if (!c) throw new Error('Nu ești conectat.')

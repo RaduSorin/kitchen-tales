@@ -549,3 +549,27 @@
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
 [data-amplify-authenticator] [data-amplify-authenticator-signin] fieldset { gap: 12px; }
+
+/* ---------- Bookshelf spines: collector's edition ---------- */
+/* Deep cloth in the cover's own colour, gold Fraunces title, gold bands and moon; dark walnut shelf
+   lit along its edge. */
+.shelf-spine.spine-skin {
+  padding: 10px 0 8px; gap: 6px; color: var(--accent); font-family: var(--f-display), serif;
+  border-radius: 4px 4px 2px 2px;
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / .12), rgb(255 255 255 / 0) 25%, rgb(0 0 0 / 0) 60%, rgb(0 0 0 / .45)),
+    linear-gradient(color-mix(in srgb, var(--c) 62%, #000), color-mix(in srgb, var(--c) 40%, #000));
+  box-shadow: 1px 0 0 rgb(0 0 0 / .4);
+}
+.shelf-spine.spine-skin.on { box-shadow: 0 0 0 1.5px var(--accent), 0 14px 24px rgb(0 0 0 / .6); }
+.shelf-spine .spine-band { width: 70%; height: 4px; border-block: 1px solid var(--accent); opacity: .8; }
+.shelf-spine .spine-title { font-weight: 600; font-size: 13.5px; letter-spacing: .02em; }
+.shelf-spine .spine-moon { flex: none; }
+.shelf-spine .spine-min { font-size: 9px; opacity: .8; }
+.shelf-spine .spine-ribbon { background: var(--accent); width: 7px; height: 28px; right: 4px; }
+.shelf-row::before { background: radial-gradient(ellipse 58% 100% at 50% 100%, rgb(242 200 121 / .14), rgb(242 200 121 / .04) 55%, transparent 100%); }
+.shelf-row::after {
+  background: linear-gradient(#3a2c22, #1d1611);
+  box-shadow: inset 0 1px 0 rgb(242 200 121 / .55), 0 10px 18px rgb(0 0 0 / .6);
+}
+.moon-dust { background: var(--accent); }

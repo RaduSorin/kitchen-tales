@@ -15,6 +15,7 @@ import { builtinFolderOf, fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories
 import StoryCover from '../components/StoryCover'
 import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
 import { useKid } from '../lib/kidMode'
+import { KidCorner } from '../components/KidMode'
 import { useGlow } from '../lib/glow'
 
 const REMAINING_KEY = 'kt-player-remaining'
@@ -156,7 +157,7 @@ function StoryPlayer() {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
         </button>
         <span className="player-from" aria-hidden="true"><small>Din {folderOf(s)}</small><b>{s.title}</b></span>
-        {kid ? <span aria-hidden="true" /> : (
+        {kid ? <KidCorner /> : (
           <span className="menu-anchor">
             <button type="button" className="night-btn" aria-label="Pentru părinți: partajare, offline, copertă, folder, ștergere" aria-haspopup="menu" aria-expanded={parentsOpen}
               onClick={() => { setParentsOpen((o) => !o); setConfirmDelete(false); setMsg('') }}>

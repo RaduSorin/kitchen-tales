@@ -12,6 +12,7 @@ import StoryCover from '../components/StoryCover'
 import ShareIcon from '../components/ShareIcon'
 import { focusField } from '../lib/keyboard'
 import { useKid } from '../lib/kidMode'
+import { KidCorner } from '../components/KidMode'
 import { useGlow } from '../lib/glow'
 
 import { matchesQuery, norm } from '../lib/format'
@@ -262,6 +263,7 @@ export default function StoryList() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           </Link>
         )}
+        {kid && <KidCorner />}
         {parent && (!inFolder || open.mine) && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
 

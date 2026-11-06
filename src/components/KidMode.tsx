@@ -150,6 +150,14 @@ export function KidLockButton({ className = 'icon-link kid-lock', locked = false
   )
 }
 
+/**
+ * Kid mode on phones (no top bar): the lock with the minutes left, as a round glass button in the
+ * page's top row, where the parent has their own buttons. Hidden on wide screens (the top bar has it).
+ */
+export function KidCorner() {
+  return useKid().active ? <KidLockButton className="night-btn kid-lock kid-corner" /> : null
+}
+
 /** Says goodnight with the phone's Romanian voice, if it has one. */
 function sayGoodnight(name: string) {
   try {

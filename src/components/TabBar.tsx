@@ -42,7 +42,7 @@ export const PROFILE = 'M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zM12 7a3.2 
 /** Hidden in full-screen cooking and on the story player, which has its own big controls. */
 const hidesTabBar = (path: string) => path.endsWith('/gateste') || isPlayerPage(path)
 
-/** The stories side: Acasă, Favorite, Bibliotecă (big, in the middle), Adaugă, Profil. */
+/** The stories side: Acasă, Favorite, Bibliotecă, Adaugă, Profil. The open one is a filled bubble. */
 function StoryTabs() {
   const { pathname, search } = useLocation()
   const q = new URLSearchParams(search)
@@ -68,7 +68,7 @@ function StoryTabs() {
         <Link to="/povesti?favorite=1" className={`tab${favorites ? ' active' : ''}`} aria-current={favorites ? 'page' : undefined}>
           <span className="tab-icon"><I d={HEART} /></span><span className="tab-label">Favorite</span>
         </Link>
-        <Link to="/povesti" className={`tab tab-center${shelf ? ' active' : ''}`} aria-current={shelf ? 'page' : undefined}>
+        <Link to="/povesti" className={`tab${shelf ? ' active' : ''}`} aria-current={shelf ? 'page' : undefined}>
           <span className="tab-icon"><I d={SHELF} /></span><span className="tab-label">Bibliotecă</span>
         </Link>
         {kid
@@ -149,7 +149,7 @@ export default function TabBar() {
       <div className="tabbar-spacer" aria-hidden="true" />
       <nav className="tabbar" aria-label="Meniu">
         {TABS.map((t) => (
-          <NavLink key={t.to} to={t.to} end={t.end} className={t.to === '/retete' ? 'tab tab-center' : 'tab'} aria-label={t.full}>
+          <NavLink key={t.to} to={t.to} end={t.end} className="tab" aria-label={t.full}>
             <span className="tab-icon">
               <I d={t.icon} />
               {t.to === '/cumparaturi' && toBuy > 0 && <span className="tab-badge">{toBuy > 99 ? '99+' : toBuy}</span>}

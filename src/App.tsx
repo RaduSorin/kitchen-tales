@@ -8,9 +8,8 @@ import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
 import { applyTheme, setStatusBarColor, useSettings } from './lib/settings'
 import { useSettingsSync } from './lib/settingsSync'
-import { useSkyPhase } from './lib/sky'
-import { SKY_TOP } from './lib/sun'
-import { SkyBackdrop } from './components/Sky'
+import CoverGlow from './components/CoverGlow'
+
 import RecipeList from './pages/RecipeList'
 import RecipeView from './pages/RecipeView'
 import RecipeEdit from './pages/RecipeEdit'
@@ -31,24 +30,24 @@ import Shopping from './pages/Shopping'
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
 
-// The stories area always uses the night palette, whatever the app theme is.
+/** The stories background (also the iPhone status bar colour there). */
+const NIGHT_BG = '#0f0e13'
+
+// The stories area always uses its own dark palette, whatever the app theme is, with the
+// cover of the story in focus glowing behind it (components/CoverGlow).
 function NightArea() {
   const night = useArea() === 'night'
-  const sky = useSkyPhase()
   useEffect(() => {
     const root = document.documentElement
     if (night) {
       root.dataset.area = 'night'
-      root.dataset.sky = sky
-      // Browser / status bar color follows the sky too.
-      setStatusBarColor(SKY_TOP[sky])
+      setStatusBarColor(NIGHT_BG)
     } else {
       delete root.dataset.area
-      delete root.dataset.sky
       applyTheme()
     }
-  }, [night, sky])
-  return night ? <SkyBackdrop /> : null
+  }, [night])
+  return night ? <CoverGlow /> : null
 }
 
 /** Where the top bar's back arrow leads on pages that are not one of the main tabs (undefined: no arrow). */

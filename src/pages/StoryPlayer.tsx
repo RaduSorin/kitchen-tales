@@ -14,6 +14,7 @@ import { builtinFolderOf, fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories
 import StoryCover from '../components/StoryCover'
 import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
 import { useKid } from '../lib/kidMode'
+import { useGlow } from '../lib/glow'
 
 const REMAINING_KEY = 'kt-player-remaining'
 
@@ -56,6 +57,8 @@ function StoryPlayer() {
   // Kid mode: no "Pentru părinți" (delete, cover, offline, move to folder).
   const kid = useKid().active
   const isSaved = !!id && offlineIds.has(id)
+  // The whole screen glows in the colours of this story's cover.
+  useGlow(s ?? undefined)
   useEffect(() => { getStory(id!).then((x) => setS(x ?? null)).catch(() => setS(null)) }, [id])
   // The audio lives in the app-wide player, so it keeps going when you leave this page.
   const navState = location.state as { autoplay?: boolean; from?: QueueFrom } | null
@@ -131,7 +134,7 @@ function StoryPlayer() {
   if (ended) {
     return (
       <div className={dim ? 'goodnight dim' : 'goodnight'} onClick={() => setDim(false)}>
-        <svg width="120" height="120" viewBox="0 0 110 110" aria-hidden="true"><circle cx="55" cy="55" r="40" fill="var(--moon)" /><circle cx="72" cy="42" r="36" fill="#161a46" /></svg>
+        <svg width="120" height="120" viewBox="0 0 110 110" aria-hidden="true"><circle cx="55" cy="55" r="40" fill="var(--moon)" /><circle cx="72" cy="42" r="36" fill="#2b2433" /></svg>
         <h1>Noapte bună{child.name ? `, ${child.name}` : ''}</h1>
         <p>Povestea s-a terminat.<br />Ne auzim data viitoare.</p>
         <div className="goodnight-actions">
@@ -146,8 +149,9 @@ function StoryPlayer() {
     <div className="night-player">
       <div className="player-top">
         <button type="button" className="night-btn" aria-label={`Înapoi la ${folderOf(s)}`} onClick={back}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
         </button>
+        <span className="player-from" aria-hidden="true"><small>Din folderul</small><b>{folderOf(s)}</b></span>
         {/* Favourites are the family's list: in kid mode the heart only shows, it can't be changed. */}
         {kid ? (
           s.favorite ? <span className="night-btn fav-btn on fav-static" role="img" aria-label="Preferată"><svg width="22" height="22" viewBox="0 0 24 24" fill={s.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" /></svg></span> : <span className="fav-static" aria-hidden="true" />
@@ -158,7 +162,7 @@ function StoryPlayer() {
           </button>
         )}
       </div>
-      <StoryCover story={s} round className={playing ? 'playing' : ''} />
+      <StoryCover story={s} className={`player-art${playing ? ' playing' : ''}`} />
       <div className="player-title">
         <h1>{s.title}</h1>
         <small>{SOURCE_LABEL[s.source]}</small>
@@ -192,15 +196,19 @@ function StoryPlayer() {
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="17.4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M4 5v14l11.5-7z" fill="currentColor" /></svg>
         </button>
       </div>
-      {/* One compact row: tap the left chip to cycle 1 → 2 → 3 → 5 stories, the right one to shuffle. */}
+      {/* Round buttons with a label: tap "Stop după" to cycle 1 → 2 → 3 → 5 stories, the other one to shuffle. */}
       <div className="play-opts">
         <button type="button" className="opt-chip" onClick={() => { const all: Sleep[] = [1, 2, 3, 5]; chooseSleep(all[(all.indexOf(sleep) + 1) % all.length]) }}
           aria-label={`Oprește după ${sleep === 1 ? 'o poveste' : `${sleep} povești`}. Atinge ca să schimbi.`}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>
-          <span>Stop după <b>{sleep}</b></span>
+          <span className="opt-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>
+          </span>
+          <span>Stop după {sleep === 1 ? '1 poveste' : `${sleep} povești`}</span>
         </button>
         <button type="button" className="opt-chip" aria-pressed={player.shuffle} onClick={player.toggleShuffle} aria-label={player.shuffle ? 'Amestecat. Atinge pentru una după alta.' : 'Una după alta. Atinge ca să amesteci.'}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 3h5v5" /><path d="M4 20 21 3" /><path d="M21 16v5h-5" /><path d="M15 15l6 6" /><path d="M4 4l5 5" /></svg>
+          <span className="opt-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 3h5v5" /><path d="M4 20 21 3" /><path d="M21 16v5h-5" /><path d="M15 15l6 6" /><path d="M4 4l5 5" /></svg>
+          </span>
           <span>{player.shuffle ? 'Amestecat' : 'La rând'}</span>
         </button>
       </div>

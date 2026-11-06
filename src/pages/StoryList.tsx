@@ -12,6 +12,7 @@ import StoryCover from '../components/StoryCover'
 import ShareIcon from '../components/ShareIcon'
 import { focusField } from '../lib/keyboard'
 import { useKid } from '../lib/kidMode'
+import { useGlow } from '../lib/glow'
 
 import { matchesQuery, norm } from '../lib/format'
 import { folderView, isBookView, newLabel, rememberShelfPick, renameFolderView, saveSeen, seenStories, setFolderView, shelfPick, useFolderViews, useLandscape } from '../lib/shelf'
@@ -20,6 +21,14 @@ import BookShelf from '../components/BookShelf'
 import CoverFlow from '../components/CoverFlow'
 
 const count = (n: number) => `${n} ${n === 1 ? 'poveste' : 'povești'}`
+/** Total listening time of a folder: "45 min", "2 h", "1 h 30". */
+function total(items: Story[]) {
+  const min = Math.round(items.reduce((t, s) => t + (s.durationSec ?? 0), 0) / 60)
+  if (!min) return ''
+  if (min < 60) return `${min} min`
+  const h = Math.floor(min / 60), m = min % 60
+  return m && h < 10 ? `${h} h ${m}` : `${h} h`
+}
 
 export default function StoryList() {
   const [stories, setStories] = useState<Story[]>([])
@@ -135,6 +144,12 @@ export default function StoryList() {
   const lastId = getLastStoryId()
   const last = available.find((s) => s.id === lastId)
   const lastPos = last ? getPosition(last.id) : 0
+  // The book chosen in a folder (on the shelf, or the last one opened), else the folder's first picture.
+  const chosenId = [selId, open && shelfPick(open.name), lastId].find((id) => id && shown.some((s) => s.id === id))
+  const chosen = shown.find((s) => s.id === chosenId)
+  // The background glows in the colours of the story in focus: the chosen book in a folder,
+  // the story to continue on the folders page.
+  useGlow(favMode ? undefined : inFolder || (open && folders.length === 1) ? chosen ?? shown.find((s) => s.coverKey) ?? shown[0] : last)
 
   const downloadAll = async () => {
     setError('')
@@ -262,23 +277,38 @@ export default function StoryList() {
       ) : searching && shown.length === 0 ? (
         <p className="empty">Nicio poveste găsită pentru „{q.trim()}”.</p>
       ) : !open && !searching ? (
-        <div className="covers">
-          {folders.map((f) => (
-            <button key={f.name} type="button" className="cover-card folder-card" onClick={() => { gridScroll.current = window.scrollY; setParams({ folder: f.name }, { state: { fromShelf: true } }) }}>
-              {unseen(f.items) > 0 && <span className="folder-fresh">{newLabel(unseen(f.items))}</span>}
-              <span className="folder-mosaic" aria-hidden="true">
-                {f.items.length === 0
-                  ? <span className="folder-plus">{f.icon ?? '📁'}</span>
-                  : [...f.items.filter((s) => s.coverKey), ...f.items.filter((s) => !s.coverKey)].slice(0, 4).map((s) => <StoryCover key={s.id} story={s} />)}
-              </span>
-              <span className="cover-title">{f.icon && <span aria-hidden="true">{f.icon} </span>}{f.name}</span>
-              <small className="cover-meta">{f.items.length ? count(f.items.length) : 'gol'}{unseen(f.items) > 0 && <span className="sr-only">, {newLabel(unseen(f.items))}</span>}</small>
-            </button>
-          ))}
+        <div className="collections">
+          {folders.map((f) => {
+            // The folder as a collection card: its covers tint the card, three of them fan out on the right.
+            const art = [...f.items.filter((s) => s.coverKey), ...f.items.filter((s) => !s.coverKey)]
+            const fresh = unseen(f.items)
+            const started = f.items.filter((s) => getPosition(s.id) > 5).length
+            const time = total(f.items)
+            return (
+              <button key={f.name} type="button" className="folder-card collection" onClick={() => { gridScroll.current = window.scrollY; setParams({ folder: f.name }, { state: { fromShelf: true } }) }}>
+                {art[0] && <StoryCover story={art[0]} className="collection-tint" />}
+                <span className="collection-text">
+                  <span className="cover-title">{f.icon && <span aria-hidden="true">{f.icon} </span>}{f.name}</span>
+                  <small className="cover-meta">{f.items.length ? count(f.items.length) : 'gol'}{time && ` · ${time}`}</small>
+                  {(fresh > 0 || started > 0) && (
+                    <span className="collection-tags">
+                      {fresh > 0 && <span className="tag-new">{newLabel(fresh)}</span>}
+                      {started > 0 && <span>{started} în curs</span>}
+                    </span>
+                  )}
+                </span>
+                <span className={`collection-covers n${Math.min(3, art.length)}`} aria-hidden="true">
+                  {art.length === 0
+                    ? <span className="folder-plus">{f.icon ?? '📁'}</span>
+                    : art.slice(0, 3).reverse().map((s) => <StoryCover key={s.id} story={s} />)}
+                </span>
+              </button>
+            )
+          })}
           {parent && (
-            <button type="button" className="cover-card folder-card folder-new" onClick={() => setEditing('new')}>
-              <span className="folder-mosaic" aria-hidden="true"><span className="folder-plus">+</span></span>
-              <span className="cover-title">Folder nou</span>
+            <button type="button" className="folder-card collection folder-new" onClick={() => setEditing('new')}>
+              <span className="collection-text"><span className="cover-title">Folder nou</span><small className="cover-meta">pentru povești sau muzică</small></span>
+              <span className="collection-covers" aria-hidden="true"><span className="folder-plus">+</span></span>
             </button>
           )}
         </div>
@@ -288,7 +318,7 @@ export default function StoryList() {
         (() => {
           const props = {
             items: shown, // same order as the squares: the first square is the first book on the top shelf
-            selId: [selId, open && shelfPick(open.name), lastId].find((id) => id && shown.some((s) => s.id === id)),
+            selId: chosenId,
             onSelect: pick, onOpen: openStory, onArrived: arrived, wide: wideShelf,
             arriving: searching ? [] : arriving,
           }

@@ -134,7 +134,7 @@ function SkySettings() {
           </select>
         </label>
       </div>
-      <p className="set-hint">Cerul se schimbă ca afară: zi cu soare de la răsărit, apus cu o oră înainte și o oră după apusul soarelui, apoi noapte cu stele.</p>
+      <p className="set-hint">După răsăritul și apusul din orașul tău, aplicația știe când e „Povestea de diseară”, iar cerul de pe cardul cu povești din Acasă (la Rețete) se schimbă ca afară: zi, apus, noapte cu stele.</p>
     </div>
   )
 }

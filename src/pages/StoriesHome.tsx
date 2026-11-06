@@ -12,7 +12,7 @@ import { useFileUrl } from '../lib/useFileUrl'
 import StoryCover from '../components/StoryCover'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { LoadError, Loading } from '../components/LoadState'
-import { SkyScene } from '../components/Sky'
+import { useGlow } from '../lib/glow'
 import { useSkyPhase } from '../lib/sky'
 import { useKid } from '../lib/kidMode'
 
@@ -24,6 +24,24 @@ function storyOfTheDay(stories: Story[], day: number, skip?: string) {
   return pool.length ? pool[day % pool.length] : undefined
 }
 
+const minutes = (sec: number) => `${Math.max(1, Math.round(sec / 60))} min`
+
+/** The big card at the top: a story to continue, or tonight's story. */
+function Hero({ story, kicker, note, progress }: { story: Story; kicker: string; note?: string; progress?: number }) {
+  return (
+    <Link to={`/povesti/${story.id}`} className="sa-hero">
+      <StoryCover story={story} />
+      <span className="sa-hero-text">
+        <small className="sa-kicker">{kicker}</small>
+        <b>{story.title}</b>
+        {note && <span className="sa-hero-note">{note}</span>}
+        {progress !== undefined && <span className="sa-progress"><i style={{ width: `${Math.round(progress * 100)}%` }} /></span>}
+        <span className="sa-hero-btn"><Play /> Ascultă{progress === undefined && story.durationSec ? ` · ${minutes(story.durationSec)}` : ''}</span>
+      </span>
+    </Link>
+  )
+}
+
 function Row({ title, to, stories, from }: { title: string; to: string; stories: Story[]; from?: 'favorites' }) {
   if (!stories.length) return null
   return (
@@ -32,7 +50,10 @@ function Row({ title, to, stories, from }: { title: string; to: string; stories:
       <div className="sh-row">
         {stories.map((s) => (
           <Link key={s.id} to={`/povesti/${s.id}`} state={from ? { fromFolder: true, from } : { fromFolder: true }} className="cover-card sh-card">
-            <StoryCover story={s} />
+            <span className="sa-cover">
+              <StoryCover story={s} />
+              {s.durationSec ? <span className="sa-dur">{minutes(s.durationSec)}</span> : null}
+            </span>
             <span className="cover-title">{s.title}</span>
           </Link>
         ))}
@@ -80,10 +101,12 @@ export default function StoriesHome() {
   const cooking = plan.filter((e) => e.day === todayKey).map((e) => recipes.find((r) => r.id === e.recipeId)).filter((r): r is Recipe => !!r)
   // "Tonight" as soon as the sun starts going down (earlier in winter).
   const evening = sky !== 'day'
+  const continuing = last && lastPos > 5 ? last : undefined
+  // The top of the screen glows in the colours of the story you'd play next.
+  useGlow(continuing ?? tonight)
 
   return (
     <section className="stories-home">
-      <SkyScene />
       <div className="shelf-head">
         <div>
           <h1>{evening && hour >= 12 ? 'Bună seara' : greeting()}{child.name ? `, ${child.name}` : ''}</h1>
@@ -102,21 +125,21 @@ export default function StoriesHome() {
         </Link>
       ) : (
         <>
-          {last && lastPos > 5 && (
-            <Link to={`/povesti/${last.id}`} className="continue">
-              <StoryCover story={last} />
-              <span className="continue-text"><b>{last.title}</b><small>continuă de la {fmtTime(lastPos)}</small></span>
-              <span className="continue-play" aria-hidden="true"><Play /></span>
-            </Link>
+          {continuing ? (
+            <Hero story={continuing} kicker="Continuă"
+              note={continuing.durationSec ? `mai sunt ${minutes(Math.max(0, continuing.durationSec - lastPos))}` : `de la ${fmtTime(lastPos)}`}
+              progress={continuing.durationSec ? Math.min(1, lastPos / continuing.durationSec) : undefined} />
+          ) : tonight && (
+            <Hero story={tonight} kicker={evening ? `Povestea de diseară${child.name ? ` pentru ${child.name}` : ''}` : 'Povestea zilei'} />
           )}
 
-          {tonight && (
+          {continuing && tonight && (
             <Link to={`/povesti/${tonight.id}`} className="sh-tonight">
               <StoryCover story={tonight} />
               <span className="sh-tonight-text">
                 <small>{evening ? `Povestea de diseară${child.name ? ` pentru ${child.name}` : ''}` : 'Povestea zilei'}</small>
                 <b>{tonight.title}</b>
-                <span className="sh-tonight-btn"><Play /> Ascultă{tonight.durationSec ? ` · ${Math.max(1, Math.round(tonight.durationSec / 60))} min` : ''}</span>
+                <span className="sh-tonight-btn"><Play /> Ascultă{tonight.durationSec ? ` · ${minutes(tonight.durationSec)}` : ''}</span>
               </span>
             </Link>
           )}

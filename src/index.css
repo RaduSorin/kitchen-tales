@@ -374,43 +374,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 :root[data-area="night"] body { background: linear-gradient(180deg, #171a45 0, #2c2368 100%) fixed; font-family: var(--f-kids); }
 :root[data-area="night"] .topbar { border-bottom-color: rgb(255 255 255 / .08); }
 
-/* The stories sky follows the real daylight (lib/sun.ts): data-sky on <html> is day, dusk or night.
-   A fixed backdrop on every stories screen, plus a picture with hills at the top of Acasă. */
-.sky-backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-.sky-scene { position: absolute; top: 0; left: 0; right: 0; height: 340px; z-index: -1; pointer-events: none;
-  -webkit-mask-image: linear-gradient(#000 62%, transparent); mask-image: linear-gradient(#000 62%, transparent); }
-.sky-layer { position: absolute; inset: 0; opacity: 0; transition: opacity 3s ease; }
-.sky-layer svg { display: block; }
-:root[data-sky="day"] .sky-layer[data-phase="day"], :root[data-sky="dusk"] .sky-layer[data-phase="dusk"], :root[data-sky="night"] .sky-layer[data-phase="night"] { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .sky-layer { transition: none; } }
-/* Room under the greeting for the hills picture. */
-.stories-home .sh-tonight, .stories-home .continue { margin-top: 0; }
-.stories-home > .shelf-head + * { margin-top: 92px; }
-:root[data-sky="night"] { --statusbar: #121541; --topbar-bg: rgb(18 21 65 / .72); }
-:root[data-sky="dusk"] { --statusbar: #2f2878; --topbar-bg: rgb(47 40 120 / .72); }
-:root[data-sky] .topbar { border-bottom-color: transparent; }
-/* By day the sky is light, so the stories switch to dark ink; play buttons stay moon-yellow. */
-:root[data-area="night"][data-sky="day"] {
-  --statusbar: #78bff9; --topbar-bg: rgb(120 191 249 / .72);
-  --bg: #d6eeff; --text: #171a45; --muted: rgb(23 26 69 / .68); --surface: rgb(255 255 255 / .58); --surface-2: rgb(255 255 255 / .74);
-  --border: rgb(23 26 69 / .14); --accent: #2a2470; --accent-soft: rgb(42 36 112 / .12); --on-accent: #fff6d6; --danger: #c2334d;
-  --night: #2a2470; --night-soft: rgb(42 36 112 / .1); --track: rgb(23 26 69 / .18); --knob: #ffffff;
-  --glass-bg: rgb(255 255 255 / .55); --glass-edge: rgb(255 255 255 / .8); --glass-shine: rgb(255 255 255 / .9); --glass-shadow: rgb(23 26 69 / .2);
-  --glass-pill: rgb(42 36 112 / .12);
-  --moon-ink: #2a2470; --on-text: #fff6d6;
-  color-scheme: light;
-}
-:root[data-sky="day"] body { background: #a9d8fc; }
-:root[data-sky="day"] .sh-tonight { background: rgb(255 255 255 / .62); border-color: rgb(255 255 255 / .9); }
-:root[data-sky="day"] .seek::-webkit-slider-runnable-track { background: linear-gradient(var(--moon-ink), var(--moon-ink)) 0 / var(--p) 100% no-repeat, rgb(23 26 69 / .15); }
-:root[data-sky="day"] .seek::-moz-range-track { background: rgb(23 26 69 / .15); }
-:root[data-sky="day"] .seek::-moz-range-progress { background: var(--moon-ink); }
-:root[data-sky="day"] .seek::-webkit-slider-thumb { background: #fff; box-shadow: 0 1px 4px rgb(23 26 69 / .35); }
-:root[data-sky="day"] .seek::-moz-range-thumb { background: #fff; box-shadow: 0 1px 4px rgb(23 26 69 / .35); }
-:root[data-sky="day"] .rec-big { border-color: var(--text); color: var(--text); }
-:root[data-sky="day"] .wave i.old { background: rgb(23 26 69 / .25); }
-:root[data-sky="day"] .story-cover.round { box-shadow: 0 0 0 12px rgb(255 255 255 / .35), 0 0 80px rgb(255 215 106 / .45); }
-:root[data-sky="day"] .night-tabbar .tab-center .tab-icon { border-color: rgb(255 255 255 / .9); }
 :root[data-area="night"] h1, :root[data-area="night"] h2 { font-family: var(--f-kids); font-weight: 800; }
 .night-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--surface); color: var(--text); display: grid; place-items: center; font-size: 1.6rem; text-decoration: none; flex: none; }
 
@@ -673,15 +636,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   :root[data-tabbar] .mini-player { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 104px); }
   :root[data-tabbar] .mini-spacer { height: 100px; }
   :root[data-tabbar] main { padding-bottom: 16px; }
-}
-/* The middle tab (Rețete / Bibliotecă) is a big raised round button: sage by day, moon-yellow at night. */
-@media (max-width: 759px) {
-  .tabbar { overflow: visible; }
-  .tab-center, .tab-center.active { background: none !important; box-shadow: none !important; }
-  .tab-center .tab-icon { width: 60px; height: 60px; margin-top: -26px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
-    box-shadow: 0 6px 18px rgb(0 0 0 / .3), inset 0 2px 0 rgb(255 255 255 / .35); border: 3px solid var(--bg); }
-  .tab-center:not(.active) .tab-icon { filter: saturate(.75) brightness(1.05); }
-  .tab-center.active .tab-label { color: var(--accent); }
 }
 /* Stories: night glass, the big moon-yellow Bibliotecă button in the middle, and Noapte bună. */
 @media (max-width: 759px) {

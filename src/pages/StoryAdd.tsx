@@ -25,6 +25,7 @@ const LEAVE_UNSAVED = {
   stay: 'Rămân să o salvez',
   leave: 'Pleacă și renunță',
 }
+const LEAVE_GENERATED = { ...LEAVE_UNSAVED, text: 'Povestea creată nu e pusă pe raft încă. Dacă pleci acum, se pierde.' }
 
 const BRIEF_KEY = 'kt-story-brief'
 const loadBrief = (): StoryBrief => {
@@ -137,8 +138,9 @@ export default function StoryAdd() {
   const preview = generated?.url ?? localPreview
   // What's ready belongs to the screen that made it, so switching screens shows that screen's own start.
   const ready = !!(audio || generated) && mode === MODE_OF[source]
-  // A finished recording that isn't saved yet only lives on this screen, so leaving asks first.
-  useLeaveGuard(source === 'recording' && !!audio && !saving, LEAVE_UNSAVED)
+  // A finished recording, or a story the app just wrote and read, isn't saved yet: leaving
+  // (the ‹ button, the tab bar, the iPhone swipe back) asks first.
+  useLeaveGuard(ready && !saving && (source === 'recording' || source === 'generated'), source === 'generated' ? LEAVE_GENERATED : LEAVE_UNSAVED)
 
   // A generated story's audio is already in the cloud: leaving without saving deletes it.
   const unsavedAudio = useRef<string>(undefined)
@@ -224,6 +226,9 @@ export default function StoryAdd() {
     setError('')
     if (creating && ownMode) setOwnMode(false)
     else if (creating && stepAt > 0) setStepAt(stepAt - 1)
+    // From the finish screen one step back: the recorder, the story's details or the file picker
+    // again, and what wasn't saved is let go (so nothing asks again later).
+    else if (ready) reset()
     else choose()
   }
   if (creating) {
@@ -363,7 +368,7 @@ export default function StoryAdd() {
   const finishing = !!mode && ready
   const head = (
     <div className={`parent-head${recordStart || uploadStart || finishing ? ' stacked' : ''}`}>
-      <button type="button" className="night-btn" aria-label="Înapoi" data-leaves={mode === 'record' && !ready ? '' : undefined} onClick={() => (mode ? back() : nav('/povesti'))}>
+      <button type="button" className="night-btn" aria-label="Înapoi" data-leaves="" onClick={() => (mode ? back() : nav('/povesti'))}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
       </button>
       <div>

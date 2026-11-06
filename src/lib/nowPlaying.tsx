@@ -11,6 +11,9 @@ import { isKidLocked } from './kidMode'
 export type Sleep = 1 | 2 | 3 | 5
 const SLEEP_KEY = 'kt-stop-after'
 const SHUFFLE_KEY = 'kt-shuffle'
+const RATE_KEY = 'kt-play-rate'
+/** Playback speeds, in the order the Viteză button goes through them. */
+const RATES = [1, 1.25, 1.5, 0.75] as const
 const readNum = (k: string, d: number) => { try { return +(localStorage.getItem(k) ?? d) || d } catch { return d } }
 const store = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* storage unavailable */ } }
 
@@ -38,6 +41,10 @@ interface NowPlaying {
   restart: () => void
   chooseSleep: (v: Sleep) => void
   toggleShuffle: () => void
+  /** Playback speed (1 = normal), remembered on this device. */
+  rate: number
+  /** Next speed: 1 → 1.25 → 1.5 → 0.75 → 1. */
+  cycleRate: () => void
   /** Stop and forget the current story (closes the mini player). */
   close: () => void
   /** Turns the sound down over a few seconds, then pauses (kid mode's time is up). */
@@ -79,6 +86,14 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const resigned = useRef(false)
   const [sleep, setSleep] = useState<Sleep>(() => ([1, 2, 3, 5].includes(readNum(SLEEP_KEY, 1)) ? readNum(SLEEP_KEY, 1) : 1) as Sleep)
   const [shuffle, setShuffle] = useState(() => readNum(SHUFFLE_KEY, 0) === 1)
+  const [rate, setRate] = useState(() => { const r = readNum(RATE_KEY, 1); return (RATES as readonly number[]).includes(r) ? r : 1 })
+  const cycleRate = useCallback(() => setRate((r) => {
+    const n = RATES[(RATES.indexOf(r as typeof RATES[number]) + 1) % RATES.length]
+    store(RATE_KEY, String(n))
+    return n
+  }), [])
+  // A new source resets the speed in some browsers, so it is set again whenever the audio changes.
+  useEffect(() => { const a = audio.current; if (a) { a.defaultPlaybackRate = rate; a.playbackRate = rate } }, [rate, url])
   const played = useRef(0) // stories finished in this run, for "stop after N stories"
   const heard = useRef(new Set<string>()) // stories already played in this run, so shuffle doesn't repeat
   const autoplay = useRef(false)
@@ -300,7 +315,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     setError(fromDevice.current ? BROKEN_FILE : NOT_REACHABLE)
   }
 
-  const value: NowPlaying = { story, url, playing, t, dur, ended, error, sleep, shuffle, prev, next, load, update, toggle, skip, seek, restart, chooseSleep, toggleShuffle, close, fadeOut }
+  const value: NowPlaying = { story, url, playing, t, dur, ended, error, sleep, shuffle, prev, next, load, update, toggle, skip, seek, restart, chooseSleep, toggleShuffle, rate, cycleRate, close, fadeOut }
   return (
     <Ctx.Provider value={value}>
       {children}
@@ -316,6 +331,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
         onTimeUpdate={(e) => setT(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => {
           const a = e.currentTarget
+          a.playbackRate = rate
           setDur(isFinite(a.duration) ? a.duration : 0)
           const cur = storyRef.current
           const pos = cur ? getPosition(cur.id) : 0

@@ -8,9 +8,8 @@ import Home from './pages/Home'
 import { useOnline } from './lib/useOffline'
 import { applyTheme, setStatusBarColor, useSettings } from './lib/settings'
 import { useSettingsSync } from './lib/settingsSync'
-import { useSkyPhase } from './lib/sky'
-import { SKY_TOP } from './lib/sun'
-import { SkyBackdrop } from './components/Sky'
+import CoverGlow from './components/CoverGlow'
+
 import RecipeList from './pages/RecipeList'
 import RecipeView from './pages/RecipeView'
 import RecipeEdit from './pages/RecipeEdit'
@@ -31,24 +30,25 @@ import Shopping from './pages/Shopping'
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
 
-// The stories area always uses the night palette, whatever the app theme is.
+/** The stories background (also the iPhone status bar colour there). */
+const NIGHT_BG = '#0f0e13'
+
+// Both sides use the dark "Seară de lux" palette; the stories side has its own tones. Behind
+// every screen glows the cover of the story in focus, or on the recipes side the dish's photo.
 function NightArea() {
   const night = useArea() === 'night'
-  const sky = useSkyPhase()
   useEffect(() => {
     const root = document.documentElement
     if (night) {
       root.dataset.area = 'night'
-      root.dataset.sky = sky
-      // Browser / status bar color follows the sky too.
-      setStatusBarColor(SKY_TOP[sky])
+      setStatusBarColor(NIGHT_BG)
     } else {
       delete root.dataset.area
-      delete root.dataset.sky
       applyTheme()
     }
-  }, [night, sky])
-  return night ? <SkyBackdrop /> : null
+  }, [night])
+  // key: the glow starts fresh when you switch sides.
+  return <CoverGlow key={night ? 'night' : 'day'} recipes={!night} />
 }
 
 /** Where the top bar's back arrow leads on pages that are not one of the main tabs (undefined: no arrow). */
@@ -114,7 +114,7 @@ function Shell() {
     const ro = new ResizeObserver(set)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [player])
+  }, [player, kid])
   useEffect(() => {
     if (player) document.documentElement.dataset.fullscreen = ''
     else delete document.documentElement.dataset.fullscreen
@@ -123,7 +123,8 @@ function Shell() {
     <>
       <NightArea />
       {!player && <div className="status-fill" aria-hidden="true" />}
-      {!player && <header className={profile ? 'topbar topbar-profile' : 'topbar'} ref={header}>
+      {/* Phones: no top bar (pages use the whole screen, like the design); wide screens and kid mode keep it. */}
+      {!player && <header className={`topbar${profile ? ' topbar-profile' : ''}${kid ? '' : ' topbar-wide'}`} ref={header}>
         {profile && <div className="topbar-title" aria-hidden="true">{profileTitle(pathname, childName)}</div>}
         {back && !kid ? <BackButton to={back} /> : profile ? <span /> : kid
           // Stories-only mode: nothing in the top bar points to the kitchen side, not even the name.
@@ -145,6 +146,8 @@ function Shell() {
       </header>}
       {!online && <div className="offline-banner">Ești offline. Vezi rețetele și poveștile salvate pe acest dispozitiv.</div>}
       <main>
+        {/* Phones have no top bar: pages that need a way back get the arrow at the top of the page. */}
+        {back && !kid && !player && <div className={back === '/retete' ? 'page-back over' : 'page-back'}><BackButton to={back} /></div>}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/retete" element={<RecipeList />} />

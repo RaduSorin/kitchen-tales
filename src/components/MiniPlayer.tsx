@@ -2,9 +2,12 @@ import { Link, useLocation } from 'react-router-dom'
 import { useNowPlaying } from '../lib/nowPlaying'
 import StoryCover from './StoryCover'
 
+/** "6 min", or "40 s" in the last minute. */
+const fmtLeft = (sec: number) => (sec >= 60 ? `${Math.round(sec / 60)} min` : `${Math.max(0, Math.round(sec))} s`)
+
 /** A bar at the bottom of every other page while a story is loaded, so it can keep playing in the background. */
 export default function MiniPlayer() {
-  const { story, playing, t, dur, url, error, toggle, close } = useNowPlaying()
+  const { story, playing, t, dur, url, error, toggle, skip, close } = useNowPlaying()
   const { pathname } = useLocation()
   if (!story || pathname === `/povesti/${story.id}`) return null
   return (
@@ -14,14 +17,19 @@ export default function MiniPlayer() {
         <span className="mini-progress" style={{ width: dur ? `${(t / dur) * 100}%` : '0%' }} />
         <Link to={`/povesti/${story.id}`} className="mini-open">
           <StoryCover story={story} />
-          <span className="mini-title">{story.title}{error && <small className="mini-error">Nu se poate reda acum</small>}</span>
+          <span className="mini-title">{story.title}
+            {error ? <small className="mini-error">Nu se poate reda acum</small> : dur > 0 && <small className="mini-left">mai sunt {fmtLeft(dur - t)}</small>}
+          </span>
         </Link>
         <button type="button" className="mini-btn mini-play" onClick={toggle} disabled={!url} aria-label={playing ? 'Pauză' : 'Pornește'}>
           {playing
             ? <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1.5" fill="currentColor" /><rect x="14" y="4" width="4" height="16" rx="1.5" fill="currentColor" /></svg>
             : <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>}
         </button>
-        <button type="button" className="mini-btn" onClick={close} aria-label="Oprește povestea">
+        <button type="button" className="mini-btn" onClick={() => skip(30)} disabled={!url} aria-label="Înainte 30 de secunde">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1" /><path d="M21 4v5h-5" /></svg>
+        </button>
+        <button type="button" className="mini-btn mini-close" onClick={close} aria-label="Oprește povestea">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
       </div>

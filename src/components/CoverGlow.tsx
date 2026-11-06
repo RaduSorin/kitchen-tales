@@ -29,7 +29,7 @@ export default function CoverGlow({ recipes }: { recipes?: boolean }) {
     <div className="cover-glow" aria-hidden="true">
       {scene && (
         <span key={scene.id} className="glow-scene">
-          <CoverScene title={scene.title} />
+          <CoverScene title={scene.title} scene={'scene' in scene ? scene.scene : undefined} />
           {'emoji' in scene && scene.emoji && <span>{scene.emoji}</span>}
         </span>
       )}

@@ -8,8 +8,8 @@ const STARS = Array.from({ length: 9 }, (_, i) => ({ x: (i * 37 + 11) % 100, y: 
  * The illustrated background of a cover without a picture: a sky in the story's colours, a few
  * stars, a soft light behind the emoji and two hills. The emoji (and title) sit on top of it.
  */
-export default function CoverScene({ title }: { title: string }) {
-  const s = coverScene(title)
+export default function CoverScene({ title, scene }: { title: string; scene?: number }) {
+  const s = coverScene(title, scene)
   const id = useId().replace(/:/g, '')
   return (
     <svg className="cover-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">

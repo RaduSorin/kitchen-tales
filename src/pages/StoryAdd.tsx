@@ -11,8 +11,10 @@ import { childAge, useSettings } from '../lib/settings'
 import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
-import { groupFolders } from '../lib/stories'
-import ShareIcon from '../components/ShareIcon'
+import { groupFolders, SCENES, sceneIndex } from '../lib/stories'
+import CoverScene from '../components/CoverScene'
+import Sheet from '../components/Sheet'
+import { fmtTime } from '../lib/stories'
 import AddArt, { type AddArtKind } from '../components/AddArt'
 import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { showToast } from '../lib/toast'
@@ -23,6 +25,7 @@ const LEAVE_UNSAVED = {
   stay: 'Rămân să o salvez',
   leave: 'Pleacă și renunță',
 }
+const LEAVE_GENERATED = { ...LEAVE_UNSAVED, text: 'Povestea creată nu e pusă pe raft încă. Dacă pleci acum, se pierde.' }
 
 const BRIEF_KEY = 'kt-story-brief'
 const loadBrief = (): StoryBrief => {
@@ -54,6 +57,31 @@ const OPTIONS: { mode: Mode; art: AddArtKind; text: string }[] = [
   { mode: 'upload', art: 'upload', text: 'MP3 sau M4A de pe telefon sau calculator' },
 ]
 
+/** A small player for the finished story: gold play button, a bar you can drag, the time. */
+function PreviewPlayer({ src, onDuration }: { src: string; onDuration: (s: number) => void }) {
+  const el = useRef<HTMLAudioElement>(null)
+  const [playing, setPlaying] = useState(false)
+  const [at, setAt] = useState(0)
+  const [dur, setDur] = useState(0)
+  return (
+    <div className="fin-player">
+      <audio ref={el} src={src} preload="metadata"
+        onLoadedMetadata={(e) => { const d = e.currentTarget.duration; if (isFinite(d) && d > 0) { setDur(d); onDuration(d) } }}
+        onTimeUpdate={(e) => setAt(e.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
+      <button type="button" className="fin-play" aria-label={playing ? 'Pauză' : 'Ascultă'} onClick={() => { const a = el.current; if (a) { if (a.paused) a.play().catch(() => {}); else a.pause() } }}>
+        {playing
+          ? <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2" /><rect x="14" y="5" width="4" height="14" rx="1.2" /></svg>
+          : <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>}
+      </button>
+      <div className="fin-track">
+        <input type="range" min={0} max={dur || 1} step={0.1} value={at} aria-label="Poziția în poveste" style={{ ['--p' as string]: `${dur ? (at / dur) * 100 : 0}%` }}
+          onChange={(e) => { const a = el.current; if (a) { a.currentTime = +e.target.value; setAt(+e.target.value) } }} />
+        <div className="fin-times"><span>{fmtTime(at)}</span><span>{dur ? `-${fmtTime(Math.max(0, dur - at))}` : ''}</span></div>
+      </div>
+    </div>
+  )
+}
+
 export default function StoryAdd() {
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
@@ -63,6 +91,8 @@ export default function StoryAdd() {
   const known = { childName: child.name.trim() || undefined, age: childAge(child), gender: child.gender }
   const [title, setTitle] = useState('')
   const [emoji, setEmoji] = useState(EMOJIS[0])
+  // The drawn cover's colours; undefined until picked (then the title decides, as before).
+  const [scene, setScene] = useState<number>()
   // Cover picture: found inside the audio file, found online by title, or a photo the parent picked. The emoji is the fallback.
   const [cover, setCover] = useState<{ blob?: Blob; url?: string; from: 'file' | 'photo' | 'web' }>()
   const coverBlobUrl = useBlobUrl(cover?.blob)
@@ -102,13 +132,15 @@ export default function StoryAdd() {
   const [stepAt, setStepAt] = useState(0)
   const step: Step = steps[Math.min(stepAt, steps.length - 1)]
   const [ownMode, setOwnMode] = useState(false)
+  const [textOpen, setTextOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [generated, setGenerated] = useState<{ text: string; audioKey: string; url: string }>()
   const preview = generated?.url ?? localPreview
   // What's ready belongs to the screen that made it, so switching screens shows that screen's own start.
   const ready = !!(audio || generated) && mode === MODE_OF[source]
-  // A finished recording that isn't saved yet only lives on this screen, so leaving asks first.
-  useLeaveGuard(source === 'recording' && !!audio && !saving, LEAVE_UNSAVED)
+  // A finished recording, or a story the app just wrote and read, isn't saved yet: leaving
+  // (the ‹ button, the tab bar, the iPhone swipe back) asks first.
+  useLeaveGuard(ready && !saving && (source === 'recording' || source === 'generated'), source === 'generated' ? LEAVE_GENERATED : LEAVE_UNSAVED)
 
   // A generated story's audio is already in the cloud: leaving without saving deletes it.
   const unsavedAudio = useRef<string>(undefined)
@@ -177,7 +209,7 @@ export default function StoryAdd() {
         coverKey = await uploadFile('story-covers', small, 'jpg')
         saveCover(coverKey, small).catch(() => {})
       }
-      const id = await createStory({ title: title.trim(), emoji, coverKey, collection: collection || undefined, shared: share, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
+      const id = await createStory({ title: title.trim(), emoji, scene: coverKey ? undefined : scene ?? sceneIndex(title.trim()), coverKey, collection: collection || undefined, shared: share, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
       unsavedAudio.current = undefined // it belongs to the story now
       // Our own recordings and files are already on this device, so keep them for offline listening.
       if (audio) await saveAudio(id, audio).catch(() => {})
@@ -194,6 +226,9 @@ export default function StoryAdd() {
     setError('')
     if (creating && ownMode) setOwnMode(false)
     else if (creating && stepAt > 0) setStepAt(stepAt - 1)
+    // From the finish screen one step back: the recorder, the story's details or the file picker
+    // again, and what wasn't saved is let go (so nothing asks again later).
+    else if (ready) reset()
     else choose()
   }
   if (creating) {
@@ -330,14 +365,15 @@ export default function StoryAdd() {
   // "Citește tu" before the recording: the invitation as the title (the recorder takes the whole screen once it starts).
   const recordStart = mode === 'record' && !ready
   const uploadStart = mode === 'upload' && !ready
+  const finishing = !!mode && ready
   const head = (
-    <div className={`parent-head${recordStart || uploadStart ? ' stacked' : ''}`}>
-      <button type="button" className="night-btn" aria-label="Înapoi" data-leaves={mode === 'record' && !ready ? '' : undefined} onClick={() => (mode ? back() : nav('/povesti'))}>
+    <div className={`parent-head${recordStart || uploadStart || finishing ? ' stacked' : ''}`}>
+      <button type="button" className="night-btn" aria-label="Înapoi" data-leaves="" onClick={() => (mode ? back() : nav('/povesti'))}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
       </button>
       <div>
-        <span className="pbadge">{recordStart ? 'Citește tu' : uploadStart ? 'Încarcă un fișier' : 'Mod părinte'}</span>
-        <h1>{recordStart ? 'Ia cartea și citește cu glas tare' : uploadStart ? 'Adaugă o poveste de pe telefon' : mode ? TITLES[mode] : 'Poveste nouă'}</h1>
+        <span className="pbadge">{recordStart ? 'Citește tu' : uploadStart ? 'Încarcă un fișier' : finishing ? TITLES[mode] : 'Mod părinte'}</span>
+        <h1>{recordStart ? 'Ia cartea și citește cu glas tare' : uploadStart ? 'Adaugă o poveste de pe telefon' : finishing ? 'Aproape gata' : mode ? TITLES[mode] : 'Poveste nouă'}</h1>
       </div>
     </div>
   )
@@ -362,9 +398,6 @@ export default function StoryAdd() {
   return (
     <form className="parent" onSubmit={save}>
       {head}
-      {ready && <label className="night-field">Titlul poveștii
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={mode === 'create' ? 'Ursulețul curajos' : 'Vulpița Fifi'} />
-      </label>}
 
       {mode === 'record' && !ready && (
         <>
@@ -401,55 +434,93 @@ export default function StoryAdd() {
 
       {ready && (
         <div className="add-finish">
-          <div className="finish-audio">
-            <span>{source === 'recording' ? 'Înregistrarea ta' : source === 'generated' ? 'Povestea nouă' : fileName || 'Fișierul tău'}</span>
-            {preview && <audio controls src={preview} onLoadedMetadata={(e) => { const d = e.currentTarget.duration; if (isFinite(d) && d > 0) setSeconds(d) }} />}
-            <button type="button" className="link-btn" onClick={reset}>
-              {source === 'recording' ? 'Înregistrează din nou' : source === 'generated' ? 'Schimbă detaliile' : 'Alt fișier'}
-            </button>
-          </div>
-          {generated && <details className="story-text"><summary>Textul poveștii</summary><p>{generated.text}</p></details>}
-          <div className="night-field">
-            <span>Coperta</span>
-            <div className="cover-pick">
-              <StoryCover story={{ title: title || 'Poveste', emoji }} src={coverUrl} />
-              <div className="cover-pick-actions">
-                {cover && <small>{cover.from === 'file' ? 'Am găsit-o în fișier.' : cover.from === 'web' ? 'Găsită pe internet.' : 'Poza aleasă de tine.'}</small>}
-                <label className="link-btn file-btn">{cover ? 'Altă poză' : 'Alege o poză'}
-                  <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) pickPhoto(f); e.target.value = '' }} />
-                </label>
-                {cover && <button type="button" className="link-btn" onClick={() => setCover(undefined)}>Folosește un desen</button>}
-              </div>
+          {/* The story as it will look: cover, title (tap to change) and a small player to listen first. */}
+          <div className="fin-hero">
+            <StoryCover story={{ title: title || 'Poveste', emoji, scene }} src={coverUrl} className="fin-cover" />
+            <label className="fin-title">
+              <span className="sr-only">Titlul poveștii</span>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titlul poveștii" />
+            </label>
+            <small className="fin-sub">{source === 'recording' ? 'vocea noastră' : source === 'generated' ? 'poveste nouă' : fileName || 'fișierul tău'} · atinge titlul ca să-l schimbi</small>
+            {preview && <PreviewPlayer src={preview} onDuration={setSeconds} />}
+            <div className="fin-links">
+              <button type="button" className="fin-chip" onClick={reset}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" /></svg>
+                {source === 'recording' ? 'Înregistrează din nou' : source === 'generated' ? 'Schimbă detaliile' : 'Alt fișier'}
+              </button>
+              {generated && (
+                <button type="button" className="fin-chip" onClick={() => setTextOpen(true)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 6h14M5 10h14M5 14h10M5 18h7" /></svg>
+                  Textul poveștii
+                </button>
+              )}
             </div>
+          </div>
+
+          <div className="set-group">
+            <h2 className="fin-label">Coperta</h2>
+            <div className="fin-cover-actions">
+              <label className="fin-chip file-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 9.5h.01" /></svg>
+                {cover ? 'Altă poză' : 'Alege o poză'}
+                <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) pickPhoto(f); e.target.value = '' }} />
+              </label>
+              {cover && <button type="button" className="fin-chip" onClick={() => setCover(undefined)}>Folosește un desen</button>}
+            </div>
+            {cover && <small className="fin-note">{cover.from === 'file' ? 'Am găsit-o în fișier.' : cover.from === 'web' ? 'Găsită pe internet.' : 'Poza aleasă de tine.'}</small>}
             {cover?.from !== 'file' && cover?.from !== 'photo' && (
               <CoverSearch key={`${source}-${fileName}`} title={title} artist={artist} auto={autoSearch} chosen={cover?.url}
                 onPick={(c) => setCover({ url: c.url, from: 'web' })} />
             )}
             {!cover && (
-              <div className="emoji-pick">
+              <div className="emoji-pick fin-emoji" role="group" aria-label="Desenul de pe copertă">
                 {EMOJIS.map((x) => <button type="button" key={x} className={x === emoji ? 'on' : ''} aria-pressed={x === emoji} onClick={() => setEmoji(x)}>{x}</button>)}
               </div>
             )}
+            {!cover && (
+              <div className="fin-scenes" role="radiogroup" aria-label="Culorile copertei">
+                {SCENES.map((_, i) => {
+                  const on = (scene ?? sceneIndex(title || 'Poveste')) === i
+                  return (
+                    <button type="button" key={i} role="radio" aria-checked={on} aria-label={`Culorile ${i + 1}`} className={on ? 'on' : undefined} onClick={() => setScene(i)}>
+                      <CoverScene title="" scene={i} />
+                      <span aria-hidden="true">{emoji}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
-          {folderNames.length > 0 && (
-            <label className="night-field">Folderul
-              <select className="night-select" value={collection} onChange={(e) => { setCollection(e.target.value); setShareChoice(undefined) }}>
-                <option value="">Automat, după cum a fost făcută</option>
-                {[...new Set([...folderNames, ...(collection ? [collection] : [])])].sort((a, b) => a.localeCompare(b, 'ro')).map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </label>
-          )}
-          <button type="button" className="btn small share-toggle add-share" aria-pressed={share} onClick={() => setShareChoice(!share)}>
-            <ShareIcon shared={share} />
-            {share ? 'Partajată cu toate conturile' : 'Doar în spațiul nostru'}
-            <span className="sr-only">. Apasă ca să schimbi.</span>
-          </button>
-          <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? (sent !== undefined && sent < 1 ? `Se încarcă… ${Math.round(sent * 100)}%` : 'Se salvează…') : 'Pune pe raft'}</button>
-          {saving && sent !== undefined && sent < 1 && <progress className="upload-progress" max={1} value={sent} aria-label="Încărcare" />}
-          {source !== 'generated' && <p className="rec-hint">Se salvează și pe acest dispozitiv, merge și fără internet.</p>}
+
+          <div className="set-group">
+            <h2 className="fin-label">Pe raft</h2>
+            <div className="set-box fin-box">
+              {folderNames.length > 0 && (
+                <label className="set-row">
+                  <span>Folderul</span>
+                  <select value={collection} onChange={(e) => { setCollection(e.target.value); setShareChoice(undefined) }}>
+                    <option value="">Automat</option>
+                    {[...new Set([...folderNames, ...(collection ? [collection] : [])])].sort((a, b) => a.localeCompare(b, 'ro')).map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </label>
+              )}
+              <label className="set-row">
+                <span>Partajată cu toate conturile<small className="set-sub">{share ? 'O văd toți cei care au cont în aplicație' : 'Doar în spațiul nostru'}</small></span>
+                <input type="checkbox" className="switch" checked={share} onChange={(e) => setShareChoice(e.target.checked)} />
+              </label>
+            </div>
+            {source !== 'generated' && <p className="fin-note">Se salvează și pe acest dispozitiv, merge și fără internet.</p>}
+          </div>
+
+          {error && <p className="error">{error}</p>}
+          <div className="cs-foot">
+            <button className="moon-btn" type="submit" disabled={saving || !title.trim()}>{saving ? (sent !== undefined && sent < 1 ? `Se încarcă… ${Math.round(sent * 100)}%` : 'Se salvează…') : 'Pune pe raft'}</button>
+            {saving && sent !== undefined && sent < 1 && <progress className="upload-progress" max={1} value={sent} aria-label="Încărcare" />}
+          </div>
+          {textOpen && generated && <Sheet title="Textul poveștii" onClose={() => setTextOpen(false)}><p className="story-text-body">{generated.text}</p></Sheet>}
         </div>
       )}
-      {error && <p className="error">{error}</p>}
+      {!ready && error && <p className="error">{error}</p>}
     </form>
   )
 }

@@ -93,8 +93,8 @@ export function tintFrom(c: Rgb): Tint {
 }
 
 /** A story without a cover keeps the colour its tile already has. */
-export function plainTint(title: string): Tint {
-  const c = fromHex(coverColor(title))
+export function plainTint(title: string, scene?: number): Tint {
+  const c = fromHex(coverColor(title, scene))
   const [h, s, l] = rgbToHsl(...c)
   return { spine: hex(c), ink: inkFor(c), dark: hex(hslToRgb(h, s, l * .6)) }
 }
@@ -170,7 +170,7 @@ function spineArt(key: string) {
 }
 
 /** A small picture of the cover for a spine, and the spine colours worked out from the cover. */
-export function useSpineArt(story: Pick<Story, 'title' | 'coverKey'>) {
+export function useSpineArt(story: Pick<Story, 'title' | 'coverKey' | 'scene'>) {
   const key = story.coverKey
   const [found, setFound] = useState<{ key: string; thumb?: string }>()
   useEffect(() => {
@@ -180,6 +180,6 @@ export function useSpineArt(story: Pick<Story, 'title' | 'coverKey'>) {
     return () => { live = false }
   }, [key])
   const thumb = key ? thumbs.get(key) ?? (found?.key === key ? found.thumb : undefined) : undefined
-  const tint = (key && store()[key]) || plainTint(story.title)
+  const tint = (key && store()[key]) || plainTint(story.title, story.scene)
   return { thumb, tint }
 }

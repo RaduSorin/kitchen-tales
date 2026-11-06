@@ -15,8 +15,8 @@ export default defineConfig({
         short_name: 'Bucătăria',
         description: 'Rețetele familiei și povești audio pentru copii',
         lang: 'ro',
-        theme_color: '#3e6a51',
-        background_color: '#f2f3ee',
+        theme_color: '#0f0e13',
+        background_color: '#0f0e13',
         display: 'standalone',
         start_url: '/',
         icons: [

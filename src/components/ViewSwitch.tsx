@@ -8,7 +8,7 @@ const ICON: Record<ShelfView, React.ReactNode> = {
   flow: <><path d="M2 7l4 1.5v7L2 17z" /><rect x="7.5" y="5" width="9" height="12" rx="1.5" /><path d="M22 7l-4 1.5v7l4 1.5z" /><rect x="7.5" y="19" width="9" height="1.6" rx=".8" opacity=".45" /></>,
 }
 
-const Icon = ({ v }: { v: ShelfView }) => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{ICON[v]}</svg>
+export const ViewIcon = ({ v }: { v: ShelfView }) => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{ICON[v]}</svg>
 
 /** How long the opened switch stays open after the last tap. */
 const OPEN_MS = 3000
@@ -49,7 +49,7 @@ export default function ViewSwitch({ value, onChange, collapsible }: { value: Sh
       {SHELF_VIEWS.map((v) => (
         <button key={v} type="button" aria-pressed={v === value} aria-label={VIEW_LABEL[v]} title={VIEW_LABEL[v]}
           onClick={() => { onChange(v); if (collapsible) closeLater() }}>
-          <Icon v={v} />
+          <ViewIcon v={v} />
         </button>
       ))}
     </div>
@@ -60,7 +60,7 @@ export default function ViewSwitch({ value, onChange, collapsible }: { value: Sh
       <button type="button" ref={toggle} className="view-toggle" aria-expanded={open} tabIndex={open ? -1 : 0}
         aria-label={`Cum se văd poveștile: ${VIEW_LABEL[value]}. Schimbă`} title="Cum se văd poveștile"
         onClick={() => { setOpen(true); closeLater() }}>
-        <Icon v={value} />
+        <ViewIcon v={value} />
       </button>
       {pill}
     </div>

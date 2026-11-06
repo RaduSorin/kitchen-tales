@@ -136,7 +136,7 @@
 :root[data-area="night"] .folder-sub .share-chip { background: rgb(0 0 0 / .28); }
 
 /* ---------- Player ---------- */
-:root[data-area="night"][data-fullscreen] main { padding-top: calc(6px + env(safe-area-inset-top)); }
+:root[data-area="night"][data-fullscreen] main { padding-top: calc(20px + env(safe-area-inset-top)); }
 :root[data-area="night"] .night-player { justify-items: stretch; text-align: left; gap: min(12px, 1.5dvh); }
 :root[data-area="night"] .player-top { display: grid !important; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; gap: 8px; }
 :root[data-area="night"] .player-top .night-btn { background: rgb(0 0 0 / .18); }
@@ -350,3 +350,202 @@
   :root .tab.active .ic-line { display: none; }
   :root .tab.active .ic-fill { display: inline; }
 }
+
+/* ---------- Illustrated covers (no picture): sky, stars, hills, emoji, and the title on big ones ---------- */
+.story-cover { container-type: inline-size; }
+.vit-pic, .ff-pic, .spine-cap { overflow: hidden; }
+.vit-pic > span, .ff-pic > span, .spine-cap > span { position: relative; }
+.cover-scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.story-cover > span, .story-cover > .cover-name { position: relative; }
+.story-cover:not(.has-img) > span { filter: drop-shadow(0 6px 10px rgb(0 0 0 / .3)); }
+.cover-name { display: none; }
+@container (min-width: 120px) {
+  .story-cover:not(.round) > .cover-name { display: block; position: absolute; left: 8%; right: 8%; bottom: 7%; text-align: center; color: #fff;
+    font-family: var(--f-title); font-weight: 600; font-size: 11cqw; line-height: 1.08; text-shadow: 0 2px 8px rgb(0 0 0 / .35);
+    overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .story-cover:not(.round):not(.has-img) > span { transform: translateY(-12%); }
+}
+
+/* ---------- Cover Flow (concept A3): flat covers, the side ones tilted, with a reflection ---------- */
+.flow-stage { perspective: 900px; perspective-origin: 50% 40%; }
+.flow-book.flat { transition: transform .5s cubic-bezier(.2, .8, .2, 1), opacity .3s; }
+.flow-book.flat .ff-front { transform: none; border-radius: 14px; background: none;
+  box-shadow: 0 18px 40px rgb(0 0 0 / .5);
+  -webkit-box-reflect: below 4px linear-gradient(transparent 62%, rgb(255 255 255 / .22)); }
+.flow-book.flat .ff-front::after { display: none; }
+.flow-book.flat .ff-pic { border-radius: 14px; }
+.flow-book.flat .ff-pic > span { position: relative; }
+.flow-caption { padding-top: 0; }
+:root[data-area="night"] .flow-caption b { font-family: var(--f-title); font-weight: 600; font-size: 1.5rem; }
+.flow-caption small { font-size: .85rem; font-weight: 600; }
+.flow-play { justify-self: center; align-self: center; margin-top: 12px; border: 0; font: inherit; font-weight: 800; cursor: pointer; padding: 10px 22px; }
+
+/* ---------- The folder's ⋯ menu (concept A3, alternative): views as tiles, then the actions ---------- */
+.folder-more-wrap { position: relative; flex: none; margin-left: auto; }
+.pop-menu { position: absolute; z-index: 30; right: 0; top: calc(100% + 8px); width: min(272px, calc(100vw - 32px)); padding: 12px; border-radius: 20px;
+  display: grid; gap: 2px; background: rgb(36 33 44 / .94); border: 1px solid rgb(255 255 255 / .08); box-shadow: 0 18px 44px rgb(0 0 0 / .55);
+  -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); animation: menu-in .16s ease-out; transform-origin: top right; text-align: left; }
+@keyframes menu-in { from { opacity: 0; transform: scale(.94); } }
+@media (prefers-reduced-motion: reduce) { .pop-menu { animation: none; } }
+.folder-menu-label { color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; padding: 0 4px 6px; }
+.folder-menu-views { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid rgb(255 255 255 / .08); }
+.folder-menu-views button { display: grid; justify-items: center; gap: 4px; padding: 9px 2px 7px; border: 0; border-radius: 12px; background: rgb(255 255 255 / .08);
+  color: var(--text); font: inherit; font-size: .68rem; font-weight: 700; line-height: 1.1; cursor: pointer; }
+.folder-menu-views button.on { background: var(--accent); color: var(--on-accent); }
+.menu-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 0 6px; border: 0; border-radius: 10px;
+  background: none; color: var(--text); font: inherit; font-weight: 600; font-size: .95rem; text-align: left; cursor: pointer; }
+.menu-row:active { background: rgb(255 255 255 / .08); }
+.menu-row + .menu-row { box-shadow: 0 -1px 0 rgb(255 255 255 / .07); }
+.menu-row.done { color: var(--muted); cursor: default; }
+.menu-row svg { flex: none; opacity: .85; }
+
+/* Player: clear of the soft band under the clock, and the speed / sleep / order buttons at the
+   bottom of the screen with room to breathe instead of right under the controls. */
+:root[data-area="night"][data-fullscreen] main { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+:root[data-area="night"][data-fullscreen] .night-player { display: flex; flex-direction: column; align-items: stretch;
+  min-height: calc(100dvh - 38px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+:root[data-area="night"][data-fullscreen] .night-player > .story-cover.player-art { align-self: center; }
+:root[data-area="night"][data-fullscreen] .play-opts { margin-top: auto; padding-top: min(28px, 3dvh); margin-bottom: min(14px, 1.5dvh); }
+@media (max-height: 700px) {
+  :root[data-area="night"][data-fullscreen] .story-cover.player-art { width: min(82vw, 340px, 32dvh); }
+  :root[data-area="night"][data-fullscreen] .play-opts { padding-top: 6px; }
+}
+.menu-row.danger { color: var(--danger); }
+.menu-row:disabled { opacity: .5; }
+.menu-note { margin: 4px 6px 2px; color: var(--muted); font-size: .8rem; line-height: 1.35; }
+.menu-confirm { display: grid; gap: 8px; padding: 8px 6px 4px; font-weight: 700; }
+.menu-confirm div { display: flex; gap: 8px; }
+.menu-confirm .btn { flex: 1; }
+/* The player's ⋯ menu opens from the button at the top right. */
+.player-top .menu-anchor { position: relative; justify-self: end; }
+
+/* The gold bubble slides from tab to tab (TabBar useTabBubble); the tabs themselves stay clear. */
+.tab-bubble { display: none; }
+@media (max-width: 759px) {
+  .tab-bubble { display: block; position: absolute; left: 0; top: 0; z-index: 0; border-radius: 25px; background: var(--accent);
+    box-shadow: 0 4px 16px rgb(242 200 121 / .3); pointer-events: none; }
+  .tab-bubble.ready { transition: transform .42s cubic-bezier(.32, .72, .25, 1.12), width .42s cubic-bezier(.32, .72, .25, 1.12), opacity .2s; }
+  :root .tabbar .tab { z-index: 1; }
+  :root .tabbar .tab.active, :root .night-tabbar .tab.active { background: none; box-shadow: none; }
+  :root .tabbar .tab .tab-icon, :root .tabbar .tab .tab-label { transition: color .25s; }
+}
+@media (max-width: 759px) and (prefers-reduced-motion: reduce) { .tab-bubble.ready { transition: opacity .2s; } }
+
+/* ---------- Sign in (login concept 4 "Doar iconița") ---------- */
+/* The app icon in a soft gold glow with a few stars; Amplify's form is a dark sheet from the bottom. */
+[data-amplify-authenticator] {
+  min-height: 100dvh;
+  display: flex; justify-content: center;
+  background: radial-gradient(circle at 50% 24%, rgb(242 200 121 / .26), transparent 46%), linear-gradient(#2a2236, #0f0e13 62%);
+  color: #f4efe6;
+  --amplify-colors-font-primary: #f4efe6;
+  --amplify-colors-font-secondary: #aaa3b2;
+  --amplify-colors-font-interactive: #f2c879;
+  --amplify-colors-font-hover: #ffe3a3;
+  --amplify-colors-font-error: #ff9b8a;
+  --amplify-colors-background-primary: transparent;
+  --amplify-colors-background-error: rgb(255 110 90 / .14);
+  --amplify-colors-border-primary: rgb(255 255 255 / .1);
+  --amplify-colors-border-focus: #f2c879;
+  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px rgb(242 200 121 / .35);
+  --amplify-components-button-primary-background-color: #f2c879;
+  --amplify-components-button-primary-color: #1a1410;
+  --amplify-components-button-primary-hover-background-color: #ffe3a3;
+  --amplify-components-button-primary-focus-background-color: #ffe3a3;
+  --amplify-components-button-primary-active-background-color: #e3b665;
+  --amplify-components-button-primary-hover-color: #1a1410;
+  --amplify-components-button-primary-focus-color: #1a1410;
+  --amplify-components-button-primary-active-color: #1a1410;
+  --amplify-components-button-link-color: #f2c879;
+  --amplify-components-button-link-hover-background-color: transparent;
+  --amplify-components-button-link-hover-color: #ffe3a3;
+  --amplify-components-button-link-focus-background-color: transparent;
+  --amplify-components-button-link-active-background-color: transparent;
+  --amplify-components-button-link-focus-color: #ffe3a3;
+  --amplify-components-button-link-active-color: #ffe3a3;
+  --amplify-components-button-color: #f4efe6;
+  --amplify-components-button-border-color: rgb(255 255 255 / .14);
+  --amplify-components-button-hover-background-color: rgb(255 255 255 / .06);
+  --amplify-components-button-hover-color: #f4efe6;
+  --amplify-components-button-hover-border-color: rgb(255 255 255 / .2);
+  --amplify-components-authenticator-router-border-width: 0;
+  --amplify-components-authenticator-router-box-shadow: none;
+  --amplify-components-authenticator-router-background-color: transparent;
+  --amplify-components-authenticator-form-padding: 0;
+  --amplify-components-authenticator-container-width-max: 440px;
+}
+[data-amplify-authenticator] [data-amplify-container] {
+  width: 100%; max-width: 440px; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  place-self: stretch;
+}
+.auth-scene {
+  position: relative; flex: 1;
+  display: grid; justify-items: center; align-content: center; gap: 18px;
+  padding: calc(40px + env(safe-area-inset-top, 0px)) 24px 32px;
+  text-align: center;
+}
+.auth-stars { position: absolute; inset: 0 0 auto; width: 100%; height: auto; pointer-events: none; }
+.auth-icon {
+  position: relative; width: 112px; height: 112px; border-radius: 26px;
+  box-shadow: 0 16px 44px rgb(0 0 0 / .55), 0 0 60px rgb(242 200 121 / .18);
+  animation: auth-float 6s ease-in-out infinite;
+}
+@keyframes auth-float { 50% { transform: translateY(-6px); } }
+.auth-brand { position: relative; margin: 4px 0 0; font-family: var(--f-display, Fraunces), serif; font-weight: 600; font-size: 2.1rem; line-height: 1.1; color: #f4efe6; }
+.auth-tagline { position: relative; margin: -8px 0 0; color: #aaa3b2; font-size: .95rem; }
+[data-amplify-authenticator] [data-amplify-router] {
+  background: rgb(30 27 38 / .92);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border: 0; border-top: 1px solid rgb(255 255 255 / .08);
+  border-radius: 32px 32px 0 0;
+  padding: 30px 24px 10px;
+  position: relative;
+  animation: auth-sheet .6s cubic-bezier(.32, .72, .25, 1) both;
+}
+[data-amplify-authenticator] [data-amplify-router]::before {
+  content: ''; position: absolute; top: 10px; left: 50%; width: 38px; height: 5px; margin-left: -19px;
+  border-radius: 3px; background: rgb(255 255 255 / .2);
+}
+@keyframes auth-sheet { from { transform: translateY(40px); opacity: 0; } }
+[data-amplify-authenticator] [data-amplify-form] { padding: 0; }
+[data-amplify-authenticator] .amplify-label { color: #aaa3b2; font-size: .85rem; }
+[data-amplify-authenticator] .amplify-input {
+  height: 54px; border-radius: 16px; padding-inline: 18px; font-size: 16px;
+  background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .1); color: #f4efe6;
+}
+[data-amplify-authenticator] .amplify-input::placeholder { color: #8b8494; }
+[data-amplify-authenticator] .amplify-field-group:has(.amplify-field__show-password) .amplify-input { border-start-end-radius: 0; border-end-end-radius: 0; border-inline-end: 0; }
+[data-amplify-authenticator] .amplify-field__show-password {
+  height: 54px; border-radius: 0 16px 16px 0; background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .1); color: #aaa3b2;
+}
+[data-amplify-authenticator] .amplify-button--primary {
+  height: 56px; border-radius: 28px; font-weight: 800; font-size: 17px; margin-top: 6px;
+  box-shadow: 0 10px 26px rgb(242 200 121 / .3);
+}
+[data-amplify-authenticator] [data-amplify-footer] { padding: 0 0 4px; }
+[data-amplify-authenticator] .amplify-button--link { font-weight: 700; }
+[data-amplify-authenticator] .amplify-heading { font-family: var(--f-display, Fraunces), serif; color: #f4efe6; }
+[data-amplify-authenticator] .amplify-alert { border-radius: 14px; }
+.auth-note {
+  margin: 0; padding: 6px 24px calc(22px + env(safe-area-inset-bottom, 0px));
+  background: rgb(30 27 38 / .92);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  color: #aaa3b2; font-size: .82rem; text-align: center;
+}
+/* Wide screens: the sheet becomes a floating card under the icon. */
+@media (min-width: 760px) {
+  [data-amplify-authenticator] [data-amplify-container] { justify-content: center; padding: 40px 0; }
+  .auth-scene { flex: 0; }
+  [data-amplify-authenticator] [data-amplify-router] { border-radius: 28px 28px 0 0; border: 1px solid rgb(255 255 255 / .08); border-bottom: 0; }
+  [data-amplify-authenticator] [data-amplify-router]::before { display: none; }
+  .auth-note { border-radius: 0 0 28px 28px; border: 1px solid rgb(255 255 255 / .08); border-top: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-icon, [data-amplify-authenticator] [data-amplify-router] { animation: none; }
+}
+/* As in the concept: only the fields, the placeholder says what goes in. Labels stay for screen readers. */
+[data-amplify-authenticator] .amplify-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+[data-amplify-authenticator] [data-amplify-authenticator-signin] fieldset { gap: 12px; }

@@ -1,15 +1,35 @@
 // Small helpers for the kids' stories area (night style).
 import type { Story, StoryFolder, StorySource } from './types'
 
-const COVERS = ['#ff9fb8', '#74e0d0', '#ffd76a', '#9fb4ff', '#c7a6ff', '#ffb38a']
+/**
+ * The illustrated cover of a story without a picture (design "Seară de lux"): a sky from `top`
+ * to `bottom`, a soft `glow` behind the emoji and two hills in `hill`. Picked from the title, so
+ * a story always gets the same one.
+ */
+export interface CoverScene { top: string; bottom: string; glow: string; hill: string }
+const SCENES: CoverScene[] = [
+  { top: '#c8324a', bottom: '#5a1630', glow: '#ff9fb0', hill: '#3a0f22' },
+  { top: '#3f7fd0', bottom: '#16245e', glow: '#bfe3ff', hill: '#0e1a44' },
+  { top: '#e08a3a', bottom: '#7a3415', glow: '#ffd9a0', hill: '#4a1f0c' },
+  { top: '#4c9a6a', bottom: '#164a3a', glow: '#d3f5c9', hill: '#0b2e24' },
+  { top: '#d9759a', bottom: '#5e2a6e', glow: '#ffd1e3', hill: '#3a1745' },
+  { top: '#5a54c8', bottom: '#151248', glow: '#fff1a8', hill: '#0b0a2e' },
+  { top: '#d3a63a', bottom: '#6e4a12', glow: '#fff0b8', hill: '#3e2808' },
+  { top: '#7fb5d9', bottom: '#2f4f8a', glow: '#e6f6ff', hill: '#1b2e5a' },
+]
 
 /** Shown behind a cover picture, so a transparent PNG doesn't let the coloured emoji tile show through. */
 export const COVER_IMG_BG = '#f4efe6'
 
-export function coverColor(title: string) {
+export function coverScene(title: string) {
   let h = 0
   for (const c of title) h = (h * 31 + c.codePointAt(0)!) | 0
-  return COVERS[Math.abs(h) % COVERS.length]
+  return SCENES[Math.abs(h) % SCENES.length]
+}
+
+/** The main colour of a story's illustrated cover (its sky), e.g. for a spine or the glow. */
+export function coverColor(title: string) {
+  return coverScene(title).top
 }
 
 export const SOURCE_LABEL: Record<StorySource, string> = { recording: 'vocea noastră', generated: 'poveste nouă', upload: 'fișier audio' }

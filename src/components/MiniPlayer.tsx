@@ -26,7 +26,7 @@ export default function MiniPlayer() {
             ? <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1.5" fill="currentColor" /><rect x="14" y="4" width="4" height="16" rx="1.5" fill="currentColor" /></svg>
             : <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>}
         </button>
-        <button type="button" className="mini-btn" onClick={() => skip(30)} disabled={!url} aria-label="Înainte 30 de secunde">
+        <button type="button" className="mini-btn" onClick={() => skip(15)} disabled={!url} aria-label="Înainte 15 secunde">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1" /><path d="M21 4v5h-5" /></svg>
         </button>
         <button type="button" className="mini-btn mini-close" onClick={close} aria-label="Oprește povestea">

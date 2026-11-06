@@ -23,6 +23,7 @@ import './stories-a.css'
 import { applyTheme } from './lib/settings'
 import { offlineFirstTokenProvider } from './lib/offlineAuth'
 import App from './App.tsx'
+import { AuthFooter, AuthHeader } from './components/AuthScene'
 
 Amplify.configure(outputs)
 // Same providers as the default, except that a saved session still opens the app offline.
@@ -36,7 +37,9 @@ I18n.putVocabulariesForLanguage('ro', {
   'Sign in': 'Intră în cont',
   'Signing in': 'Se intră în cont',
   Email: 'Email',
-  'Enter your Email': 'Adresa de email',
+  'Enter your Email': 'Email',
+  Username: 'Email',
+  'Enter your Username': 'Email',
   Password: 'Parolă',
   'Enter your Password': 'Parola',
   'Forgot your password?': 'Ai uitat parola?',
@@ -63,18 +66,19 @@ const theme = createTheme({
   tokens: {
     colors: {
       primary: {
-        10: '#f2f3ee', 20: '#e3e7de', 40: '#9cbfa9', 60: '#5a8a6e',
-        80: '#3e6a51', 90: '#2f5240', 100: '#1f2a24',
+        // Gold, from design A.
+        10: '#3a3122', 20: '#5a4a2c', 40: '#c99a45', 60: '#e3b665',
+        80: '#f2c879', 90: '#ffe3a3', 100: '#fff3d6',
       },
     },
-    radii: { small: '10px', medium: '12px', large: '16px' },
+    radii: { small: '12px', medium: '16px', large: '28px' },
   },
 })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
-      <Authenticator hideSignUp components={{ Header: () => <h1 className="auth-brand">Bucătăria cu povești</h1> }}>
+      <Authenticator hideSignUp components={{ Header: AuthHeader, Footer: AuthFooter }}>
         <App />
       </Authenticator>
     </ThemeProvider>

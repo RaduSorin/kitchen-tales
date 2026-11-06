@@ -12,6 +12,8 @@ export interface KidState {
   active: boolean
   /** When the time runs out (ms since epoch); null = no limit. */
   endsAt: number | null
+  /** How long the time was when it was set or last extended (ms), for the draining ring. */
+  total?: number
   /** The time ran out: only the PIN opens the app again. */
   locked: boolean
   /** Wrong PINs in a row, and until when the PIN pad waits after too many. */
@@ -54,17 +56,26 @@ export function useKid() {
 
 /** Turns kid mode on for `minutes` (0 = no limit). */
 export function startKid(minutes: number) {
-  set({ active: true, locked: false, endsAt: minutes > 0 ? Date.now() + minutes * 60_000 : null })
+  set({ active: true, locked: false, endsAt: minutes > 0 ? Date.now() + minutes * 60_000 : null, total: minutes * 60_000 })
 }
 
 /** More time: counted from now when the time already ran out, otherwise added to what is left. */
 export function extendKid(minutes: number) {
   const base = state.endsAt && state.endsAt > Date.now() ? state.endsAt : Date.now()
-  set({ active: true, locked: false, endsAt: base + minutes * 60_000 })
+  // The ring starts full again with the new time.
+  set({ active: true, locked: false, endsAt: base + minutes * 60_000, total: base + minutes * 60_000 - Date.now() })
 }
 
 export const lockKid = () => set({ locked: true })
 export const exitKid = () => set({ active: false, locked: false, endsAt: null })
+
+/** How much of the time is left, 1 → 0 (for the ring), or null without a limit. */
+export const kidFraction = (s: KidState = state, now = Date.now()) => {
+  const left = kidLeft(s, now)
+  if (left == null) return null
+  const total = Math.max(s.total ?? 0, left, 1)
+  return left / total
+}
 
 /** Milliseconds left, or null without a limit. */
 export const kidLeft = (s: KidState = state, now = Date.now()) => (s.endsAt == null ? null : Math.max(0, s.endsAt - now))

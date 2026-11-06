@@ -649,14 +649,19 @@
 
 /* Kid mode on phones: no top bar, the lock (with the minutes left) is a round glass button at the
    right of each page's top row. Wide screens have it in the top bar, except on the player. */
-.night-btn.kid-corner { width: auto; min-width: 44px; height: 44px; padding: 0 12px; margin-left: auto; border-radius: 22px; grid-auto-flow: column; gap: 4px;
-  font-size: 1rem; color: var(--text); }
-.night-btn.kid-corner .kid-mins { font-size: .9rem; font-weight: 800; }
+.night-btn.kid-corner { width: 44px; height: 44px; margin-left: auto; font-size: 1rem; color: var(--text); }
 .kid-head { justify-content: flex-end; }
 .player-top .kid-corner { justify-self: end; }
 @media (min-width: 760px) {
   .kid-corner, .kid-head { display: none !important; }
   .player-top .kid-corner { display: grid !important; }
 }
-/* The lock pill is wider than the ⋯ it replaces: both side columns widen so the title stays centred. */
-:root[data-kid] .player-top { grid-template-columns: 78px minmax(0, 1fr) 78px; }
+
+/* The time left: a gold ring around the lock that drains as the minutes pass. */
+.kid-lock .kid-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); pointer-events: none; overflow: visible; }
+.kid-ring circle { fill: none; stroke-width: 3; }
+.kid-ring-track { stroke: rgb(255 255 255 / .12); }
+.kid-ring-left { stroke: var(--accent, #f2c879); stroke-linecap: round; transition: stroke-dasharray 5s linear; }
+.kid-lock.soon .kid-ring-left { stroke: var(--moon, #f2c879); }
+.icon-link.kid-lock:has(.kid-ring) { width: 44px; min-width: 0; height: 44px; padding: 0; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) { .kid-ring-left { transition: none; } }

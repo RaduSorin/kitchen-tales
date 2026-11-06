@@ -430,3 +430,117 @@
   :root .tabbar .tab .tab-icon, :root .tabbar .tab .tab-label { transition: color .25s; }
 }
 @media (max-width: 759px) and (prefers-reduced-motion: reduce) { .tab-bubble.ready { transition: opacity .2s; } }
+
+/* ---------- Sign in (login concept 4 "Doar iconița") ---------- */
+/* The app icon in a soft gold glow with a few stars; Amplify's form is a dark sheet from the bottom. */
+[data-amplify-authenticator] {
+  min-height: 100dvh;
+  display: flex; justify-content: center;
+  background: radial-gradient(circle at 50% 24%, rgb(242 200 121 / .26), transparent 46%), linear-gradient(#2a2236, #0f0e13 62%);
+  color: #f4efe6;
+  --amplify-colors-font-primary: #f4efe6;
+  --amplify-colors-font-secondary: #aaa3b2;
+  --amplify-colors-font-interactive: #f2c879;
+  --amplify-colors-font-hover: #ffe3a3;
+  --amplify-colors-font-error: #ff9b8a;
+  --amplify-colors-background-primary: transparent;
+  --amplify-colors-background-error: rgb(255 110 90 / .14);
+  --amplify-colors-border-primary: rgb(255 255 255 / .1);
+  --amplify-colors-border-focus: #f2c879;
+  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px rgb(242 200 121 / .35);
+  --amplify-components-button-primary-background-color: #f2c879;
+  --amplify-components-button-primary-color: #1a1410;
+  --amplify-components-button-primary-hover-background-color: #ffe3a3;
+  --amplify-components-button-primary-focus-background-color: #ffe3a3;
+  --amplify-components-button-primary-active-background-color: #e3b665;
+  --amplify-components-button-primary-hover-color: #1a1410;
+  --amplify-components-button-primary-focus-color: #1a1410;
+  --amplify-components-button-primary-active-color: #1a1410;
+  --amplify-components-button-link-color: #f2c879;
+  --amplify-components-button-link-hover-background-color: transparent;
+  --amplify-components-button-link-hover-color: #ffe3a3;
+  --amplify-components-button-link-focus-background-color: transparent;
+  --amplify-components-button-link-active-background-color: transparent;
+  --amplify-components-button-link-focus-color: #ffe3a3;
+  --amplify-components-button-link-active-color: #ffe3a3;
+  --amplify-components-button-color: #f4efe6;
+  --amplify-components-button-border-color: rgb(255 255 255 / .14);
+  --amplify-components-button-hover-background-color: rgb(255 255 255 / .06);
+  --amplify-components-button-hover-color: #f4efe6;
+  --amplify-components-button-hover-border-color: rgb(255 255 255 / .2);
+  --amplify-components-authenticator-router-border-width: 0;
+  --amplify-components-authenticator-router-box-shadow: none;
+  --amplify-components-authenticator-router-background-color: transparent;
+  --amplify-components-authenticator-form-padding: 0;
+  --amplify-components-authenticator-container-width-max: 440px;
+}
+[data-amplify-authenticator] [data-amplify-container] {
+  width: 100%; max-width: 440px; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  place-self: stretch;
+}
+.auth-scene {
+  position: relative; flex: 1;
+  display: grid; justify-items: center; align-content: center; gap: 18px;
+  padding: calc(40px + env(safe-area-inset-top, 0px)) 24px 32px;
+  text-align: center;
+}
+.auth-stars { position: absolute; inset: 0 0 auto; width: 100%; height: auto; pointer-events: none; }
+.auth-icon {
+  position: relative; width: 112px; height: 112px; border-radius: 26px;
+  box-shadow: 0 16px 44px rgb(0 0 0 / .55), 0 0 60px rgb(242 200 121 / .18);
+  animation: auth-float 6s ease-in-out infinite;
+}
+@keyframes auth-float { 50% { transform: translateY(-6px); } }
+.auth-brand { position: relative; margin: 4px 0 0; font-family: var(--f-display, Fraunces), serif; font-weight: 600; font-size: 2.1rem; line-height: 1.1; color: #f4efe6; }
+.auth-tagline { position: relative; margin: -8px 0 0; color: #aaa3b2; font-size: .95rem; }
+[data-amplify-authenticator] [data-amplify-router] {
+  background: rgb(30 27 38 / .92);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border: 0; border-top: 1px solid rgb(255 255 255 / .08);
+  border-radius: 32px 32px 0 0;
+  padding: 30px 24px 10px;
+  position: relative;
+  animation: auth-sheet .6s cubic-bezier(.32, .72, .25, 1) both;
+}
+[data-amplify-authenticator] [data-amplify-router]::before {
+  content: ''; position: absolute; top: 10px; left: 50%; width: 38px; height: 5px; margin-left: -19px;
+  border-radius: 3px; background: rgb(255 255 255 / .2);
+}
+@keyframes auth-sheet { from { transform: translateY(40px); opacity: 0; } }
+[data-amplify-authenticator] [data-amplify-form] { padding: 0; }
+[data-amplify-authenticator] .amplify-label { color: #aaa3b2; font-size: .85rem; }
+[data-amplify-authenticator] .amplify-input {
+  height: 54px; border-radius: 16px; padding-inline: 18px; font-size: 16px;
+  background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .1); color: #f4efe6;
+}
+[data-amplify-authenticator] .amplify-input::placeholder { color: #8b8494; }
+[data-amplify-authenticator] .amplify-field-group:has(.amplify-field__show-password) .amplify-input { border-start-end-radius: 0; border-end-end-radius: 0; border-inline-end: 0; }
+[data-amplify-authenticator] .amplify-field__show-password {
+  height: 54px; border-radius: 0 16px 16px 0; background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .1); color: #aaa3b2;
+}
+[data-amplify-authenticator] .amplify-button--primary {
+  height: 56px; border-radius: 28px; font-weight: 800; font-size: 17px; margin-top: 6px;
+  box-shadow: 0 10px 26px rgb(242 200 121 / .3);
+}
+[data-amplify-authenticator] [data-amplify-footer] { padding: 0 0 4px; }
+[data-amplify-authenticator] .amplify-button--link { font-weight: 700; }
+[data-amplify-authenticator] .amplify-heading { font-family: var(--f-display, Fraunces), serif; color: #f4efe6; }
+[data-amplify-authenticator] .amplify-alert { border-radius: 14px; }
+.auth-note {
+  margin: 0; padding: 6px 24px calc(22px + env(safe-area-inset-bottom, 0px));
+  background: rgb(30 27 38 / .92);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  color: #aaa3b2; font-size: .82rem; text-align: center;
+}
+/* Wide screens: the sheet becomes a floating card under the icon. */
+@media (min-width: 760px) {
+  [data-amplify-authenticator] [data-amplify-container] { justify-content: center; padding: 40px 0; }
+  .auth-scene { flex: 0; }
+  [data-amplify-authenticator] [data-amplify-router] { border-radius: 28px 28px 0 0; border: 1px solid rgb(255 255 255 / .08); border-bottom: 0; }
+  [data-amplify-authenticator] [data-amplify-router]::before { display: none; }
+  .auth-note { border-radius: 0 0 28px 28px; border: 1px solid rgb(255 255 255 / .08); border-top: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-icon, [data-amplify-authenticator] [data-amplify-router] { animation: none; }
+}

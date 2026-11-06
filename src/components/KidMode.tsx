@@ -7,7 +7,7 @@ import { useAuthenticator } from '@aws-amplify/ui-react'
 import Sheet from './Sheet'
 import { useNowPlaying } from '../lib/nowPlaying'
 import { useSettings } from '../lib/settings'
-import { checkPin, exitKid, extendKid, getKid, kidLeft, kidRouteAllowed, lockKid, markPinReset, pinWait, setPin, useKid } from '../lib/kidMode'
+import { checkPin, exitKid, extendKid, getKid, kidFraction, kidLeft, kidRouteAllowed, lockKid, markPinReset, pinWait, setPin, useKid } from '../lib/kidMode'
 
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']
 const PIN_LEN = 4
@@ -118,11 +118,11 @@ export function KidLockButton({ className = 'icon-link kid-lock', locked = false
   const kid = useKid()
   const [step, setStep] = useState<'pin' | 'menu'>()
   const [holding, setHolding] = useState(false)
-  // Re-draw every 20 s so the minutes left stay right.
+  // Re-draw every 5 s so the ring drains smoothly.
   const [, tick] = useState(0)
   useEffect(() => {
     if (kid.endsAt == null || locked) return
-    const h = setInterval(() => tick((x) => x + 1), 20_000)
+    const h = setInterval(() => tick((x) => x + 1), 5_000)
     return () => clearInterval(h)
   }, [kid.endsAt, locked])
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -131,14 +131,21 @@ export function KidLockButton({ className = 'icon-link kid-lock', locked = false
   const left = kidLeft(kid)
   const mins = left == null ? undefined : Math.ceil(left / 60000)
   const soon = mins != null && mins <= 5 && !locked
+  const frac = locked ? null : kidFraction(kid)
   return (
     <>
       <button type="button" className={`${className}${holding ? ' holding' : ''}${soon ? ' soon' : ''}`}
-        aria-label="Modul copil. Ține apăsat 2 secunde ca să ieși."
+        aria-label={`Modul copil${mins != null && !locked ? `, mai sunt ${mins} ${mins === 1 ? 'minut' : 'minute'}` : ''}. Ține apăsat 2 secunde ca să ieși.`}
         onPointerDown={start} onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop}
         onContextMenu={(e) => e.preventDefault()}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-        {mins != null && !locked && <span className="kid-mins">{mins}′</span>}
+        {/* The time left as a ring around the lock that drains clockwise. */}
+        {frac != null && (
+          <svg className="kid-ring" viewBox="0 0 44 44" aria-hidden="true">
+            <circle cx="22" cy="22" r="19" pathLength="100" className="kid-ring-track" />
+            <circle cx="22" cy="22" r="19" pathLength="100" className="kid-ring-left" strokeDasharray={`${frac * 100} 100`} />
+          </svg>
+        )}
       </button>
       {/* Outside the top bar (which moves while scrolling) and above the lock screen. */}
       {step && createPortal(
@@ -148,6 +155,14 @@ export function KidLockButton({ className = 'icon-link kid-lock', locked = false
         </div>, document.body)}
     </>
   )
+}
+
+/**
+ * Kid mode on phones (no top bar): the lock with the minutes left, as a round glass button in the
+ * page's top row, where the parent has their own buttons. Hidden on wide screens (the top bar has it).
+ */
+export function KidCorner() {
+  return useKid().active ? <KidLockButton className="night-btn kid-lock kid-corner" /> : null
 }
 
 /** Says goodnight with the phone's Romanian voice, if it has one. */

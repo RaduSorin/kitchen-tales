@@ -30,14 +30,19 @@
 .cover-glow img { position: absolute; left: -20%; top: -12%; width: 140%; height: 78vh; object-fit: cover;
   filter: blur(48px) saturate(1.5) brightness(.82); opacity: 0; transition: opacity .9s ease; }
 .cover-glow img.on { opacity: .95; }
-.glow-tint { position: absolute; inset: 0 0 auto; height: 78vh; background: radial-gradient(110% 70% at 50% 0, var(--glow), transparent 75%); opacity: .55; }
+/* A cover without a picture glows from its drawn sky and emoji, blurred like a picture would be. */
+.glow-scene { position: absolute; left: -20%; top: -12%; width: 140%; height: 78vh; display: grid; place-items: center;
+  filter: blur(48px) saturate(1.8) brightness(1.08); opacity: .95; animation: glow-in .9s ease; }
+.glow-scene > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.glow-scene > span { position: relative; font-size: min(40vw, 30vh); line-height: 1; }
+@keyframes glow-in { from { opacity: 0; } }
 .glow-fade { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0, rgb(15 14 19 / .4) 34vh, var(--night-bg) 72vh); }
 /* The player: the whole screen in the cover's colours. */
 :root[data-fullscreen] .cover-glow img { top: -10%; height: 120%; filter: blur(60px) saturate(1.6) brightness(.72); }
 :root[data-fullscreen] .cover-glow::before { height: 100%; }
-:root[data-fullscreen] .glow-tint { height: 100%; }
+:root[data-fullscreen] .glow-scene { top: -10%; height: 120%; filter: blur(60px) saturate(1.9) brightness(1.02); }
 :root[data-fullscreen] .glow-fade { background: linear-gradient(180deg, rgb(0 0 0 / .08), rgb(0 0 0 / .32) 55%, rgb(0 0 0 / .72)); }
-@media (prefers-reduced-motion: reduce) { .cover-glow img { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cover-glow img { transition: none; } .glow-scene { animation: none; } }
 
 /* ---------- Covers ---------- */
 :root[data-area="night"] .story-cover { border-radius: 12px; box-shadow: 0 8px 22px rgb(0 0 0 / .38); }
@@ -332,7 +337,7 @@
 @media (max-width: 759px) {
   .recipe { margin-top: calc(-8px - var(--status-h)); }
   .recipe-hero { height: calc(clamp(220px, 42vw, 380px) + var(--status-h)); }
-  .recipe .hero-more { top: calc(10px + var(--status-h)); }
+  .recipe .hero-more-anchor { top: calc(10px + var(--status-h)); }
   .page-back.over { position: absolute; z-index: 6; left: 12px; top: calc(10px + var(--status-h)); margin: 0; }
   .page-back.over .back-btn { width: 44px; height: 44px; min-height: 0; margin: 0; padding: 0; justify-content: center; border-radius: 50%; color: #fff;
     border: 1px solid rgb(255 255 255 / .35); background: rgb(20 16 14 / .45); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
@@ -583,8 +588,9 @@
     content: ''; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0;
     top: calc(-1 * env(safe-area-inset-top, 0px) - 2px);
     border-radius: inherit; pointer-events: none;
-    background: rgb(15 14 19 / .72);
-    -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+    /* Same tint and blur as the window had before (the top bar's), only reaching up under the clock. */
+    background: var(--topbar-bg);
+    -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
     opacity: 0; transition: opacity .2s;
   }
   .bookshelf:not(.wide) .vitrine.stuck::before { opacity: 1; }
@@ -640,3 +646,143 @@
 }
 .pop-menu .menu-row + .menu-row { box-shadow: 0 -1px 0 rgb(255 255 255 / .1); }
 .pop-menu .folder-menu-views button { background: rgb(255 255 255 / .1); }
+
+/* Kid mode on phones: no top bar, the lock (with the minutes left) is a round glass button at the
+   right of each page's top row. Wide screens have it in the top bar, except on the player. */
+.night-btn.kid-corner { width: 44px; height: 44px; margin-left: auto; font-size: 1rem; color: var(--text); }
+.kid-head { justify-content: flex-end; }
+.player-top .kid-corner { justify-self: end; }
+@media (min-width: 760px) {
+  .kid-corner, .kid-head { display: none !important; }
+  .player-top .kid-corner { display: grid !important; }
+}
+
+/* The time left: a gold ring around the lock that drains as the minutes pass. */
+.kid-lock .kid-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); pointer-events: none; overflow: visible; }
+.kid-ring circle { fill: none; stroke-width: 3; }
+.kid-ring-track { stroke: rgb(255 255 255 / .12); }
+.kid-ring-left { stroke: var(--accent, #f2c879); stroke-linecap: round; transition: stroke-dasharray 5s linear; }
+.kid-lock.soon .kid-ring-left { stroke: var(--moon, #f2c879); }
+.icon-link.kid-lock:has(.kid-ring) { width: 44px; min-width: 0; height: 44px; padding: 0; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) { .kid-ring-left { transition: none; } }
+
+/* "Creează o poveste", one question per screen: back + progress dots on top, the question in
+   Fraunces, big tiles to tap, and the gold button pinned above the tab bar. */
+.create-steps { display: flex; flex-direction: column; gap: 22px; min-height: calc(100dvh - 120px - var(--status-h, 0px)); }
+.create-steps .cs-foot { margin-top: auto; }
+.cs-top { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; }
+.cs-top .night-btn { width: 44px; height: 44px; }
+.cs-dots { display: flex; justify-content: center; gap: 6px; }
+.cs-dots span { width: 6px; height: 6px; border-radius: 3px; background: rgb(255 255 255 / .2); transition: width .25s, background .25s; }
+.cs-dots span.done { background: rgb(242 200 121 / .5); }
+.cs-dots span.on { width: 26px; background: var(--accent); }
+.cs-body { display: grid; gap: 16px; align-content: start; animation: cs-in .22s ease-out; }
+@keyframes cs-in { from { opacity: 0; transform: translateX(14px); } }
+.cs-q { display: grid; gap: 6px; }
+.cs-kicker { font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.cs-q h1 { margin: 0; font-family: var(--f-title); font-weight: 600; font-size: 2rem; line-height: 1.1; }
+.cs-q p { margin: 0; color: var(--muted); line-height: 1.4; }
+.cs-q a { color: var(--accent); font-weight: 700; }
+.cs-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cs-tiles button, .cs-lengths button { min-height: 64px; border-radius: 18px; border: 1px solid rgb(255 255 255 / .08); background: var(--surface); color: var(--text);
+  font: inherit; font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: transform .12s; }
+.cs-tiles button:active, .cs-lengths button:active { transform: scale(.97); }
+.cs-tiles button[aria-pressed=true], .cs-lengths button[aria-checked=true] { border: 2px solid var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 800; }
+.cs-other, .cs-text { width: 100%; box-sizing: border-box; padding: 14px 16px; border-radius: 16px; border: 1px dashed rgb(242 200 121 / .35); background: none; color: var(--text);
+  font: inherit; font-family: var(--f-body); }
+.cs-other::placeholder, .cs-text::placeholder { color: var(--muted); }
+.cs-text { border-style: solid; border-color: var(--border); background: var(--surface); resize: vertical; line-height: 1.5; }
+.cs-lengths { display: grid; gap: 10px; }
+.cs-lengths button { flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 18px; text-align: left; }
+.cs-lengths b { font-size: 1.2rem; }
+.cs-lengths small { font-size: .9rem; font-weight: 600; color: var(--muted); }
+.cs-lengths button[aria-checked=true] small { color: var(--text); opacity: .8; }
+.cs-summary { display: grid; gap: 4px; padding: 12px 16px; border-radius: 16px; background: var(--surface); color: var(--muted); font-size: .92rem; font-weight: 600; }
+.cs-summary span:first-child { color: var(--text); }
+.cs-summary a { color: var(--accent); margin-left: 6px; }
+.cs-foot { position: sticky; bottom: calc(102px + env(safe-area-inset-bottom)); display: grid; justify-items: center; gap: 8px; padding-top: 8px; }
+:root:has(.mini-player) .cs-foot { bottom: calc(176px + env(safe-area-inset-bottom)); }
+@media (min-width: 760px) { .cs-foot, :root:has(.mini-player) .cs-foot { bottom: 16px; } }
+.cs-foot .moon-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 10px 30px rgb(242 200 121 / .22); }
+.cs-own { color: var(--muted); font-weight: 700; justify-self: center; }
+.cs-next { color: var(--muted); font-size: .85rem; }
+@media (prefers-reduced-motion: reduce) { .cs-body { animation: none; } }
+
+/* "Citește tu" (concepts D + F): before starting, the invitation, three tips and a gold microphone;
+   once recording, the whole screen: big clock, rings breathing with the voice, Reia and Gata. */
+.parent-head.stacked { flex-direction: column; align-items: flex-start; gap: 18px; }
+.parent-head.stacked h1 { font-size: 2rem; }
+.rec-tips { list-style: none; margin: 0; padding: 14px 16px; display: grid; gap: 10px; border-radius: 20px; background: var(--surface); border: 1px solid rgb(255 255 255 / .08);
+  font-size: .9rem; font-weight: 600; color: #d8d1dd; }
+.rec-tips li { display: flex; gap: 10px; align-items: center; }
+.rec-tips svg { color: var(--accent); flex: none; }
+.recorder { gap: 12px; padding: 22px 0 8px; }
+.rec-clock.idle { font-size: 2.8rem; color: rgb(244 239 230 / .55); }
+.rec-start { width: 116px; height: 116px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center;
+  background: radial-gradient(circle, rgb(242 200 121 / .22), rgb(242 200 121 / .06) 70%); box-shadow: 0 0 0 2px var(--accent), 0 0 40px rgb(242 200 121 / .3); }
+.rec-start span { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
+.rec-start:active { transform: scale(.96); }
+.rec-start-label { color: var(--accent); font-weight: 800; font-size: .9rem; }
+
+.rec-full { position: fixed; inset: 0; z-index: 25; display: grid; grid-template-rows: auto auto 1fr auto auto; justify-items: center; gap: 10px;
+  padding: calc(18px + var(--status-h, env(safe-area-inset-top, 0px))) 16px calc(24px + env(safe-area-inset-bottom));
+  background: radial-gradient(80% 50% at 50% 52%, rgb(242 200 121 / .14), transparent 70%), radial-gradient(120% 45% at 10% 0%, rgb(116 66 150 / .35), transparent 70%), var(--night-bg, #0f0e13);
+  color: var(--text); font-family: var(--f-body); animation: rec-in .25s ease-out; }
+@keyframes rec-in { from { opacity: 0; } }
+.rec-kicker { font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); padding-top: 12px; }
+.rec-now { display: grid; justify-items: center; gap: 8px; margin-top: 4vh; }
+.rec-status { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 800; color: #ff8f8f; }
+.rec-status i { width: 8px; height: 8px; border-radius: 50%; background: #ff6b6b; animation: rec-blink 1.4s ease-in-out infinite; }
+.rec-status.paused { color: var(--muted); }
+.rec-status.paused i { background: var(--muted); animation: none; }
+@keyframes rec-blink { 50% { opacity: .3; } }
+.rec-full .rec-clock { font-size: clamp(3.4rem, 18vw, 4.6rem); line-height: 1; }
+.rec-orb { --lvl: 0; position: relative; align-self: center; width: 116px; height: 116px; display: grid; place-items: center; }
+.rec-orb .ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; translate: -50% -50%; transition: scale .15s ease-out; }
+.rec-orb .r1 { width: 184px; height: 184px; border: 2px solid rgb(242 200 121 / .4); background: rgb(242 200 121 / .05); scale: calc(1 + var(--lvl) * .12); }
+.rec-orb .r2 { width: 240px; height: 240px; border: 1px solid rgb(242 200 121 / .22); background: rgb(242 200 121 / .03); scale: calc(1 + var(--lvl) * .2); }
+.rec-orb .r3 { width: 300px; height: 300px; border: 1px solid rgb(242 200 121 / .12); scale: calc(1 + var(--lvl) * .28); }
+.rec-main { position: relative; width: 116px; height: 116px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; color: #ff6b6b;
+  background: #1c1922; box-shadow: 0 0 0 3px var(--accent), 0 0 40px rgb(242 200 121 / .35); }
+.rec-main i { width: 40px; height: 40px; border-radius: 50%; background: #ff6b6b; }
+.rec-main:active { transform: scale(.96); }
+.rec-full .rec-hint { font-size: .95rem; line-height: 1.45; }
+.rec-actions { width: 100%; max-width: 480px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rec-again, .rec-done { height: 56px; border-radius: 28px; font: inherit; font-weight: 800; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.rec-again { border: 1px solid rgb(255 255 255 / .1); background: rgb(255 255 255 / .07); color: var(--text); }
+.rec-done { border: 0; background: var(--accent); color: var(--on-accent); }
+.rec-done:disabled { opacity: .45; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .rec-full, .rec-status i { animation: none; } .rec-orb .ring { transition: none; } }
+
+/* "Încarcă un fișier": the drop zone as a glass card with a gold outline icon, like the rest. */
+.drop { gap: 8px; padding: 38px 20px 34px; border: 1.5px dashed rgb(242 200 121 / .35); border-radius: 24px; background: var(--surface); transition: background .15s, transform .12s; }
+.drop:active { background: var(--accent-soft); transform: scale(.98); }
+.drop .drop-ic { width: 72px; height: 72px; margin-bottom: 6px; border-radius: 50%; display: grid; place-items: center; color: var(--accent);
+  background: radial-gradient(circle, rgb(242 200 121 / .2), rgb(242 200 121 / .05) 70%); box-shadow: 0 0 0 1.5px rgb(242 200 121 / .6), 0 0 30px rgb(242 200 121 / .18); }
+.drop .drop-ic svg { background: none; border-radius: 0; padding: 0; width: 30px; height: 30px; }
+.drop b { font-size: 1.1rem; }
+.drop small { font-size: .9rem; }
+.drop-note { margin: -4px 4px 0; color: var(--muted); font-size: .9rem; line-height: 1.4; }
+
+/* ---------- Profile and settings in the new look: glass cards, gold line icons, gold labels ---------- */
+.settings { gap: 26px; }
+.settings .profile-h1 { font-family: var(--f-title, Fraunces, serif); font-weight: 600; }
+:root .settings h2.set-label { color: var(--accent); font-size: .72rem; font-weight: 800; letter-spacing: .14em; padding: 0 4px; }
+.settings .set-box { background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .08); border-radius: 20px; overflow: hidden;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .06); }
+.settings .set-row, .settings .set-link { border-top-color: rgb(255 255 255 / .07); min-height: 56px; }
+.settings .set-link:active, .settings .prof-row:active { background: rgb(255 255 255 / .06); }
+.settings .set-row select, .settings .set-row input[type=text] { background: rgb(0 0 0 / .25); border-color: rgb(255 255 255 / .1); border-radius: 12px; }
+.settings .set-hint { line-height: 1.45; }
+.settings .set-chev { color: var(--muted); }
+.prof-ic { width: 34px; height: 34px; border-radius: 50%; color: var(--accent); background: rgb(242 200 121 / .12); box-shadow: inset 0 0 0 1px rgb(242 200 121 / .3); }
+.prof-row { gap: 14px; }
+.prof-me { padding: 18px; border-radius: 22px; gap: 16px; background: linear-gradient(135deg, rgb(242 200 121 / .12), rgb(255 255 255 / .05) 60%);
+  border: 1px solid rgb(242 200 121 / .18); box-shadow: inset 0 1px 0 rgb(255 255 255 / .08); }
+.prof-me .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px rgb(242 200 121 / .7); }
+.prof-me-text b { font-family: var(--f-title, Fraunces, serif); font-weight: 600; font-size: 1.3rem; }
+.prof-chip { background: rgb(242 200 121 / .14); }
+.settings .kid-start { min-height: 52px; border-radius: 26px; background: var(--accent); color: var(--on-accent); border: 0; font-weight: 800; box-shadow: 0 10px 28px rgb(242 200 121 / .2); }
+.prof-out { background: rgb(255 255 255 / .05); border: 1px solid rgb(255 255 255 / .08); border-radius: 20px; font-weight: 700; }
+.settings .seg { background: rgb(0 0 0 / .25); }
+.settings .kid-guided summary { color: var(--accent); }

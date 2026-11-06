@@ -5,7 +5,7 @@
 :root[data-week-board] main { padding-bottom: 0; }
 :root[data-week-board] .tabbar-spacer { display: none; }
 
-.wk { --col: calc((100vw - 12px) / 2.45); display: flex; flex-direction: column; }
+.wk { --col: calc((100vw - 12px) / 3); display: flex; flex-direction: column; }
 @media (min-width: 760px) { .wk { --col: 200px; } }
 
 /* Title: a small gold label, the month right under it (tap: jump to a day), the days right below. */
@@ -45,7 +45,7 @@
 .wk-col.past .wk-day, .wk-col.past .wk-cards { opacity: .55; }
 
 /* Each column scrolls on its own, under the tab bar. */
-.wk-col-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: none; padding: 0 8px calc(118px + env(safe-area-inset-bottom)); }
+.wk-col-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: none; padding: 0 6px calc(118px + env(safe-area-inset-bottom)); }
 .wk-col-body::-webkit-scrollbar { display: none; }
 @media (min-width: 760px) { .wk-col-body { padding-bottom: 24px; } }
 :root:has(.mini-player) .wk-col-body { padding-bottom: calc(190px + env(safe-area-inset-bottom)); }

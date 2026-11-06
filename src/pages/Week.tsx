@@ -237,7 +237,7 @@ export default function Week() {
 
   const pendingJump = useRef<Date | undefined>(addDays(t, -1))
   const colWidth = () => board.current?.querySelector<HTMLElement>('.wk-col')?.offsetWidth || 150
-  /** Brings a day to the left edge (as the first column on screen). */
+  /** Brings a day to the left edge (as the first of the three columns on screen). */
   const scrollToDay = useCallback((d: Date, smooth = true) => {
     const el = board.current
     if (!el) return
@@ -278,7 +278,7 @@ export default function Week() {
   }, [])
   const shownMonth = days[Math.min(days.length - 1, Math.max(0, first))] ?? t
   const todayIndex = daysBetween(range.start, t)
-  const todayOnScreen = todayIndex >= first && todayIndex <= first + 1
+  const todayOnScreen = todayIndex >= first && todayIndex <= first + 2
 
   // ---- shopping: what's planned from today on, for a week ----
   const shopWeek = () => {
@@ -319,7 +319,7 @@ export default function Week() {
       {/* Away from today: a pill above the tab bar brings it back, like "Today" in Calendar. */}
       {!todayOnScreen && (
         <button type="button" className="wk-today" onClick={() => scrollToDay(addDays(t, -1))}>
-          {todayIndex < first && <Chevron dir="left" />}Azi{todayIndex > first && <Chevron dir="right" />}
+          {todayIndex < first && <Chevron dir="left" />}Azi{todayIndex > first + 2 && <Chevron dir="right" />}
         </button>
       )}
 
@@ -357,7 +357,7 @@ export default function Week() {
       {picking && <RecipePicker day={picking} recipes={recipes} onClose={() => setPicking(undefined)} />}
       {calendar && (
         <MonthSheet month={shownMonth} planned={new Set(plan.map((e) => e.day))} onClose={() => setCalendar(false)}
-          onPick={(d) => { setCalendar(false); scrollToDay(dayKey(d) === todayKey ? addDays(d, -1) : d) }} />
+          onPick={(d) => { setCalendar(false); scrollToDay(addDays(d, -1)) }} />
       )}
     </section>
   )

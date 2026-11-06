@@ -423,7 +423,9 @@ export default function RecipeEdit() {
   return (
     <form className="editor" onSubmit={save}>
       <div className="editor-bar">
-        <button type="button" className="link-btn" data-leaves onClick={back}>Renunță</button>
+        <button type="button" className="editor-back" data-leaves onClick={back} aria-label="Renunță">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+        </button>
         <span className="editor-bar-title">{id ? 'Editează' : 'Rețetă nouă'}</span>
         <button type="submit" className="btn primary small" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
       </div>

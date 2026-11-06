@@ -123,8 +123,9 @@ function Shell() {
     <>
       <NightArea />
       {!player && <div className="status-fill" aria-hidden="true" />}
-      {/* Phones: no top bar (pages use the whole screen, like the design); wide screens and kid mode keep it. */}
-      {!player && <header className={`topbar${profile ? ' topbar-profile' : ''}${kid ? '' : ' topbar-wide'}`} ref={header}>
+      {/* Phones: no top bar (pages use the whole screen, like the design), kid mode too: there the
+          lock sits in each page's top row (KidCorner). Wide screens keep the bar. */}
+      {!player && <header className={`topbar topbar-wide${profile ? ' topbar-profile' : ''}`} ref={header}>
         {profile && <div className="topbar-title" aria-hidden="true">{profileTitle(pathname, childName)}</div>}
         {back && !kid ? <BackButton to={back} /> : profile ? <span /> : kid
           // Stories-only mode: nothing in the top bar points to the kitchen side, not even the name.

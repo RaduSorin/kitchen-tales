@@ -583,8 +583,9 @@
     content: ''; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0;
     top: calc(-1 * env(safe-area-inset-top, 0px) - 2px);
     border-radius: inherit; pointer-events: none;
-    background: rgb(15 14 19 / .72);
-    -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+    /* Same tint and blur as the window had before (the top bar's), only reaching up under the clock. */
+    background: var(--topbar-bg);
+    -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
     opacity: 0; transition: opacity .2s;
   }
   .bookshelf:not(.wide) .vitrine.stuck::before { opacity: 1; }

@@ -479,6 +479,7 @@ export default function StoryAdd() {
                   return (
                     <button type="button" key={i} role="radio" aria-checked={on} aria-label={`Culorile ${i + 1}`} className={on ? 'on' : undefined} onClick={() => setScene(i)}>
                       <CoverScene title="" scene={i} />
+                      <span aria-hidden="true">{emoji}</span>
                     </button>
                   )
                 })}

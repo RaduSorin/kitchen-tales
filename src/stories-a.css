@@ -665,3 +665,45 @@
 .kid-lock.soon .kid-ring-left { stroke: var(--moon, #f2c879); }
 .icon-link.kid-lock:has(.kid-ring) { width: 44px; min-width: 0; height: 44px; padding: 0; border-radius: 50%; }
 @media (prefers-reduced-motion: reduce) { .kid-ring-left { transition: none; } }
+
+/* "Creează o poveste", one question per screen: back + progress dots on top, the question in
+   Fraunces, big tiles to tap, and the gold button pinned above the tab bar. */
+.create-steps { display: flex; flex-direction: column; gap: 22px; min-height: calc(100dvh - 120px - var(--status-h, 0px)); }
+.create-steps .cs-foot { margin-top: auto; }
+.cs-top { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; }
+.cs-top .night-btn { width: 44px; height: 44px; }
+.cs-dots { display: flex; justify-content: center; gap: 6px; }
+.cs-dots span { width: 6px; height: 6px; border-radius: 3px; background: rgb(255 255 255 / .2); transition: width .25s, background .25s; }
+.cs-dots span.done { background: rgb(242 200 121 / .5); }
+.cs-dots span.on { width: 26px; background: var(--accent); }
+.cs-body { display: grid; gap: 16px; align-content: start; animation: cs-in .22s ease-out; }
+@keyframes cs-in { from { opacity: 0; transform: translateX(14px); } }
+.cs-q { display: grid; gap: 6px; }
+.cs-kicker { font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.cs-q h1 { margin: 0; font-family: var(--f-title); font-weight: 600; font-size: 2rem; line-height: 1.1; }
+.cs-q p { margin: 0; color: var(--muted); line-height: 1.4; }
+.cs-q a { color: var(--accent); font-weight: 700; }
+.cs-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cs-tiles button, .cs-lengths button { min-height: 64px; border-radius: 18px; border: 1px solid rgb(255 255 255 / .08); background: var(--surface); color: var(--text);
+  font: inherit; font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: transform .12s; }
+.cs-tiles button:active, .cs-lengths button:active { transform: scale(.97); }
+.cs-tiles button[aria-pressed=true], .cs-lengths button[aria-checked=true] { border: 2px solid var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 800; }
+.cs-other, .cs-text { width: 100%; box-sizing: border-box; padding: 14px 16px; border-radius: 16px; border: 1px dashed rgb(242 200 121 / .35); background: none; color: var(--text);
+  font: inherit; font-family: var(--f-body); }
+.cs-other::placeholder, .cs-text::placeholder { color: var(--muted); }
+.cs-text { border-style: solid; border-color: var(--border); background: var(--surface); resize: vertical; line-height: 1.5; }
+.cs-lengths { display: grid; gap: 10px; }
+.cs-lengths button { flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 18px; text-align: left; }
+.cs-lengths b { font-size: 1.2rem; }
+.cs-lengths small { font-size: .9rem; font-weight: 600; color: var(--muted); }
+.cs-lengths button[aria-checked=true] small { color: var(--text); opacity: .8; }
+.cs-summary { display: grid; gap: 4px; padding: 12px 16px; border-radius: 16px; background: var(--surface); color: var(--muted); font-size: .92rem; font-weight: 600; }
+.cs-summary span:first-child { color: var(--text); }
+.cs-summary a { color: var(--accent); margin-left: 6px; }
+.cs-foot { position: sticky; bottom: calc(102px + env(safe-area-inset-bottom)); display: grid; justify-items: center; gap: 8px; padding-top: 8px; }
+:root:has(.mini-player) .cs-foot { bottom: calc(176px + env(safe-area-inset-bottom)); }
+@media (min-width: 760px) { .cs-foot, :root:has(.mini-player) .cs-foot { bottom: 16px; } }
+.cs-foot .moon-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 10px 30px rgb(242 200 121 / .22); }
+.cs-own { color: var(--muted); font-weight: 700; justify-self: center; }
+.cs-next { color: var(--muted); font-size: .85rem; }
+@media (prefers-reduced-motion: reduce) { .cs-body { animation: none; } }

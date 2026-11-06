@@ -624,3 +624,7 @@
 .add-opt b, .way b { display: block; font-family: Fraunces, serif; font-weight: 600; font-size: 1.25rem; line-height: 1.15; }
 .way b { font-size: 1.12rem; }
 .add-opt small, .way small { display: block; margin-top: 3px; font-family: var(--f-body); font-size: .86rem; line-height: 1.3; color: var(--muted); }
+/* Three equal columns, so a longer label ("După 2 povești", "Amestecat") doesn't push the buttons off centre. */
+:root[data-area="night"] .play-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; gap: 8px; }
+:root[data-area="night"] .play-opts .opt-chip { min-width: 0; max-width: 100%; }
+:root[data-area="night"] .play-opts .opt-chip > span:last-child { white-space: nowrap; }

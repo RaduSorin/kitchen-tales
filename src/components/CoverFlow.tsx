@@ -1,22 +1,28 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
 import type { Story } from '../lib/types'
-import { useSpineArt } from '../lib/coverTint'
 import { useCoverUrl } from '../lib/useCoverUrl'
-import { bookMeta, bookVars, moonDust, NATIVE_SWITCH, nextFrame, primeClick, shelfClick, spineWidth, tickAllowed, wait } from '../lib/shelf'
-import { CoverPicture, SpineFace, type BookViewProps } from './Spine'
+import { moonDust, NATIVE_SWITCH, nextFrame, primeClick, shelfClick, tickAllowed, wait } from '../lib/shelf'
+import { getPosition } from '../lib/stories'
+import { CoverPicture, type BookViewProps } from './Spine'
+
+/** Under the cover: time left (or the length) and how to browse. */
+function flowMeta(s: Story) {
+  const pos = getPosition(s.id), total = s.durationSec ?? 0
+  const left = pos > 5 && total > pos ? `Mai sunt ${Math.max(1, Math.round((total - pos) / 60))} min` : total ? `${Math.max(1, Math.round(total / 60))} min` : ''
+  return [left, 'glisează stânga-dreapta'].filter(Boolean).join(' · ')
+}
 
 type Arrival = { id: string; phase: 'enter' | 'float' | 'slot' }
-const GAP = 16, SPACE = 2, FLOOR = 46, STEP = 34
 
-/** Where each book stands, from the middle of the stage, when book `sel` is the one facing us. */
+/**
+ * Where each cover stands, from the middle of the stage, when cover `sel` faces us: the
+ * neighbours tilt away on both sides and overlap like a fanned deck (design "Seară de lux").
+ */
 function positions(list: Story[], sel: number, w: number) {
-  const xs: number[] = new Array(list.length)
-  xs[sel] = 0
-  let x = -(w / 2 + GAP)
-  for (let k = sel - 1; k >= 0; k--) { const d = spineWidth(list[k]); xs[k] = x - d / 2; x -= d + SPACE }
-  x = w / 2 + GAP
-  for (let k = sel + 1; k < list.length; k++) { const d = spineWidth(list[k]); xs[k] = x + d / 2; x += d + SPACE }
-  return xs
+  return list.map((_, k) => {
+    const d = k - sel
+    return d === 0 ? 0 : Math.sign(d) * (w * 0.52 + (Math.abs(d) - 1) * w * 0.2)
+  })
 }
 
 function FlowCover({ story, isNew }: { story: Story; isNew: boolean }) {
@@ -24,25 +30,19 @@ function FlowCover({ story, isNew }: { story: Story; isNew: boolean }) {
   return <div className="ff ff-front"><CoverPicture story={story} url={url} className="ff-pic" />{isNew && <span className="flow-new">Nouă</span>}</div>
 }
 
-/**
- * One book. Only the few books near the middle (which can turn to face us) get a cover, back and
- * pages; the others are just a spine and the top of the pages, to keep the iPhone's memory free.
- */
-function FlowBook({ story, style, full, isNew, shine }: { story: Story; style: CSSProperties; full: boolean; isNew: boolean; shine: boolean }) {
-  const { thumb, tint } = useSpineArt(story)
+/** One cover; the stage draws only the covers on screen, to keep the iPhone's memory free. */
+function FlowBook({ story, style, isNew, shine }: { story: Story; style: CSSProperties; isNew: boolean; shine: boolean }) {
   return (
-    <div className={`flow-book${shine ? ' shine' : ''}`} data-id={story.id} style={{ ...bookVars(story, tint), ...style }} aria-hidden="true">
-      {full && <><FlowCover story={story} isNew={isNew} /><div className="ff ff-back" /><div className="ff ff-edge" /></>}
-      <div className="ff ff-spine spine-skin"><SpineFace story={story} url={thumb} /></div>
-      <div className="ff ff-top" />
+    <div className={`flow-book flat${shine ? ' shine' : ''}`} data-id={story.id} style={style} aria-hidden="true">
+      <FlowCover story={story} isNew={isNew} />
     </div>
   )
 }
 
 /**
- * Cover Flow with books: the chosen book faces you, the others stand with their spines out, in 3D.
- * Hold and drag and the books pass under your finger one by one; tap left or right of the cover for
- * the neighbouring book, or on the cover to listen.
+ * Cover Flow: the chosen cover faces you, the others tilt away on both sides, with a reflection
+ * under them. Hold and drag and the covers pass under your finger one by one; tap left or right
+ * of the cover for the neighbouring one, or on the cover (or Ascultă) to listen.
  */
 export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, onArrived, wide }: BookViewProps) {
   const [now, setNow] = useState<Arrival>()
@@ -71,7 +71,9 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
     ro.observe(el)
     return () => ro.disconnect()
   }, [wide])
-  const W = Math.round(wide ? Math.max(110, Math.min(230, box.h - FLOOR - 40)) : Math.max(140, Math.min(210, box.w * .52)))
+  const W = Math.round(wide ? Math.max(110, Math.min(230, box.h / 1.5)) : Math.max(150, Math.min(250, box.w * .6)))
+  // Dragging this far moves one cover; under the covers there is room for their reflection.
+  const STEP = W * .22, FLOOR = Math.round(W * .36)
 
   // While a new book floats in, the shelf opens up where it will go.
   const layoutSel = now?.phase === 'float' ? Math.max(0, list.findIndex((s) => s.id === now.id)) : selIdx
@@ -84,8 +86,9 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
     if (now?.id === s.id && now.phase === 'float') return { transform: `translateX(0px) translateY(${-Math.min(60, W * .3)}px) translateZ(110px) rotateX(0deg) rotateY(0deg)`, zIndex: 400, transition: 'transform .85s cubic-bezier(.2, .9, .25, 1), opacity .35s' }
     const slot = now?.id === s.id && now.phase === 'slot' ? { transition: 'transform .75s cubic-bezier(.34, 1.36, .5, 1)' } : undefined
     const zIndex = 200 - Math.abs(i - layoutSel)
-    if (i === layoutSel) return { transform: 'translateX(0px) translateY(-6px) translateZ(64px) rotateX(0deg) rotateY(0deg)', zIndex, ...slot }
-    return { transform: `translateX(${xs[i]}px) translateY(0px) translateZ(${-W / 2}px) rotateX(0deg) rotateY(90deg)`, zIndex, ...slot }
+    if (i === layoutSel) return { transform: 'translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg)', zIndex, ...slot }
+    const left = i < layoutSel
+    return { transform: `translateX(${xs[i]}px) translateY(0px) translateZ(${-W * .42}px) rotateX(0deg) rotateY(${left ? 62 : -62}deg)`, zIndex, ...slot }
   }
 
   /** Chooses a book; false when it was already the chosen one (or there is none). */
@@ -175,7 +178,7 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
       const el = flow.current?.querySelector<HTMLElement>(`[data-id="${CSS.escape(id)}"]`)
       if (el && flow.current) {
         const b = el.getBoundingClientRect(), r = flow.current.getBoundingClientRect()
-        moonDust(flow.current.querySelector('.dust-layer'), b.left + b.width / 2 - r.left, r.height - FLOOR)
+        moonDust(flow.current.querySelector('.dust-layer'), b.left + b.width / 2 - r.left, b.bottom - r.top)
       }
       await wait(420)
       if (!live.current) return
@@ -194,24 +197,28 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
   const caption = fresh ? list.find((s) => s.id === now.id) : sel
   return (
     <div className={`cover-flow${wide ? ' wide' : ''}`}>
-      <label className={`flow-stage${dragging ? ' dragging' : ''}`} ref={flow} style={{ '--w': `${W}px`, '--floor': `${FLOOR}px` } as CSSProperties}
+      <label className={`flow-stage${dragging ? ' dragging' : ''}`} ref={flow} style={{ '--w': `${W}px`, '--floor': `${FLOOR}px`, height: wide ? undefined : W + FLOOR + 24 } as CSSProperties}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={click}>
         <input {...NATIVE_SWITCH} />
-        <div className="flow-floor" aria-hidden="true" />
         {list.map((s, i) => drawn(s, i) && (
-          <FlowBook key={s.id} story={s} style={styleFor(s, i)} full={Math.abs(i - layoutSel) <= 3 || now?.id === s.id}
+          <FlowBook key={s.id} story={s} style={styleFor(s, i)}
             isNew={arrived.includes(s.id) || now?.id === s.id} shine={shine && now?.id === s.id} />
         ))}
         <div className="dust-layer" aria-hidden="true" />
       </label>
       <div className={`flow-caption${fresh ? ' fresh' : ''}`} aria-live="polite">
         <b>{fresh ? 'Poveste nouă!' : sel.title}</b>
-        <small>{fresh ? caption?.title : bookMeta(sel)}</small>
+        <small>{fresh ? caption?.title : flowMeta(sel)}</small>
       </div>
+      {!fresh && (
+        <button type="button" className="sa-hero-btn flow-play" onClick={() => onOpen(sel)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" /></svg>
+          {getPosition(sel.id) > 5 ? 'Continuă' : 'Ascultă'}
+        </button>
+      )}
       {/* Screen readers and keyboards get plain buttons for what the gestures do. */}
       <div className="sr-only">
         <button type="button" onClick={() => step(-1)}>Povestea dinainte</button>
-        <button type="button" onClick={() => onOpen(sel)}>Ascultă „{sel.title}”</button>
         <button type="button" onClick={() => step(1)}>Povestea următoare</button>
       </div>
     </div>

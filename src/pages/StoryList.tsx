@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { cachedFolders, createFolder, deleteFolder, downloadStory, listFolders, listStories, saveFolder, setFolderShared } from '../lib/db'
 import type { Story, StoryFolder } from '../lib/types'
@@ -17,6 +17,7 @@ import { useGlow } from '../lib/glow'
 import { matchesQuery, norm } from '../lib/format'
 import { folderView, isBookView, newLabel, rememberShelfPick, renameFolderView, saveSeen, seenStories, setFolderView, shelfPick, useFolderViews, useLandscape } from '../lib/shelf'
 import ViewSwitch from '../components/ViewSwitch'
+import FolderMenu from '../components/FolderMenu'
 import BookShelf from '../components/BookShelf'
 import CoverFlow from '../components/CoverFlow'
 
@@ -30,6 +31,7 @@ function left(s: Story) {
 /** How far into a started story you are, drawn as a ring on its cover. */
 function Ring({ part }: { part: number }) {
   const c = 2 * Math.PI * 8
+
   return (
     <svg className="sa-ring" width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
       <circle cx="13" cy="13" r="12" fill="rgb(0 0 0 / .5)" />
@@ -77,6 +79,8 @@ export default function StoryList() {
   // The family's own folders; shown even while empty (only with internet, like the rest of the full shelf).
   const [rows, setRows] = useState<StoryFolder[]>(cachedFolders)
   const [editing, setEditing] = useState<'new' | 'open'>()
+  const [menu, setMenu] = useState(false)
+  const closeMenu = useCallback(() => setMenu(false), [])
   const reload = () => Promise.all([listStories().then(setStories), listFolders().then(setRows)])
   useEffect(() => {
     listStories().then(setStories).catch(() => setError('Nu pot încărca poveștile fără internet.')).finally(() => setLoading(false))
@@ -232,10 +236,19 @@ export default function StoryList() {
                 </div>
               )}
             </div>
-            {parent && !open.builtin && open.mine && (
-              <button type="button" className="night-btn folder-more" aria-label={`Editează folderul ${open.name}`} onClick={() => setEditing('open')}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
-              </button>
+            {parent && (
+              <span className="folder-more-wrap">
+                <button type="button" className="night-btn folder-more" aria-label={`Mai multe pentru folderul ${open.name}`} aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+                </button>
+                {menu && (
+                  <FolderMenu onClose={closeMenu}
+                    view={open.items.length > 0 && !wideShelf ? view : undefined} onView={pickView}
+                    onShare={open.mine && online && open.items.length > 0 ? () => setAskShare(true) : undefined}
+                    offline={open.items.length > 0 ? { missing: missing.length, progress, save: downloadAll } : undefined}
+                    onRename={!open.builtin && open.mine ? () => setEditing('open') : undefined} />
+                )}
+              </span>
             )}
           </div>
         ) : (
@@ -374,15 +387,6 @@ export default function StoryList() {
         </div>
       )}
 
-      {parent && stories.length > 0 && !favMode && !wideShelf && !(inFolder && open.items.length === 0) && (
-        <div className="offline-bar">
-          {missing.length === 0
-            ? <span>{inFolder ? 'Poveștile din acest folder merg și fără internet.' : 'Toate poveștile merg și fără internet.'}</span>
-            : progress
-              ? <span><span className="spinner" /> {progress}</span>
-              : <button className="link-btn" onClick={downloadAll}>{inFolder ? 'Salvează folderul pentru drum' : 'Salvează toate pentru drum'} ({missing.length})</button>}
-        </div>
-      )}
       {editing === 'new' && (
         <FolderSheet taken={folders.map((f) => f.name)} onClose={() => setEditing(undefined)}
           onSave={async (name, icon) => {
@@ -417,7 +421,7 @@ export default function StoryList() {
           </Sheet>
         )
       })()}
-      {editing === 'open' && inFolder && (() => {
+      {editing === 'open' && inFolder && !open.builtin && open.mine && (() => {
         const sources = new Set(open.items.map(builtinFolderOf))
         return (
           <FolderSheet folder={{ name: open.name, icon: open.icon, count: open.items.length, fallback: sources.size === 1 ? [...sources][0] : undefined }}

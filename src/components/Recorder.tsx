@@ -4,8 +4,6 @@ import { fmtTime } from '../lib/stories'
 import { keepAwake } from '../lib/keepAwake'
 import { useLeaveGuard } from '../lib/leaveGuard'
 
-const BARS = 8
-
 type Session = { mr: MediaRecorder; stream: MediaStream; ctx?: AudioContext; analyser?: AnalyserNode; discard: boolean; byUser: boolean }
 
 const LEAVE = {
@@ -23,7 +21,6 @@ const LEAVE = {
 export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: number, interrupted?: boolean) => void }) {
   const [state, setState] = useState<'idle' | 'rec' | 'paused'>('idle')
   const [sec, setSec] = useState(0)
-  const [bars, setBars] = useState<number[]>([])
   const [error, setError] = useState('')
   const session = useRef<Session>(null)
   const secRef = useRef(0)
@@ -50,20 +47,40 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
     return () => document.removeEventListener('visibilitychange', onHide)
   }, [state])
 
-  // While recording: a clock tick every second and a waveform bar every ~120 ms.
+  // While recording: a clock tick every second.
   useEffect(() => {
     if (state !== 'rec') return
     const clock = setInterval(() => { secRef.current += 1; setSec(secRef.current) }, 1000)
-    const buf = new Uint8Array(256)
-    const wave = setInterval(() => {
-      const a = session.current?.analyser
-      if (!a) return
+    return () => clearInterval(clock)
+  }, [state])
+
+  // The rings around the button follow the voice, every frame: the inner ring jumps with each
+  // sound, the outer ones follow a moment later and fade out slower, like ripples. Written
+  // straight to CSS variables on the rings, so React doesn't re-render 60 times a second.
+  const orb = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (state !== 'rec') { orb.current?.style.setProperty('--l1', '0'); orb.current?.style.setProperty('--l2', '0'); orb.current?.style.setProperty('--l3', '0'); return }
+    const a = session.current?.analyser
+    if (!a) return
+    session.current?.ctx?.resume().catch(() => {})
+    const buf = new Uint8Array(a.fftSize)
+    let l1 = 0, l2 = 0, l3 = 0, raf = 0
+    const follow = (v: number, to: number, up: number, down: number) => v + (to - v) * (to > v ? up : down)
+    const frame = () => {
       a.getByteTimeDomainData(buf)
-      let peak = 0
-      for (const v of buf) peak = Math.max(peak, Math.abs(v - 128))
-      setBars((b) => [...b.slice(-(BARS - 1)), Math.min(1, peak / 70)])
-    }, 120)
-    return () => { clearInterval(clock); clearInterval(wave) }
+      let sum = 0
+      for (const v of buf) { const d = (v - 128) / 128; sum += d * d }
+      // Loudness (RMS), lifted so normal reading fills most of the range and silence stays still.
+      const level = Math.min(1, Math.max(0, (Math.sqrt(sum / buf.length) - 0.01) * 6))
+      l1 = follow(l1, level, 0.6, 0.18)
+      l2 = follow(l2, l1, 0.25, 0.08)
+      l3 = follow(l3, l2, 0.15, 0.05)
+      const el = orb.current
+      if (el) { el.style.setProperty('--l1', l1.toFixed(3)); el.style.setProperty('--l2', l2.toFixed(3)); el.style.setProperty('--l3', l3.toFixed(3)) }
+      raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    return () => cancelAnimationFrame(raf)
   }, [state])
 
   const start = async () => {
@@ -75,8 +92,10 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
       const s: Session = { mr, stream, discard: false, byUser: false }
       try {
         s.ctx = new AudioContext()
+        // iOS starts a context made after an await suspended: without this the rings stay still.
+        s.ctx.resume().catch(() => {})
         s.analyser = s.ctx.createAnalyser()
-        s.analyser.fftSize = 256
+        s.analyser.fftSize = 1024
         s.ctx.createMediaStreamSource(stream).connect(s.analyser)
       } catch { /* waveform is optional */ }
       mr.ondataavailable = (e) => chunks.push(e.data)
@@ -88,13 +107,13 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
         if (session.current === s) { session.current = null; setState('idle') }
         if (s.discard) return
         if (chunks.length && secRef.current >= 1) onDoneRef.current(new Blob(chunks, { type: mr.mimeType }), secRef.current, interrupted)
-        else if (interrupted) { secRef.current = 0; setSec(0); setBars([]); setError('Înregistrarea s-a oprit. Apasă microfonul ca să începi din nou.') }
+        else if (interrupted) { secRef.current = 0; setSec(0); setError('Înregistrarea s-a oprit. Apasă microfonul ca să începi din nou.') }
       }
       // iOS ends the microphone track when it takes the mic away; stop cleanly and keep what we have.
       stream.getAudioTracks().forEach((t) => { t.onended = () => { if (mr.state !== 'inactive') mr.stop() } })
       mr.start(1000)
       session.current = s
-      secRef.current = 0; setSec(0); setBars([])
+      secRef.current = 0; setSec(0)
       setState('rec')
     } catch {
       setError('Nu am acces la microfon. Verifică permisiunile browserului.')
@@ -116,13 +135,12 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
     if (s.mr.state !== 'inactive') s.mr.stop()
     secRef.current = keep ? secRef.current : 0
     setState('idle')
-    if (!keep) { setSec(0); setBars([]) }
+    if (!keep) setSec(0)
   }
 
   // Before starting: the clock and a gold microphone button on the page. Once recording (also
   // paused), the whole screen is the recorder, over the tab bar, so nothing gets tapped by mistake
   // with the book in hand: big clock, rings that breathe with the voice, Reia and Gata.
-  const level = state === 'rec' ? bars[bars.length - 1] ?? 0 : 0
   const mic = <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
   if (state === 'idle') {
     return (
@@ -141,7 +159,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
         <span className={`rec-status ${state}`}><i />{state === 'rec' ? 'Se înregistrează' : 'Pauză'}</span>
         <div className="rec-clock" role="timer">{fmtTime(sec)}</div>
       </div>
-      <div className="rec-orb" style={{ ['--lvl' as string]: level.toFixed(2) }}>
+      <div className="rec-orb" ref={orb}>
         <span className="ring r3" aria-hidden="true" /><span className="ring r2" aria-hidden="true" /><span className="ring r1" aria-hidden="true" />
         <button type="button" className={`rec-main ${state}`} onClick={main} aria-label={state === 'rec' ? 'Pauză' : 'Continuă înregistrarea'}>
           {state === 'rec'

@@ -724,7 +724,7 @@
 .rec-start:active { transform: scale(.96); }
 .rec-start-label { color: var(--accent); font-weight: 800; font-size: .9rem; }
 
-.rec-full { position: fixed; inset: 0; z-index: 25; display: grid; grid-template-rows: auto auto 1fr auto auto; justify-items: center; gap: 10px;
+.rec-full { position: fixed; inset: 0; z-index: 25; overflow: hidden; display: grid; grid-template-rows: auto auto 1fr auto auto; justify-items: center; gap: 10px;
   padding: calc(18px + var(--status-h, env(safe-area-inset-top, 0px))) 16px calc(24px + env(safe-area-inset-bottom));
   background: radial-gradient(80% 50% at 50% 52%, rgb(242 200 121 / .14), transparent 70%), radial-gradient(120% 45% at 10% 0%, rgb(116 66 150 / .35), transparent 70%), var(--night-bg, #0f0e13);
   color: var(--text); font-family: var(--f-body); animation: rec-in .25s ease-out; }
@@ -737,11 +737,13 @@
 .rec-status.paused i { background: var(--muted); animation: none; }
 @keyframes rec-blink { 50% { opacity: .3; } }
 .rec-full .rec-clock { font-size: clamp(3.4rem, 18vw, 4.6rem); line-height: 1; }
-.rec-orb { --lvl: 0; position: relative; align-self: center; width: 116px; height: 116px; display: grid; place-items: center; }
-.rec-orb .ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; translate: -50% -50%; transition: scale .15s ease-out; }
-.rec-orb .r1 { width: 184px; height: 184px; border: 2px solid rgb(242 200 121 / .4); background: rgb(242 200 121 / .05); scale: calc(1 + var(--lvl) * .12); }
-.rec-orb .r2 { width: 240px; height: 240px; border: 1px solid rgb(242 200 121 / .22); background: rgb(242 200 121 / .03); scale: calc(1 + var(--lvl) * .2); }
-.rec-orb .r3 { width: 300px; height: 300px; border: 1px solid rgb(242 200 121 / .12); scale: calc(1 + var(--lvl) * .28); }
+.rec-orb { --l1: 0; --l2: 0; --l3: 0; position: relative; align-self: center; width: 116px; height: 116px; display: grid; place-items: center; }
+.rec-orb .ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; translate: -50% -50%; will-change: scale, opacity; }
+.rec-orb .r1 { width: 160px; height: 160px; border: 2px solid rgb(242 200 121 / calc(.35 + var(--l1) * .5)); background: rgb(242 200 121 / calc(.04 + var(--l1) * .1));
+  scale: calc(1 + var(--l1) * .3); }
+.rec-orb .r2 { width: 220px; height: 220px; border: 1.5px solid rgb(242 200 121 / calc(.18 + var(--l2) * .4)); background: rgb(242 200 121 / calc(.02 + var(--l2) * .05));
+  scale: calc(1 + var(--l2) * .38); }
+.rec-orb .r3 { width: 290px; height: 290px; border: 1px solid rgb(242 200 121 / calc(.1 + var(--l3) * .3)); scale: calc(1 + var(--l3) * .42); }
 .rec-main { position: relative; width: 116px; height: 116px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; color: #ff6b6b;
   background: #1c1922; box-shadow: 0 0 0 3px var(--accent), 0 0 40px rgb(242 200 121 / .35); }
 .rec-main i { width: 40px; height: 40px; border-radius: 50%; background: #ff6b6b; }
@@ -752,7 +754,7 @@
 .rec-again { border: 1px solid rgb(255 255 255 / .1); background: rgb(255 255 255 / .07); color: var(--text); }
 .rec-done { border: 0; background: var(--accent); color: var(--on-accent); }
 .rec-done:disabled { opacity: .45; cursor: default; }
-@media (prefers-reduced-motion: reduce) { .rec-full, .rec-status i { animation: none; } .rec-orb .ring { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .rec-full, .rec-status i { animation: none; } .rec-orb .ring { scale: 1; }  }
 
 /* "Încarcă un fișier": the drop zone as a glass card with a gold outline icon, like the rest. */
 .drop { gap: 8px; padding: 38px 20px 34px; border: 1.5px dashed rgb(242 200 121 / .35); border-radius: 24px; background: var(--surface); transition: background .15s, transform .12s; }

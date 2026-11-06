@@ -753,3 +753,13 @@
 .rec-done { border: 0; background: var(--accent); color: var(--on-accent); }
 .rec-done:disabled { opacity: .45; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .rec-full, .rec-status i { animation: none; } .rec-orb .ring { transition: none; } }
+
+/* "Încarcă un fișier": the drop zone as a glass card with a gold outline icon, like the rest. */
+.drop { gap: 8px; padding: 38px 20px 34px; border: 1.5px dashed rgb(242 200 121 / .35); border-radius: 24px; background: var(--surface); transition: background .15s, transform .12s; }
+.drop:active { background: var(--accent-soft); transform: scale(.98); }
+.drop .drop-ic { width: 72px; height: 72px; margin-bottom: 6px; border-radius: 50%; display: grid; place-items: center; color: var(--accent);
+  background: radial-gradient(circle, rgb(242 200 121 / .2), rgb(242 200 121 / .05) 70%); box-shadow: 0 0 0 1.5px rgb(242 200 121 / .6), 0 0 30px rgb(242 200 121 / .18); }
+.drop .drop-ic svg { background: none; border-radius: 0; padding: 0; width: 30px; height: 30px; }
+.drop b { font-size: 1.1rem; }
+.drop small { font-size: .9rem; }
+.drop-note { margin: -4px 4px 0; color: var(--muted); font-size: .9rem; line-height: 1.4; }

@@ -329,14 +329,15 @@ export default function StoryAdd() {
 
   // "Citește tu" before the recording: the invitation as the title (the recorder takes the whole screen once it starts).
   const recordStart = mode === 'record' && !ready
+  const uploadStart = mode === 'upload' && !ready
   const head = (
-    <div className={`parent-head${recordStart ? ' stacked' : ''}`}>
+    <div className={`parent-head${recordStart || uploadStart ? ' stacked' : ''}`}>
       <button type="button" className="night-btn" aria-label="Înapoi" data-leaves={mode === 'record' && !ready ? '' : undefined} onClick={() => (mode ? back() : nav('/povesti'))}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
       </button>
       <div>
-        <span className="pbadge">{recordStart ? 'Citește tu' : 'Mod părinte'}</span>
-        <h1>{recordStart ? 'Ia cartea și citește cu glas tare' : mode ? TITLES[mode] : 'Poveste nouă'}</h1>
+        <span className="pbadge">{recordStart ? 'Citește tu' : uploadStart ? 'Încarcă un fișier' : 'Mod părinte'}</span>
+        <h1>{recordStart ? 'Ia cartea și citește cu glas tare' : uploadStart ? 'Adaugă o poveste de pe telefon' : mode ? TITLES[mode] : 'Poveste nouă'}</h1>
       </div>
     </div>
   )
@@ -361,7 +362,7 @@ export default function StoryAdd() {
   return (
     <form className="parent" onSubmit={save}>
       {head}
-      {(mode === 'upload' || ready) && <label className="night-field">Titlul poveștii
+      {ready && <label className="night-field">Titlul poveștii
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={mode === 'create' ? 'Ursulețul curajos' : 'Vulpița Fifi'} />
       </label>}
 
@@ -381,7 +382,7 @@ export default function StoryAdd() {
 
       {mode === 'upload' && !ready && (
         <label className="drop">
-          <Icon d="M12 15V4M7 9l5-5 5 5M5 20h14" />
+          <span className="drop-ic"><Icon d="M12 15V4M7 9l5-5 5 5M5 20h14" /></span>
           <b>Alege un fișier audio</b>
           <small>MP3, M4A sau WAV</small>
           <input type="file" accept="audio/*" onChange={(e) => {
@@ -389,6 +390,9 @@ export default function StoryAdd() {
             if (f) pickFile(f)
           }} />
         </label>
+      )}
+      {mode === 'upload' && !ready && (
+        <p className="drop-note">Titlul și coperta le luăm din fișier, dacă le are. Le poți schimba înainte să salvezi.</p>
       )}
 
       {mode === 'create' && !ready && generating && (

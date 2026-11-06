@@ -23,6 +23,7 @@ import { NowPlayingProvider } from './lib/nowPlaying'
 import TabBar, { PROFILE } from './components/TabBar'
 import AreaSwitch from './components/AreaSwitch'
 import { isPlayerPage, useArea } from './lib/area'
+import { primeKeyboard } from './lib/keyboard'
 import Search from './pages/Search'
 import StoriesHome from './pages/StoriesHome'
 import Week from './pages/Week'
@@ -100,6 +101,9 @@ function Shell() {
   const kid = useKid().active
   // The name only on the two home screens; elsewhere each page's big title says where you are.
   const home = pathname === '/' || pathname === '/povesti/acasa'
+  // Stories side (design A): a small Rețete / Povești switch on the left and a search button on
+  // the right; the page's big title says where you are, so no app name.
+  const storiesBar = useArea() === 'night' && !profile && !kid && !back
   useHideOnScroll(!player)
   // A new page starts with the bar showing.
   useEffect(() => { delete document.documentElement.dataset.topbarHidden }, [pathname])
@@ -113,7 +117,7 @@ function Shell() {
     const ro = new ResizeObserver(set)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [player])
+  }, [player, storiesBar])
   useEffect(() => {
     if (player) document.documentElement.dataset.fullscreen = ''
     else delete document.documentElement.dataset.fullscreen
@@ -122,7 +126,18 @@ function Shell() {
     <>
       <NightArea />
       {!player && <div className="status-fill" aria-hidden="true" />}
-      {!player && <header className={profile ? 'topbar topbar-profile' : 'topbar'} ref={header}>
+      {!player && storiesBar && <header className="topbar topbar-stories" ref={header}>
+        <nav><AreaSwitch /></nav>
+        <div className="topbar-actions">
+          <Link to="/povesti?cauta=1" className="topbar-icon" aria-label="Caută o poveste" onClick={() => primeKeyboard('story-search')}>
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          </Link>
+          <NavLink to="/profil" className="topbar-icon wide-only" aria-label="Profil și setări" title="Profil">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={PROFILE} /></svg>
+          </NavLink>
+        </div>
+      </header>}
+      {!player && !storiesBar && <header className={profile ? 'topbar topbar-profile' : 'topbar'} ref={header}>
         {profile && <div className="topbar-title" aria-hidden="true">{profileTitle(pathname, childName)}</div>}
         {back && !kid ? <BackButton to={back} /> : profile ? <span /> : kid
           // Stories-only mode: nothing in the top bar points to the kitchen side, not even the name.

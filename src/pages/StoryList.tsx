@@ -4,7 +4,7 @@ import { cachedFolders, createFolder, deleteFolder, downloadStory, listFolders, 
 import type { Story, StoryFolder } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { builtinFolderOf, fmtTime, folderOf, getLastStoryId, getPosition, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
+import { builtinFolderOf, folderOf, getLastStoryId, getPosition, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
 import FolderSheet from '../components/FolderSheet'
 import Sheet from '../components/Sheet'
 import { showToast } from '../lib/toast'
@@ -21,6 +21,23 @@ import BookShelf from '../components/BookShelf'
 import CoverFlow from '../components/CoverFlow'
 
 const count = (n: number) => `${n} ${n === 1 ? 'poveste' : 'povești'}`
+const minutes = (sec: number) => `${Math.max(1, Math.round(sec / 60))} min`
+/** Seconds left of a story you started (and haven't finished), else undefined. */
+function left(s: Story) {
+  const pos = getPosition(s.id)
+  return pos > 5 && s.durationSec && pos < s.durationSec - 5 ? s.durationSec - pos : undefined
+}
+/** How far into a started story you are, drawn as a ring on its cover. */
+function Ring({ part }: { part: number }) {
+  const c = 2 * Math.PI * 8
+  return (
+    <svg className="sa-ring" width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="12" fill="rgb(0 0 0 / .5)" />
+      <circle cx="13" cy="13" r="8" fill="none" stroke="rgb(255 255 255 / .3)" strokeWidth="3" />
+      <circle cx="13" cy="13" r="8" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray={`${c * Math.min(1, part)} ${c}`} transform="rotate(-90 13 13)" />
+    </svg>
+  )
+}
 /** Total listening time of a folder: "45 min", "2 h", "1 h 30". */
 function total(items: Story[]) {
   const min = Math.round(items.reduce((t, s) => t + (s.durationSec ?? 0), 0) / 60)
@@ -143,7 +160,6 @@ export default function StoryList() {
   const missing = (inFolder ? open.items : stories).filter((s) => !offline.has(s.id))
   const lastId = getLastStoryId()
   const last = available.find((s) => s.id === lastId)
-  const lastPos = last ? getPosition(last.id) : 0
   // The book chosen in a folder (on the shelf, or the last one opened), else the folder's first picture.
   const chosenId = [selId, open && shelfPick(open.name), lastId].find((id) => id && shown.some((s) => s.id === id))
   const chosen = shown.find((s) => s.id === chosenId)
@@ -226,10 +242,13 @@ export default function StoryList() {
           <h1>Bibliotecă</h1>
         )}
         {/* The count sits at the right of the title row, to save vertical space. */}
-        {!favMode && (inFolder ? (wideShelf ? open.items.length : 0) : available.length) > 0 && (
-          <span className="shelf-count">{count(inFolder ? open.items.length : available.length)}</span>
-        )}
+        {!favMode && inFolder && wideShelf && open.items.length > 0 && <span className="shelf-count">{count(open.items.length)}</span>}
         {wideShelf && <ViewSwitch value={view} onChange={pickView} />}
+        {parent && !inFolder && !favMode && (
+          <Link to="/povesti/adauga" className="night-btn lib-add" aria-label="Adaugă o poveste">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </Link>
+        )}
         {parent && (!inFolder || open.mine) && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
 
@@ -237,23 +256,10 @@ export default function StoryList() {
         <div className="search-row">
           <label className="search-box night-search">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-            <input type="search" id="story-search" aria-label="Caută povești" placeholder={inFolder ? `Caută în ${open.name}` : 'Caută o poveste'} value={q} onChange={(e) => setQ(e.target.value)} />
+            <input type="search" id="story-search" aria-label="Caută povești" placeholder={inFolder ? `Caută în ${open.name}` : `Caută în ${available.length === 1 ? 'o poveste' : `${available.length}${available.length % 100 >= 20 || (available.length >= 100 && available.length % 100 === 0) ? ' de' : ''} povești`}`} value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
           {open && (inFolder || !searching) && open.items.length > 0 && <ViewSwitch value={view} onChange={pickView} collapsible />}
         </div>
-      )}
-
-      {last && !inFolder && !searching && !favMode && (
-        <Link to={`/povesti/${last.id}`} className="continue">
-          <StoryCover story={last} />
-          <span className="continue-text">
-            <b>{last.title}</b>
-            <small>{lastPos > 5 ? `continuă de la ${fmtTime(lastPos)}` : 'ascultă din nou'}</small>
-          </span>
-          <span className="continue-play" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>
-          </span>
-        </Link>
       )}
 
       {error && <p className="error">{error}</p>}
@@ -264,9 +270,12 @@ export default function StoryList() {
             {favs.map((s) => (
               <div key={s.id} className="cover-slot">
                 <Link to={`/povesti/${s.id}`} state={{ fromFolder: true, from: 'favorites' }} className="cover-card">
-                  <StoryCover story={s} />
+                  <span className="sa-cover">
+                    <StoryCover story={s} />
+                    {left(s) !== undefined ? <Ring part={getPosition(s.id) / (s.durationSec || 1)} /> : s.durationSec ? <span className="sa-dur">{minutes(s.durationSec)}</span> : null}
+                  </span>
                   <span className="cover-title">{s.title}</span>
-                  {s.durationSec ? <small className="cover-meta">{Math.max(1, Math.round(s.durationSec / 60))} min</small> : null}
+                  <small className="cover-meta">{left(s) !== undefined ? `Mai sunt ${minutes(left(s)!)}` : folderOf(s)}</small>
                 </Link>
               </div>
             ))}
@@ -329,14 +338,20 @@ export default function StoryList() {
           {shown.map((s) => (
             <div key={s.id} className={`${view === 'list' ? 'row-slot' : 'cover-slot'}${popping && arriving.includes(s.id) ? ' pop-in' : ''}`}>
               <Link to={`/povesti/${s.id}`} state={{ fromFolder: true }} className={view === 'list' ? 'story-row' : 'cover-card'} onClick={() => pick(s.id)}>
-                <StoryCover story={s} />
+                <span className="sa-cover">
+                  <StoryCover story={s} />
+                  {view !== 'list' && (left(s) !== undefined ? <Ring part={getPosition(s.id) / (s.durationSec || 1)} /> : s.durationSec ? <span className="sa-dur">{minutes(s.durationSec)}</span> : null)}
+                </span>
                 <span className="row-text">
                   <span className="cover-title">{s.title}</span>
                   <small className="cover-meta">
                     {s.mine && !s.shared && <span className="private-mark" title="Doar în spațiul nostru" aria-label="Doar în spațiul nostru">🔒 </span>}
-                    {!s.collection && <><i style={{ background: SOURCE_COLOR[s.source] }} />{SOURCE_LABEL[s.source]}</>}
-                    {s.durationSec ? `${s.collection ? '' : ' · '}${Math.max(1, Math.round(s.durationSec / 60))} min` : ''}
+                    {left(s) !== undefined ? `Mai sunt ${minutes(left(s)!)}` : <>
+                      {!s.collection && <><i style={{ background: SOURCE_COLOR[s.source] }} />{SOURCE_LABEL[s.source]}</>}
+                      {s.durationSec ? `${s.collection ? '' : ' · '}${minutes(s.durationSec)}` : ''}
+                    </>}
                   </small>
+                  {view === 'list' && left(s) !== undefined && <span className="sa-progress row-progress"><i style={{ width: `${Math.round(Math.min(1, getPosition(s.id) / (s.durationSec || 1)) * 100)}%` }} /></span>}
                 </span>
               </Link>
               {s.favorite && (

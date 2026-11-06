@@ -6,6 +6,7 @@ import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
 import CoverSearch from '../components/CoverSearch'
 import MoveSheet from '../components/MoveSheet'
+import Sheet from '../components/Sheet'
 import { showToast } from '../lib/toast'
 import type { Story } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
@@ -37,7 +38,7 @@ function StoryPlayer() {
   const { child } = useSettings()
   const [s, setS] = useState<Story | null>()
   const player = useNowPlaying()
-  const [remaining, setRemaining] = useState(() => { try { return localStorage.getItem(REMAINING_KEY) === '1' } catch { return false } })
+  const [remaining, setRemaining] = useState(() => { try { return localStorage.getItem(REMAINING_KEY) !== '0' } catch { return true } })
   const toggleRemaining = () => setRemaining((r) => { try { localStorage.setItem(REMAINING_KEY, r ? '0' : '1') } catch { /* ignore */ } return !r })
   const [dim, setDim] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -47,6 +48,7 @@ function StoryPlayer() {
   const [coverOpen, setCoverOpen] = useState(false)
   const [coverBusy, setCoverBusy] = useState(false)
   const [moveOpen, setMoveOpen] = useState(false)
+  const [parentsOpen, setParentsOpen] = useState(false)
   const [sharing, setSharing] = useState(false)
   // While the finger is on the progress bar we only move the bar; the audio seeks once, on release.
   // Seeking on every move made iOS re-fetch the stream each time and timeupdate pulled the thumb back.
@@ -151,7 +153,19 @@ function StoryPlayer() {
         <button type="button" className="night-btn" aria-label={`Înapoi la ${folderOf(s)}`} onClick={back}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
         </button>
-        <span className="player-from" aria-hidden="true"><small>Din folderul</small><b>{folderOf(s)}</b></span>
+        <span className="player-from" aria-hidden="true"><small>Din {folderOf(s)}</small><b>{s.title}</b></span>
+        {kid ? <span aria-hidden="true" /> : (
+          <button type="button" className="night-btn" aria-label="Pentru părinți: partajare, offline, copertă, folder, ștergere" onClick={() => setParentsOpen(true)}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+          </button>
+        )}
+      </div>
+      <StoryCover story={s} className={`player-art${playing ? ' playing' : ''}`} />
+      <div className="player-head">
+        <div className="player-title">
+          <h1>{s.title}</h1>
+          <small>{s.collection ? `${s.collection} · ${SOURCE_LABEL[s.source]}` : SOURCE_LABEL[s.source]}</small>
+        </div>
         {/* Favourites are the family's list: in kid mode the heart only shows, it can't be changed. */}
         {kid ? (
           s.favorite ? <span className="night-btn fav-btn on fav-static" role="img" aria-label="Preferată"><svg width="22" height="22" viewBox="0 0 24 24" fill={s.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" /></svg></span> : <span className="fav-static" aria-hidden="true" />
@@ -161,11 +175,6 @@ function StoryPlayer() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill={s.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" /></svg>
           </button>
         )}
-      </div>
-      <StoryCover story={s} className={`player-art${playing ? ' playing' : ''}`} />
-      <div className="player-title">
-        <h1>{s.title}</h1>
-        <small>{SOURCE_LABEL[s.source]}</small>
       </div>
       <input type="range" className="seek" aria-label="Unde suntem în poveste" min={0} max={dur || 1} step={1} value={Math.min(shown, dur || 1)}
         style={{ ['--p' as string]: dur ? `${(shown / dur) * 100}%` : '0%' }}
@@ -189,8 +198,8 @@ function StoryPlayer() {
             ? <svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1.5" fill="currentColor" /><rect x="14" y="4" width="4" height="16" rx="1.5" fill="currentColor" /></svg>
             : <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>}
         </button>
-        <button aria-label={`Înainte ${SKIP} secunde`} onClick={() => skip(SKIP)}>
-          <SkipIcon sec={SKIP} />
+        <button aria-label={`Înainte ${SKIP_FWD} de secunde`} onClick={() => skip(SKIP_FWD)}>
+          <SkipIcon sec={SKIP_FWD} />
         </button>
         <button className="track" aria-label={next ? `Povestea următoare: ${next.title}` : 'Povestea următoare'} disabled={!next} onClick={() => next && goTo(next)}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="17.4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M4 5v14l11.5-7z" fill="currentColor" /></svg>
@@ -198,12 +207,16 @@ function StoryPlayer() {
       </div>
       {/* Round buttons with a label: tap "Stop după" to cycle 1 → 2 → 3 → 5 stories, the other one to shuffle. */}
       <div className="play-opts">
+        <button type="button" className="opt-chip" onClick={player.cycleRate} aria-label={`Viteză ${fmtRate(player.rate)}. Atinge ca să schimbi.`}>
+          <span className="opt-icon"><b className="opt-rate">{fmtRate(player.rate)}</b></span>
+          <span>Viteză</span>
+        </button>
         <button type="button" className="opt-chip" onClick={() => { const all: Sleep[] = [1, 2, 3, 5]; chooseSleep(all[(all.indexOf(sleep) + 1) % all.length]) }}
           aria-label={`Oprește după ${sleep === 1 ? 'o poveste' : `${sleep} povești`}. Atinge ca să schimbi.`}>
           <span className="opt-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>
           </span>
-          <span>Stop după {sleep === 1 ? '1 poveste' : `${sleep} povești`}</span>
+          <span>După {sleep === 1 ? '1 poveste' : `${sleep} povești`}</span>
         </button>
         <button type="button" className="opt-chip" aria-pressed={player.shuffle} onClick={player.toggleShuffle} aria-label={player.shuffle ? 'Amestecat. Atinge pentru una după alta.' : 'Una după alta. Atinge ca să amesteci.'}>
           <span className="opt-icon">
@@ -213,8 +226,7 @@ function StoryPlayer() {
         </button>
       </div>
 
-      {!kid && <details className="parents">
-        <summary>Pentru părinți</summary>
+      {!kid && parentsOpen && <Sheet title="Pentru părinți" onClose={() => setParentsOpen(false)}>
         <div className="parents-body">
           {s.text && <details className="story-text"><summary>Textul poveștii</summary><p>{s.text}</p></details>}
           {s.mine === false && <p className="share-note">De la {s.spaceName ?? 'alt cont'}, doar ascultare.</p>}
@@ -242,7 +254,7 @@ function StoryPlayer() {
               }}>{saving ? 'Se salvează…' : 'Salvează offline'}</button>
             ) : null}
             {online && s.mine !== false && !coverOpen && <button className="btn small" onClick={() => setCoverOpen(true)}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</button>}
-            {online && s.mine !== false && <button className="btn small span-all" onClick={() => setMoveOpen(true)}>Mută în folder</button>}
+            {online && s.mine !== false && <button className="btn small span-all" onClick={() => { setParentsOpen(false); setMoveOpen(true) }}>Mută în folder</button>}
             {online && s.mine !== false && (confirmDelete ? (
               <span className="confirm span-all">Ștergi povestea?
                 <button className="btn danger small" disabled={deleting} onClick={async () => {
@@ -280,7 +292,7 @@ function StoryPlayer() {
           {!online && <p className="parents-offline">Fără internet poți asculta poveștile salvate. Coperta, mutarea și ștergerea revin când ai din nou internet.</p>}
           {msg && <p className="error">{msg}</p>}
         </div>
-      </details>}
+      </Sheet>}
       {moveOpen && !kid && (
         <MoveSheet story={s} onClose={() => setMoveOpen(false)} onMoved={(collection, shared, changed) => {
           const moved = { ...s, collection, shared: shared ?? s.shared }
@@ -293,8 +305,12 @@ function StoryPlayer() {
   )
 }
 
-/** Seconds jumped by the skip buttons. */
+/** "1×", "1,25×". */
+const fmtRate = (r: number) => `${String(r).replace('.', ',')}×`
+
+/** Seconds jumped by the skip buttons: back a little, forward a bit more. */
 const SKIP = 15
+const SKIP_FWD = 30
 
 /** A curved arrow around the number of seconds it skips (mirrored for "back"). */
 function SkipIcon({ sec, back }: { sec: number; back?: boolean }) {

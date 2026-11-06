@@ -168,3 +168,60 @@
 :root[data-area="night"] .goodnight { background: radial-gradient(circle at 50% 38%, #2b2433 0, var(--night-bg) 70%); }
 :root[data-area="night"] .goodnight h1 { font-family: var(--f-title); }
 @media (max-width: 380px) { .night-tabbar .tab-label { font-size: .64rem; } }
+
+/* ---------- Concept layout: top bar, Acasă rows, chips ---------- */
+.topbar-stories { justify-content: space-between; }
+.topbar-stories nav { margin-left: 0 !important; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.topbar-icon { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: rgb(0 0 0 / .28);
+  border: 1px solid rgb(255 255 255 / .06); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); text-decoration: none; }
+.topbar-icon.active { color: var(--accent); }
+/* The small Rețete / Povești pill: text only, like the concept. */
+.topbar-stories .area-switch { background: rgb(0 0 0 / .28); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.topbar-stories .area-switch svg { display: none; }
+.topbar-stories .area-switch .area-thumb { background: rgb(255 255 255 / .16) !important; box-shadow: none; }
+.topbar-stories nav .area-switch a { padding: 6px 13px; min-height: 34px; font-size: .88rem; font-weight: 700; color: var(--muted); }
+.topbar-stories nav .area-switch a.on, .topbar-stories nav .area-switch.night a.on { color: var(--text); }
+@media (max-width: 759px) { .topbar-stories .wide-only { display: none; } }
+
+.sa-greeting { margin: 6px 0 0; font-size: 2.05rem; line-height: 1.1; }
+:root[data-area="night"] .stories-home { gap: 18px; }
+.sa-chips { display: flex; gap: 8px; overflow-x: auto; margin-right: -16px; padding-right: 16px; scrollbar-width: none; }
+.sa-chips::-webkit-scrollbar { display: none; }
+.sa-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 15px; border-radius: 999px; background: rgb(255 255 255 / .08);
+  color: var(--text); font-weight: 700; font-size: .9rem; text-decoration: none; white-space: nowrap; }
+.sa-chip:active { background: rgb(255 255 255 / .14); }
+:root[data-area="night"] .sh-card { gap: 2px; }
+:root[data-area="night"] .sh-card .cover-title { margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:root[data-area="night"] .sh-card .cover-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+
+/* Tab bar bubble: a pill inside the bar, not a circle. */
+@media (max-width: 759px) {
+  :root .tabbar { padding: 7px; }
+  :root .tab { height: 50px; border-radius: 25px; }
+}
+
+/* Mini player: title, time left, pause, +30 s and close. */
+.mini-title { display: grid; min-width: 0; }
+.mini-title, .mini-left { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-left { font-size: .78rem; font-weight: 600; color: var(--muted); }
+.mini-btn:disabled { opacity: .45; }
+:root[data-area="night"] .mini-close { opacity: .7; }
+
+/* Bibliotecă header: the + button next to the title. */
+:root[data-area="night"] .lib-add { display: grid; place-items: center; width: 42px; height: 42px; margin-left: auto; color: var(--text); text-decoration: none; }
+
+/* Covers in a folder: length or a progress ring in the corner. */
+.sa-ring { position: absolute; right: 7px; bottom: 7px; color: var(--accent); }
+.story-row .sa-cover .story-cover { width: 100%; }
+.row-progress { width: 96px; }
+:root[data-area="night"] .story-row .row-text { display: grid; gap: 2px; }
+
+/* Player: heart next to the title, Viteză as text in its circle. */
+.player-head { display: flex; align-items: flex-end; gap: 12px; }
+.player-head .player-title { flex: 1; min-width: 0; }
+:root[data-area="night"] .player-head .fav-btn { background: none; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; width: 44px; height: 44px; flex: none; }
+:root[data-area="night"] .player-head .fav-btn svg { width: 26px; height: 26px; }
+.opt-rate { position: static !important; background: none !important; color: inherit !important; font-size: .95rem !important; min-width: 0 !important; }
+.player-from b { font-size: .92rem; }
+:root[data-area="night"] .sheet .parents-body { margin-top: 4px; color: var(--text); }

@@ -786,3 +786,44 @@
 .prof-out { background: rgb(255 255 255 / .05); border: 1px solid rgb(255 255 255 / .08); border-radius: 20px; font-weight: 700; }
 .settings .seg { background: rgb(0 0 0 / .25); }
 .settings .kid-guided summary { color: var(--accent); }
+
+/* The finish screen after adding a story: the story as it will look (cover, title, a small player),
+   then the cover choices and the shelf settings, with "Pune pe raft" pinned above the tab bar. */
+.add-finish { gap: 26px; }
+.fin-hero { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.fin-hero .fin-cover { width: min(56vw, 220px); border-radius: 16px; box-shadow: 0 22px 46px rgb(0 0 0 / .5); }
+.fin-hero .fin-cover > span { font-size: min(22vw, 92px); }
+.fin-title { width: 100%; margin-top: 8px; font-size: 1.7rem; }
+.fin-title input { width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px dashed rgb(255 255 255 / .2); background: none; padding: 2px 4px 6px; text-align: center;
+  color: var(--text); font-family: var(--f-title); font-weight: 600; font-size: 1em; }
+.fin-title input:focus { outline: none; border-bottom-color: var(--accent); }
+.fin-sub { color: var(--muted); font-weight: 600; font-size: .85rem; }
+.fin-player { width: 100%; display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 14px; margin-top: 8px; padding: 12px 14px;
+  border-radius: 20px; background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .08); }
+.fin-play { width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; cursor: pointer; }
+.fin-play:active { transform: scale(.95); }
+.fin-track { display: grid; gap: 4px; text-align: left; }
+.fin-track input { --p: 0%; width: 100%; height: 22px; margin: 0; appearance: none; -webkit-appearance: none; background: none; cursor: pointer; }
+.fin-track input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent) var(--p), rgb(255 255 255 / .18) var(--p)); }
+.fin-track input::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent) var(--p), rgb(255 255 255 / .18) var(--p)); }
+.fin-track input::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: var(--text); border: 0; }
+.fin-track input::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--text); border: 0; }
+.fin-times { display: flex; justify-content: space-between; color: var(--muted); font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fin-links, .fin-cover-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.fin-cover-actions { justify-content: flex-start; }
+.fin-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid rgb(255 255 255 / .1);
+  background: rgb(255 255 255 / .07); color: var(--text); font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; }
+.fin-chip svg { color: var(--accent); }
+.fin-chip:active { background: rgb(255 255 255 / .12); }
+.fin-chip.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+:root h2.fin-label { margin: 0; padding: 0 4px; font-family: var(--f-body); font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.fin-note { margin: 0; padding: 0 4px; color: var(--muted); font-size: .85rem; }
+.fin-emoji { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.fin-emoji button { width: auto; height: auto; aspect-ratio: 1; border-radius: 50%; border: 1px solid rgb(255 255 255 / .08); background: rgb(255 255 255 / .06); font-size: 1.6rem; }
+.fin-emoji button.on { border: 2px solid var(--accent); background: var(--accent-soft); }
+.fin-box { background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .08); border-radius: 20px; overflow: hidden; }
+.fin-box .set-row { border-top-color: rgb(255 255 255 / .07); min-height: 56px; }
+.fin-box select { max-width: 52%; padding: 9px 12px; border-radius: 12px; border: 1px solid rgb(255 255 255 / .1); background: rgb(0 0 0 / .25); color: var(--text); font: inherit; }
+.add-finish .cover-search > .link-btn { justify-self: start; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid rgb(255 255 255 / .1);
+  background: rgb(255 255 255 / .07); color: var(--text); font-weight: 700; font-size: .9rem; }
+.story-text-body { white-space: pre-wrap; line-height: 1.6; margin: 0; }

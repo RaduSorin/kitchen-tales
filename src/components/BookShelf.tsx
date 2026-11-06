@@ -10,7 +10,8 @@ const GAP = 3
 
 // Memoised: a step on a shelf of a hundred books re-renders only the two books that change.
 const ShelfSpine = memo(function ShelfSpine({ story, on, width, height, arrival, wob }: { story: Story; on: boolean; width: number; height: number; arrival?: Arrival['phase']; wob?: number }) {
-  const { thumb, tint } = useSpineArt(story)
+  // The cover itself isn't printed on the spine, but its colours tint the cloth.
+  const { tint } = useSpineArt(story)
   const cls = `shelf-spine spine-skin${on ? ' on' : ''}${arrival === 'drop' ? ' drop' : ''}${wob ? ' wob' : ''}`
   return (
     // Not a <button>: the whole shelf is the label of a hidden switch (for the iPhone tick), and a
@@ -18,7 +19,7 @@ const ShelfSpine = memo(function ShelfSpine({ story, on, width, height, arrival,
     // The chosen book is the one stop for Tab (arrows move between books, Enter opens it).
     <span role="button" className={cls} data-id={story.id} aria-label={story.title} aria-pressed={on} tabIndex={on ? 0 : -1}
       style={{ ...bookVars(story, tint), width, height, ['--dir' as string]: wob ?? 0 }}>
-      <SpineFace story={story} url={thumb} />
+      <SpineFace story={story} />
     </span>
   )
 })
@@ -65,7 +66,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
     ro.observe(el)
     return () => ro.disconnect()
   }, [wide])
-  const full = wide ? Math.max(110, Math.min(240, box.h - 50)) : 146
+  const full = wide ? Math.max(110, Math.min(240, box.h - 50)) : 180
   const widthOf = (s: Story) => (now?.id === s.id && now.phase === 'zero' ? 0 : spineWidth(s))
 
   const rows: Story[][] = []

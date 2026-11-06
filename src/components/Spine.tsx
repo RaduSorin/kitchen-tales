@@ -14,20 +14,23 @@ export function CoverPicture({ story, url, className }: { story: Pick<Story, 'ti
 }
 
 /**
- * What is printed on a spine: a bit of the cover, the title from top to bottom, a heart for a
- * favourite and the length. A ribbon hangs from the top of the book you were listening to.
+ * What is printed on a spine (design "Seară de lux", collector's edition): two gold bands, the
+ * title stamped in gold from top to bottom, a heart for a favourite, a small gold moon and the
+ * length at the foot. The cloth is the cover's own colour, darkened (bookVars). A gold ribbon
+ * hangs from the top of the book you were listening to.
  */
-export function SpineFace({ story, url }: { story: Story; url?: string }) {
+export function SpineFace({ story }: { story: Story }) {
   const min = story.durationSec ? Math.max(1, Math.round(story.durationSec / 60)) : undefined
   return (
     <>
       {getPosition(story.id) > 5 && <span className="spine-ribbon" aria-hidden="true" />}
-      <CoverPicture story={story} url={url} className="spine-cap" />
       <span className="spine-band" aria-hidden="true" />
       <span className="spine-title">{story.title}</span>
       {story.favorite && (
-        <svg className="spine-heart" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" fill="currentColor" /></svg>
+        <svg className="spine-heart" width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" fill="currentColor" /></svg>
       )}
+      <span className="spine-band" aria-hidden="true" />
+      <svg className="spine-moon" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3a9 9 0 1 0 6 15A8 8 0 0 1 15 3z" fill="currentColor" /></svg>
       {min && <span className="spine-min">{min}′</span>}
     </>
   )

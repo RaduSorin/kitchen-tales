@@ -549,3 +549,94 @@
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
 [data-amplify-authenticator] [data-amplify-authenticator-signin] fieldset { gap: 12px; }
+
+/* ---------- Bookshelf spines: collector's edition ---------- */
+/* Deep cloth in the cover's own colour, gold Fraunces title, gold bands and moon; dark walnut shelf
+   lit along its edge. */
+.shelf-spine.spine-skin {
+  padding: 10px 0 8px; gap: 6px; color: var(--accent); font-family: var(--f-display), serif;
+  border-radius: 4px 4px 2px 2px;
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / .12), rgb(255 255 255 / 0) 25%, rgb(0 0 0 / 0) 60%, rgb(0 0 0 / .45)),
+    linear-gradient(color-mix(in srgb, var(--c) 62%, #000), color-mix(in srgb, var(--c) 40%, #000));
+  box-shadow: 1px 0 0 rgb(0 0 0 / .4);
+}
+.shelf-spine.spine-skin.on { box-shadow: 0 0 0 1.5px var(--accent), 0 14px 24px rgb(0 0 0 / .6); }
+.shelf-spine .spine-band { width: 70%; height: 4px; border-block: 1px solid var(--accent); opacity: .8; }
+.shelf-spine .spine-title { font-weight: 600; font-size: 13.5px; letter-spacing: .02em; }
+.shelf-spine .spine-moon { flex: none; }
+.shelf-spine .spine-min { font-size: 9px; opacity: .8; }
+.shelf-spine .spine-ribbon { background: var(--accent); width: 7px; height: 28px; right: 4px; }
+.shelf-row::before { background: radial-gradient(ellipse 58% 100% at 50% 100%, rgb(242 200 121 / .14), rgb(242 200 121 / .04) 55%, transparent 100%); }
+.shelf-row::after {
+  background: linear-gradient(#3a2c22, #1d1611);
+  box-shadow: inset 0 1px 0 rgb(242 200 121 / .55), 0 10px 18px rgb(0 0 0 / .6);
+}
+.moon-dust { background: var(--accent); }
+
+/* The pinned window of the bookshelf: one even blur from its bottom edge up behind the clock, so the
+   books scrolling under it don't show through at the very top. The blur lives on a pseudo-element
+   that reaches into the status bar area (a filter on the window itself would stop at its top). */
+@media (max-width: 759px) {
+  .bookshelf:not(.wide) .vitrine.stuck { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .bookshelf:not(.wide) .vitrine::before {
+    content: ''; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0;
+    top: calc(-1 * env(safe-area-inset-top, 0px) - 2px);
+    border-radius: inherit; pointer-events: none;
+    background: rgb(15 14 19 / .72);
+    -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+    opacity: 0; transition: opacity .2s;
+  }
+  .bookshelf:not(.wide) .vitrine.stuck::before { opacity: 1; }
+  :root:has(.vitrine.stuck) .status-fill { background: none; }
+}
+
+/* Recording: a gold ring with a soft glow, the clock in Fraunces. */
+.rec-big { border: 4px solid var(--accent); box-shadow: 0 0 30px rgb(242 200 121 / .25); }
+.rec-big i { background: #ff6b6b; }
+.rec-clock { font-family: Fraunces, serif; font-weight: 600; }
+.rec-sm { background: rgb(255 255 255 / .07); border: 1px solid rgb(255 255 255 / .08); }
+
+/* ---------- Add a story / a recipe: the choices (design "Desene mici") ---------- */
+/* A small gold line drawing for each way, no boxes or cards: rows split by fine gold lines,
+   the name in Fraunces, a chevron. */
+.parent-head .pbadge { background: none; padding: 0; color: var(--accent); font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.parent-head h1, .add-recipe-head h1 { font-family: Fraunces, serif; font-weight: 600; }
+.add-sub { margin: -6px 0 4px; color: var(--muted); }
+.add-opts, .ways { gap: 0; }
+.add-opt, .way {
+  display: grid; grid-template-columns: auto 1fr 18px; gap: 16px; align-items: center;
+  padding: 14px 4px; border: 0; border-radius: 0; background: none; color: var(--text);
+  text-align: left; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: opacity .15s;
+}
+.add-opt + .add-opt, .way + .way { border-top: 1px solid rgb(242 200 121 / .14); }
+.add-opt:hover, .way:hover { outline: none; background: none; }
+.add-opt:active, .way:active { opacity: .6; }
+.add-opt:focus-visible, .way:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 14px; }
+.add-opt::after, .way::after {
+  content: ''; width: 16px; height: 16px; background: var(--muted); opacity: .7;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.add-art { display: block; flex: none; width: 72px; height: 72px; }
+.way .add-art { width: 56px; height: 56px; }
+.add-opt b, .way b { display: block; font-family: Fraunces, serif; font-weight: 600; font-size: 1.25rem; line-height: 1.15; }
+.way b { font-size: 1.12rem; }
+.add-opt small, .way small { display: block; margin-top: 3px; font-family: var(--f-body); font-size: .86rem; line-height: 1.3; color: var(--muted); }
+/* Three equal columns, so a longer label ("După 2 povești", "Amestecat") doesn't push the buttons off centre. */
+:root[data-area="night"] .play-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; gap: 8px; }
+:root[data-area="night"] .play-opts .opt-chip { min-width: 0; max-width: 100%; }
+:root[data-area="night"] .play-opts .opt-chip > span:last-child { white-space: nowrap; }
+/* The speed fits inside its circle and sits in the middle of it, also with three digits ("1,25×"). */
+.opt-icon .opt-rate { height: auto !important; padding: 0 !important; border-radius: 0 !important; line-height: 1; display: block !important; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.opt-icon .opt-rate.long { font-size: .74rem !important; letter-spacing: -.03em; }
+/* Menus: frosted glass, the page shows through softly. */
+.pop-menu {
+  background: linear-gradient(rgb(255 255 255 / .1), rgb(255 255 255 / .04)), rgb(28 25 36 / .42);
+  border-color: rgb(255 255 255 / .14);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .12), 0 18px 44px rgb(0 0 0 / .45);
+  -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%);
+}
+.pop-menu .menu-row + .menu-row { box-shadow: 0 -1px 0 rgb(255 255 255 / .1); }
+.pop-menu .folder-menu-views button { background: rgb(255 255 255 / .1); }

@@ -3,6 +3,9 @@ import type { Story, StoryFolder, StorySource } from './types'
 
 const COVERS = ['#ff9fb8', '#74e0d0', '#ffd76a', '#9fb4ff', '#c7a6ff', '#ffb38a']
 
+/** Shown behind a cover picture, so a transparent PNG doesn't let the coloured emoji tile show through. */
+export const COVER_IMG_BG = '#f4efe6'
+
 export function coverColor(title: string) {
   let h = 0
   for (const c of title) h = (h * 31 + c.codePointAt(0)!) | 0

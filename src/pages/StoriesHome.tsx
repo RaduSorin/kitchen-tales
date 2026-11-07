@@ -13,6 +13,7 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import { LoadError, Loading } from '../components/LoadState'
 import { useGlow } from '../lib/glow'
 import { useSkyPhase } from '../lib/sky'
+import NewStoryFab from '../components/NewStoryFab'
 import { useKid } from '../lib/kidMode'
 import { KidCorner } from '../components/KidMode'
 import HomeHead from '../components/HomeHead'
@@ -164,6 +165,8 @@ export default function StoriesHome() {
           ? cooking.slice(0, 2).map((r) => <RecipePeek key={r.id} r={r} label="Azi în meniu" />)
           : recipes[0] ? <RecipePeek r={recipes[0]} label="Rețetă recentă" /> : <Link to="/retete" className="sh-recipe"><span className="sh-recipe-text"><b>Rețetele mele</b></span></Link>}
       </section>}
+      {/* Phones: the floating gold "+" opens the ways to add a story from the bottom. */}
+      {online && !kid && <NewStoryFab />}
     </section>
   )
 }

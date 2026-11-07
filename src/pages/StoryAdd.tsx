@@ -15,7 +15,8 @@ import { groupFolders, sceneIndex } from '../lib/stories'
 import CoverDrawing, { COVER_EMOJIS } from '../components/CoverDrawing'
 import Sheet from '../components/Sheet'
 import { fmtTime } from '../lib/stories'
-import AddArt, { type AddArtKind } from '../components/AddArt'
+import AddArt from '../components/AddArt'
+import { ADD_OPTIONS, ADD_TITLES, type AddMode } from '../components/NewStoryFab'
 import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { showToast } from '../lib/toast'
 
@@ -40,21 +41,16 @@ const AGES = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 const TOPICS = ['animale', 'prietenie', 'curaj', 'pădurea', 'marea', 'spațiu', 'dragoni', 'somn']
 const LENGTHS = [['short', '2 min'], ['medium', '4 min'], ['long', '7 min']] as const
 
-type Mode = 'record' | 'create' | 'upload'
+type Mode = AddMode
 type Step = 'who' | 'topic' | 'length' | 'title'
 const LENGTH_NOTE: Record<string, string> = { short: 'Scurtă, pentru când e deja somnoros', medium: 'Cât o poveste obișnuită de culcare', long: 'Pentru o seară fără grabă' }
 const MODE_OF: Record<StorySource, Mode> = { recording: 'record', generated: 'create', upload: 'upload' }
-const TITLES: Record<Mode, string> = { record: 'Citește tu', create: 'Creează o poveste', upload: 'Încarcă un fișier' }
+const TITLES = ADD_TITLES
 
 const Icon = ({ d }: { d: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
 )
-// Creating comes first: it is the one that needs nothing ready.
-const OPTIONS: { mode: Mode; art: AddArtKind; text: string }[] = [
-  { mode: 'create', art: 'create', text: 'Spui eroul și tema, aplicația o scrie și o citește' },
-  { mode: 'record', art: 'record', text: 'Înregistrează-ți vocea citind o carte' },
-  { mode: 'upload', art: 'upload', text: 'MP3 sau M4A de pe telefon sau calculator' },
-]
+const OPTIONS = ADD_OPTIONS
 
 /** A small player for the finished story: gold play button, a bar you can drag, the time. */
 function PreviewPlayer({ src, onDuration }: { src: string; onDuration: (s: number) => void }) {

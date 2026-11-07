@@ -197,6 +197,27 @@ const schema = a.schema({
 
   RecipeFacts: a.customType({ nutrition: a.string(), allergens: a.string() }),
 
+  // Plans the week's dinners: picks from the family's recipes (and writes a few new ones if
+  // allowed), fitting the time each evening, the diet, what is in the fridge and variety.
+  // days, recipes: JSON (see src/lib/planner.ts); returns JSON: one item per evening.
+  planWeek: a
+    .query()
+    .arguments({
+      days: a.string().required(),
+      recipes: a.string(),
+      recent: a.string().array(),
+      fridge: a.string(),
+      diet: a.string(),
+      tools: a.string().array(),
+      allowNew: a.boolean(),
+      // Only this day again, avoiding what the rest of the week already has.
+      swapDay: a.string(),
+      keep: a.string().array(),
+    })
+    .returns(a.string())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(importRecipe)),
+
   // Estimates a saved recipe's values per serving and its allergens from the ingredients.
   analyzeRecipe: a
     .query()

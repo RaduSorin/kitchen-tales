@@ -26,6 +26,7 @@ import { isPlayerPage, useArea } from './lib/area'
 import Search from './pages/Search'
 import StoriesHome from './pages/StoriesHome'
 import Week from './pages/Week'
+import PlanWeek from './pages/PlanWeek'
 import Shopping from './pages/Shopping'
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
@@ -162,6 +163,7 @@ function Shell() {
           <Route path="/povesti/:id" element={<StoryPlayer />} />
           <Route path="/cauta" element={<Search />} />
           <Route path="/saptamana" element={<Week />} />
+          <Route path="/saptamana/planifica" element={<PlanWeek />} />
           <Route path="/cumparaturi" element={<Shopping />} />
           <Route path="/profil" element={<Profile />} />
           <Route path="/profil/:page" element={<Profile />} />

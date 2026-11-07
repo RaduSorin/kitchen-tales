@@ -446,6 +446,15 @@ export const generateRecipe = (idea: string, tools: string[], servings?: number,
 export const adaptRecipe = (r: Recipe, diet: string, tools: string[]) =>
   runImport({ adaptFrom: JSON.stringify({ title: r.title, servings: r.servings, ingredients: r.ingredients, steps: r.steps, notes: r.notes }), diet, tools })
 
+export type PlannedDinner = { day: string; kind: 'existing' | 'new' | 'leftovers'; recipeId?: string; title: string; reason?: string; recipe?: ImportedRecipe }
+
+/** Plans the given evenings' dinners (AI): from our recipes, and a few new ones when allowed. */
+export async function planWeek(args: { days: string; recipes: string; recent: string[]; fridge?: string; diet?: string; tools: string[]; allowNew: boolean; swapDay?: string; keep?: string[] }): Promise<PlannedDinner[]> {
+  const res = await client.queries.planWeek(args)
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  try { return JSON.parse(res.data ?? '[]') } catch { throw new Error('Nu am putut citi planul.') }
+}
+
 /** Draws a photo for a recipe with AI and returns its storage path. */
 export async function generateRecipePhoto(title: string, ingredients: string[]): Promise<string> {
   const res = await client.mutations.generateRecipePhoto({ title, ingredients })

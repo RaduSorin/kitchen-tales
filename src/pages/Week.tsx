@@ -31,6 +31,7 @@ const ICON = {
   list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
   open: 'M7 17 17 7M9 7h8v8',
   move: 'M4 7h16M4 12h10M4 17h7M17 14l3 3-3 3',
+  spark: 'M11 4l1.8 4.7L17.5 10.5l-4.7 1.8L11 17l-1.8-4.7L4.5 10.5l4.7-1.8zM18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z',
 }
 
 const Chevron = ({ dir }: { dir: 'left' | 'right' | 'down' }) => (
@@ -311,6 +312,7 @@ export default function Week() {
             <PopMenu label="Cumpărături" onClose={closeShop}>
               <MenuRow icon={ICON.cart} onClick={() => { closeShop(); shopWeek() }}>Pune în listă ce gătești în 7 zile</MenuRow>
               <MenuRow icon={ICON.list} onClick={() => { closeShop(); navigate('/cumparaturi') }}>Vezi lista de cumpărături</MenuRow>
+              <MenuRow icon={ICON.spark} onClick={() => { closeShop(); navigate('/saptamana/planifica') }}>Propune cinele săptămânii</MenuRow>
             </PopMenu>
           )}
         </span>
@@ -351,6 +353,11 @@ export default function Week() {
           )
         })}
       </div>
+
+      {/* Phones: the planner floats at the bottom right, like "+" on the recipes page. */}
+      <Link to="/saptamana/planifica" className="fab-new fab-plan" aria-label="Propune cinele săptămânii" title="Propune cinele săptămânii">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={ICON.spark} /></svg>
+      </Link>
 
       {menu && menuEntry && <CardMenu at={menu.at} e={menuEntry} r={byId.get(menuEntry.recipeId)} onClose={closeMenu} onMove={() => setMoving(menuEntry)} />}
       {moving && <MoveSheet e={moving} r={byId.get(moving.recipeId)} onClose={() => setMoving(undefined)} />}

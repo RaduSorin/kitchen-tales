@@ -396,6 +396,108 @@ async function suggest(ingredients: string, tools: string[], diet?: string | nul
   return ideas.filter((i) => i?.title?.trim()).slice(0, 6)
 }
 
+// ---- planning the week's dinners ----
+
+type PlanDay = { day: string; label: string; minutes?: number | null }
+type PlanRecipe = { id: string; title: string; category?: string; minutes?: number; ingredients?: string[] }
+type PlanArgs = {
+  days: string; recipes?: string | null; recent?: (string | null)[] | null; fridge?: string | null; diet?: string | null
+  tools?: (string | null)[] | null; allowNew?: boolean | null; swapDay?: string | null; keep?: (string | null)[] | null
+}
+type Planned = { day: string; kind: 'existing' | 'new' | 'leftovers'; recipeId?: string; title: string; reason?: string; recipe?: Imported }
+
+const PLAN_SYSTEM = `Ești bucătarul unei familii din România și le planifici cinele pe câteva seri.
+Răspunde apelând unealta plan_week, cu exact o intrare pentru fiecare seară cerută, în ordine.
+Reguli:
+- Pentru fiecare seară, rețeta trebuie să încapă în timpul disponibil (minutes; lipsă = oricât).
+- Preferă rețetele familiei (kind = existing, cu recipeId exact din listă). Dacă ai voie la rețete noi (allowNew), poți propune
+  cel mult 2 rețete noi (kind = new, cu un titlu clar și scurt), când lipsește varietate sau nimic nu încape în timp.
+- Varietate: nu repeta același fel principal (pui, porc, vită, pește, paste, supă, vegetarian) în seri la rând; nu propune ce au gătit recent.
+- Folosește întâi ce e în frigider, mai ales ce se strică repede, și spune asta în reason.
+- O ciorbă sau o mâncare mare poate acoperi și seara următoare: atunci pune pentru seara următoare kind = leftovers, title = „Resturi: <fel>”.
+  Fă asta cel mult o dată și doar când seara următoare are puțin timp.
+- Respectă restricțiile familiei: ce e alergie nu apare deloc; ce evită nu alegi.
+- reason: o frază foarte scurtă, de ce această rețetă în seara asta („folosește dovleceii”, „rapidă, ai 20 de minute”).`
+
+const PLAN_TOOL = {
+  toolSpec: {
+    name: 'plan_week',
+    description: 'Salvează planul de cine.',
+    inputSchema: {
+      json: {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                day: { type: 'string', description: 'Data serii, exact ca în cerere (YYYY-MM-DD)' },
+                kind: { type: 'string', enum: ['existing', 'new', 'leftovers'] },
+                recipeId: { type: 'string' },
+                title: { type: 'string' },
+                reason: { type: 'string' },
+              },
+              required: ['day', 'kind', 'title'],
+            },
+          },
+        },
+        required: ['items'],
+      },
+    },
+  },
+}
+
+async function planWeek(a: PlanArgs): Promise<Planned[]> {
+  let days: PlanDay[] = []
+  let recipes: PlanRecipe[] = []
+  try { days = JSON.parse(a.days) } catch { throw new Error('Zilele nu au putut fi citite.') }
+  try { recipes = a.recipes ? JSON.parse(a.recipes) : [] } catch { recipes = [] }
+  days = days.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.day)).slice(0, 7)
+  if (a.swapDay) days = days.filter((d) => d.day === a.swapDay)
+  if (!days.length) throw new Error('Alege cel puțin o seară.')
+  recipes = recipes.slice(0, 150)
+  const ids = new Set(recipes.map((r) => r.id))
+  const keep = (a.keep ?? []).filter(Boolean) as string[]
+  const tools = cleanTools(a.tools)
+  const text = [
+    `Serile de planificat: ${days.map((d) => `${d.day} (${d.label}): ${d.minutes ? `${d.minutes} minute` : 'oricât'}`).join('; ')}`,
+    `Rețetele familiei (id | titlu | categorie | minute | ingrediente principale):\n${recipes.map((r) => `${r.id} | ${r.title} | ${r.category ?? ''} | ${r.minutes ?? '?'} | ${(r.ingredients ?? []).slice(0, 8).join(', ')}`).join('\n') || '(niciuna)'}`,
+    a.recent?.length ? `Gătite recent (nu le repeta): ${a.recent.filter(Boolean).join(', ')}` : '',
+    keep.length ? `Restul săptămânii are deja: ${keep.join(', ')} (alege altceva, diferit de acestea).` : '',
+    a.fridge?.trim() ? `Ce e în frigider: ${a.fridge.trim().slice(0, MAX_IDEA_CHARS)}` : '',
+    `Rețete noi permise: ${a.allowNew ? 'da (cel mult 2)' : 'nu, doar din lista familiei'}.`,
+    dietLine(a.diet),
+  ].filter(Boolean).join('\n\n')
+  const res = await bedrock.send(new ConverseCommand({
+    modelId: MODEL_ID,
+    system: [{ text: PLAN_SYSTEM }],
+    messages: [{ role: 'user', content: [{ text }] }],
+    toolConfig: { tools: [PLAN_TOOL], toolChoice: { tool: { name: 'plan_week' } } },
+    inferenceConfig: { maxTokens: 2000 },
+  }))
+  const block = res.output?.message?.content?.find((c) => c.toolUse)
+  const raw = ((block?.toolUse?.input as { items?: Planned[] } | undefined)?.items ?? [])
+  const byDay = new Map(raw.filter((x) => x?.day).map((x) => [x.day, x]))
+  const items: Planned[] = days.map((d) => {
+    const x = byDay.get(d.day)
+    if (!x) return { day: d.day, kind: (a.allowNew ? 'new' : 'existing') as Planned['kind'], title: 'O cină rapidă', reason: '' }
+    if (x.kind === 'existing' && (!x.recipeId || !ids.has(x.recipeId))) return { ...x, kind: (a.allowNew ? 'new' : 'existing') as Planned['kind'], recipeId: undefined }
+    if (x.kind === 'new' && !a.allowNew) return { ...x, kind: 'existing' as const }
+    return { ...x, day: d.day }
+  }).filter((x) => x.kind !== 'existing' || x.recipeId)
+  // The new dishes are written in full (in parallel), like "Generează", for the time of their evening.
+  await Promise.all(items.map(async (x) => {
+    if (x.kind !== 'new') return
+    const d = days.find((y) => y.day === x.day)
+    const idea = `${x.title}. Cină pentru seara de ${d?.label ?? ''}, gata în ${d?.minutes ? `cel mult ${d.minutes} de minute` : 'cât e nevoie'}.` +
+      (a.fridge?.trim() ? ` Folosește dacă se potrivește: ${a.fridge.trim().slice(0, 500)}.` : '')
+    x.recipe = await generate(idea, tools, 4, a.diet).catch(() => undefined)
+    if (x.recipe?.title) x.title = x.recipe.title
+  }))
+  return items.filter((x) => x.kind !== 'new' || x.recipe?.title)
+}
+
 // Amplify Gen2 sends fieldName at the top level of the event (no AppSync-style `info`).
 // AI photo for a recipe that has none: Claude writes an English food-photo prompt from the
 // Romanian recipe, Stable Image Core draws it, and the JPEG goes to recipe-photos/.
@@ -471,7 +573,7 @@ const importHandler: Schema['importRecipe']['functionHandler'] = async (event) =
   throw new Error('Trimite un link, o poză, un text sau o idee de rețetă.')
 }
 
-// One function serves importRecipe, suggestRecipes, analyzeRecipe and generateRecipePhoto.
+// One function serves importRecipe, suggestRecipes, analyzeRecipe, planWeek and generateRecipePhoto.
 export const handler = async (event: Parameters<typeof importHandler>[0] | SuggestEvent, ...rest: unknown[]) => {
   const e = event as SuggestEvent
   callerSpace = spaceOf((event as { identity?: { groups?: string[] | null } }).identity?.groups)
@@ -480,6 +582,7 @@ export const handler = async (event: Parameters<typeof importHandler>[0] | Sugge
     const { title, ingredients } = (event as unknown as PhotoEvent).arguments
     return generatePhoto(title ?? '', (ingredients ?? []).filter((x): x is string => !!x?.trim()))
   }
+  if (field === 'planWeek') return JSON.stringify(await planWeek((event as unknown as { arguments: PlanArgs }).arguments))
   if (field === 'analyzeRecipe') {
     const { title, servings, ingredients } = (event as unknown as AnalyzeEvent).arguments
     const list = (ingredients ?? []).filter((x): x is string => !!x?.trim())

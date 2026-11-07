@@ -60,13 +60,13 @@
   :root[data-tabbar] .mini-spacer { height: 76px; }
 }
 
-/* ---------- Mini player ---------- */
-:root[data-area="night"] .mini-player { background: rgb(36 33 44 / .86); border-color: rgb(255 255 255 / .08); border-radius: 18px;
+/* ---------- Mini player (the same on the stories and the recipes side) ---------- */
+:root .mini-player { background: rgb(36 33 44 / .86); border-color: rgb(255 255 255 / .08); border-radius: 18px;
   -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%); box-shadow: 0 10px 30px rgb(0 0 0 / .5); }
-:root[data-area="night"] .mini-open .story-cover { width: 44px; height: 44px; border-radius: 9px; box-shadow: none; }
-:root[data-area="night"] .mini-progress { background: var(--accent); }
-:root[data-area="night"] .mini-btn { background: none; }
-:root[data-area="night"] .mini-btn.mini-play { background: none; color: var(--text); }
+:root .mini-open .story-cover { width: 44px; height: 44px; border-radius: 9px; box-shadow: none; }
+:root .mini-progress { background: var(--accent); }
+:root .mini-btn { background: none; }
+:root .mini-btn.mini-play { background: none; color: var(--text); }
 
 /* ---------- Search, buttons, headers ---------- */
 :root[data-area="night"] .night-search, :root[data-area="night"] .view-switch-wrap { background: rgb(0 0 0 / .28); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-color: rgb(255 255 255 / .06); }
@@ -211,7 +211,7 @@
 .mini-title, .mini-left { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mini-left { font-size: .78rem; font-weight: 600; color: var(--muted); }
 .mini-btn:disabled { opacity: .45; }
-:root[data-area="night"] .mini-close { opacity: .7; }
+:root .mini-close { opacity: .7; }
 
 /* Bibliotecă header: the + button next to the title. */
 :root[data-area="night"] .lib-add { display: grid; place-items: center; width: 42px; height: 42px; margin-left: auto; color: var(--text); text-decoration: none; }

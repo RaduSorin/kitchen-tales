@@ -1060,7 +1060,7 @@
 .vt-track { display: flex; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
 .vt-track::-webkit-scrollbar { display: none; }
 .vt-slide { position: relative; flex: none; width: 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; }
-.vt-photo { position: absolute; inset: 0; z-index: -1; display: block; }
+.vt-photo { position: absolute; inset: 0; z-index: -1; display: block; text-decoration: none; }
 .vt-photo > * { width: 100%; height: 100%; object-fit: cover; display: block; }
 .vt-photo::after { content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(180deg, rgb(19 16 14 / .38) 0, rgb(19 16 14 / 0) 22%, rgb(19 16 14 / 0) 42%, rgb(19 16 14 / .72) 76%, var(--bg) 100%); }
@@ -1134,7 +1134,8 @@
 .vt-blur > .story-cover { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; transform: scale(1.25); filter: blur(30px) saturate(1.4) brightness(.6); }
 .vt-blur::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, var(--bg) 100%); }
 .vt-cover .vt-photo { bottom: auto; aspect-ratio: 1; -webkit-mask-image: linear-gradient(#000 62%, transparent); mask-image: linear-gradient(#000 62%, transparent); }
-.vt-cover .vt-photo > .story-cover { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+/* display: grid again (.vt-photo > * makes it a block), so the emoji of a drawn cover sits in the middle. */
+.vt-cover .vt-photo > .story-cover { display: grid; width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
 .vt-cover .vt-photo > .story-cover > span { font-size: 6rem; }
 .vt-cover .vt-photo::after { background: linear-gradient(180deg, rgb(15 14 19 / .55) 0, rgb(15 14 19 / 0) 24%); }
 .vt-progress { display: block; height: 4px; margin-top: 10px; border-radius: 2px; background: rgb(255 255 255 / .22); overflow: hidden; }

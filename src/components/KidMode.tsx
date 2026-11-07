@@ -24,7 +24,9 @@ function PinPad({ onPin, error }: { onPin: (pin: string) => void; error?: string
   // A wrong PIN clears the dots so the next try starts fresh.
   useEffect(() => { if (error) { setPinText(''); setWait(pinWait()) } }, [error])
   const press = (d: string) => {
-    if (wait) return
+    // Four digits in: they are being checked. More taps (a child pressing on) must not send them
+    // again, each time counting as one more wrong try.
+    if (wait || pin.length >= PIN_LEN) return
     if (d === '⌫') return setPinText((p) => p.slice(0, -1))
     const next = (pin + d).slice(0, PIN_LEN)
     setPinText(next)

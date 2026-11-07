@@ -5,6 +5,7 @@ import { safeFetch } from '../../shared/safeFetch'
 import { fileSpace, newFilePath } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
 import { VIDEO_RULES, videoSource, videoText } from './video'
+import { runJob } from '../../shared/jobResult'
 
 const bedrock = new BedrockRuntimeClient({})
 const s3 = new S3Client({})
@@ -422,6 +423,7 @@ type PlanArgs = {
   tools?: (string | null)[] | null; allowNew?: boolean | null; swapDay?: string | null; keep?: (string | null)[] | null
 }
 type Planned = { day: string; kind: 'existing' | 'new' | 'leftovers'; recipeId?: string; title: string; reason?: string; recipe?: Imported }
+const MAX_NEW = 2
 
 const PLAN_SYSTEM = `Ești bucătarul unei familii din România și le planifici cinele pe câteva seri.
 Răspunde apelând unealta plan_week, cu exact o intrare pentru fiecare seară cerută, în ordine.
@@ -505,8 +507,10 @@ async function planWeek(a: PlanArgs): Promise<Planned[]> {
     return { ...x, day: d.day }
   }).filter((x) => x.kind !== 'existing' || x.recipeId)
   // The new dishes are written in full (in parallel), like "Generează", for the time of their evening.
+  // At most 2, whatever the model answered: each one is a full recipe to write (time and cost).
+  const toWrite = new Set(items.filter((x) => x.kind === 'new').slice(0, MAX_NEW))
   await Promise.all(items.map(async (x) => {
-    if (x.kind !== 'new') return
+    if (!toWrite.has(x)) return
     const d = days.find((y) => y.day === x.day)
     const idea = `${x.title}. Cină pentru seara de ${d?.label ?? ''}, gata în ${d?.minutes ? `cel mult ${d.minutes} de minute` : 'cât e nevoie'}.` +
       (a.fridge?.trim() ? ` Folosește dacă se potrivește: ${a.fridge.trim().slice(0, 500)}.` : '')
@@ -576,8 +580,10 @@ function fromText(text: string): Promise<Imported> {
   return askModel([{ text: `Textul rețetei:\n${text.trim().slice(0, MAX_FREE_TEXT_CHARS)}` }], SYSTEM + '\n' + TEXT_RULES)
 }
 
-const importHandler: Schema['importRecipe']['functionHandler'] = async (event) => {
-  const { url, photoKey, photoKeys, text, idea, tools, servings, diet, adaptFrom } = event.arguments
+type ImportArgs = Schema['importRecipe']['args']
+
+async function importFrom(args: ImportArgs): Promise<Imported> {
+  const { url, photoKey, photoKeys, text, idea, tools, servings, diet, adaptFrom } = args
   if (adaptFrom) {
     if (!diet?.trim()) throw new Error('Nu e setat ce nu mănâncă familia.')
     return adapt(adaptFrom, diet, tools ?? [])
@@ -591,11 +597,40 @@ const importHandler: Schema['importRecipe']['functionHandler'] = async (event) =
   throw new Error('Trimite un link, o poză, un text sau o idee de rețetă.')
 }
 
-// One function serves importRecipe, suggestRecipes, analyzeRecipe, planWeek and generateRecipePhoto.
-export const handler = async (event: Parameters<typeof importHandler>[0] | SuggestEvent, ...rest: unknown[]) => {
+function suggestFrom({ ingredients, tools, diet }: SuggestEvent['arguments']) {
+  if (!ingredients?.trim()) throw new Error('Scrie ce ai în frigider.')
+  return suggest(ingredients, cleanTools(tools), diet)
+}
+
+type JobEvent = { fieldName?: string; arguments: Record<string, unknown> & { jobId?: string | null }; identity?: { groups?: string[] | null } | null }
+
+/**
+ * The async mutations (startImportRecipe, startSuggestRecipes, startPlanWeek): the same work as the
+ * queries, run in the background, with the outcome written for the app (amplify/shared/jobs.ts).
+ */
+async function background(field: string, e: JobEvent) {
+  const args = e.arguments
+  await runJob(s3, BUCKET, e, async () => {
+    if (field === 'startImportRecipe') {
+      const r = await importFrom(args as unknown as ImportArgs)
+      if (!r.title) throw new Error('Nu am găsit o rețetă aici.')
+      return r
+    }
+    if (field === 'startSuggestRecipes') return suggestFrom(args as unknown as SuggestEvent['arguments'])
+    return planWeek(args as unknown as PlanArgs)
+  })
+  return { success: true }
+}
+
+const JOBS = new Set(['startImportRecipe', 'startSuggestRecipes', 'startPlanWeek'])
+
+// One function serves importRecipe, suggestRecipes, analyzeRecipe, planWeek and generateRecipePhoto,
+// and their async versions (start…).
+export const handler = async (event: { arguments: ImportArgs } | SuggestEvent) => {
   const e = event as SuggestEvent
   callerSpace = spaceOf((event as { identity?: { groups?: string[] | null } }).identity?.groups)
   const field = e.fieldName ?? e.info?.fieldName
+  if (field && JOBS.has(field)) return background(field, event as unknown as JobEvent)
   if (field === 'generateRecipePhoto') {
     const { title, ingredients } = (event as unknown as PhotoEvent).arguments
     return generatePhoto(title ?? '', (ingredients ?? []).filter((x): x is string => !!x?.trim()))
@@ -607,10 +642,6 @@ export const handler = async (event: Parameters<typeof importHandler>[0] | Sugge
     if (!list.length) throw new Error('Rețeta nu are ingrediente.')
     return analyze(title ?? '', servings, list)
   }
-  if (field === 'suggestRecipes' || (!field && 'ingredients' in (e.arguments ?? {}))) {
-    const { ingredients, tools, diet } = (event as SuggestEvent).arguments
-    if (!ingredients?.trim()) throw new Error('Scrie ce ai în frigider.')
-    return suggest(ingredients, cleanTools(tools), diet)
-  }
-  return (importHandler as (...a: unknown[]) => unknown)(event, ...rest)
+  if (field === 'suggestRecipes' || (!field && 'ingredients' in (e.arguments ?? {}))) return suggestFrom((event as SuggestEvent).arguments)
+  return importFrom((event as { arguments: ImportArgs }).arguments)
 }

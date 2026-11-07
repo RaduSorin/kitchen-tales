@@ -7,7 +7,7 @@ import { dayKey, fromKey, today } from './plan'
 import { createSyncedList, useSyncedList } from './synced'
 import type { CookNote, RecipeLog } from './types'
 
-export const recipeLogStore = createSyncedList<RecipeLog>('recipe-log', recipeLogApi)
+export const recipeLogStore = createSyncedList<RecipeLog>('recipe-log', recipeLogApi, 'favoritele și notele rețetelor')
 
 const empty = (recipeId: string): RecipeLog => ({ id: '', recipeId, favorite: false, cooked: [], notes: [] })
 

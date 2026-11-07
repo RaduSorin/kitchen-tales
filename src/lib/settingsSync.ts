@@ -6,6 +6,7 @@
 import { useEffect } from 'react'
 import { getFamilySettings, saveFamilySettings } from './db'
 import { applySharedSettings, getSettings, onSharedChange, type SharedSettings } from './settings'
+import { spaceReady } from './space'
 
 const DIRTY_KEY = 'kt-settings-unsent'
 // The family's settings as last agreed with the cloud: what this device changed is what differs from it.
@@ -39,6 +40,10 @@ let busy: Promise<void> | undefined
  * no longer overwrite each other; the other phone's changes come back to this one.
  */
 async function push() {
+  // Settle who is signed in first: if it's another account than before, the previous one's
+  // settings were just reset (space.ts, onAccountChange) and must not be sent as this one's.
+  await spaceReady()
+  if (!isDirty()) return
   const v = version
   try {
     const local = shared()
@@ -63,6 +68,7 @@ async function sync() {
   if (busy) return busy
   busy = (async () => {
     if (!navigator.onLine) return
+    await spaceReady()
     if (isDirty()) { await push(); if (isDirty()) return }
     try {
       const server = await getFamilySettings()

@@ -250,7 +250,11 @@ export default function CookMode() {
     } else if (c.kind === 'stop') { setHandsFree(false); say('Gata, nu mai ascult.') }
   }
 
-  const onTouchStart = (e: React.TouchEvent) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }
+  // Swipes change the step or open the ingredients; inside the ingredients sheet a finger scrolls the
+  // list instead (scrolling back up must not close it, sideways must not change the step).
+  const onTouchStart = (e: React.TouchEvent) => {
+    touch.current = (e.target as Element).closest('.cook-sheet') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
   const onTouchEnd = (e: React.TouchEvent) => {
     const s = touch.current; touch.current = null
     if (!s) return

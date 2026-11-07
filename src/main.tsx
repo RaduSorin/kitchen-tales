@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Amplify } from 'aws-amplify'
 import { cognitoCredentialsProvider } from 'aws-amplify/auth/cognito'
-import { I18n } from 'aws-amplify/utils'
+import { Hub, I18n } from 'aws-amplify/utils'
 import { Authenticator, ThemeProvider, createTheme } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
 import outputs from '../amplify_outputs.json'
@@ -33,6 +33,13 @@ Amplify.configure(Amplify.getConfig(), {
 })
 applyTheme()
 watchForUpdates()
+
+// Signed out: start the app again from scratch. What it keeps in memory for an account (its space,
+// settings, lists, the family) belongs to that account; without a fresh start, the next account to
+// sign in on this tab would be shown and would save into the previous one's space.
+Hub.listen('auth', ({ payload }) => {
+  if (payload.event === 'signedOut') window.location.replace('/')
+})
 
 I18n.putVocabulariesForLanguage('ro', {
   'Sign In': 'Intră în cont',

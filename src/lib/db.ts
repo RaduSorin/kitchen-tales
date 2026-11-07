@@ -11,6 +11,7 @@ import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, removePhoto, 
 import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
 import { folderOf, receivedFolderName, type Folder } from './stories'
 import { isMine, isShared, mySpaceGroup, mySpaceName, readerGroupsFor, rememberSpaceName, spaceReady } from './space'
+import { jobPath, type JobOutcome } from '../../amplify/shared/jobs'
 
 const client = generateClient<Schema>()
 
@@ -400,29 +401,62 @@ export async function saveFolder(oldName: string, row: StoryFolder | undefined, 
   } else await createFolder(name, icon)
   if (name !== oldName) {
     kidFolderRenamed(oldName, name)
-    for (const s of stories.filter((x) => x.collection === oldName)) errorsOf(await client.models.Story.update({ id: s.id, collection: name }))
-    await patchCachedStories((x) => (x.collection === oldName ? { ...x, collection: name } : x))
+    // Only our own stories: another space's folder of the same name is a different folder (and not ours to change).
+    for (const s of stories.filter((x) => x.mine !== false && x.collection === oldName)) errorsOf(await client.models.Story.update({ id: s.id, collection: name }))
+    await patchCachedStories((x) => (x.mine !== false && x.collection === oldName ? { ...x, collection: name } : x))
   }
 }
 
 /** Removes a folder; its stories are kept and go back to their own folder by how they were made. */
 export async function deleteFolder(name: string, row: StoryFolder | undefined, stories: Story[]) {
   kidFolderRenamed(name)
-  for (const s of stories.filter((x) => x.collection === name)) errorsOf(await client.models.Story.update({ id: s.id, collection: null }))
-  await patchCachedStories((x) => (x.collection === name ? { ...x, collection: undefined } : x))
+  for (const s of stories.filter((x) => x.mine !== false && x.collection === name)) errorsOf(await client.models.Story.update({ id: s.id, collection: null }))
+  await patchCachedStories((x) => (x.mine !== false && x.collection === name ? { ...x, collection: undefined } : x))
   if (row) errorsOf(await client.models.StoryFolder.delete({ id: row.id }))
   cacheFolders(cachedFolders().filter((f) => f.name !== name))
 }
+
+// ---- long AI work (runs in the background, see amplify/shared/jobs.ts) ----
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Starts AI work that can take longer than the 30 s a request may last, and waits for its outcome:
+ * the function writes it to a file in our space folder, which is read through one signed link
+ * (S3 answers 403/404 until it is there), then deleted. `limit` is a bit more than the function's own timeout.
+ */
+async function runJob<T>(start: (jobId: string) => Promise<{ errors?: { message: string }[] | null }>, limit: number): Promise<T> {
+  const jobId = newId()
+  const path = jobPath(await mySpaceGroup(), jobId)
+  const res = await start(jobId)
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  const url = await fileUrl(path)
+  const until = Date.now() + limit
+  for (let wait = 1500; Date.now() < until; wait = Math.min(wait + 500, 4000)) {
+    await sleep(wait)
+    const r = await fetch(url, { cache: 'no-store' }).catch(() => undefined)
+    if (!r?.ok) continue
+    const out = (await r.json().catch(() => undefined)) as JobOutcome<T> | undefined
+    if (!out) continue
+    removeFile(path).catch(() => {})
+    if (!out.ok) throw new Error(out.error)
+    return out.data
+  }
+  throw new Error('Durează mai mult decât de obicei. Verifică internetul și încearcă din nou.')
+}
+
+// The functions' own time limits (amplify/functions/*/resource.ts), plus a margin.
+const RECIPE_JOB_MS = 150_000
+const STORY_JOB_MS = 210_000
 
 // ---- recipe import ----
 
 export type ImportedRecipe = NonNullable<Awaited<ReturnType<typeof client.queries.importRecipe>>['data']>
 
 async function runImport(args: { url?: string; photoKey?: string; photoKeys?: string[]; text?: string; idea?: string; tools?: string[]; servings?: number; diet?: string; adaptFrom?: string }) {
-  const res = await client.queries.importRecipe(args)
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
-  if (!res.data?.title) throw new Error('Nu am găsit o rețetă aici.')
-  return res.data
+  const data = await runJob<ImportedRecipe | null>((jobId) => client.mutations.startImportRecipe({ jobId, ...args }), RECIPE_JOB_MS)
+  if (!data?.title) throw new Error('Nu am găsit o rețetă aici.')
+  return data
 }
 
 export const importRecipeFromUrl = (url: string) => runImport({ url })
@@ -434,9 +468,8 @@ export type RecipeIdea = { title: string; description?: string | null; tools?: (
 
 /** Asks Claude for a few dishes that can be made from what is in the fridge. */
 export async function suggestRecipes(ingredients: string, tools: string[], diet?: string): Promise<RecipeIdea[]> {
-  const res = await client.queries.suggestRecipes({ ingredients, tools, diet: diet || null })
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
-  return (res.data ?? []).filter((x): x is NonNullable<typeof x> => !!x)
+  const data = await runJob<(RecipeIdea | null)[] | null>((jobId) => client.mutations.startSuggestRecipes({ jobId, ingredients, tools, diet: diet || null }), RECIPE_JOB_MS)
+  return (data ?? []).filter((x): x is RecipeIdea => !!x)
 }
 
 /** Asks Claude for a new recipe from an idea, using only the given kitchen tools. */
@@ -450,9 +483,9 @@ export type PlannedDinner = { day: string; kind: 'existing' | 'new' | 'leftovers
 
 /** Plans the given evenings' dinners (AI): from our recipes, and a few new ones when allowed. */
 export async function planWeek(args: { days: string; recipes: string; recent: string[]; fridge?: string; diet?: string; tools: string[]; allowNew: boolean; swapDay?: string; keep?: string[] }): Promise<PlannedDinner[]> {
-  const res = await client.queries.planWeek(args)
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
-  try { return JSON.parse(res.data ?? '[]') } catch { throw new Error('Nu am putut citi planul.') }
+  const data = await runJob<PlannedDinner[] | null>((jobId) => client.mutations.startPlanWeek({ jobId, ...args }), RECIPE_JOB_MS)
+  if (!Array.isArray(data)) throw new Error('Nu am putut citi planul.')
+  return data
 }
 
 /** Draws a photo for a recipe with AI and returns its storage path. */
@@ -484,11 +517,12 @@ export type StoryBrief = {
   length?: 'short' | 'medium' | 'long'
 }
 
+export type GeneratedStory = { text: string; audioKey: string; narrator?: string | null; note?: string | null }
+
 export async function generateStory(args: { title: string; text?: string; voice?: string } & StoryBrief) {
-  const res = await client.queries.generateStory(args)
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
-  if (!res.data) throw new Error('Nu am putut crea povestea.')
-  return res.data
+  const data = await runJob<GeneratedStory | null>((jobId) => client.mutations.startGenerateStory({ jobId, ...args }), STORY_JOB_MS)
+  if (!data?.audioKey) throw new Error('Nu am putut crea povestea.')
+  return data
 }
 
 export type NarratorVoice = { id: string; name: string; description?: string | null; gender?: string | null; age?: string | null; accent?: string | null; category?: string | null; romanian?: boolean | null }
@@ -597,8 +631,25 @@ export async function inviteFamilyMember(email: string, resend = false, separate
 type PlanRow = Schema['MealPlanEntry']['type']
 type ShoppingRow = Schema['ShoppingItem']['type']
 
-const check = (res: { errors?: { message: string }[] | null }) => {
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+/**
+ * The server was reached and refused the change (as opposed to not being reached at all, which
+ * throws a plain error). `conditional`: the row was already there (made before, the answer got
+ * lost) or already gone, so the change has nothing left to do. See lib/synced.ts.
+ */
+export class Rejected extends Error {
+  name = 'Rejected'
+  readonly conditional: boolean
+  constructor(message: string, conditional: boolean) { super(message); this.conditional = conditional }
+}
+
+const check = (res: { errors?: { message: string; errorType?: string }[] | null }) => {
+  if (!res.errors?.length) return
+  // Amplify also reports "server not reached" (no signal) in `errors`, but without the errorType
+  // AppSync puts on every answer of its own ("Unauthorized", "DynamoDB:…").
+  const reached = res.errors.every((e) => !!e.errorType && !/network error/i.test(e.message))
+  if (!reached) throw new Error(res.errors.map((e) => e.message).join('; '))
+  const conditional = res.errors.every((e) => /ConditionalCheckFailed/.test(e.errorType ?? '') || /conditional request failed/i.test(e.message))
+  throw new Rejected(res.errors.map((e) => e.message).join('; '), conditional)
 }
 
 const toPlan = (p: PlanRow): PlanEntry => ({ id: p.id, day: p.day, recipeId: p.recipeId, servings: p.servings ?? undefined })

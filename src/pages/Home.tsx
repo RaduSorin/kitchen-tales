@@ -117,7 +117,8 @@ export default function Home() {
   const t = today()
   const todayKey = dayKey(t)
   const byId = useMemo(() => new Map((recipes ?? []).map((r) => [r.id, r])), [recipes])
-  const menu = plan.filter((e) => e.day === todayKey).map((e) => byId.get(e.recipeId)).filter((r): r is Recipe => !!r)
+  // What is cooked today (leftovers were cooked yesterday).
+  const menu = plan.filter((e) => e.day === todayKey && !e.leftovers).map((e) => byId.get(e.recipeId)).filter((r): r is Recipe => !!r)
   const newest = (recipes ?? []).reduce<Recipe | undefined>((a, r) => (!a || (r.createdAt ?? '') > (a.createdAt ?? '') ? r : a), undefined)
 
   // The photos on top: the dish you're cooking, today's first planned dish, the newest recipe.

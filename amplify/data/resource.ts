@@ -93,6 +93,8 @@ const schema = a.schema({
       day: a.string().required(),
       recipeId: a.string().required(),
       servings: a.integer(),
+      // Leftovers of this recipe (cooked the evening before): nothing to cook or buy that day.
+      leftovers: a.boolean(),
       spaceGroups: a.string().array(),
     })
     .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),

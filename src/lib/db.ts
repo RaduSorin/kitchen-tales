@@ -10,8 +10,10 @@ import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource }
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, removePhoto, saveAudio } from './offline'
 import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
 import { folderOf, receivedFolderName, type Folder } from './stories'
-import { isMine, isShared, mySpaceGroup, mySpaceName, readerGroupsFor, rememberSpaceName, spaceReady } from './space'
+import { isMine, isShared, mySpaceGroup, mySpaceName, readerGroupsFor, rememberSpaceName, setMySpaceName, spaceReady } from './space'
+import { getSettings } from './settings'
 import { jobPath, type JobOutcome } from '../../amplify/shared/jobs'
+import { fileSpace } from '../../amplify/shared/files'
 
 const client = generateClient<Schema>()
 
@@ -215,12 +217,20 @@ export async function setRecipeFacts(r: Recipe, facts: Pick<Recipe, 'nutrition' 
   if (cached) await cacheList('recipes', cached.map((x) => (x.id === r.id ? { ...x, ...facts } : x))).catch(() => {})
 }
 
+/**
+ * Deletes a row and its files. Files from before spaces had folders can only be deleted through
+ * the row that points at them, so they go first; files in our space folder go after the row,
+ * so a row that could not be deleted never loses its photo or audio.
+ */
+async function deleteWithFiles(files: (string | undefined)[], deleteRow: () => Promise<{ errors?: { message: string }[] | null }>) {
+  const paths = files.filter((p): p is string => !!p)
+  await Promise.all(paths.filter((p) => !fileSpace(p)).map((p) => removeFile(p)))
+  errorsOf(await deleteRow())
+  await Promise.all(paths.filter((p) => fileSpace(p)).map((p) => removeFile(p)))
+}
+
 export async function deleteRecipe(r: Recipe) {
-  // Files first: an older file may only be deleted through the row that still points at it.
-  await removeFile(r.photoKey)
-  await Promise.all((r.stepPhotoKeys ?? []).map((k) => removeFile(k || undefined)))
-  const res = await client.models.Recipe.delete({ id: r.id })
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  await deleteWithFiles([r.photoKey, ...(r.stepPhotoKeys ?? [])], () => client.models.Recipe.delete({ id: r.id }))
 }
 
 export { removeFile }
@@ -290,16 +300,12 @@ export async function createStory(story: Omit<Story, 'id' | 'createdAt'>) {
   const res = await client.models.Story.create({
     ...s, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(share), sharedDirect: share, spaceName: mySpaceName(),
   })
-  if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') ?? 'Eroare la salvare')
+  if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') || 'Eroare la salvare')
   return res.data.id
 }
 
 export async function deleteStory(s: Story) {
-  // Files first: an older file may only be deleted through the row that still points at it.
-  await removeFile(s.audioKey)
-  await removeFile(s.coverKey)
-  const res = await client.models.Story.delete({ id: s.id })
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  await deleteWithFiles([s.audioKey, s.coverKey], () => client.models.Story.delete({ id: s.id }))
   await removeAudio(s.id).catch(() => {})
 }
 
@@ -556,7 +562,7 @@ export async function findCovers(title: string, artist?: string): Promise<CoverC
 /** Copies a found cover into our storage; returns its path. */
 export async function saveFoundCover(url: string) {
   const res = await client.mutations.saveCover({ url })
-  if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') ?? 'Nu am putut salva coperta.')
+  if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') || 'Nu am putut salva coperta.')
   return res.data
 }
 
@@ -652,15 +658,15 @@ const check = (res: { errors?: { message: string; errorType?: string }[] | null 
   throw new Rejected(res.errors.map((e) => e.message).join('; '), conditional)
 }
 
-const toPlan = (p: PlanRow): PlanEntry => ({ id: p.id, day: p.day, recipeId: p.recipeId, servings: p.servings ?? undefined })
+const toPlan = (p: PlanRow): PlanEntry => ({ id: p.id, day: p.day, recipeId: p.recipeId, servings: p.servings ?? undefined, leftovers: p.leftovers ?? undefined })
 const toShopping = (s: ShoppingRow): ShoppingItem => ({
   id: s.id, text: s.text, checked: !!s.checked, recipeId: s.recipeId ?? undefined, recipeTitle: s.recipeTitle ?? undefined, createdAt: s.createdAt,
 })
 
 export const planApi = {
   list: async () => (await listAll((nextToken) => client.models.MealPlanEntry.list({ nextToken, limit: 500 }))).map(toPlan),
-  create: async (p: PlanEntry) => check(await client.models.MealPlanEntry.create({ ...p, servings: p.servings ?? null, spaceGroups: [await mySpaceGroup()] })),
-  update: async (p: PlanEntry) => check(await client.models.MealPlanEntry.update({ ...p, servings: p.servings ?? null })),
+  create: async (p: PlanEntry) => check(await client.models.MealPlanEntry.create({ ...p, servings: p.servings ?? null, leftovers: p.leftovers ?? null, spaceGroups: [await mySpaceGroup()] })),
+  update: async (p: PlanEntry) => check(await client.models.MealPlanEntry.update({ ...p, servings: p.servings ?? null, leftovers: p.leftovers ?? null })),
   remove: async (id: string) => check(await client.models.MealPlanEntry.delete({ id })),
 }
 
@@ -722,6 +728,20 @@ export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' 
     // Rows saved before the narrator setting existed have none: keep this device's choice then.
     narrator: r.narrator == null ? undefined : { id: r.narrator, name: r.narratorName ?? '' },
   }
+}
+
+/**
+ * Renames the space: the name other accounts see on what it shares ("Primite de la …"). Saved on
+ * the space's settings row, then put on the rows already shared, so their folders don't split.
+ */
+export async function renameSpace(name: string) {
+  const v = name.trim().slice(0, 40)
+  if (!v) throw new Error('Scrie un nume.')
+  setMySpaceName(v)
+  const { child, city, kitchenTools, kid, diet, narrator } = getSettings()
+  await saveFamilySettings({ child, city, kitchenTools, kid, diet, narrator })
+  namesChecked = false
+  await refreshSharedNames(v)
 }
 
 export async function saveFamilySettings(s: SharedSettings) {

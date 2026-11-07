@@ -197,8 +197,11 @@ export default function StoryAdd() {
     if (!title.trim()) { setError('Scrie un titlu pentru poveste.'); return }
     if (!ready) return
     setSaving(true); setError('')
+    // Files put in the cloud by this attempt: if the story can't be saved, they go again (a new try uploads anew).
+    const uploaded: string[] = []
     try {
       const audioKey = generated ? generated.audioKey : await uploadFile('stories', audio!, 'webm', setSent)
+      if (!generated) uploaded.push(audioKey)
       let coverKey: string | undefined
       if (cover?.url) coverKey = await saveFoundCover(cover.url).catch(() => undefined)
       else if (cover?.blob) {
@@ -206,6 +209,7 @@ export default function StoryAdd() {
         coverKey = await uploadFile('story-covers', small, 'jpg')
         saveCover(coverKey, small).catch(() => {})
       }
+      if (coverKey) uploaded.push(coverKey)
       const id = await createStory({ title: title.trim(), emoji, scene: coverKey ? undefined : scene ?? sceneIndex(title.trim()), coverKey, collection: collection || undefined, shared: share, source, audioKey, text: generated?.text, durationSec: seconds ? Math.round(seconds) : undefined })
       unsavedAudio.current = undefined // it belongs to the story now
       // Our own recordings and files are already on this device, so keep them for offline listening.
@@ -213,6 +217,7 @@ export default function StoryAdd() {
       await guardedWorkDone()
       nav(`/povesti/${id}`, { replace: true })
     } catch (err) {
+      uploaded.forEach((k) => removeFile(k).catch(() => {}))
       setError(`Nu am putut salva povestea: ${errorText(err)}`)
       setSaving(false); setSent(undefined)
     }

@@ -112,8 +112,16 @@ export default function PlanWeek() {
     setSaving(true); setError('')
     try {
       const planned: { recipe: Recipe; servings?: number }[] = []
-      for (const x of items) {
-        if (x.kind === 'leftovers') continue
+      // The dish planned for each evening, so leftovers can point at the one cooked the evening before.
+      const dishOf = new Map<string, Recipe>()
+      for (const x of [...items].sort((a, b) => a.day.localeCompare(b.day))) {
+        if (x.kind === 'leftovers') {
+          const before = dishOf.get(dayKey(addDays(fromKey(x.day), -1)))
+            ?? byId.get(plan.find((e) => e.day === dayKey(addDays(fromKey(x.day), -1)) && !e.leftovers)?.recipeId ?? '')
+          // Nothing to cook or buy: just marked in the week, so the evening isn't empty.
+          if (before) planRecipe(before, x.day, undefined, true)
+          continue
+        }
         let r = recipeOf(x)
         if (x.kind === 'new' && x.recipe) {
           const n = x.recipe
@@ -125,6 +133,7 @@ export default function PlanWeek() {
         }
         if (!r) continue
         planRecipe(r, x.day)
+        dishOf.set(x.day, r)
         planned.push({ recipe: r, servings: r.servings })
       }
       const added = toList && planned.length ? addPlanToShopping(planned, skip) : 0

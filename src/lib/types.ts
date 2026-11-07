@@ -65,6 +65,8 @@ export interface PlanEntry {
   day: string
   recipeId: string
   servings?: number
+  /** Leftovers of this recipe, cooked the evening before: nothing to cook or buy that day. */
+  leftovers?: boolean
 }
 
 export interface ShoppingItem {

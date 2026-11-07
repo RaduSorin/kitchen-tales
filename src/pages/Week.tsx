@@ -84,7 +84,7 @@ function CardMenu({ at, e, r, onClose, onMove }: { at: DOMRect; e: PlanEntry; r?
 }
 
 function Card({ e, r, loaded, menuOpen, onMenu }: { e: PlanEntry; r?: Recipe; loaded: boolean; menuOpen: boolean; onMenu: (at?: DOMRect) => void }) {
-  const title = r?.title ?? (loaded ? 'Rețeta nu mai e disponibilă' : '…')
+  const title = (e.leftovers ? 'Resturi: ' : '') + (r?.title ?? (loaded ? 'Rețeta nu mai e disponibilă' : '…'))
   const photo = <span className="wk-photo"><Thumb r={r} /></span>
   return (
     <li className="wk-card">
@@ -286,7 +286,8 @@ export default function Week() {
   // ---- shopping: what's planned from today on, for a week ----
   const shopWeek = () => {
     const end = dayKey(addDays(t, 6))
-    const upcoming = plan.filter((e) => e.day >= todayKey && e.day <= end && byId.has(e.recipeId))
+    // Leftovers were cooked (and bought) the evening before.
+    const upcoming = plan.filter((e) => e.day >= todayKey && e.day <= end && !e.leftovers && byId.has(e.recipeId))
     if (!upcoming.length) { showToast('Nicio rețetă în următoarele 7 zile.'); return }
     const added = addPlanToShopping(upcoming.map((e) => {
       const recipe = byId.get(e.recipeId)!

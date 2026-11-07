@@ -33,8 +33,8 @@ export function weekLabel(monday: Date) {
 
 // ---- plan ----
 
-export function planRecipe(recipe: Recipe, day: string, servings?: number) {
-  planStore.create({ id: newId(), day, recipeId: recipe.id, servings: servings && servings !== recipe.servings ? servings : undefined })
+export function planRecipe(recipe: Recipe, day: string, servings?: number, leftovers?: boolean) {
+  planStore.create({ id: newId(), day, recipeId: recipe.id, servings: servings && servings !== recipe.servings ? servings : undefined, ...(leftovers ? { leftovers } : {}) })
 }
 
 /**

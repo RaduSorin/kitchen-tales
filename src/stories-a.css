@@ -980,3 +980,20 @@
 .rsq b { font-size: .9rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .rsq small { color: var(--muted); font-size: .78rem; font-weight: 600; }
 .rows-back { justify-self: start; display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 700; cursor: pointer; }
+
+/* "+" on the recipes page: a drawn plus, centred in its circle; a small copy floats above the tab
+   bar (and above the mini player) once the title has scrolled away. Phones only. */
+.new-recipe { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.new-recipe svg { flex: none; display: block; }
+@media (max-width: 520px) { .new-recipe { display: grid; place-items: center; } }
+.fab-new { display: none; }
+@media (max-width: 759px) {
+  .fab-new { position: fixed; z-index: 16; right: max(16px, env(safe-area-inset-right)); bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 90px);
+    width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); text-decoration: none;
+    box-shadow: 0 10px 26px rgb(0 0 0 / .5), 0 0 0 1px rgb(255 255 255 / .12) inset; animation: fab-in .2s ease-out; }
+  .fab-new svg { display: block; }
+  .fab-new:active { transform: scale(.94); }
+  :root:has(.mini-player) .fab-new { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 178px); }
+}
+@keyframes fab-in { from { opacity: 0; transform: translateY(10px) scale(.9); } }
+@media (prefers-reduced-motion: reduce) { .fab-new { animation: none; } }

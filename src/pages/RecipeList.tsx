@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
@@ -50,6 +50,8 @@ const writeKey = (k: string, v: string) => { try { localStorage.setItem(k, v) } 
 const Icon = ({ d, size = 20 }: { d: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
 )
+// A drawn plus, so it sits exactly in the middle of its round button (a typed "+" sits low).
+const PLUS = <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
 const CAL = 'M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 2v4M16 2v4'
 const CART = 'M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01'
 
@@ -130,6 +132,16 @@ export default function RecipeList() {
   const setView = (v: View) => { setViewState(v); writeKey(VIEW_KEY, v); setCat('') }
   const setSort = (s: Sort) => { setSortState(s); writeKey(SORT_KEY, s) }
   const plan = useSyncedList(planStore)
+  // Scrolled past the title (and its +): a small + floats above the tab bar, within thumb's reach.
+  const head = useRef<HTMLDivElement>(null)
+  const [headGone, setHeadGone] = useState(false)
+  useEffect(() => {
+    const el = head.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => setHeadGone(!e.isIntersecting), { threshold: 0 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
   const load = () => {
     listRecipes().then(setRecipes).catch(() => setFailed(true)).finally(() => setLoading(false))
   }
@@ -160,7 +172,7 @@ export default function RecipeList() {
 
   return (
     <section className={`recipes recipes-${view}`}>
-      <div className="recipes-head">
+      <div className="recipes-head" ref={head}>
         <h1>Rețetele mele</h1>
         <div className="recipes-head-btns">
           <span className="menu-anchor">
@@ -186,7 +198,7 @@ export default function RecipeList() {
               </PopMenu>
             )}
           </span>
-          <Link to="/retete/noua" className="btn primary new-recipe" aria-label="Rețetă nouă" title="Rețetă nouă"><span aria-hidden="true">+</span><span className="new-recipe-text" aria-hidden="true"> Rețetă nouă</span></Link>
+          <Link to="/retete/noua" className="btn primary new-recipe" aria-label="Rețetă nouă" title="Rețetă nouă">{PLUS}<span className="new-recipe-text" aria-hidden="true">Rețetă nouă</span></Link>
         </div>
       </div>
       <label className="search-box">
@@ -239,6 +251,9 @@ export default function RecipeList() {
         <div className="rcards">{shown.map((r) => <Card key={r.id} r={r} onPlan={() => setPlanning(r)} />)}</div>
       ) : (
         <Grid items={shown} />
+      )}
+      {headGone && (
+        <Link to="/retete/noua" className="fab-new" aria-label="Rețetă nouă" title="Rețetă nouă">{PLUS}</Link>
       )}
       {planning && <DayPicker r={planning} servings={planning.servings} onClose={() => setPlanning(undefined)} onDone={(msg) => { setPlanning(undefined); showToast(msg) }} />}
     </section>

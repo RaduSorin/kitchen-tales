@@ -26,6 +26,10 @@ const schema = a.schema({
       steps: a.string().array(),
       // Optional photo per step, aligned with steps by index ('' = no photo).
       stepPhotoKeys: a.string().array(),
+      // Estimated by AI from the ingredients (JSON, see src/lib/diet.ts): values per serving and
+      // the allergens with the ingredients they come from. Empty until worked out.
+      nutrition: a.string(),
+      allergens: a.string(),
       notes: a.string(),
       sourceUrl: a.string(),
       photoKey: a.string(),
@@ -120,6 +124,8 @@ const schema = a.schema({
       kidPinSalt: a.string(),
       kidMinutes: a.integer(),
       kidFolders: a.string().array(),
+      // What the family doesn't eat (JSON, see src/lib/diet.ts): respected by recipe generation.
+      diet: a.string(),
       // The name other spaces see on what this space shares ("De la Sorin").
       spaceName: a.string(),
       spaceGroups: a.string().array(),
@@ -136,6 +142,8 @@ const schema = a.schema({
     notes: a.string(),
     sourceUrl: a.string(),
     photoKey: a.string(),
+    nutrition: a.string(),
+    allergens: a.string(),
   }),
 
   // Reads a recipe from a web page link, an uploaded photo or free (typed or dictated) text,
@@ -149,6 +157,10 @@ const schema = a.schema({
       idea: a.string(),
       tools: a.string().array(),
       servings: a.integer(),
+      // What the family doesn't eat, in words (for generation and adapting).
+      diet: a.string(),
+      // A saved recipe (JSON) to rewrite so it fits `diet`.
+      adaptFrom: a.string(),
     })
     .returns(a.ref('ImportedRecipe'))
     .authorization((allow) => [allow.authenticated()])
@@ -168,13 +180,26 @@ const schema = a.schema({
     tools: a.string().array(),
     missing: a.string().array(),
     minutes: a.integer(),
+    kcal: a.integer(),
+    // What was swapped to fit the family's diet ("iaurt fără lactoză în loc de smântână").
+    swaps: a.string().array(),
   }),
 
   // Suggests a few dishes from what is in the fridge, using only the kitchen tools given.
   suggestRecipes: a
     .query()
-    .arguments({ ingredients: a.string().required(), tools: a.string().array() })
+    .arguments({ ingredients: a.string().required(), tools: a.string().array(), diet: a.string() })
     .returns(a.ref('RecipeIdea').array())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(importRecipe)),
+
+  RecipeFacts: a.customType({ nutrition: a.string(), allergens: a.string() }),
+
+  // Estimates a saved recipe's values per serving and its allergens from the ingredients.
+  analyzeRecipe: a
+    .query()
+    .arguments({ title: a.string().required(), servings: a.integer(), ingredients: a.string().array().required() })
+    .returns(a.ref('RecipeFacts'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(importRecipe)),
 

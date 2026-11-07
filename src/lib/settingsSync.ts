@@ -10,7 +10,7 @@ import { applySharedSettings, getSettings, onSharedChange, type SharedSettings }
 const DIRTY_KEY = 'kt-settings-unsent'
 // The family's settings as last agreed with the cloud: what this device changed is what differs from it.
 const SYNCED_KEY = 'kt-settings-synced'
-const FIELDS = ['child', 'city', 'kitchenTools', 'kid'] as const
+const FIELDS = ['child', 'city', 'kitchenTools', 'kid', 'diet'] as const
 
 const readSynced = (): SharedSettings | undefined => { try { return JSON.parse(localStorage.getItem(SYNCED_KEY) ?? 'null') ?? undefined } catch { return undefined } }
 const writeSynced = (v: SharedSettings) => { try { localStorage.setItem(SYNCED_KEY, JSON.stringify(v)) } catch { /* storage unavailable */ } }
@@ -21,13 +21,13 @@ const setDirty = (on: boolean) => {
 }
 
 const shared = (): SharedSettings => {
-  const { child, city, kitchenTools, kid } = getSettings()
-  return { child, city, kitchenTools, kid }
+  const { child, city, kitchenTools, kid, diet } = getSettings()
+  return { child, city, kitchenTools, kid, diet }
 }
 
 /** Whether anything worth keeping was set on this device. */
 const hasAny = (s: SharedSettings) =>
-  !!(s.child.name.trim() || s.child.birthYear || s.child.gender || s.child.canRead || s.kitchenTools.length || s.kid.pinHash)
+  !!(s.child.name.trim() || s.child.birthYear || s.child.gender || s.child.canRead || s.kitchenTools.length || s.kid.pinHash || s.diet.avoid.length || s.diet.dislikes.trim())
 
 let version = 0
 let timer: ReturnType<typeof setTimeout> | undefined
@@ -46,7 +46,7 @@ async function push() {
     const changed = FIELDS.filter((f) => !base || JSON.stringify(local[f]) !== JSON.stringify(base[f]))
     const server = await getFamilySettings()
     const merged: SharedSettings = server
-      ? { child: server.child, kitchenTools: server.kitchenTools, city: server.city ?? local.city, kid: server.kid ?? local.kid }
+      ? { child: server.child, kitchenTools: server.kitchenTools, city: server.city ?? local.city, kid: server.kid ?? local.kid, diet: server.diet ?? local.diet }
       : { ...local }
     for (const f of changed) (merged as Record<string, unknown>)[f] = local[f]
     await saveFamilySettings(merged)
@@ -69,7 +69,7 @@ async function sync() {
       if (isDirty()) return // changed on this device while loading: that change wins
       // Rows saved before kid mode existed have no kid fields: keep this device's copy then.
       if (server) {
-        const next = { ...server, city: server.city ?? getSettings().city, kid: server.kid ?? getSettings().kid }
+        const next = { ...server, city: server.city ?? getSettings().city, kid: server.kid ?? getSettings().kid, diet: server.diet ?? getSettings().diet }
         applySharedSettings(next)
         writeSynced(shared())
       }

@@ -4,6 +4,7 @@ import { useAuthenticator } from '@aws-amplify/ui-react'
 import { childAge, updateSettings, useSettings } from '../lib/settings'
 import { NATIVE_SWITCH, tryShelfClick } from '../lib/shelf'
 import { PRESET_TOOLS } from '../lib/kitchenTools'
+import { DIET_ITEMS, type Diet, type DietRule } from '../lib/diet'
 import { onOfflineChange, removeAllAudio, savedAudioSummary } from '../lib/offline'
 import { listFolders, listStories } from '../lib/db'
 import { groupFolders } from '../lib/stories'
@@ -115,6 +116,59 @@ function OfflineStorage() {
   )
 }
 
+
+/** What the family doesn't eat: recipe generation and the fridge ideas respect it, recipes warn. */
+function DietSettings() {
+  const { diet, child } = useSettings()
+  const set = (d: Partial<Diet>) => updateSettings({ diet: { ...diet, ...d } })
+  const rule = (key: string) => diet.avoid.find((r) => r.key === key)
+  const toggle = (key: string) => set({ avoid: rule(key) ? diet.avoid.filter((r) => r.key !== key) : [...diet.avoid, { key, strict: key !== 'lactoza' && key !== 'porc' && key !== 'carne' }] })
+  const change = (key: string, patch: Partial<DietRule>) => set({ avoid: diet.avoid.map((r) => (r.key === key ? { ...r, ...patch } : r)) })
+  const label = (key: string) => DIET_ITEMS.find((d) => d.key === key)?.label ?? key
+  return (
+    <>
+      <p className="set-hint prof-intro">Rețetele noi, ideile din frigider și „Adaptează rețeta” țin cont de asta. Pe fiecare rețetă vezi dacă se potrivește.</p>
+      <div className="set-group">
+        <h2 className="set-label">Fără</h2>
+        <div className="diet-chips" role="group" aria-label="Ce nu mâncăm">
+          {DIET_ITEMS.map((d) => (
+            <button type="button" key={d.key} className={`chip${rule(d.key) ? ' on' : ''}`} aria-pressed={!!rule(d.key)} onClick={() => toggle(d.key)}>{d.label}</button>
+          ))}
+        </div>
+      </div>
+      {diet.avoid.length > 0 && (
+        <div className="set-group">
+          <h2 className="set-label">Cât de strict și pentru cine</h2>
+          <div className="set-box">
+            {diet.avoid.map((r) => (
+              <div className="set-row diet-row" key={r.key}>
+                <span>{label(r.key)}<small className="set-sub">{r.strict ? 'alergie: nu apare deloc' : 'evităm: propunem înlocuiri'}</small></span>
+                <div className="seg diet-seg" role="group" aria-label={`Cât de strict, ${label(r.key)}`}>
+                  <button type="button" aria-pressed={r.strict} onClick={() => change(r.key, { strict: true })}>Alergie</button>
+                  <button type="button" aria-pressed={!r.strict} onClick={() => change(r.key, { strict: false })}>Evităm</button>
+                </div>
+                <input type="text" className="diet-who" value={r.who ?? ''} placeholder="toată familia" aria-label={`Pentru cine, ${label(r.key)}`} autoComplete="off"
+                  list="diet-people" onChange={(e) => change(r.key, { who: e.target.value || undefined })} />
+              </div>
+            ))}
+          </div>
+          {child.name && <datalist id="diet-people"><option value={child.name} /></datalist>}
+          <p className="set-hint">„Pentru cine” e doar ca să știi de ce: rețetele respectă oricum regula pentru toată masa.</p>
+        </div>
+      )}
+      <div className="set-group">
+        <h2 className="set-label">Ce nu ne place</h2>
+        <div className="set-box">
+          <label className="set-row">
+            <input type="text" className="tool-add" value={diet.dislikes} placeholder="de exemplu ciuperci, ficat" aria-label="Ce nu ne place" autoComplete="off"
+              onChange={(e) => set({ dislikes: e.target.value })} />
+          </label>
+        </div>
+        <p className="set-hint">Se salvează în cont, la fel pe toate dispozitivele familiei. Valorile nutriționale și alergenii sunt estimați din ingrediente: la o alergie severă verifică și eticheta produselor.</p>
+      </div>
+    </>
+  )
+}
 
 const KID_TIMES: [number, string][] = [[15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 oră'], [0, 'Fără limită']]
 export const Chevron = () => <svg className="set-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
@@ -349,6 +403,7 @@ const P = {
   down: 'M12 4v11M7 10l5 5 5-5M5 20h14',
   lock: 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
   books: 'M4 4h4v16H4zM10 4h4v16h-4zM15.5 5.2l3.8-1 3.7 15.5-3.8 1z',
+  leaf: 'M5 19c0-8 5-14 15-14 0 10-6 15-14 15M5 19l7-7',
 }
 
 /** One row: gold line icon, label (with an optional second line), current value, chevron. */
@@ -373,7 +428,7 @@ const nameFromEmail = (email: string) => {
 
 /** The Profile tab: who you are, the child, people and sharing, preferences, this phone, sign out. */
 function ProfileHome() {
-  const { child, kid, kitchenTools, shelfClick } = useSettings()
+  const { child, kid, kitchenTools, shelfClick, diet } = useSettings()
   const { user, signOut } = useAuthenticator((c) => [c.user])
   const email = user?.signInDetails?.loginId ?? myEmail()
   const name = useMyName()
@@ -434,6 +489,7 @@ function ProfileHome() {
         <h2 className="set-label">Preferințe</h2>
         <div className="set-box">
           <Row to="/profil/bucatarie" icon="oven" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
+          <Row to="/profil/mancare" icon="leaf" label="Ce mâncăm" value={diet.avoid.length ? `fără ${diet.avoid.map((r) => DIET_ITEMS.find((d) => d.key === r.key)?.short ?? r.key).join(', ')}` : 'orice'} />
         </div>
       </div>
 
@@ -457,6 +513,7 @@ const PAGES: Record<string, [string, ComponentType]> = {
   invita: ['Invită pe cineva', InviteForm],
   partajare: ['Ce partajez', SharedSettings],
   bucatarie: ['Bucătăria mea', KitchenTools],
+  mancare: ['Ce mâncăm', DietSettings],
   offline: ['Povești fără internet', OfflineStorage],
   raft: ['Raftul cu povești', ShelfSettings],
 }

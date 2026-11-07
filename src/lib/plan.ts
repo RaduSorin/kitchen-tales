@@ -5,8 +5,8 @@ import { norm } from './format'
 import { createSyncedList } from './synced'
 import type { PlanEntry, Recipe, ShoppingItem } from './types'
 
-export const planStore = createSyncedList<PlanEntry>('plan', planApi)
-export const shoppingStore = createSyncedList<ShoppingItem>('shopping', shoppingApi)
+export const planStore = createSyncedList<PlanEntry>('plan', planApi, 'săptămâna ta')
+export const shoppingStore = createSyncedList<ShoppingItem>('shopping', shoppingApi, 'lista de cumpărături')
 
 // ---- dates (local time, weeks start on Monday) ----
 

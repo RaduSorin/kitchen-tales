@@ -401,16 +401,17 @@ export async function saveFolder(oldName: string, row: StoryFolder | undefined, 
   } else await createFolder(name, icon)
   if (name !== oldName) {
     kidFolderRenamed(oldName, name)
-    for (const s of stories.filter((x) => x.collection === oldName)) errorsOf(await client.models.Story.update({ id: s.id, collection: name }))
-    await patchCachedStories((x) => (x.collection === oldName ? { ...x, collection: name } : x))
+    // Only our own stories: another space's folder of the same name is a different folder (and not ours to change).
+    for (const s of stories.filter((x) => x.mine !== false && x.collection === oldName)) errorsOf(await client.models.Story.update({ id: s.id, collection: name }))
+    await patchCachedStories((x) => (x.mine !== false && x.collection === oldName ? { ...x, collection: name } : x))
   }
 }
 
 /** Removes a folder; its stories are kept and go back to their own folder by how they were made. */
 export async function deleteFolder(name: string, row: StoryFolder | undefined, stories: Story[]) {
   kidFolderRenamed(name)
-  for (const s of stories.filter((x) => x.collection === name)) errorsOf(await client.models.Story.update({ id: s.id, collection: null }))
-  await patchCachedStories((x) => (x.collection === name ? { ...x, collection: undefined } : x))
+  for (const s of stories.filter((x) => x.mine !== false && x.collection === name)) errorsOf(await client.models.Story.update({ id: s.id, collection: null }))
+  await patchCachedStories((x) => (x.mine !== false && x.collection === name ? { ...x, collection: undefined } : x))
   if (row) errorsOf(await client.models.StoryFolder.delete({ id: row.id }))
   cacheFolders(cachedFolders().filter((f) => f.name !== name))
 }
@@ -630,8 +631,25 @@ export async function inviteFamilyMember(email: string, resend = false, separate
 type PlanRow = Schema['MealPlanEntry']['type']
 type ShoppingRow = Schema['ShoppingItem']['type']
 
-const check = (res: { errors?: { message: string }[] | null }) => {
-  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+/**
+ * The server was reached and refused the change (as opposed to not being reached at all, which
+ * throws a plain error). `conditional`: the row was already there (made before, the answer got
+ * lost) or already gone, so the change has nothing left to do. See lib/synced.ts.
+ */
+export class Rejected extends Error {
+  name = 'Rejected'
+  readonly conditional: boolean
+  constructor(message: string, conditional: boolean) { super(message); this.conditional = conditional }
+}
+
+const check = (res: { errors?: { message: string; errorType?: string }[] | null }) => {
+  if (!res.errors?.length) return
+  // Amplify also reports "server not reached" (no signal) in `errors`, but without the errorType
+  // AppSync puts on every answer of its own ("Unauthorized", "DynamoDB:…").
+  const reached = res.errors.every((e) => !!e.errorType && !/network error/i.test(e.message))
+  if (!reached) throw new Error(res.errors.map((e) => e.message).join('; '))
+  const conditional = res.errors.every((e) => /ConditionalCheckFailed/.test(e.errorType ?? '') || /conditional request failed/i.test(e.message))
+  throw new Rejected(res.errors.map((e) => e.message).join('; '), conditional)
 }
 
 const toPlan = (p: PlanRow): PlanEntry => ({ id: p.id, day: p.day, recipeId: p.recipeId, servings: p.servings ?? undefined })

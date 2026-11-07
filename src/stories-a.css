@@ -1162,3 +1162,9 @@
 .sa-cover:has(> .sa-dur) .story-cover:not(.has-img) > span { transform: none; }
 /* A folder's "2 povești" stays readable over a bright cover glow. */
 :root[data-area="night"] .folder-sub > span { color: rgb(255 255 255 / .82); text-shadow: 0 1px 6px rgb(0 0 0 / .45); }
+/* "Citită de Brian · Schimbă vocea" above the create button: opens the narrator picker. */
+.cs-voice { justify-self: start; text-align: left; padding: 0 4px; min-height: 40px; border: 0; background: none; color: var(--muted); font: inherit; font-size: .9rem; cursor: pointer; }
+.cs-voice b { color: var(--text); font-weight: 600; }
+.cs-voice span { color: var(--accent); font-weight: 600; }
+.voice-sheet { padding: 0; }
+.voice-done { width: 100%; margin-top: 12px; }

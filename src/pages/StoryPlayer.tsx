@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, setStoryDrawing, setStoryShared, uploadFile, setStoryFavorite } from '../lib/db'
+import { deleteStory, downloadStory, getStory, removeOfflineAudio, renarrateStory, saveFoundCover, setStoryCover, setStoryDrawing, setStoryShared, uploadFile, setStoryFavorite } from '../lib/db'
 import CoverDrawing from '../components/CoverDrawing'
 import PopMenu, { MENU_ICON, MenuRow } from '../components/PopMenu'
 import { saveCover } from '../lib/offline'
@@ -11,7 +11,8 @@ import Sheet from '../components/Sheet'
 import { showToast } from '../lib/toast'
 import type { Story } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
-import { useSettings } from '../lib/settings'
+import { getSettings, useSettings } from '../lib/settings'
+import NarratorPicker from '../components/NarratorPicker'
 import { builtinFolderOf, fmtTime, folderOf, sceneIndex, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
 import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
@@ -55,6 +56,11 @@ function StoryPlayer() {
   const [moveOpen, setMoveOpen] = useState(false)
   const [parentsOpen, setParentsOpen] = useState(false)
   const [textOpen, setTextOpen] = useState(false)
+  // "Recitește cu altă voce": the voice picked here (starts at the family's voice for new stories).
+  const [voiceOpen, setVoiceOpen] = useState(false)
+  const [voice, setVoice] = useState(() => getSettings().narrator)
+  const [renarrating, setRenarrating] = useState(false)
+  const [voiceError, setVoiceError] = useState('')
   const closeMenu = useCallback(() => setParentsOpen(false), [])
   const [sharing, setSharing] = useState(false)
   // While the finger is on the progress bar we only move the bar; the audio seeks once, on release.
@@ -205,6 +211,7 @@ function StoryPlayer() {
                 {online && s.mine !== false && <MenuRow icon={MENU_ICON.image} onClick={() => { closeMenu(); setCoverOpen(true) }}>Coperta</MenuRow>}
                 {online && s.mine !== false && <MenuRow icon={MENU_ICON.folder} onClick={() => { closeMenu(); setMoveOpen(true) }}>Mută în folder</MenuRow>}
                 {s.text && <MenuRow icon={MENU_ICON.text} onClick={() => { closeMenu(); setTextOpen(true) }}>Textul poveștii</MenuRow>}
+                {online && s.mine !== false && s.text && <MenuRow icon={MENU_ICON.voice} onClick={() => { closeMenu(); setVoiceOpen(true) }}>Recitește cu altă voce</MenuRow>}
                 {online && s.mine !== false && (confirmDelete ? (
                   <div className="menu-confirm">Ștergi povestea?
                     <div>
@@ -326,6 +333,28 @@ function StoryPlayer() {
             )}
             {msg && <p className="error">{msg}</p>}
           </div>
+        </Sheet>
+      )}
+      {!kid && voiceOpen && s.text && (
+        <Sheet title="Recitește cu altă voce" onClose={() => { if (!renarrating) setVoiceOpen(false) }}>
+          <div className="settings voice-sheet">
+            <NarratorPicker compact value={voice} onChange={setVoice} />
+          </div>
+          {voiceError && <p className="set-hint error">{voiceError}</p>}
+          <button type="button" className="btn primary voice-done" disabled={renarrating} onClick={async () => {
+            setRenarrating(true); setVoiceError('')
+            try {
+              const { story, note } = await renarrateStory(s, voice.id)
+              if (current) player.close()
+              setS(story)
+              setVoiceOpen(false)
+              showToast(note ?? `Gata! Acum o citește ${voice.id ? voice.name.split(' - ')[0] : 'Carmen'}.`)
+            } catch (err) {
+              setVoiceError(`Nu am putut reciti povestea: ${err instanceof Error ? err.message : String(err)}`)
+            }
+            setRenarrating(false)
+          }}>{renarrating ? 'Se citește din nou… (până la un minut)' : 'Recitește povestea'}</button>
+          <p className="set-hint">Titlul, coperta și folderul rămân la fel. Se schimbă doar vocea.</p>
         </Sheet>
       )}
       {!kid && textOpen && s.text && <Sheet title="Textul poveștii" onClose={() => setTextOpen(false)}><p className="story-text-body">{s.text}</p></Sheet>}

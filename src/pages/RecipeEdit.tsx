@@ -64,20 +64,31 @@ const LEAVE_EDITS = {
   leave: 'Renunță la modificări',
 }
 
-function StepItem({ n, step, total, onChange, onMove, onRemove }: {
-  n: number; step: Step; total: number
+function StepItem({ n, step, total, drag, onChange, onMove, onRemove, onGrab }: {
+  n: number; step: Step; total: number; drag?: { dy: number; lifted: boolean }
   onChange: (s: Step) => void; onMove: (d: number) => void; onRemove: () => void
+  onGrab: (e: React.PointerEvent<HTMLButtonElement>) => void
 }) {
   const blobUrl = useBlobUrl(step.photoBlob)
   const savedUrl = useFileUrl(step.photoBlob ? undefined : step.photoKey)
   const url = blobUrl ?? savedUrl
   const secs = detectDuration(step.text)
   return (
-    <li className="edit-step">
+    <li className={'edit-step' + (drag?.lifted ? ' lifted' : '') + (drag && !drag.lifted ? ' shifting' : '')} data-uid={step.uid}
+      style={drag?.dy ? { transform: `translateY(${drag.dy}px)` } : undefined}>
       <div className="edit-step-side">
         <span className="step-no">{n}</span>
-        <button type="button" className="icon-btn" aria-label={`Mută pasul ${n} mai sus`} disabled={n === 1} onClick={() => onMove(-1)}>↑</button>
-        <button type="button" className="icon-btn" aria-label={`Mută pasul ${n} mai jos`} disabled={n === total} onClick={() => onMove(1)}>↓</button>
+        {/* Drag the grip to reorder; on a keyboard, ↑/↓ on the grip moves the step. */}
+        <button type="button" className="step-grip" aria-label={`Mută pasul ${n} (trage, sau săgeți sus/jos)`}
+          onPointerDown={onGrab} onContextMenu={(e) => e.preventDefault()}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp' && n > 1) { e.preventDefault(); onMove(-1) }
+            if (e.key === 'ArrowDown' && n < total) { e.preventDefault(); onMove(1) }
+          }}>
+          <svg viewBox="0 0 12 20" width="12" height="20" aria-hidden="true">
+            {[3, 10, 17].flatMap((y) => [<circle key={'a' + y} cx="3" cy={y} r="1.6" />, <circle key={'b' + y} cx="9" cy={y} r="1.6" />])}
+          </svg>
+        </button>
       </div>
       <div className="edit-step-main">
         <textarea id={`step-${step.uid}`} aria-label={`Pasul ${n}`} rows={Math.max(2, Math.ceil(step.text.length / 32))} value={step.text} placeholder="Ce faci la acest pas?"
@@ -102,6 +113,9 @@ function StepItem({ n, step, total, onChange, onMove, onRemove }: {
   )
 }
 
+/** Drag state: which step is lifted, where it started, how far it moved and where it would land. */
+type Drag = { uid: string; from: number; to: number; dy: number; h: number; mids: number[] }
+
 export default function RecipeEdit() {
   const { id } = useParams()
   const nav = useNavigate()
@@ -109,6 +123,7 @@ export default function RecipeEdit() {
   const [original, setOriginal] = useState<Recipe>()
   const [ing, setIng] = useState('')
   const [steps, setSteps] = useState<Step[]>([])
+  const [drag, setDrag] = useState<Drag>()
   const [photo, setPhoto] = useState<Blob>()
   // /retete/noua?din=frigider opens straight on the fridge ideas (linked from Search).
   const [mode, setMode] = useState<Mode>(id ? 'edit' : new URLSearchParams(window.location.search).get('din') === 'frigider' ? 'fridge' : 'choose')
@@ -322,10 +337,66 @@ export default function RecipeEdit() {
     const n = [...xs]; const [s] = n.splice(k, 1); n.splice(k + d, 0, s); return n
   })
   const removeStep = (k: number) => setSteps((xs) => xs.filter((_, j) => j !== k))
-  const addStep = () => {
+  /** Adds an empty step at position `at` (the end by default) and puts the cursor in it. */
+  const addStep = (at?: number) => {
     const s = { uid: newId(), text: '' }
-    setSteps((xs) => [...xs, s])
-    requestAnimationFrame(() => document.getElementById(`step-${s.uid}`)?.focus())
+    setSteps((xs) => { const n = [...xs]; n.splice(at ?? n.length, 0, s); return n })
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`step-${s.uid}`)
+      el?.focus({ preventScroll: true })
+      el?.closest('li')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    })
+  }
+
+  const grab = (k: number) => (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return
+    const list = e.currentTarget.closest('ol')
+    const items = list ? [...list.querySelectorAll<HTMLElement>(':scope > li.edit-step')] : []
+    const me = items[k]
+    if (!me) return
+    e.preventDefault()
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    const rects = items.map((x) => x.getBoundingClientRect())
+    const gap = items[1] ? rects[1].top - rects[0].bottom : 10
+    const h = rects[k].height + gap
+    const mids = rects.map((r) => r.top + r.height / 2 + scrollY)
+    const y0 = e.clientY + scrollY
+    let cur: Drag = { uid: steps[k].uid, from: k, to: k, dy: 0, h, mids }
+    setDrag(cur)
+    navigator.vibrate?.(8)
+    const move = (ev: PointerEvent) => {
+      const dy = ev.clientY + scrollY - y0
+      const c = mids[k] + dy
+      let to = k
+      while (to < mids.length - 1 && c > mids[to + 1]) to++
+      while (to > 0 && c < mids[to - 1]) to--
+      if (to !== cur.to) navigator.vibrate?.(4)
+      cur = { ...cur, dy, to }
+      setDrag(cur)
+      // Scroll the page when the step is held near the top or bottom edge.
+      const edge = 80
+      if (ev.clientY > window.innerHeight - edge) window.scrollBy(0, 8)
+      else if (ev.clientY < edge) window.scrollBy(0, -8)
+    }
+    const end = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+      const { from, to } = cur
+      if (from !== to) setSteps((xs) => { const n = [...xs]; const [s] = n.splice(from, 1); n.splice(to, 0, s); return n })
+      setDrag(undefined)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
+  }
+  /** Where each step sits while another one is being dragged. */
+  const dragOf = (k: number) => {
+    if (!drag) return undefined
+    if (k === drag.from) return { dy: drag.dy, lifted: true }
+    if (drag.from < k && k <= drag.to) return { dy: -drag.h, lifted: false }
+    if (drag.to <= k && k < drag.from) return { dy: drag.h, lifted: false }
+    return { dy: 0, lifted: false }
   }
 
   const save = async (e: React.FormEvent) => {
@@ -546,15 +617,22 @@ export default function RecipeEdit() {
 
       <section className="editor-section">
         <h2>Pași</h2>
-        <p className="set-hint">Dacă scrii un timp („10 minute”), apare un cronometru când gătești. Poza unui pas apare pe tot ecranul.</p>
-        <ol className="edit-steps">
-          {steps.map((s, k) => (
-            <StepItem key={s.uid} n={k + 1} step={s} total={steps.length}
-              onChange={(x) => updateStep(k, x)} onMove={(d) => moveStep(k, d)} onRemove={() => removeStep(k)} />
-          ))}
+        <p className="set-hint">Dacă scrii un timp („10 minute”), apare un cronometru când gătești. Poza unui pas apare pe tot ecranul.{steps.length > 1 && ' Trage de ⠿ ca să muți un pas, sau atinge + ca să adaugi unul între doi pași.'}</p>
+        <ol className={'edit-steps' + (drag ? ' dragging' : '')}>
+          {steps.map((s, k) => [
+            <StepItem key={s.uid} n={k + 1} step={s} total={steps.length} drag={dragOf(k)}
+              onChange={(x) => updateStep(k, x)} onMove={(d) => moveStep(k, d)} onRemove={() => removeStep(k)} onGrab={grab(k)} />,
+            k < steps.length - 1 && (
+              <li key={s.uid + '+'} className="step-insert" aria-hidden={drag ? true : undefined}>
+                <button type="button" aria-label={`Adaugă un pas după pasul ${k + 1}`} onClick={() => addStep(k + 1)}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                </button>
+              </li>
+            ),
+          ])}
         </ol>
         <div className="steps-add">
-          <button type="button" className="btn ghost" onClick={addStep}>+ Adaugă un pas</button>
+          <button type="button" className="btn ghost" onClick={() => addStep()}>+ Adaugă un pas</button>
           <MicButton value="" label="Dictează un pas" hint="Spune pasul, apoi atinge pătratul ca să oprești."
             onStart={() => {
               // Fill the last step if it is still empty, otherwise start a new one.

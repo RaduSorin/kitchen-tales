@@ -13,6 +13,7 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import { LoadError, Loading } from '../components/LoadState'
 import { useGlow } from '../lib/glow'
 import { useSkyPhase } from '../lib/sky'
+import NewStoryFab from '../components/NewStoryFab'
 import { useKid } from '../lib/kidMode'
 import { KidCorner } from '../components/KidMode'
 import HomeHead from '../components/HomeHead'
@@ -228,6 +229,8 @@ export default function StoriesHome() {
       <Row title="Favorite" to="/povesti?favorite=1" stories={favorites} from="favorites" />
       <Row title="Adăugate recent" to="/povesti" stories={recent.filter((s) => !onTop.has(s.id))} />
       {kitchen}
+      {/* Phones: the floating gold "+" opens the ways to add a story from the bottom. */}
+      {online && !kid && <NewStoryFab />}
     </section>
   )
 }

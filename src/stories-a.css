@@ -998,7 +998,23 @@
   /* The header + gives way to the floating one; the last cards can scroll clear of it. */
   .recipes .new-recipe { display: none; }
   .recipes { padding-bottom: 72px; }
+  /* Stories: same floating "+" on Acasă, the shelf and our folders; the header one gives way. */
+  :root[data-area="night"] .shelf .lib-add { display: none; }
+  .shelf, .stories-home { padding-bottom: 72px; }
 }
+/* The ways to add, in a sheet that comes up from the bottom like on iOS: a grabber, frosted dark. */
+.sheet-ios { background: rgb(0 0 0 / .5); }
+.sheet-ios .sheet { background: rgb(30 26 36 / .86); -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .08), 0 -10px 40px rgb(0 0 0 / .4); padding-top: 8px; overscroll-behavior: contain; }
+:root:not([data-area="night"]) .sheet-ios .sheet { background: rgb(34 29 25 / .88); }
+.sheet-grab { width: 38px; height: 5px; border-radius: 3px; background: rgb(255 255 255 / .25); justify-self: center; margin-bottom: 4px; }
+.sheet-ios .sheet-head h2 { font-family: Fraunces, serif; font-weight: 600; }
+.add-sheet-hint { margin: -6px 0 0; }
+.sheet-ios .add-opt, .sheet-ios .way { text-decoration: none; }
+/* Tighter rows than on the full page, so all six ways for a recipe fit on a small iPhone. */
+.sheet-ios .sheet { max-height: 92vh; max-height: 92dvh; }
+.sheet-ios .add-opt, .sheet-ios .way { padding: 9px 4px; gap: 14px; }
+.sheet-ios .add-art { width: 46px; height: 46px; }
 @keyframes fab-in { from { opacity: 0; transform: translateY(10px) scale(.9); } }
 @media (prefers-reduced-motion: reduce) { .fab-new { animation: none; } }
 

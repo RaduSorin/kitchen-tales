@@ -11,6 +11,7 @@ import { showToast } from '../lib/toast'
 import StoryCover from '../components/StoryCover'
 import ShareIcon from '../components/ShareIcon'
 import { focusField } from '../lib/keyboard'
+import NewStoryFab from '../components/NewStoryFab'
 import { useKid } from '../lib/kidMode'
 import { KidCorner } from '../components/KidMode'
 import { useGlow } from '../lib/glow'
@@ -257,6 +258,8 @@ export default function StoryList() {
         {kid && <KidCorner />}
         {parent && (!inFolder || open.mine) && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
+      {/* Phones: the floating gold "+" replaces the header one; inside our own folder it adds there. */}
+      {parent && !favMode && (!inFolder || open.mine) && <NewStoryFab folder={inFolder && !open.builtin && open.mine ? open.name : undefined} />}
 
       {available.length > 0 && !favMode && !wideShelf && (
         <div className="search-row">

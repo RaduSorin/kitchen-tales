@@ -12,6 +12,7 @@ import { useSyncedList } from '../lib/synced'
 import { addDays, addToShopping, dayKey, dayName, fromKey, planStore, today } from '../lib/plan'
 import { showToast } from '../lib/toast'
 import { DayPicker } from './RecipeView'
+import NewRecipeFab from '../components/NewRecipeFab'
 
 export function RecipeRow({ r }: { r: Recipe }) {
   const img = useFileUrl(r.photoKey)
@@ -243,8 +244,8 @@ export default function RecipeList() {
       ) : (
         <Grid items={shown} />
       )}
-      {/* Phones: "+" floats at the bottom right, above the tab bar, always within the thumb's reach. */}
-      <Link to="/retete/noua" className="fab-new" aria-label="Rețetă nouă" title="Rețetă nouă">{PLUS}</Link>
+      {/* Phones: "+" floats at the bottom right, above the tab bar, always within the thumb's reach; it opens the ways to add a recipe from the bottom. */}
+      <NewRecipeFab />
       {planning && <DayPicker r={planning} servings={planning.servings} onClose={() => setPlanning(undefined)} onDone={(msg) => { setPlanning(undefined); showToast(msg) }} />}
     </section>
   )

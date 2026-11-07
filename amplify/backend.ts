@@ -84,3 +84,21 @@ for (const [model, env] of [['Story', 'STORY_TABLE'], ['Recipe', 'RECIPE_TABLE']
   backend.files.addEnvironment(env, table.tableName)
   filesFn.addToRolePolicy(new PolicyStatement({ actions: ['dynamodb:BatchGetItem', 'dynamodb:GetItem'], resources: [table.tableArn] }))
 }
+
+// Backups. The family's recipes and recorded stories cannot be made again, so every table keeps
+// point-in-time recovery (any second of the last 35 days can be restored) and the bucket keeps a
+// deleted or replaced file for 30 days before it is really gone.
+for (const table of Object.values(backend.data.resources.cfnResources.amplifyDynamoDbTables)) {
+  table.pointInTimeRecoveryEnabled = true
+}
+const cfnBucket = backend.storage.resources.cfnResources.cfnBucket
+cfnBucket.versioningConfiguration = { status: 'Enabled' }
+cfnBucket.lifecycleConfiguration = {
+  rules: [{
+    id: 'keep-old-versions-30-days',
+    status: 'Enabled',
+    noncurrentVersionExpiration: { noncurrentDays: 30 },
+    expiredObjectDeleteMarker: true,
+    abortIncompleteMultipartUpload: { daysAfterInitiation: 7 },
+  }],
+}

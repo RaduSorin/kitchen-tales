@@ -399,7 +399,7 @@ async function suggest(ingredients: string, tools: string[], diet?: string | nul
 // ---- planning the week's dinners ----
 
 type PlanDay = { day: string; label: string; minutes?: number | null }
-type PlanRecipe = { id: string; title: string; category?: string; minutes?: number; ingredients?: string[] }
+type PlanRecipe = { id: string; title: string; category?: string; minutes?: number; ingredients?: string[]; favorite?: boolean; cooked?: number; lastCooked?: string }
 type PlanArgs = {
   days: string; recipes?: string | null; recent?: (string | null)[] | null; fridge?: string | null; diet?: string | null
   tools?: (string | null)[] | null; allowNew?: boolean | null; swapDay?: string | null; keep?: (string | null)[] | null
@@ -410,7 +410,8 @@ const PLAN_SYSTEM = `Ești bucătarul unei familii din România și le planifici
 Răspunde apelând unealta plan_week, cu exact o intrare pentru fiecare seară cerută, în ordine.
 Reguli:
 - Pentru fiecare seară, rețeta trebuie să încapă în timpul disponibil (minutes; lipsă = oricât).
-- Preferă rețetele familiei (kind = existing, cu recipeId exact din listă). Dacă ai voie la rețete noi (allowNew), poți propune
+- Preferă rețetele familiei (kind = existing, cu recipeId exact din listă), mai ales cele marcate ♥ (preferate) și pe cele bune
+  care n-au mai fost gătite de mult (ultima dată). Dacă ai voie la rețete noi (allowNew), poți propune
   cel mult 2 rețete noi (kind = new, cu un titlu clar și scurt), când lipsește varietate sau nimic nu încape în timp.
 - Varietate: nu repeta același fel principal (pui, porc, vită, pește, paste, supă, vegetarian) în seri la rând; nu propune ce au gătit recent.
 - Folosește întâi ce e în frigider, mai ales ce se strică repede, și spune asta în reason.
@@ -462,7 +463,7 @@ async function planWeek(a: PlanArgs): Promise<Planned[]> {
   const tools = cleanTools(a.tools)
   const text = [
     `Serile de planificat: ${days.map((d) => `${d.day} (${d.label}): ${d.minutes ? `${d.minutes} minute` : 'oricât'}`).join('; ')}`,
-    `Rețetele familiei (id | titlu | categorie | minute | ingrediente principale):\n${recipes.map((r) => `${r.id} | ${r.title} | ${r.category ?? ''} | ${r.minutes ?? '?'} | ${(r.ingredients ?? []).slice(0, 8).join(', ')}`).join('\n') || '(niciuna)'}`,
+    `Rețetele familiei (id | titlu | categorie | minute | ingrediente principale | ♥ preferată, de câte ori și ultima dată gătită):\n${recipes.map((r) => `${r.id} | ${r.title} | ${r.category ?? ''} | ${r.minutes ?? '?'} | ${(r.ingredients ?? []).slice(0, 8).join(', ')} | ${[r.favorite ? '♥' : '', r.cooked ? `${r.cooked}x, ultima dată ${r.lastCooked ?? '?'}` : ''].filter(Boolean).join(' ')}`).join('\n') || '(niciuna)'}`,
     a.recent?.length ? `Gătite recent (nu le repeta): ${a.recent.filter(Boolean).join(', ')}` : '',
     keep.length ? `Restul săptămânii are deja: ${keep.join(', ')} (alege altceva, diferit de acestea).` : '',
     a.fridge?.trim() ? `Ce e în frigider: ${a.fridge.trim().slice(0, MAX_IDEA_CHARS)}` : '',

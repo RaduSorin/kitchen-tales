@@ -107,6 +107,27 @@ export function setPosition(id: string, sec: number | undefined) {
     localStorage.setItem(LAST, id)
   } catch { /* storage unavailable */ }
 }
+// Stories ever started on this device, for the "Nou" badge on covers. Only stories added in the
+// last NEW_DAYS days can be new, so older ones never get a badge.
+const PLAYED = 'kt-played-stories'
+const NEW_DAYS = 14
+let played: Set<string> | undefined
+function playedSet() {
+  if (!played) { try { played = new Set(JSON.parse(localStorage.getItem(PLAYED) ?? '[]')) } catch { played = new Set() } }
+  return played
+}
+export function markPlayed(id: string) {
+  const p = playedSet()
+  if (p.has(id)) return
+  p.add(id)
+  try { localStorage.setItem(PLAYED, JSON.stringify([...p].slice(-2000))) } catch { /* storage unavailable */ }
+}
+/** Added in the last two weeks and never started on this device. */
+export function isNewStory(s: Story, now = Date.now()) {
+  if (!s.createdAt || now - Date.parse(s.createdAt) > NEW_DAYS * 86_400_000) return false
+  return !playedSet().has(s.id) && getPosition(s.id) === 0
+}
+
 export function getLastStoryId() {
   try { return localStorage.getItem(LAST) ?? undefined } catch { return undefined }
 }

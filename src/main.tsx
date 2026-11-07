@@ -23,6 +23,7 @@ import './stories-a.css'
 import { applyTheme } from './lib/settings'
 import { offlineFirstTokenProvider } from './lib/offlineAuth'
 import App from './App.tsx'
+import { watchForUpdates } from './lib/update'
 import { AuthFooter, AuthHeader } from './components/AuthScene'
 
 Amplify.configure(outputs)
@@ -31,6 +32,7 @@ Amplify.configure(Amplify.getConfig(), {
   Auth: { tokenProvider: offlineFirstTokenProvider, credentialsProvider: cognitoCredentialsProvider },
 })
 applyTheme()
+watchForUpdates()
 
 I18n.putVocabulariesForLanguage('ro', {
   'Sign In': 'Intră în cont',

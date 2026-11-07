@@ -17,6 +17,60 @@ import { useSyncedList } from '../lib/synced'
 import { addDays, addToShopping, dayKey, dayName, forgetRecipe, planRecipe, planStore, shortDate, today } from '../lib/plan'
 import { useBack } from '../lib/back'
 import { useOnline } from '../lib/useOffline'
+import { addCookNote, cookedLabel, forgetRecipeLog, removeCookNote, setRecipeFavorite, sinceLabel, useRecipeLog } from '../lib/recipeLog'
+import { useMyName } from '../lib/me'
+
+const HEART = 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z'
+
+/** The heart next to a recipe's title: the space's favourites, also for recipes others shared. */
+export function RecipeHeart({ recipeId, favorite }: { recipeId: string; favorite: boolean }) {
+  return (
+    <button type="button" className={`recipe-fav${favorite ? ' on' : ''}`} aria-pressed={favorite}
+      aria-label={favorite ? 'Scoate din favorite' : 'Pune la favorite'}
+      onClick={() => { setRecipeFavorite(recipeId, !favorite); showToast(favorite ? 'Scoasă din favorite' : 'Pusă la favorite') }}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill={favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden="true"><path d={HEART} /></svg>
+    </button>
+  )
+}
+
+/** Notes written after cooking, newest first, and a way to add one. */
+function CookNotes({ recipeId }: { recipeId: string }) {
+  const log = useRecipeLog(recipeId)
+  const me = useMyName()
+  const [writing, setWriting] = useState(false)
+  const [text, setText] = useState('')
+  const notes = [...(log?.notes ?? [])].reverse()
+  const save = () => { addCookNote(recipeId, text, me || undefined); setText(''); setWriting(false) }
+  return (
+    <section className="cook-notes">
+      <div className="section-head">
+        <h2>Notele noastre</h2>
+        {!writing && <button type="button" className="btn small" onClick={() => setWriting(true)}>Adaugă o notă</button>}
+      </div>
+      {writing && (
+        <form className="cook-note-form" onSubmit={(e) => { e.preventDefault(); save() }}>
+          <textarea autoFocus rows={2} maxLength={500} placeholder="ex. mai puțină sare, copilului i-a plăcut" value={text} onChange={(e) => setText(e.target.value)} />
+          <div>
+            <button type="submit" className="btn primary small" disabled={!text.trim()}>Salvează</button>
+            <button type="button" className="btn small" onClick={() => { setWriting(false); setText('') }}>Renunță</button>
+          </div>
+        </form>
+      )}
+      {notes.length > 0 ? (
+        <ul className="cook-note-list">
+          {notes.map((n) => (
+            <li key={`${n.day}|${n.by}|${n.text}`}>
+              <p>{n.text}</p>
+              <small>{n.by ? `${n.by} · ` : ''}{sinceLabel(n.day)}
+                <button type="button" className="link-btn" aria-label="Șterge nota" onClick={() => removeCookNote(recipeId, n)}>Șterge</button>
+              </small>
+            </li>
+          ))}
+        </ul>
+      ) : !writing && <p className="muted-note">Ce ați schimba data viitoare? Scrieți aici după ce o gătiți.</p>}
+    </section>
+  )
+}
 
 /** Choose a day in the next two weeks; days that already have this recipe are marked. */
 export function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; servings?: number; onDone: (msg: string) => void; onClose: () => void }) {
@@ -66,6 +120,7 @@ export default function RecipeView() {
     setSharing(false)
   }
   const online = useOnline()
+  const log = useRecipeLog(id)
   const navigate = useNavigate()
   const closeMenu = useCallback(() => { setMenu(false); setConfirming(false); setDeleteError('') }, [])
   // After deleting, step back to where the recipe was opened from rather than adding a page on
@@ -76,6 +131,7 @@ export default function RecipeView() {
     try {
       await deleteRecipe(x)
       forgetRecipe(x.id)
+      forgetRecipeLog(x.id)
       leave()
     } catch {
       setDeleteError('Nu am putut șterge rețeta. Verifică internetul și încearcă din nou.')
@@ -142,7 +198,10 @@ export default function RecipeView() {
         )}
       </span>
       <div className="recipe-sheet">
-        <h1>{r.title}</h1>
+        <div className="recipe-title-row">
+          <h1>{r.title}</h1>
+          <RecipeHeart recipeId={r.id} favorite={!!log?.favorite} />
+        </div>
         <div className="pills">
           {r.minutes ? <span className="pill">{formatMinutes(r.minutes)}</span> : null}
           {r.category && <span className="pill">{r.category}</span>}
@@ -150,6 +209,8 @@ export default function RecipeView() {
             ? <span className="pill">De la {r.spaceName ?? 'alt cont'}</span>
             : r.shared && <span className="pill pill-shared"><ShareIcon shared size={14} /> Partajată</span>}
         </div>
+
+        {cookedLabel(log) && <p className="recipe-cooked">{cookedLabel(log)}</p>}
 
         <RecipeFacts r={r} onFacts={(f) => setR((cur) => (cur ? { ...cur, ...f } : cur))} />
 
@@ -225,6 +286,7 @@ export default function RecipeView() {
         </div>
 
         {r.notes && (<section><h2>Note</h2><p className="notes">{r.notes}</p></section>)}
+        <CookNotes recipeId={r.id} />
         {r.sourceUrl && <p><a href={r.sourceUrl} target="_blank" rel="noreferrer">Sursa originală</a></p>}
 
       </div>

@@ -66,6 +66,19 @@ export default function Shopping() {
   // By aisle: each merged line under its aisle, in the order of a walk through the shop.
   const byAisle = AISLES.map((a) => ({ aisle: a, rows: openRows.filter((r) => aisleOf(r.text) === a.key) })).filter((g) => g.rows.length)
 
+  // The list as plain text, by aisle, for someone without the app (WhatsApp, Notes, Messages).
+  const shareList = async () => {
+    const text = ['Cumpărături', ...byAisle.map(({ aisle, rows }) => `\n${aisle.name}\n${rows.map((r) => `• ${r.text}`).join('\n')}`)].join('\n')
+    try {
+      if (navigator.share) { await navigator.share({ text }); return }
+      await navigator.clipboard.writeText(text)
+      showToast('Am copiat lista. O poți lipi într-un mesaj.')
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return
+      try { await navigator.clipboard.writeText(text); showToast('Am copiat lista. O poți lipi într-un mesaj.') } catch { showToast('Nu am putut trimite lista.') }
+    }
+  }
+
   const add = (e: React.FormEvent) => {
     e.preventDefault()
     addShoppingText(text)
@@ -76,7 +89,12 @@ export default function Shopping() {
     <section className="shopping">
       <div className="recipes-head">
         <h1>Cumpărături</h1>
-        {open.length > 0 && <small className="shop-count">{openRows.length} de luat</small>}
+        {open.length > 0 && <span className="shop-head-side">
+          <small className="shop-count">{openRows.length} de luat</small>
+          <button type="button" className="shop-share" aria-label="Trimite lista" title="Trimite lista" onClick={shareList}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" /></svg>
+          </button>
+        </span>}
       </div>
 
       <form className="shop-add" onSubmit={add}>

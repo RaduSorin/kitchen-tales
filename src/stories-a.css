@@ -844,3 +844,9 @@
 .cover-change .cover-change-preview > span { font-size: min(18vw, 72px); }
 .cover-change h2.fin-label { margin-top: 6px; }
 .cover-change .moon-btn { width: 100%; }
+
+/* Shopping list by aisle: a switch "Pe raioane / Pe rețete", gold aisle labels with a line icon. */
+.shop-view { margin: 4px 0 6px; background: rgb(0 0 0 / .25); }
+.shop-aisle h2 { display: flex; align-items: center; gap: 10px; font-family: var(--f-body); font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.shop-aisle h2 .count { margin-left: auto; color: var(--muted); letter-spacing: 0; font-size: .8rem; }
+.shop-aisle-ic { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgb(242 200 121 / .12); box-shadow: inset 0 0 0 1px rgb(242 200 121 / .3); flex: none; }

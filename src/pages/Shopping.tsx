@@ -5,6 +5,12 @@ import { addShoppingText, shoppingStore } from '../lib/plan'
 import { mergeShopping, type ShoppingRow } from '../lib/merge'
 import type { ShoppingItem } from '../lib/types'
 import { showToast } from '../lib/toast'
+import { AISLES, aisleOf } from '../lib/aisles'
+
+// How the list is grouped: by shop aisle (default) or by recipe. Remembered on this device.
+const VIEW_KEY = 'kt-shop-view'
+type View = 'aisles' | 'recipes'
+const readView = (): View => { try { return localStorage.getItem(VIEW_KEY) === 'recipes' ? 'recipes' : 'aisles' } catch { return 'aisles' } }
 
 /** Removes items right away and offers to bring them back for a few seconds. */
 function removeWithUndo(items: ShoppingItem[], text: string) {
@@ -13,7 +19,7 @@ function removeWithUndo(items: ShoppingItem[], text: string) {
 }
 
 /** One line on the list; a merged line (e.g. onions from two recipes) checks and removes all its items together. */
-function Item({ row }: { row: ShoppingRow }) {
+function Item({ row, showSources }: { row: ShoppingRow; showSources?: boolean }) {
   const checked = row.items.every((s) => s.checked)
   return (
     <li className="shop-item">
@@ -21,7 +27,7 @@ function Item({ row }: { row: ShoppingRow }) {
         <input type="checkbox" checked={checked} onChange={() => row.items.forEach((s) => shoppingStore.update({ ...s, checked: !checked }))} />
         <span>
           {row.text}
-          {row.sources.length > 1 && <small className="shop-sources">{row.sources.join(' · ')}</small>}
+          {row.sources.length > (showSources ? 0 : 1) && <small className="shop-sources">{row.sources.join(' · ')}</small>}
         </span>
       </label>
       <button type="button" className="shop-remove" onClick={() => removeWithUndo(row.items, `Am șters ${row.text}`)} aria-label={`Șterge ${row.text}`}>
@@ -31,12 +37,14 @@ function Item({ row }: { row: ShoppingRow }) {
   )
 }
 
-/** The family's shopping list: grouped by recipe, bought items drop into "În coș". Works offline in the shop. */
+/** The family's shopping list: grouped by shop aisle or by recipe, bought items drop into "În coș". Works offline in the shop. */
 export default function Shopping() {
   const items = useSyncedList(shoppingStore)
   const [text, setText] = useState('')
   const [confirming, setConfirming] = useState(false)
   const [clearingAll, setClearingAll] = useState(false)
+  const [view, setViewState] = useState<View>(readView)
+  const setView = (v: View) => { setViewState(v); try { localStorage.setItem(VIEW_KEY, v) } catch { /* ignore */ } }
   const sorted = items.slice().sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
   const open = sorted.filter((s) => !s.checked)
   const done = sorted.filter((s) => s.checked)
@@ -55,6 +63,8 @@ export default function Shopping() {
   const rank = (k: string) => (k === '' ? 0 : k === MANY ? 1 : 2)
   const ordered = [...groups].sort(([a], [b]) => rank(a) - rank(b))
   const doneRows = mergeShopping(done)
+  // By aisle: each merged line under its aisle, in the order of a walk through the shop.
+  const byAisle = AISLES.map((a) => ({ aisle: a, rows: openRows.filter((r) => aisleOf(r.text) === a.key) })).filter((g) => g.rows.length)
 
   const add = (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,6 +84,13 @@ export default function Shopping() {
         <button type="submit" className="btn primary" disabled={!text.trim()}>Adaugă</button>
       </form>
 
+      {open.length > 0 && (
+        <div className="seg shop-view" role="group" aria-label="Grupează lista">
+          <button type="button" aria-pressed={view === 'aisles'} onClick={() => setView('aisles')}>Pe raioane</button>
+          <button type="button" aria-pressed={view === 'recipes'} onClick={() => setView('recipes')}>Pe rețete</button>
+        </div>
+      )}
+
       {items.length === 0 ? (
         <div className="empty">
           <p>Lista e goală.</p>
@@ -81,7 +98,17 @@ export default function Shopping() {
         </div>
       ) : (
         <>
-          {ordered.map(([title, xs]) => (
+          {view === 'aisles' ? byAisle.map(({ aisle, rows }) => (
+            <section key={aisle.key} className="shop-group shop-aisle">
+              <h2>
+                <span className="shop-aisle-ic" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={aisle.icon} /></svg>
+                </span>
+                {aisle.name}<small className="count">{rows.length}</small>
+              </h2>
+              <ul className="checklist">{rows.map((row) => <Item key={row.key} row={row} showSources />)}</ul>
+            </section>
+          )) : ordered.map(([title, xs]) => (
             <section key={title || '_'} className="shop-group">
               {title ? <h2>{title}</h2> : groups.size > 1 && <h2>Altele</h2>}
               <ul className="checklist">{xs.map((row) => <Item key={row.key} row={row} />)}</ul>

@@ -5,6 +5,7 @@
 // on for the phone does not lock the tablet.
 import { useSyncExternalStore } from 'react'
 import { getSettings, updateSettings } from './settings'
+import { onAccountChange } from './space'
 import { folderOf } from './stories'
 import type { Story, StoryFolder } from './types'
 
@@ -45,6 +46,9 @@ if (typeof window !== 'undefined') {
     listeners.forEach((l) => l())
   })
 }
+
+// Another account signed in on this device: the previous one's kid mode doesn't carry over.
+onAccountChange(() => set(OFF))
 
 export const getKid = () => state
 export const isKidMode = () => state.active

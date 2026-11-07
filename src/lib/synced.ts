@@ -2,6 +2,7 @@
 // and are sent to the cloud as soon as there is internet. Used for the week plan
 // and the shopping list, which are often used in a shop with bad signal.
 import { useEffect, useSyncExternalStore } from 'react'
+import { onAccountChange, spaceReady } from './space'
 
 type Op<T> = { kind: 'create' | 'update'; item: T; tries?: number } | { kind: 'delete'; id: string; tries?: number }
 
@@ -38,9 +39,15 @@ export function createSyncedList<T extends { id: string }>(name: string, api: Ap
   const set = (next: T[]) => { items = next; write(itemsKey, items); listeners.forEach((fn) => fn()) }
   const saveOps = () => write(opsKey, ops)
 
+  // Another account signed in on this device: the previous one's items and unsent changes go
+  // (they must never be sent with the new account's sign-in, into its space).
+  onAccountChange(() => { ops = []; loaded = false; set([]) })
+
   async function flush() {
     if (flushing) return flushing
     flushing = (async () => {
+      // Which account is signed in is settled first: a change left by another account is dropped then.
+      await spaceReady()
       while (ops.length && navigator.onLine) {
         const op = ops[0]
         try {
@@ -60,6 +67,7 @@ export function createSyncedList<T extends { id: string }>(name: string, api: Ap
   }
 
   async function refresh() {
+    await spaceReady()
     await flush()
     try {
       const server = await api.list()

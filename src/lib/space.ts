@@ -7,7 +7,9 @@ import { cacheList } from './offline'
 type Info = { user: string; space?: string; admin: boolean; email?: string; name?: string }
 
 const KEY = 'kt-space'
-// Device copies that belong to whoever was signed in; cleared when another account signs in here.
+// Device copies that belong to whoever was signed in are cleared when another account signs in
+// here. kt-settings stays: it also holds this device's own choices (theme, shelf click); its
+// family part is reset by settings.ts (onAccountChange).
 const KEEP = new Set([KEY, 'kt-settings'])
 
 let info: Info | undefined = (() => {
@@ -23,11 +25,25 @@ async function readToken(forceRefresh: boolean): Promise<Info | undefined> {
   return { user: String(p.sub), space: spaceOf(groups), admin: groups.includes(ADMINS), email: typeof email === 'string' ? email : undefined }
 }
 
-/** A different account signed in on this device: drop the previous account's lists. */
+// What other modules keep in memory for the signed-in account (its settings, kid mode, the week
+// and shopping lists): they register here to start over when another account signs in.
+const resets = new Set<() => void>()
+/** Calls `fn` when a different account signs in on this device, after its saved copies were dropped. */
+export function onAccountChange(fn: () => void) {
+  resets.add(fn)
+  return () => { resets.delete(fn) }
+}
+
+/**
+ * A different account signed in on this device: drop the previous account's lists, and its
+ * family settings (child, kid-mode PIN, diet…), which would otherwise be saved as the new
+ * account's own on its first sync.
+ */
 async function forgetPreviousAccount() {
   try {
     for (const k of Object.keys(localStorage)) if (k.startsWith('kt-') && !KEEP.has(k)) localStorage.removeItem(k)
   } catch { /* storage unavailable */ }
+  resets.forEach((fn) => { try { fn() } catch (err) { console.warn('account change', err) } })
   await Promise.all([cacheList('stories', []), cacheList('recipes', [])]).catch(() => {})
 }
 

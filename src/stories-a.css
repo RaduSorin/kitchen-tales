@@ -1155,3 +1155,10 @@
 /* A story added lately and not started on this device yet. */
 .sa-new { position: absolute; left: 7px; top: 7px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1a1408; font-size: .68rem; font-weight: 800; letter-spacing: .02em;
   box-shadow: 0 2px 8px rgb(0 0 0 / .35); }
+
+/* Cards with the length badge print the title under the cover: drawn on the cover too, it ran under
+   the badge ("Scufița Roș…"). There the drawing keeps just its emoji, in the middle. */
+.sa-cover:has(> .sa-dur) .story-cover > .cover-name { display: none; }
+.sa-cover:has(> .sa-dur) .story-cover:not(.has-img) > span { transform: none; }
+/* A folder's "2 povești" stays readable over a bright cover glow. */
+:root[data-area="night"] .folder-sub > span { color: rgb(255 255 255 / .82); text-shadow: 0 1px 6px rgb(0 0 0 / .45); }

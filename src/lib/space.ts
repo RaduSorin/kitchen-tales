@@ -89,6 +89,13 @@ export function mySpaceName() {
   return local ? local[0].toUpperCase() + local.slice(1) : 'Alt cont'
 }
 
+/** Sets the space's name on this device (saved to the cloud by db.renameSpace). */
+export function setMySpaceName(name: string) {
+  if (!info) return
+  info = { ...info, name }
+  save()
+}
+
 /** Remembers the space's name, as read from its settings row. */
 export function rememberSpaceName(name: string | null | undefined) {
   if (!info || !name || info.name === name) return

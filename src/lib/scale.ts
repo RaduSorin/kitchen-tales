@@ -48,7 +48,14 @@ const UNITS: [string, string][] = [
   ['plic', 'plicuri'], ['pachet', 'pachete'], ['fir', 'fire'], ['frunză', 'frunze'], ['vârf', 'vârfuri'],
 ]
 
-/** "3 cană" → "3 căni", "1 linguri" → "1 lingură"; "1000 g" → "1 kg", "1500 ml" → "1,5 l". */
+// Things counted by the piece follow the amount the same way: "1 ou", "2 ouă", "½ ceapă", "3 cepe".
+const NOUNS: [string, string][] = [
+  ['ou', 'ouă'], ['ceapă', 'cepe'], ['morcov', 'morcovi'], ['cartof', 'cartofi'], ['roșie', 'roșii'], ['lămâie', 'lămâi'],
+  ['măr', 'mere'], ['pară', 'pere'], ['dovlecel', 'dovlecei'], ['castravete', 'castraveți'], ['vânătă', 'vinete'],
+  ['portocală', 'portocale'], ['banană', 'banane'], ['gălbenuș', 'gălbenușuri'], ['albuș', 'albușuri'], ['piept', 'piepți'],
+]
+
+/** "3 cană" → "3 căni", "1 linguri" → "1 lingură", "1 ouă" → "1 ou"; "1000 g" → "1 kg", "1500 ml" → "1,5 l". */
 function tidyUnit(amount: number, rest: string, range = false): { amount?: string; rest: string } {
   const m = /^(\s*)(\p{L}+)/u.exec(rest)
   if (!m) return { rest }
@@ -63,6 +70,14 @@ function tidyUnit(amount: number, rest: string, range = false): { amount?: strin
     if (lower !== one && lower !== many) continue
     const want = amount >= 2 || (range && amount > 1) ? many : one
     return { rest: `${m[1]}${want}${after}` }
+  }
+  // Pieces: one up to 1 ("½ ceapă mare"), more above it ("1 ½ cepe mari"), with "mare"/"mari" after them too.
+  for (const [one, many] of NOUNS) {
+    if (lower !== one && lower !== many) continue
+    const plural = amount > 1
+    const size = /^(\s+)(mare|mari)\b/u.exec(after)
+    const tail = size ? `${size[1]}${plural ? 'mari' : 'mare'}${after.slice(size[0].length)}` : after
+    return { rest: `${m[1]}${plural ? many : one}${tail}` }
   }
   return { rest }
 }

@@ -57,6 +57,28 @@ export function formatClock(sec: number) {
   return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
 }
 
+// ---- step timers ----
+
+/**
+ * A step's timer. While it runs, only its end time is kept and the seconds left are worked out
+ * from the clock, so it stays right after the phone was locked or the app was in the background
+ * (iOS pauses the page then). `push`: a notification is scheduled for the end. `title`: the
+ * recipe's, for the alarm shown outside cooking mode.
+ */
+export type CookTimer = { total: number; left: number; endsAt?: number; push?: boolean; title?: string }
+
+// Timers survive leaving cook mode (to look at the recipe) and reloading, per recipe.
+export const TIMERS_PREFIX = 'kt-cook-timers-'
+export function loadTimers(id: string): Record<number, CookTimer> {
+  try { return JSON.parse(localStorage.getItem(TIMERS_PREFIX + id) ?? '{}') } catch { return {} }
+}
+export function saveTimers(id: string, timers: Record<number, CookTimer>) {
+  try {
+    if (Object.keys(timers).length) localStorage.setItem(TIMERS_PREFIX + id, JSON.stringify(timers))
+    else localStorage.removeItem(TIMERS_PREFIX + id)
+  } catch { /* storage unavailable */ }
+}
+
 // Remembers the step you stopped at, per recipe, on this device.
 const progressKey = (id: string) => `kt-cook-${id}`
 const LAST_COOK = 'kt-last-cook'

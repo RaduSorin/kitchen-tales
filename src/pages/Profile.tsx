@@ -13,7 +13,7 @@ import { CheckPinSheet, NewPinSheet } from '../components/KidMode'
 import Sheet from '../components/Sheet'
 import Avatar from '../components/Avatar'
 import { Members, InviteForm, useFamily } from './FamilySection'
-import { listRecipes, narratorVoices, previewVoice, setFolderShared, setRecipeShared, type NarratorVoice } from '../lib/db'
+import { listRecipes, narratorVoices, previewVoice, renameSpace, setFolderShared, setRecipeShared, type NarratorVoice } from '../lib/db'
 import { errorText } from '../lib/errors'
 import { saveMyName, useMyName } from '../lib/me'
 import { myEmail, mySpaceName } from '../lib/space'
@@ -462,6 +462,31 @@ function SharedSettings() {
   )
 }
 
+/** The space's name: what the other accounts see on what we share ("De la Sorin", "Primite de la Sorin"). */
+function SpaceNameSettings() {
+  const [name, setName] = useState(mySpaceName)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ ok: boolean; text: string }>()
+  const save = async (e: FormEvent) => {
+    e.preventDefault()
+    setBusy(true); setMsg(undefined)
+    try { await renameSpace(name); setMsg({ ok: true, text: 'Am salvat numele.' }) } catch (err) { setMsg({ ok: false, text: errorText(err) }) }
+    setBusy(false)
+  }
+  return (
+    <div className="set-group">
+      <div className="set-box">
+        <form className="set-row invite-row" onSubmit={save}>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Sorin" aria-label="Numele spațiului" maxLength={40} autoComplete="off" />
+          <button type="submit" className="btn small primary" disabled={busy || !name.trim() || name.trim() === mySpaceName()}>{busy ? 'Se salvează…' : 'Salvează'}</button>
+        </form>
+      </div>
+      {msg && <p className={msg.ok ? 'set-hint' : 'set-hint error'} role="status">{msg.text}</p>}
+      <p className="set-hint">Celelalte conturi văd ce partajezi sub acest nume („De la {name.trim() || '…'}”). Se schimbă și pe ce ai partajat deja.</p>
+    </div>
+  )
+}
+
 function NameSheet({ onClose }: { onClose: () => void }) {
   const current = useMyName()
   const [name, setName] = useState(current)
@@ -571,6 +596,7 @@ function ProfileHome() {
         <div className="set-box">
           {admin && <Row to="/profil/persoane" icon="users" label="Persoane" value={members ? String(members.length) : ''} />}
           {admin && <Row to="/profil/invita" icon="mail" label="Invită pe cineva" />}
+          <Row to="/profil/spatiu" icon="users" label="Numele spațiului" value={mySpaceName()} />
           <Row to="/profil/partajare" icon="share" label="Ce partajez"
             value={counts ? `${plural(counts.stories, 'poveste', 'povești')} · ${plural(counts.recipes, 'rețetă', 'rețete')}` : ''} />
         </div>
@@ -604,6 +630,7 @@ const PAGES: Record<string, [string, ComponentType]> = {
   persoane: ['Persoane', () => <Members me={myEmail()?.toLowerCase()} />],
   invita: ['Invită pe cineva', InviteForm],
   partajare: ['Ce partajez', SharedSettings],
+  spatiu: ['Numele spațiului', SpaceNameSettings],
   bucatarie: ['Bucătăria mea', KitchenTools],
   mancare: ['Ce mâncăm', DietSettings],
   voce: ['Vocea poveștilor', NarratorSettings],

@@ -1,4 +1,23 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ComponentType } from 'react'
+import { Loading } from './components/LoadState'
+
+const RELOADED = 'kt-new-version-reload'
+/**
+ * A page loaded when first opened, so the app starts with less code. If its file is gone (a new
+ * version was published while this one was open), the app reloads once, into the new version.
+ */
+function page(load: () => Promise<{ default: ComponentType }>) {
+  return lazy(() => load().then((m) => {
+    try { sessionStorage.removeItem(RELOADED) } catch { /* storage unavailable */ }
+    return m
+  }, (err) => {
+    let first = false
+    try { first = !sessionStorage.getItem(RELOADED); if (first) sessionStorage.setItem(RELOADED, '1') } catch { /* storage unavailable */ }
+    if (!first || !navigator.onLine) throw err
+    window.location.reload()
+    return new Promise<never>(() => {})
+  }))
+}
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useBack } from './lib/back'
 import NotFound from './pages/NotFound'
@@ -10,26 +29,27 @@ import { applyTheme, setStatusBarColor, useSettings } from './lib/settings'
 import { useSettingsSync } from './lib/settingsSync'
 import CoverGlow from './components/CoverGlow'
 
-import RecipeList from './pages/RecipeList'
-import RecipeView from './pages/RecipeView'
-import RecipeEdit from './pages/RecipeEdit'
-import StoryList from './pages/StoryList'
-import StoryPlayer from './pages/StoryPlayer'
-import StoryAdd from './pages/StoryAdd'
+const RecipeList = page(() => import('./pages/RecipeList'))
+const RecipeView = page(() => import('./pages/RecipeView'))
+const RecipeEdit = page(() => import('./pages/RecipeEdit'))
+const StoryList = page(() => import('./pages/StoryList'))
+const StoryPlayer = page(() => import('./pages/StoryPlayer'))
+const StoryAdd = page(() => import('./pages/StoryAdd'))
 import Profile, { profileTitle } from './pages/Profile'
-import CookMode from './pages/CookMode'
+const CookMode = page(() => import('./pages/CookMode'))
 import MiniPlayer from './components/MiniPlayer'
 import { NowPlayingProvider } from './lib/nowPlaying'
 import TabBar, { PROFILE } from './components/TabBar'
 import AreaSwitch from './components/AreaSwitch'
 import { isPlayerPage, useArea } from './lib/area'
-import Search from './pages/Search'
+const Search = page(() => import('./pages/Search'))
 import StoriesHome from './pages/StoriesHome'
-import Week from './pages/Week'
-import PlanWeek from './pages/PlanWeek'
-import Shopping from './pages/Shopping'
+const Week = page(() => import('./pages/Week'))
+const PlanWeek = page(() => import('./pages/PlanWeek'))
+const Shopping = page(() => import('./pages/Shopping'))
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
+import { useCookAlarms } from './lib/cookAlarms'
 
 /** The stories background (also the iPhone status bar colour there). */
 const NIGHT_BG = '#0f0e13'
@@ -103,6 +123,8 @@ function Shell() {
   // The name only on the two home screens; elsewhere each page's big title says where you are.
   const home = pathname === '/' || pathname === '/povesti/acasa'
   useHideOnScroll(!player)
+  // A cooking timer that ends while you are on another screen still rings.
+  useCookAlarms()
   // A new page starts with the bar showing.
   useEffect(() => { delete document.documentElement.dataset.topbarHidden }, [pathname])
   // Sticky bars under the top bar (e.g. the recipe editor's Save bar) need its real height,
@@ -150,6 +172,7 @@ function Shell() {
       <main>
         {/* Phones have no top bar: pages that need a way back get the arrow at the top of the page. */}
         {back && !kid && !player && <div className={back === '/retete' ? 'page-back over' : 'page-back'}><BackButton to={back} /></div>}
+        <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/retete" element={<RecipeList />} />
@@ -173,6 +196,7 @@ function Shell() {
           <Route path="/setari/retete" element={<Navigate to="/profil/bucatarie" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </main>
       <KidGate />
       <MiniPlayer />

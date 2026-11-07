@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getRecipe } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
-import { detectDuration, formatClock, getProgress, ingredientsForStep, setProgress } from '../lib/cooking'
+import { detectDuration, formatClock, getProgress, ingredientsForStep, loadTimers, saveTimers, setProgress, type CookTimer } from '../lib/cooking'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import { ringAlarm, unlockAlarm } from '../lib/alarm'
 import { canGoBack } from '../lib/back'
@@ -13,25 +13,10 @@ import { addCookNote, cookedLabel, markCooked, useRecipeLog } from '../lib/recip
 import { useMyName } from '../lib/me'
 import { canSpeak, speak, spokenDuration, stopSpeaking, useHandsFree, type Command } from '../lib/handsFree'
 
-/**
- * A step's timer. While it runs, only its end time is kept and the seconds left are worked out
- * from the clock, so it stays right after the phone was locked or the app was in the background
- * (iOS pauses the page then). `push`: a notification is scheduled for the end.
- */
-type Timer = { total: number; left: number; endsAt?: number; push?: boolean }
+// Timers are kept per recipe (lib/cooking.ts); one that ends while you are elsewhere in the app
+// rings there too (lib/cookAlarms.ts).
+type Timer = CookTimer
 const leftOf = (t: Timer, now = Date.now()) => (t.endsAt ? Math.max(0, Math.ceil((t.endsAt - now) / 1000)) : t.left)
-
-// Timers survive leaving cook mode (to look at the recipe) and reloading, per recipe.
-const timersKey = (id: string) => `kt-cook-timers-${id}`
-function loadTimers(id: string): Record<number, Timer> {
-  try { return JSON.parse(localStorage.getItem(timersKey(id)) ?? '{}') } catch { return {} }
-}
-function saveTimers(id: string, timers: Record<number, Timer>) {
-  try {
-    if (Object.keys(timers).length) localStorage.setItem(timersKey(id), JSON.stringify(timers))
-    else localStorage.removeItem(timersKey(id))
-  } catch { /* storage unavailable */ }
-}
 
 function useWakeLock() {
   useEffect(() => {
@@ -154,6 +139,8 @@ export default function CookMode() {
   // Keyboard: arrows to move, Escape to close the ingredients sheet or leave.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Space on a button or a tick box (the ingredients sheet, the timer) does that control's job.
+      if (e.key === ' ' && (e.target as Element | null)?.closest?.('button, input, textarea, select, a, label')) return
       if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1) }
       else if (e.key === 'ArrowLeft') go(-1)
       else if (e.key === 'ArrowUp') setSheet(true)
@@ -221,7 +208,7 @@ export default function CookMode() {
       return
     }
     const endsAt = Date.now() + timerLeft * 1000
-    setTimers({ ...timers, [i]: { total: timer.total, left: timerLeft, endsAt } })
+    setTimers({ ...timers, [i]: { total: timer.total, left: timerLeft, endsAt, title: r.title } })
     // Straight from the tap, so iOS may ask for notification permission.
     scheduleAlarm(key, endsAt, r.title, `Pasul ${i + 1} e gata (${formatClock(timer.total)}).`, `/retete/${r.id}/gateste`)
       .then((push) => {

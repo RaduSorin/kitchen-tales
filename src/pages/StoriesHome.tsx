@@ -109,7 +109,8 @@ export default function StoriesHome() {
   const [rows, setRows] = useState<StoryFolder[]>(cachedFolders)
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const plan = useSyncedList(planStore)
-  const [{ hour, day }] = useState(() => ({ hour: new Date().getHours(), day: Math.floor(Date.now() / 86400000) }))
+  // `day` counts local days, so tonight's stories change at midnight here, not at midnight UTC (2–3 am).
+  const [{ hour, day }] = useState(() => { const now = new Date(); return { hour: now.getHours(), day: Math.floor((now.getTime() - now.getTimezoneOffset() * 60_000) / 86_400_000) } })
   const [seen] = useState(seenStories)
   const sky = useSkyPhase()
   const kid = useKid().active
@@ -169,7 +170,7 @@ export default function StoriesHome() {
   const favorites = available.filter((s) => isFav(s)).slice(0, 10)
   const recent = available.slice(0, 10) // the list comes newest first
   const todayKey = dayKey(today())
-  const cooking = plan.filter((e) => e.day === todayKey).map((e) => recipes.find((r) => r.id === e.recipeId)).filter((r): r is Recipe => !!r)
+  const cooking = plan.filter((e) => e.day === todayKey && !e.leftovers).map((e) => recipes.find((r) => r.id === e.recipeId)).filter((r): r is Recipe => !!r)
   const head = kid ? <div className="home-head kid-head"><KidCorner /></div> : <HomeHead search="/povesti?cauta=1" label="Caută o poveste" field="story-search" />
   const hello = `${evening && hour >= 12 ? 'Bună seara' : greeting()}${child.name ? `, ${child.name}` : ''}`
 

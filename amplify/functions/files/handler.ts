@@ -12,13 +12,13 @@ const TABLES = { Story: process.env.STORY_TABLE!, Recipe: process.env.RECIPE_TAB
 const LINK_SECONDS = 3600
 
 type Model = keyof typeof TABLES
-type Row = { spaceGroups: string[]; readerGroups: string[]; files: Set<string> }
+type Row = { spaceGroups: string[]; readerGroups: string[]; files: Set<string>; createdAt?: string }
 
 const strings = (v?: AttributeValue) => (v?.L ?? []).map((x) => x.S).filter((x): x is string => !!x)
 /** The row's groups and every file path it points at. */
 function toRow(model: Model, item: Record<string, AttributeValue>): Row {
   const files = model === 'Story' ? [item.audioKey?.S, item.coverKey?.S] : [item.photoKey?.S, ...strings(item.stepPhotoKeys)]
-  return { spaceGroups: strings(item.spaceGroups), readerGroups: strings(item.readerGroups), files: new Set(files.filter((f): f is string => !!f)) }
+  return { spaceGroups: strings(item.spaceGroups), readerGroups: strings(item.readerGroups), files: new Set(files.filter((f): f is string => !!f)), createdAt: item.createdAt?.S }
 }
 
 /** "Story:<id>" or "Recipe:<id>" → the row, for files that are not in the caller's own space. */
@@ -35,7 +35,7 @@ async function loadRows(refs: string[]) {
       let keys: Record<string, AttributeValue>[] | undefined = all.slice(i, i + 100).map((id) => ({ id: { S: id } }))
       // Unprocessed keys come back when the table is busy: ask again a few times.
       for (let tries = 0; keys?.length && tries < 4; tries++) {
-        const res: BatchGetItemCommandOutput = await ddb.send(new BatchGetItemCommand({ RequestItems: { [TABLES[model]]: { Keys: keys, ProjectionExpression: 'id, spaceGroups, readerGroups, audioKey, coverKey, photoKey, stepPhotoKeys' } } }))
+        const res: BatchGetItemCommandOutput = await ddb.send(new BatchGetItemCommand({ RequestItems: { [TABLES[model]]: { Keys: keys, ProjectionExpression: 'id, spaceGroups, readerGroups, audioKey, coverKey, photoKey, stepPhotoKeys, createdAt' } } }))
         for (const item of res.Responses?.[TABLES[model]] ?? []) rows.set(`${model}:${item.id.S}`, toRow(model, item))
         keys = res.UnprocessedKeys?.[TABLES[model]]?.Keys
       }
@@ -47,10 +47,17 @@ async function loadRows(refs: string[]) {
 const known = (path: string) => FILE_PREFIXES.some((p) => path.startsWith(`${p}/`)) && !path.includes('..')
 const meets = (groups: string[], allowed: string[]) => allowed.some((g) => groups.includes(g))
 
+// Files got a folder per space on 2026-11-04. Rows made since then never point at an older file
+// (new files always go in a space folder), so only an older row can open one.
+const SPACE_FOLDERS_SINCE = '2026-11-05T00:00:00.000Z'
+
 /**
- * Whether the caller may read (or delete) a file: files in its own space folder always;
- * any other file (another space's, or one stored before spaces had folders) only through a row
- * the caller can read (or edit) that points at it.
+ * Whether the caller may read (or delete) a file: files in its own space folder always; any other
+ * file only through the row it belongs to, when the caller can read (or edit) that row. The row
+ * must be the file's own: one of the space whose folder holds it, or, for a file stored before
+ * spaces had folders, a row from that time. A row anyone makes now pointing at someone else's
+ * file (a recipe whose photoKey is another space's photo) opens nothing, and a row that stops
+ * being shared stops opening its files.
  */
 function allowed(path: string, ref: string | undefined, rows: Map<string, Row>, groups: string[], mySpace: string | undefined, write: boolean) {
   if (!path || !known(path)) return false
@@ -61,6 +68,7 @@ function allowed(path: string, ref: string | undefined, rows: Map<string, Row>, 
   }
   const row = ref ? rows.get(ref) : undefined
   if (!row || !row.files.has(path)) return false
+  if (own ? !row.spaceGroups.includes(own) : !row.createdAt || row.createdAt >= SPACE_FOLDERS_SINCE) return false
   return meets(groups, write ? row.spaceGroups : [...row.spaceGroups, ...row.readerGroups])
 }
 

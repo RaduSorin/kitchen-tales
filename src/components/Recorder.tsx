@@ -3,8 +3,23 @@ import { createPortal } from 'react-dom'
 import { fmtTime } from '../lib/stories'
 import { keepAwake } from '../lib/keepAwake'
 import { useLeaveGuard } from '../lib/leaveGuard'
+import { useNowPlaying } from '../lib/nowPlaying'
 
-type Session = { mr: MediaRecorder; stream: MediaStream; ctx?: AudioContext; analyser?: AnalyserNode; discard: boolean; byUser: boolean }
+type Session = {
+  mr: MediaRecorder
+  /** The microphone in use now; replaced if iOS takes it away mid-recording. */
+  stream: MediaStream
+  ctx?: AudioContext
+  /** Where the microphone is plugged in: it feeds both the rings and the recording. */
+  input?: GainNode
+  source?: MediaStreamAudioSourceNode
+  analyser?: AnalyserNode
+  discard: boolean
+  byUser: boolean
+}
+
+/** One mono microphone, with the phone's own echo and noise cleanup. */
+const getMic = () => navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } })
 
 const LEAVE = {
   title: 'Oprești înregistrarea?',
@@ -22,6 +37,9 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   const [state, setState] = useState<'idle' | 'rec' | 'paused'>('idle')
   const [sec, setSec] = useState(0)
   const [error, setError] = useState('')
+  /** A passing problem with the microphone, shown while it is being fixed. */
+  const [note, setNote] = useState('')
+  const np = useNowPlaying()
   const session = useRef<Session>(null)
   const secRef = useRef(0)
 
@@ -29,7 +47,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   onDoneRef.current = onDone
 
   // Stop the microphone if the parent leaves mid-recording; nothing is kept.
-  useEffect(() => () => { const s = session.current; if (s) { s.discard = true; if (s.mr.state !== 'inactive') s.mr.stop() } }, [])
+  useEffect(() => () => { const s = session.current; if (s) { s.discard = true; if (s.mr.state !== 'inactive') s.mr.stop(); else s.stream.getTracks().forEach((t) => t.stop()) } }, [])
 
   // While a recording is open (also paused): the screen stays on, and leaving the screen asks first.
   const open = state !== 'idle'
@@ -45,6 +63,14 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
     }
     document.addEventListener('visibilitychange', onHide)
     return () => document.removeEventListener('visibilitychange', onHide)
+  }, [state])
+
+  // Back on screen: iOS may have suspended the audio context meanwhile.
+  useEffect(() => {
+    if (state === 'idle') return
+    const onShow = () => { if (document.visibilityState === 'visible') session.current?.ctx?.resume().catch(() => {}) }
+    document.addEventListener('visibilitychange', onShow)
+    return () => document.removeEventListener('visibilitychange', onShow)
   }, [state])
 
   // While recording: a clock tick every second.
@@ -84,51 +110,109 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   }, [state])
 
   const start = async () => {
-    setError('')
+    setError(''); setNote('')
+    // Made in the tap itself, before the first await: iOS only lets a context started by a tap run,
+    // and a context made after the microphone opened is what made iPhones drop the sound.
+    let ctx: AudioContext | undefined
+    try { ctx = new AudioContext(); ctx.resume().catch(() => {}) } catch { ctx = undefined }
+    // A story playing in the app would end up in the recording and fights the mic for the speaker.
+    if (np.playing) np.toggle()
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mr = new MediaRecorder(stream)
+      const stream = await getMic()
       const chunks: Blob[] = []
-      const s: Session = { mr, stream, discard: false, byUser: false }
-      try {
-        s.ctx = new AudioContext()
-        // iOS starts a context made after an await suspended: without this the rings stay still.
-        s.ctx.resume().catch(() => {})
-        s.analyser = s.ctx.createAnalyser()
-        s.analyser.fftSize = 1024
-        s.ctx.createMediaStreamSource(stream).connect(s.analyser)
-      } catch { /* waveform is optional */ }
-      mr.ondataavailable = (e) => chunks.push(e.data)
-      // "Gata" stops on purpose; anything else (the system took the microphone away) is an interruption.
+      const s: Session = { mr: undefined as unknown as MediaRecorder, stream, ctx, discard: false, byUser: false }
+      // The recording is taken from the audio context, not from the microphone directly: when iOS
+      // takes the microphone away for a moment (a notification, Siri, the audio route changing), a
+      // new one is plugged into the same place and the recording simply goes on, in the same file.
+      let recorded: MediaStream = stream
+      if (ctx) {
+        try {
+          s.input = ctx.createGain()
+          s.analyser = ctx.createAnalyser()
+          s.analyser.fftSize = 1024
+          const dest = ctx.createMediaStreamDestination()
+          s.input.connect(s.analyser)
+          s.input.connect(dest)
+          s.source = ctx.createMediaStreamSource(stream)
+          s.source.connect(s.input)
+          recorded = dest.stream
+        } catch { s.input = undefined; s.source = undefined; recorded = stream }
+      }
+      const mr = new MediaRecorder(recorded)
+      s.mr = mr
+      mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data) }
+      // "Gata" stops on purpose; anything else (the microphone could not be brought back) is an interruption.
       mr.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop())
+        s.stream.getTracks().forEach((t) => t.stop())
         s.ctx?.close().catch(() => {})
         const interrupted = !s.byUser
-        if (session.current === s) { session.current = null; setState('idle') }
+        if (session.current === s) { session.current = null; setState('idle'); setNote('') }
         if (s.discard) return
         if (chunks.length && secRef.current >= 1) onDoneRef.current(new Blob(chunks, { type: mr.mimeType }), secRef.current, interrupted)
         else if (interrupted) { secRef.current = 0; setSec(0); setError('Înregistrarea s-a oprit. Apasă microfonul ca să începi din nou.') }
       }
-      // iOS ends the microphone track when it takes the mic away; stop cleanly and keep what we have.
-      stream.getAudioTracks().forEach((t) => { t.onended = () => { if (mr.state !== 'inactive') mr.stop() } })
+      watchTrack(s)
+      // iOS "interrupts" the context during a call or Siri; start it again as soon as it allows.
+      if (ctx) ctx.onstatechange = () => { if (ctx.state !== 'running' && ctx.state !== 'closed' && document.visibilityState === 'visible') ctx.resume().catch(() => {}) }
       mr.start(1000)
       session.current = s
       secRef.current = 0; setSec(0)
       setState('rec')
     } catch {
+      ctx?.close().catch(() => {})
       setError('Nu am acces la microfon. Verifică permisiunile browserului.')
     }
+  }
+
+  // The microphone track ended (iOS took it away) or went quiet (another app holds it for a while).
+  const watchTrack = (s: Session) => {
+    const track = s.stream.getAudioTracks()[0]
+    if (!track) return
+    track.onmute = () => {
+      if (session.current !== s) return
+      setNote('Microfonul e folosit de altceva acum. Continuăm când se eliberează.')
+    }
+    track.onunmute = () => { if (session.current === s) setNote('') }
+    track.onended = () => { if (session.current === s && !s.discard) reconnect(s) }
+  }
+
+  // Plug a fresh microphone into the same recording. Without the audio context (very old
+  // browsers) there is nothing to plug into: stop and keep what was recorded.
+  const reconnect = async (s: Session) => {
+    if (!s.input || !s.ctx) { if (s.mr.state !== 'inactive') s.mr.stop(); return }
+    s.source?.disconnect()
+    setNote('Microfonul s-a întrerupt. Îl pornesc din nou…')
+    for (const wait of [0, 500, 1500, 3000]) {
+      if (wait) await new Promise((r) => setTimeout(r, wait))
+      if (session.current !== s) return
+      // iOS gives the microphone only to a page on screen; try again once it is back.
+      if (document.visibilityState !== 'visible') await new Promise<void>((r) => document.addEventListener('visibilitychange', () => r(), { once: true }))
+      if (session.current !== s) return
+      try {
+        const stream = await getMic()
+        if (session.current !== s) { stream.getTracks().forEach((t) => t.stop()); return }
+        s.stream = stream
+        s.source = s.ctx.createMediaStreamSource(stream)
+        s.source.connect(s.input)
+        s.ctx.resume().catch(() => {})
+        watchTrack(s)
+        setNote('')
+        return
+      } catch { /* try again */ }
+    }
+    if (session.current === s && s.mr.state !== 'inactive') s.mr.stop()
   }
 
   const main = () => {
     const mr = session.current?.mr
     if (state === 'idle') start()
     else if (state === 'rec') { mr?.pause(); setState('paused') }
-    else { mr?.resume(); setState('rec') }
+    else { session.current?.ctx?.resume().catch(() => {}); mr?.resume(); setState('rec') }
   }
   const stop = (keep: boolean) => {
     const s = session.current
     if (!s) return
+    setNote('')
     s.discard = !keep
     s.byUser = true
     session.current = null
@@ -167,6 +251,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
             : <i />}
         </button>
       </div>
+      {note && <p className="rec-note" role="status">{note}</p>}
       <p className="rec-hint">{state === 'rec' ? <>Citește în ritmul tău, ca la culcare.<br />Atinge cercul ca să faci pauză.</> : <>Ai pus pauză.<br />Atinge cercul ca să continui.</>}</p>
       <div className="rec-actions">
         <button type="button" className="rec-again" onClick={() => stop(false)}>

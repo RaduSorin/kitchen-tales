@@ -153,6 +153,8 @@ const schema = a.schema({
     .arguments({
       url: a.string(),
       photoKey: a.string(),
+      // Several photos of one recipe (pages of a book, both sides of a note), in order.
+      photoKeys: a.string().array(),
       text: a.string(),
       idea: a.string(),
       tools: a.string().array(),

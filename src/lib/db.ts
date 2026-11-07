@@ -417,7 +417,7 @@ export async function deleteFolder(name: string, row: StoryFolder | undefined, s
 
 export type ImportedRecipe = NonNullable<Awaited<ReturnType<typeof client.queries.importRecipe>>['data']>
 
-async function runImport(args: { url?: string; photoKey?: string; text?: string; idea?: string; tools?: string[]; servings?: number; diet?: string; adaptFrom?: string }) {
+async function runImport(args: { url?: string; photoKey?: string; photoKeys?: string[]; text?: string; idea?: string; tools?: string[]; servings?: number; diet?: string; adaptFrom?: string }) {
   const res = await client.queries.importRecipe(args)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data?.title) throw new Error('Nu am găsit o rețetă aici.')
@@ -453,12 +453,14 @@ export async function generateRecipePhoto(title: string, ingredients: string[]):
   return res.data
 }
 
-export async function importRecipeFromPhoto(photo: Blob) {
-  const photoKey = await uploadFile('recipe-photos', photo, 'jpg')
+/** One recipe from one or more photos (pages of a book, both sides of a note), read together. */
+export async function importRecipeFromPhotos(photos: Blob[]) {
+  const photoKeys: string[] = []
   try {
-    return await runImport({ photoKey })
+    for (const p of photos) photoKeys.push(await uploadFile('recipe-photos', p, 'jpg'))
+    return await runImport({ photoKeys })
   } finally {
-    await removeFile(photoKey)
+    await Promise.all(photoKeys.map((k) => removeFile(k).catch(() => {})))
   }
 }
 

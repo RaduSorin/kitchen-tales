@@ -920,3 +920,13 @@
 .idea-fit { padding: 3px 9px; border-radius: 999px; background: rgb(143 196 166 / .14); color: #9fd3b4; font-size: .78rem; font-weight: 700; }
 .idea-kcal { padding: 3px 9px; border-radius: 999px; background: var(--surface-2); font-size: .78rem; font-weight: 600; }
 .idea-swaps { color: #d9cfc4; }
+
+/* "Din poză" with several pages: thumbnails in order, each removable, then "Încă o pagină". */
+.photo-pages { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.photo-page { position: relative; aspect-ratio: 3 / 4; border-radius: 12px; overflow: hidden; background: var(--surface-2); box-shadow: 0 6px 14px rgb(0 0 0 / .35); }
+.photo-page img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-page-n { position: absolute; left: 6px; bottom: 6px; min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px;
+  background: var(--accent); color: var(--on-accent); font-size: .78rem; font-weight: 800; display: grid; place-items: center; }
+.photo-page-x { position: absolute; right: 4px; top: 4px; width: 30px; height: 30px; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer;
+  background: rgb(0 0 0 / .55); color: #fff; }
+.photo-more { display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }

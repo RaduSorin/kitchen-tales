@@ -226,16 +226,27 @@ function imageFormat(b: Uint8Array): ImageFormat | undefined {
   return undefined
 }
 
-async function fromPhoto(key: string): Promise<Imported> {
+const MAX_PHOTOS = 4
+
+async function photoBlock(key: string): Promise<ContentBlock> {
   // Only a photo the caller just uploaded to its own space folder, never another space's file.
   if (!callerSpace || fileSpace(key) !== callerSpace || !key.startsWith('recipe-photos/')) throw new Error('Poză invalidă')
   const obj = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
   const bytes = await obj.Body!.transformToByteArray()
   const fmt = imageFormat(bytes)
   if (!fmt) throw new Error('Formatul pozei nu e suportat. Folosește JPG, PNG, WEBP sau GIF.')
+  return { image: { format: fmt, source: { bytes } } }
+}
+
+/** One recipe from one or more photos (pages of a book, both sides of a note), read together in order. */
+async function fromPhotos(keys: string[]): Promise<Imported> {
+  if (keys.length > MAX_PHOTOS) throw new Error(`Cel mult ${MAX_PHOTOS} poze pentru o rețetă.`)
+  const images = await Promise.all(keys.map(photoBlock))
   return askModel([
-    { image: { format: fmt, source: { bytes } } },
-    { text: 'Extrage rețeta din această fotografie.' },
+    ...images,
+    { text: keys.length > 1
+      ? `Acestea sunt ${keys.length} fotografii ale ACELEIAȘI rețete, în ordine (de exemplu două pagini din carte sau fața și spatele unui bilet). Citește-le împreună și extrage o singură rețetă completă, fără să repeți ce apare de două ori.`
+      : 'Extrage rețeta din această fotografie.' },
   ])
 }
 
@@ -446,13 +457,15 @@ function fromText(text: string): Promise<Imported> {
 }
 
 const importHandler: Schema['importRecipe']['functionHandler'] = async (event) => {
-  const { url, photoKey, text, idea, tools, servings, diet, adaptFrom } = event.arguments
+  const { url, photoKey, photoKeys, text, idea, tools, servings, diet, adaptFrom } = event.arguments
   if (adaptFrom) {
     if (!diet?.trim()) throw new Error('Nu e setat ce nu mănâncă familia.')
     return adapt(adaptFrom, diet, tools ?? [])
   }
   if (url) return fromUrl(url)
-  if (photoKey) return fromPhoto(photoKey)
+  const keys = (photoKeys ?? []).filter((k): k is string => !!k)
+  if (keys.length) return fromPhotos(keys)
+  if (photoKey) return fromPhotos([photoKey])
   if (text?.trim()) return fromText(text)
   if (idea?.trim()) return generate(idea, tools ?? [], servings, diet)
   throw new Error('Trimite un link, o poză, un text sau o idee de rețetă.')

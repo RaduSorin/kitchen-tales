@@ -168,9 +168,11 @@ export default function Home() {
     if (slides.length >= 3) break
     add({ r, kicker: ['Din caietul tău', r.minutes && formatMinutes(r.minutes)].filter(Boolean).join(' · '), action: 'Gătește pas cu pas', to: `/retete/${r.id}/gateste` })
   }
-  const [active, setActive] = useState(0)
+  // Which photo is on screen, for this set of dishes (a new set starts again from the first).
   const slideKey = slides.map((s) => s.r.id).join()
-  useEffect(() => setActive(0), [slideKey])
+  const [pos, setPos] = useState({ key: '', i: 0 })
+  const active = pos.key === slideKey ? pos.i : 0
+  const setActive = (i: number) => setPos({ key: slideKey, i })
   const shown = slides[Math.min(active, slides.length - 1)]
   // The page glows in the colours of the dish on screen.
   useGlow(shown && { id: shown.r.id, title: shown.r.title, photoKey: shown.r.photoKey })

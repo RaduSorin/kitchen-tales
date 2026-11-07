@@ -20,6 +20,47 @@ const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate
 const MAX_PAGE_BYTES = 3_000_000
 const MAX_TEXT_CHARS = 40_000
 
+// What can be in a dish that a family may avoid: the 14 allergens food labels must show in the
+// EU, plus pork and meat (for families that don't eat them). Keys match src/lib/diet.ts.
+const ALLERGENS: Record<string, string> = {
+  gluten: 'gluten (grâu, secară, orz, ovăz, paste, pâine, făină obișnuită)', crustacee: 'crustacee', oua: 'ouă',
+  peste: 'pește', arahide: 'arahide', soia: 'soia', lactoza: 'lapte și lactate (lactoză)', nuci: 'nuci și fructe cu coajă (migdale, alune, caju, fistic)',
+  telina: 'țelină', mustar: 'muștar', susan: 'susan', sulfiti: 'sulfiți (vin, fructe uscate)', lupin: 'lupin', moluste: 'moluște',
+  porc: 'carne de porc (inclusiv bacon, șuncă, slănină, cârnați de porc)', carne: 'orice carne sau pește',
+}
+const FACT_PROPS = {
+  nutrition: {
+    type: 'object',
+    description: 'Valori estimate pentru O porție, din ingrediente și numărul de porții.',
+    properties: {
+      kcal: { type: 'integer' }, protein: { type: 'number', description: 'grame' }, carbs: { type: 'number', description: 'grame' },
+      fat: { type: 'number', description: 'grame' }, fiber: { type: 'number', description: 'grame' }, sugar: { type: 'number', description: 'grame' },
+      salt: { type: 'number', description: 'grame' },
+    },
+    required: ['kcal', 'protein', 'carbs', 'fat'],
+  },
+  allergens: {
+    type: 'array',
+    description: 'Ce conține rețeta din lista de chei, fiecare cu ingredientele din care vine (cum apar în rețetă, scurt).',
+    items: {
+      type: 'object',
+      properties: { key: { type: 'string', enum: Object.keys(ALLERGENS) }, from: { type: 'array', items: { type: 'string' } } },
+      required: ['key', 'from'],
+    },
+  },
+}
+const FACT_RULES = `
+- nutrition: estimează realist valorile pentru o porție (folosește cantitățile și numărul de porții; dacă porțiile lipsesc, presupune 4).
+- allergens: marchează tot ce conține rețeta din aceste chei: ${Object.entries(ALLERGENS).map(([k, v]) => `${k} = ${v}`).join('; ')}. Fii atent la ingrediente ascunse (pesmet = gluten, unt = lactoză, maioneză = ouă, sos de soia = soia și gluten).`
+
+type Facts = { nutrition?: Record<string, number>; allergens?: { key: string; from?: string[] }[] }
+/** The facts as the JSON strings stored on the recipe row. */
+function factsJson(f: Facts) {
+  const n = f.nutrition && typeof f.nutrition.kcal === 'number' ? f.nutrition : undefined
+  const al = (f.allergens ?? []).filter((x) => x && x.key in ALLERGENS).map((x) => ({ key: x.key, from: (x.from ?? []).filter(Boolean).slice(0, 6) }))
+  return { nutrition: n ? JSON.stringify(n) : undefined, allergens: n ? JSON.stringify(al) : undefined }
+}
+
 type Imported = {
   title: string
   category?: string
@@ -30,6 +71,8 @@ type Imported = {
   notes?: string
   sourceUrl?: string
   photoKey?: string
+  nutrition?: string
+  allergens?: string
 }
 
 const SYSTEM = `Extragi rețete culinare din pagini web sau din fotografii (text tipărit sau scris de mână).
@@ -40,7 +83,7 @@ Reguli:
 - Un ingredient pe element, de forma „500 g făină”. Un pas pe element, fără numerotare.
 - Categoria trebuie să fie una dintre: ${CATEGORIES.join(', ')}.
 - Nu inventa. Ce nu apare în sursă rămâne gol.
-- Dacă sursa nu conține o rețetă, pune title = "" și listele goale.`
+- Dacă sursa nu conține o rețetă, pune title = "" și listele goale.${FACT_RULES}`
 
 const TOOL = {
   toolSpec: {
@@ -57,6 +100,7 @@ const TOOL = {
           ingredients: { type: 'array', items: { type: 'string' } },
           steps: { type: 'array', items: { type: 'string' } },
           notes: { type: 'string', description: 'Sfaturi sau variante menționate în sursă' },
+          ...FACT_PROPS,
         },
         required: ['title', 'ingredients', 'steps'],
       },
@@ -73,8 +117,9 @@ async function askModel(content: ContentBlock[], system = SYSTEM): Promise<Impor
     inferenceConfig: { maxTokens: 4000 },
   }))
   const block = res.output?.message?.content?.find((c) => c.toolUse)
-  const input = (block?.toolUse?.input ?? {}) as Partial<Imported>
+  const input = (block?.toolUse?.input ?? {}) as Partial<Imported> & Facts
   return {
+    ...factsJson(input),
     title: (input.title ?? '').trim(),
     category: input.category,
     servings: input.servings,
@@ -207,24 +252,74 @@ Reguli:
 - Folosește DOAR ustensilele de bază (aragaz, cuptor, cratițe, tigaie, cuțite, castroane, tel) și aparatele din lista familiei.
   Nu cere niciun alt aparat. Dacă un aparat din listă ajută, folosește-l și dă setările lui (de exemplu la Thermomix: timp / temperatură / viteză; la oala sub presiune: presiune și timp).
 - În notes scrie pe scurt ce aparat folosește rețeta și, dacă e cazul, cum se face fără el.
-- Dacă cererea nu e despre mâncare, pune title = "" și listele goale.`
+- Dacă cererea nu e despre mâncare, pune title = "" și listele goale.
+- Respectă restricțiile familiei, dacă sunt date: ce e „alergie” nu apare deloc, nici ca urmă (verifică și ingredientele ascunse);
+  ce e „evităm” înlocuiești cu ceva potrivit; ce nu le place lași deoparte. În notes spune pe scurt ce ai înlocuit.${FACT_RULES}`
 
 const MAX_IDEA_CHARS = 2000
 const MAX_TOOLS = 30
 
-function generate(idea: string, tools: (string | null)[], servings?: number | null): Promise<Imported> {
+const MAX_DIET_CHARS = 1000
+const dietLine = (diet?: string | null) => (diet?.trim() ? `Restricțiile familiei: ${diet.trim().slice(0, MAX_DIET_CHARS)}` : '')
+
+function generate(idea: string, tools: (string | null)[], servings?: number | null, diet?: string | null): Promise<Imported> {
   const list = cleanTools(tools)
   const text = [
     `Cererea: ${idea.trim().slice(0, MAX_IDEA_CHARS)}`,
     `Aparatele familiei: ${list.length ? list.join(', ') : 'doar ustensilele de bază'}.`,
     servings ? `Porții: ${servings}.` : '',
+    dietLine(diet),
   ].filter(Boolean).join('\n')
   return askModel([{ text }], GENERATE_SYSTEM)
 }
 
+// ---- adapting a saved recipe to the family's diet ----
+
+const ADAPT_SYSTEM = GENERATE_SYSTEM + `
+Primești o rețetă existentă și restricțiile familiei. Rescrie-o ca să le respecte: înlocuiește doar ce trebuie,
+păstrează felul de mâncare, titlul (adaugă la final de exemplu „, fără lactoză”), porțiile și pașii, cu cantitățile potrivite pentru înlocuitori.
+În notes scrie ce ai înlocuit, de forma „smântână → iaurt grecesc fără lactoză”.`
+
+function adapt(recipeJson: string, diet: string, tools: (string | null)[]): Promise<Imported> {
+  let r: Partial<Imported> = {}
+  try { r = JSON.parse(recipeJson.slice(0, MAX_FREE_TEXT_CHARS)) } catch { throw new Error('Rețeta nu a putut fi citită.') }
+  const list = cleanTools(tools)
+  const text = [
+    `Rețeta: ${r.title ?? ''}${r.servings ? ` (${r.servings} porții)` : ''}`,
+    `Ingrediente:\n${(r.ingredients ?? []).join('\n')}`,
+    `Pași:\n${(r.steps ?? []).join('\n')}`,
+    r.notes ? `Note: ${r.notes}` : '',
+    `Aparatele familiei: ${list.length ? list.join(', ') : 'doar ustensilele de bază'}.`,
+    dietLine(diet),
+  ].filter(Boolean).join('\n\n')
+  return askModel([{ text }], ADAPT_SYSTEM)
+}
+
+// ---- values and allergens of a saved recipe ----
+
+const FACTS_TOOL = {
+  toolSpec: {
+    name: 'save_facts',
+    description: 'Salvează valorile nutriționale și alergenii.',
+    inputSchema: { json: { type: 'object', properties: FACT_PROPS, required: ['nutrition', 'allergens'] } },
+  },
+}
+
+async function analyze(title: string, servings: number | null | undefined, ingredients: string[]) {
+  const res = await bedrock.send(new ConverseCommand({
+    modelId: MODEL_ID,
+    system: [{ text: `Ești nutriționist. Pentru rețeta dată estimezi valorile nutriționale pe porție și alergenii. Răspunde apelând unealta save_facts.${FACT_RULES}` }],
+    messages: [{ role: 'user', content: [{ text: `Rețeta: ${title.slice(0, 200)}\nPorții: ${servings || 'nespecificat'}\nIngrediente:\n${ingredients.slice(0, 60).join('\n').slice(0, MAX_FREE_TEXT_CHARS)}` }] }],
+    toolConfig: { tools: [FACTS_TOOL], toolChoice: { tool: { name: 'save_facts' } } },
+    inferenceConfig: { maxTokens: 1200 },
+  }))
+  const block = res.output?.message?.content?.find((c) => c.toolUse)
+  return factsJson((block?.toolUse?.input ?? {}) as Facts)
+}
+
 // ---- ideas from the fridge ----
 
-type Idea = { title: string; description?: string; tools?: string[]; missing?: string[]; minutes?: number }
+type Idea = { title: string; description?: string; tools?: string[]; missing?: string[]; minutes?: number; kcal?: number; swaps?: string[] }
 
 const SUGGEST_SYSTEM = `Ești un bucătar care ajută o familie din România să gătească din ce are în frigider.
 Răspunde întotdeauna apelând unealta suggest_recipes.
@@ -233,7 +328,10 @@ Reguli:
 - Folosește în principal ingredientele date. Presupune că familia are sare, piper, ulei, apă, zahăr și făină.
 - În missing pune doar ce ar mai trebui cumpărat (cel mult 3 lucruri); listă goală dacă nu lipsește nimic. Preferă rețete fără ingrediente lipsă.
 - Folosește DOAR ustensilele de bază (aragaz, cuptor, cratițe, tigaie) și aparatele familiei. În tools pune aparatele familiei pe care le folosește rețeta.
-- description: o frază scurtă și apetisantă.`
+- description: o frază scurtă și apetisantă.
+- kcal: estimarea caloriilor pe o porție.
+- Respectă restricțiile familiei, dacă sunt date: ce e „alergie” nu apare deloc (nici ca urmă); ce e „evităm” înlocuiești
+  (în swaps scrie de forma „iaurt fără lactoză în loc de smântână”), chiar dacă e în frigider; ce nu le place lași deoparte.`
 
 const SUGGEST_TOOL = {
   toolSpec: {
@@ -253,6 +351,8 @@ const SUGGEST_TOOL = {
                 tools: { type: 'array', items: { type: 'string' } },
                 missing: { type: 'array', items: { type: 'string' } },
                 minutes: { type: 'integer', description: 'Timp total, în minute' },
+                kcal: { type: 'integer', description: 'Calorii pe porție, estimat' },
+                swaps: { type: 'array', items: { type: 'string' }, description: 'Ce ai înlocuit ca să respecți restricțiile' },
               },
               required: ['title', 'description', 'missing'],
             },
@@ -267,11 +367,12 @@ const SUGGEST_TOOL = {
 const cleanTools = (tools: (string | null)[] | null | undefined) =>
   (tools ?? []).filter((t): t is string => !!t).map((t) => t.trim().slice(0, 60)).filter(Boolean).slice(0, MAX_TOOLS)
 
-async function suggest(ingredients: string, tools: string[]): Promise<Idea[]> {
+async function suggest(ingredients: string, tools: string[], diet?: string | null): Promise<Idea[]> {
   const text = [
     `Ce am în frigider: ${ingredients.trim().slice(0, MAX_IDEA_CHARS)}`,
     `Aparatele familiei: ${tools.length ? tools.join(', ') : 'doar ustensilele de bază'}.`,
-  ].join('\n')
+    dietLine(diet),
+  ].filter(Boolean).join('\n')
   const res = await bedrock.send(new ConverseCommand({
     modelId: MODEL_ID,
     system: [{ text: SUGGEST_SYSTEM }],
@@ -326,7 +427,8 @@ async function generatePhoto(title: string, ingredients: string[]): Promise<stri
 
 type PhotoEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: { title: string; ingredients?: (string | null)[] | null } }
 
-type SuggestEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: { ingredients: string; tools?: (string | null)[] | null } }
+type SuggestEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: { ingredients: string; tools?: (string | null)[] | null; diet?: string | null } }
+type AnalyzeEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: { title: string; servings?: number | null; ingredients: (string | null)[] } }
 
 // ---- free text (typed, pasted or dictated) ----
 
@@ -344,15 +446,19 @@ function fromText(text: string): Promise<Imported> {
 }
 
 const importHandler: Schema['importRecipe']['functionHandler'] = async (event) => {
-  const { url, photoKey, text, idea, tools, servings } = event.arguments
+  const { url, photoKey, text, idea, tools, servings, diet, adaptFrom } = event.arguments
+  if (adaptFrom) {
+    if (!diet?.trim()) throw new Error('Nu e setat ce nu mănâncă familia.')
+    return adapt(adaptFrom, diet, tools ?? [])
+  }
   if (url) return fromUrl(url)
   if (photoKey) return fromPhoto(photoKey)
   if (text?.trim()) return fromText(text)
-  if (idea?.trim()) return generate(idea, tools ?? [], servings)
+  if (idea?.trim()) return generate(idea, tools ?? [], servings, diet)
   throw new Error('Trimite un link, o poză, un text sau o idee de rețetă.')
 }
 
-// One function serves importRecipe, suggestRecipes and generateRecipePhoto.
+// One function serves importRecipe, suggestRecipes, analyzeRecipe and generateRecipePhoto.
 export const handler = async (event: Parameters<typeof importHandler>[0] | SuggestEvent, ...rest: unknown[]) => {
   const e = event as SuggestEvent
   callerSpace = spaceOf((event as { identity?: { groups?: string[] | null } }).identity?.groups)
@@ -361,10 +467,16 @@ export const handler = async (event: Parameters<typeof importHandler>[0] | Sugge
     const { title, ingredients } = (event as unknown as PhotoEvent).arguments
     return generatePhoto(title ?? '', (ingredients ?? []).filter((x): x is string => !!x?.trim()))
   }
+  if (field === 'analyzeRecipe') {
+    const { title, servings, ingredients } = (event as unknown as AnalyzeEvent).arguments
+    const list = (ingredients ?? []).filter((x): x is string => !!x?.trim())
+    if (!list.length) throw new Error('Rețeta nu are ingrediente.')
+    return analyze(title ?? '', servings, list)
+  }
   if (field === 'suggestRecipes' || (!field && 'ingredients' in (e.arguments ?? {}))) {
-    const { ingredients, tools } = (event as SuggestEvent).arguments
+    const { ingredients, tools, diet } = (event as SuggestEvent).arguments
     if (!ingredients?.trim()) throw new Error('Scrie ce ai în frigider.')
-    return suggest(ingredients, cleanTools(tools))
+    return suggest(ingredients, cleanTools(tools), diet)
   }
   return (importHandler as (...a: unknown[]) => unknown)(event, ...rest)
 }

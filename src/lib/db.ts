@@ -5,6 +5,7 @@
 import { generateClient } from 'aws-amplify/data'
 import type { Schema } from '../../amplify/data/resource'
 import type { SharedSettings } from './settings'
+import { parseAllergens, parseDiet, parseNutrition } from './diet'
 import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, removePhoto, saveAudio } from './offline'
 import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
@@ -30,6 +31,8 @@ const toRecipe = (r: RecipeRow): Recipe => (fileOwner(`Recipe:${r.id}`, r.photoK
   notes: r.notes ?? undefined,
   sourceUrl: r.sourceUrl ?? undefined,
   photoKey: r.photoKey ?? undefined,
+  nutrition: parseNutrition(r.nutrition),
+  allergens: parseAllergens(r.allergens),
   updatedAt: r.updatedAt,
   mine: isMine(r.spaceGroups),
   shared: isShared(r.readerGroups),
@@ -185,12 +188,29 @@ export async function saveRecipe(r: Recipe, isNew: boolean) {
   const { updatedAt: _, mine: _m, shared, spaceName: _n, ...fields } = r
   const input = { ...fields, category: fields.category || null, notes: fields.notes || null, sourceUrl: fields.sourceUrl || null,
     servings: fields.servings ?? null, minutes: fields.minutes ?? null, photoKey: fields.photoKey ?? null,
-    stepPhotoKeys: fields.stepPhotoKeys?.some(Boolean) ? fields.stepPhotoKeys : null }
+    stepPhotoKeys: fields.stepPhotoKeys?.some(Boolean) ? fields.stepPhotoKeys : null,
+    nutrition: fields.nutrition ? JSON.stringify(fields.nutrition) : null, allergens: fields.allergens ? JSON.stringify(fields.allergens) : null }
   // A new recipe starts private to its space.
   const res = isNew
     ? await client.models.Recipe.create({ ...input, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(!!shared), spaceName: mySpaceName() })
     : await client.models.Recipe.update(input)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+}
+
+/** Estimates a recipe's values per serving and allergens (AI), from its ingredients. */
+export async function analyzeRecipe(r: Pick<Recipe, 'title' | 'servings' | 'ingredients'>) {
+  const res = await client.queries.analyzeRecipe({ title: r.title, servings: r.servings ?? null, ingredients: r.ingredients })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  const nutrition = parseNutrition(res.data?.nutrition)
+  if (!nutrition) throw new Error('Nu am putut calcula valorile.')
+  return { nutrition, allergens: parseAllergens(res.data?.allergens) ?? [] }
+}
+
+/** Keeps the worked-out values and allergens on our own recipe (and its cached copy). */
+export async function setRecipeFacts(r: Recipe, facts: Pick<Recipe, 'nutrition' | 'allergens'>) {
+  errorsOf(await client.models.Recipe.update({ id: r.id, nutrition: JSON.stringify(facts.nutrition), allergens: JSON.stringify(facts.allergens ?? []) }))
+  const cached = await cachedList('recipes').catch(() => undefined)
+  if (cached) await cacheList('recipes', cached.map((x) => (x.id === r.id ? { ...x, ...facts } : x))).catch(() => {})
 }
 
 export async function deleteRecipe(r: Recipe) {
@@ -397,7 +417,7 @@ export async function deleteFolder(name: string, row: StoryFolder | undefined, s
 
 export type ImportedRecipe = NonNullable<Awaited<ReturnType<typeof client.queries.importRecipe>>['data']>
 
-async function runImport(args: { url?: string; photoKey?: string; text?: string; idea?: string; tools?: string[]; servings?: number }) {
+async function runImport(args: { url?: string; photoKey?: string; text?: string; idea?: string; tools?: string[]; servings?: number; diet?: string; adaptFrom?: string }) {
   const res = await client.queries.importRecipe(args)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data?.title) throw new Error('Nu am găsit o rețetă aici.')
@@ -409,17 +429,21 @@ export const importRecipeFromUrl = (url: string) => runImport({ url })
 /** Lets Claude structure free text (dictated, or pasted without clear headings). */
 export const importRecipeFromText = (text: string) => runImport({ text })
 
-export type RecipeIdea = { title: string; description?: string | null; tools?: (string | null)[] | null; missing?: (string | null)[] | null; minutes?: number | null }
+export type RecipeIdea = { title: string; description?: string | null; tools?: (string | null)[] | null; missing?: (string | null)[] | null; minutes?: number | null; kcal?: number | null; swaps?: (string | null)[] | null }
 
 /** Asks Claude for a few dishes that can be made from what is in the fridge. */
-export async function suggestRecipes(ingredients: string, tools: string[]): Promise<RecipeIdea[]> {
-  const res = await client.queries.suggestRecipes({ ingredients, tools })
+export async function suggestRecipes(ingredients: string, tools: string[], diet?: string): Promise<RecipeIdea[]> {
+  const res = await client.queries.suggestRecipes({ ingredients, tools, diet: diet || null })
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   return (res.data ?? []).filter((x): x is NonNullable<typeof x> => !!x)
 }
 
 /** Asks Claude for a new recipe from an idea, using only the given kitchen tools. */
-export const generateRecipe = (idea: string, tools: string[], servings?: number) => runImport({ idea, tools, servings })
+export const generateRecipe = (idea: string, tools: string[], servings?: number, diet?: string) => runImport({ idea, tools, servings, diet: diet || undefined })
+
+/** Rewrites a saved recipe so it fits the family's diet (a new recipe, the original stays). */
+export const adaptRecipe = (r: Recipe, diet: string, tools: string[]) =>
+  runImport({ adaptFrom: JSON.stringify({ title: r.title, servings: r.servings, ingredients: r.ingredients, steps: r.steps, notes: r.notes }), diet, tools })
 
 /** Draws a photo for a recipe with AI and returns its storage path. */
 export async function generateRecipePhoto(title: string, ingredients: string[]): Promise<string> {
@@ -503,6 +527,20 @@ export async function setStoryCover(s: Story, coverKey: string) {
   if (old) await removeFile(old)
 }
 
+/**
+ * The drawn cover: emoji and colours. With `dropPicture` the cover picture goes, so the drawing
+ * shows (the picture file is deleted).
+ */
+export async function setStoryDrawing(s: Story, emoji: string, scene: number, dropPicture = false) {
+  const old = dropPicture ? s.coverKey : undefined
+  if (old) owners.set(old, `Story:${s.id}`)
+  const res = await client.models.Story.update({ id: s.id, emoji, scene, ...(dropPicture ? { coverKey: null } : {}) })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (old) await removeFile(old).catch(() => {})
+  const cached = await cachedList('stories').catch(() => undefined)
+  if (cached) await cacheList('stories', cached.map((x) => (x.id === s.id ? { ...x, emoji, scene, ...(dropPicture ? { coverKey: undefined } : {}) } : x))).catch(() => {})
+}
+
 // ---- family accounts ----
 
 /** An account; `sameSpace` = in the signed-in account's space (sees everything there). */
@@ -578,7 +616,7 @@ async function refreshSharedNames(name: string | undefined) {
 }
 
 /** The space's settings from the cloud, or null if they were never saved there. */
-export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid'> & { city?: string; kid?: SharedSettings['kid'] }) | null> {
+export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid' | 'diet'> & { city?: string; kid?: SharedSettings['kid']; diet?: SharedSettings['diet'] }) | null> {
   const res = await client.models.FamilySettings.get({ id: await mySpaceGroup() })
   check(res)
   const r = res.data
@@ -600,6 +638,7 @@ export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' 
       minutes: r.kidMinutes ?? 30,
       folders: clean(r.kidFolders),
     },
+    diet: parseDiet(r.diet),
   }
 }
 
@@ -618,6 +657,7 @@ export async function saveFamilySettings(s: SharedSettings) {
     kidPinSalt: s.kid.pinSalt ?? null,
     kidMinutes: s.kid.minutes,
     kidFolders: s.kid.folders,
+    diet: JSON.stringify(s.diet),
     spaceName: mySpaceName(),
   }
   const res = await client.models.FamilySettings.update(row)

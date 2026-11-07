@@ -11,6 +11,9 @@ export interface Recipe {
   notes?: string
   sourceUrl?: string
   photoKey?: string
+  /** Estimated by AI from the ingredients: values per serving and allergens (src/lib/diet.ts). */
+  nutrition?: import('./diet').Nutrition
+  allergens?: import('./diet').AllergenHit[]
   updatedAt?: string
   /** Set when read from the cloud: in the signed-in account's space, and shared with every account. */
   mine?: boolean

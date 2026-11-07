@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteRecipe, getRecipe, setRecipeShared } from '../lib/db'
 import ShareIcon from '../components/ShareIcon'
+import RecipeFacts from '../components/RecipeFacts'
 import { showToast } from '../lib/toast'
 import type { Recipe } from '../lib/types'
 import { keepPhotos, useFileUrl } from '../lib/useFileUrl'
@@ -149,6 +150,8 @@ export default function RecipeView() {
             ? <span className="pill">De la {r.spaceName ?? 'alt cont'}</span>
             : r.shared && <span className="pill pill-shared"><ShareIcon shared size={14} /> Partajată</span>}
         </div>
+
+        <RecipeFacts r={r} onFacts={(f) => setR((cur) => (cur ? { ...cur, ...f } : cur))} />
 
         {r.steps.length > 0 && (() => {
           const saved = getProgress(r.id)

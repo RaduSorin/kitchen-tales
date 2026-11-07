@@ -13,6 +13,7 @@ import { formatMinutes } from '../lib/format'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import MicButton from '../components/MicButton'
 import { spokenIngredientLines } from '../lib/spokenIngredients'
+import { dietSummary, dietText, hasDiet, parseAllergens, parseNutrition } from '../lib/diet'
 import { useSettings } from '../lib/settings'
 import { canGoBack, useBack } from '../lib/back'
 import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
@@ -106,7 +107,11 @@ export default function RecipeEdit() {
   // What the recipe looked like when the editor opened (blank for a new one).
   const [base, setBase] = useState(() => snap(empty(), '', []))
   const [error, setError] = useState('')
-  const { kitchenTools } = useSettings()
+  const { kitchenTools, diet } = useSettings()
+  // What the family doesn't eat, for the AI (empty: nothing to respect).
+  const dietStr = hasDiet(diet) ? dietText(diet) : undefined
+  // The ingredients and servings the AI's values were worked out for: changed before saving, they go.
+  const factsFor = useRef<string>(undefined)
   const [idea, setIdea] = useState('')
   const [genServings, setGenServings] = useState(4)
   // Tools left out for this one recipe (all of the family's tools are used by default).
@@ -177,7 +182,10 @@ export default function RecipeEdit() {
       notes: x.notes ?? undefined,
       sourceUrl: x.sourceUrl ?? undefined,
       photoKey: x.photoKey ?? r.photoKey,
+      nutrition: parseNutrition(x.nutrition),
+      allergens: parseAllergens(x.allergens),
     })
+    factsFor.current = `${clean(x.ingredients).join('\n')}|${x.servings ?? ''}`
   }
 
   const makeAiPhoto = (title: string, ingredients: string[]) => {
@@ -216,13 +224,13 @@ export default function RecipeEdit() {
   }
   const useTools = kitchenTools.filter((t) => !skipTools.includes(t))
   const runGenerate = () => {
-    if (idea.trim()) doImport('Scriu rețeta…', () => generateRecipe(idea.trim(), useTools, genServings))
+    if (idea.trim()) doImport('Scriu rețeta…', () => generateRecipe(idea.trim(), useTools, genServings, dietStr))
   }
   const runSuggest = async () => {
     if (!fridge.trim()) return
     setImporting('Mă uit ce se poate găti…'); setError('')
     try {
-      const xs = await suggestRecipes(fridge.trim(), useTools)
+      const xs = await suggestRecipes(fridge.trim(), useTools, dietStr)
       if (!xs.length) setError('Nu am găsit nicio idee. Adaugă mai multe ingrediente.')
       setIdeas(xs)
     } catch (err) { setError(`Nu am putut propune rețete: ${errorText(err)}`) }
@@ -232,11 +240,23 @@ export default function RecipeEdit() {
     const brief = `${x.title}${x.description ? ` (${x.description})` : ''}. ` +
       `Folosește ce am în frigider: ${fridge.trim()}. Pe lângă asta am doar sare, piper, ulei, apă, zahăr și făină` +
       (x.missing?.length ? `, iar pot cumpăra: ${x.missing.join(', ')}.` : '.')
-    doImport(`Scriu rețeta „${x.title}”…`, () => generateRecipe(brief, useTools, genServings))
+    doImport(`Scriu rețeta „${x.title}”…`, () => generateRecipe(brief, useTools, genServings, dietStr))
   }
+
+  // What the family doesn't eat, always in sight where recipes are written (Profile › Ce mâncăm).
+  const dietRow = hasDiet(diet) ? (
+    <Link to="/profil/mancare" className="diet-row-link">
+      <span className="diet-shield" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z" /></svg>
+      </span>
+      <span className="diet-row-text">{[dietSummary(diet), diet.dislikes.trim() ? `fără ${diet.dislikes.trim()}` : ''].filter(Boolean).join(' · ')}</span>
+      <span className="diet-row-change">Schimbă</span>
+    </Link>
+  ) : null
 
   const genOptions = (
     <>
+    {dietRow}
     <div className="gen-row">
       <span id="gen-serv-label">Porții</span>
       <div className="stepper" role="group" aria-labelledby="gen-serv-label">
@@ -294,7 +314,13 @@ export default function RecipeEdit() {
       const kept = steps.filter((s) => s.text.trim())
       const stepPhotoKeys = await Promise.all(kept.map(async (s) =>
         s.photoBlob ? uploadFile('recipe-photos', await resizeImage(s.photoBlob), 'jpg') : s.photoKey ?? ''))
-      await saveRecipe({ ...r, photoKey, title: r.title.trim(), ingredients: lines(ing), steps: kept.map((s) => s.text.trim()), stepPhotoKeys }, !id)
+      // Values and allergens stay only while the ingredients and servings are the ones they were
+      // worked out for (an import, or the saved recipe); otherwise they are worked out again later.
+      const ingredients = lines(ing)
+      const now = `${ingredients.join('\n')}|${r.servings ?? ''}`
+      const was = factsFor.current ?? (original ? `${original.ingredients.join('\n')}|${original.servings ?? ''}` : undefined)
+      const facts = now === was ? { nutrition: r.nutrition, allergens: r.allergens } : { nutrition: undefined, allergens: undefined }
+      await saveRecipe({ ...r, ...facts, photoKey, title: r.title.trim(), ingredients, steps: kept.map((s) => s.text.trim()), stepPhotoKeys }, !id)
       // Clean up photos that were replaced or removed.
       if (original?.photoKey && original.photoKey !== photoKey) await removeFile(original.photoKey)
       for (const k of made.current) if (k !== photoKey) await removeFile(k)
@@ -348,6 +374,7 @@ export default function RecipeEdit() {
           ideas?.length ? (
             <div className="add-panel">
               <span className="gen-label">Alege ce gătești</span>
+              {dietRow}
               <div className="ideas">
                 {ideas.map((x) => (
                   <button type="button" key={x.title} className="idea" onClick={() => pickIdea(x)}>
@@ -357,6 +384,13 @@ export default function RecipeEdit() {
                       {[x.minutes ? formatMinutes(x.minutes) : '', ...(x.tools ?? []).filter((t): t is string => !!t)].filter(Boolean).join(' · ')}
                     </small>
                     {x.missing?.length ? <small className="idea-missing">Îți mai trebuie: {x.missing.join(', ')}</small> : null}
+                    {(dietStr || x.kcal) ? (
+                      <span className="idea-tags">
+                        {dietStr && <span className="idea-fit">potrivit pentru familie</span>}
+                        {x.kcal ? <span className="idea-kcal">{x.kcal} kcal / porție</span> : null}
+                      </span>
+                    ) : null}
+                    {x.swaps?.filter(Boolean).length ? <small className="idea-swaps">În loc: {x.swaps.filter(Boolean).join('; ')}</small> : null}
                   </button>
                 ))}
               </div>

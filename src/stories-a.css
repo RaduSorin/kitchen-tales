@@ -837,3 +837,86 @@
 .fin-scenes button span { position: relative; font-size: 1.9rem; line-height: 1; filter: drop-shadow(0 3px 5px rgb(0 0 0 / .3)); }
 .fin-scenes button.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
 .mic-detail { display: block; margin-top: 4px; color: var(--muted); font-size: .75rem; overflow-wrap: anywhere; }
+
+/* The player's "Coperta" sheet: a preview, the drawing (emoji and colours), then a picture. */
+.cover-change { display: grid; gap: 14px; }
+.cover-change .cover-change-preview { justify-self: center; width: min(44vw, 170px); border-radius: 14px; box-shadow: 0 16px 34px rgb(0 0 0 / .45); }
+.cover-change .cover-change-preview > span { font-size: min(18vw, 72px); }
+.cover-change h2.fin-label { margin-top: 6px; }
+.cover-change .moon-btn { width: 100%; }
+
+/* Shopping list by aisle: a switch "Pe raioane / Pe rețete", gold aisle labels with a line icon. */
+.shop-view { margin: 4px 0 6px; background: rgb(0 0 0 / .25); }
+.shop-aisle h2 { display: flex; align-items: center; gap: 10px; font-family: var(--f-body); font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.shop-aisle h2 .count { margin-left: auto; color: var(--muted); letter-spacing: 0; font-size: .8rem; }
+.shop-aisle-ic { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgb(242 200 121 / .12); box-shadow: inset 0 0 0 1px rgb(242 200 121 / .3); flex: none; }
+
+/* Profile › Ce mâncăm: chips for what the family avoids; per item how strict and for whom. */
+.diet-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.diet-chips .chip { min-height: 40px; }
+.settings .diet-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; }
+.diet-seg { font-size: .85rem; }
+.diet-seg button[aria-pressed=true] { font-weight: 800; }
+.diet-row .diet-who { grid-column: 1 / -1; max-width: none !important; text-align: left !important; }
+
+/* ---------- Recipes: values per serving, what goes against the family's diet, allergens ---------- */
+.facts-busy { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .9rem; }
+.facts-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 12px 4px; border-radius: 18px; cursor: pointer; text-align: center;
+  background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .08); color: var(--text); font: inherit; }
+.facts-strip > span { display: grid; gap: 2px; }
+.facts-strip > span + span { box-shadow: -1px 0 0 rgb(255 255 255 / .08); }
+.facts-strip b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.facts-strip small, .facts-note { font-size: .75rem; color: var(--muted); font-weight: 600; }
+.facts-note { margin-top: -8px; text-align: center; font-weight: 500; }
+.facts-clash { display: grid; gap: 10px; padding: 14px; border-radius: 18px; background: rgb(242 200 121 / .08); border: 1px solid rgb(242 200 121 / .3); }
+.facts-clash.strict { background: rgb(255 155 110 / .1); border-color: rgb(255 155 110 / .4); }
+.facts-clash-head { display: flex; gap: 10px; align-items: flex-start; }
+.facts-clash-head > div { display: grid; gap: 2px; }
+.facts-clash-head b { font-size: 1rem; }
+.facts-clash-head span { font-size: .9rem; color: #d9cfc4; line-height: 1.4; }
+.facts-clash-ic { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: rgb(242 200 121 / .16); color: var(--accent); }
+.facts-clash.strict .facts-clash-ic { background: rgb(255 155 110 / .18); color: #ffb08a; }
+.facts-adapt { width: 100%; padding: 12px 18px; font-size: 1rem; }
+.facts-allergens { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .82rem; }
+.facts-allergens-label { color: var(--muted); font-weight: 600; margin-right: 2px; }
+.facts-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); font-weight: 600; }
+.facts-chip.clash { background: rgb(255 155 110 / .16); color: #ffb08a; font-weight: 800; }
+.facts-chip.ok { background: rgb(143 196 166 / .14); color: #9fd3b4; font-weight: 700; }
+.facts-card { display: grid; gap: 16px; }
+.facts-ring-row { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 18px; align-items: center; }
+.facts-ring { position: relative; width: 128px; height: 128px; }
+.facts-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.facts-ring circle { fill: none; stroke-width: 5; }
+.facts-ring .t { stroke: var(--surface-2); }
+.facts-ring .p, .facts-macros i.p { stroke: #f2c879; background: #f2c879; }
+.facts-ring .c, .facts-macros i.c { stroke: #e08a5a; background: #e08a5a; }
+.facts-ring .f, .facts-macros i.f { stroke: #8fb6e0; background: #8fb6e0; }
+.facts-ring > span { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.facts-ring b { font-family: var(--f-title); font-size: 1.7rem; line-height: 1; }
+.facts-ring small { color: var(--muted); font-weight: 700; font-size: .75rem; }
+.facts-macros { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.facts-macros li { display: flex; align-items: center; gap: 8px; }
+.facts-macros i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.facts-macros b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.facts-more { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.facts-more span { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: rgb(255 255 255 / .05); }
+.facts-more small { color: var(--muted); font-size: .75rem; font-weight: 600; }
+.facts-card h3.fin-label { margin: 2px 0 -6px; }
+.facts-list { list-style: none; margin: 0; padding: 0; border-radius: 16px; overflow: hidden; background: rgb(255 255 255 / .05); }
+.facts-list li { display: flex; justify-content: space-between; gap: 10px; padding: 11px 14px; }
+.facts-list li + li { box-shadow: 0 -1px 0 rgb(255 255 255 / .06); }
+.facts-list small { color: var(--muted); }
+.facts-list li.clash b { color: #ffb08a; }
+.facts-list li.none { color: var(--muted); }
+.facts-disclaimer { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.4; }
+
+/* Where recipes are written: the family's diet in one line, tap to change it in Profile. */
+.diet-row-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .08);
+  color: var(--text); text-decoration: none; font-size: .9rem; }
+.diet-shield { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgb(242 200 121 / .12); color: var(--accent); }
+.diet-row-text { flex: 1; min-width: 0; line-height: 1.35; }
+.diet-row-change { color: var(--accent); font-weight: 700; }
+.idea-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.idea-fit { padding: 3px 9px; border-radius: 999px; background: rgb(143 196 166 / .14); color: #9fd3b4; font-size: .78rem; font-weight: 700; }
+.idea-kcal { padding: 3px 9px; border-radius: 999px; background: var(--surface-2); font-size: .78rem; font-weight: 600; }
+.idea-swaps { color: #d9cfc4; }

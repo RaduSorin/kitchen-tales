@@ -1,13 +1,16 @@
-/** One short message at the bottom of the screen, optionally with an undo button (like iOS / Android apps). */
-export type Toast = { id: number; text: string; undo?: () => void }
+/**
+ * One short message at the bottom of the screen, optionally with a button (like iOS / Android
+ * apps): "Anulează" by default, or `label` (e.g. "Deschide"); `ms` keeps it longer on screen.
+ */
+export type Toast = { id: number; text: string; undo?: () => void; label?: string; ms?: number }
 
 let current: Toast | undefined
 let nextId = 1
 const listeners = new Set<() => void>()
 const emit = () => listeners.forEach((fn) => fn())
 
-export function showToast(text: string, undo?: () => void) {
-  current = { id: nextId++, text, undo }
+export function showToast(text: string, undo?: () => void, opts?: { label?: string; ms?: number }) {
+  current = { id: nextId++, text, undo, ...opts }
   emit()
 }
 

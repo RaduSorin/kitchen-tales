@@ -18,8 +18,8 @@ import { dayKey, mondayOf, planStore, today, weekDays } from '../lib/plan'
 import { LoadError, Loading } from '../components/LoadState'
 
 // The recipes Acasă, design "Vitrina": the dish photo fills the top of the screen (swipe between
-// the dish you're cooking, today's plan and the newest recipe), then today's menu, "Săptămâna ta"
-// as seven round plates, recent recipes, "Caietul meu" (one collection card per category) and
+// the dish you're cooking, today's plan and the newest recipe), then today's menu, recent recipes,
+// "Săptămâna ta" as seven round plates, "Caietul meu" (one collection card per category) and
 // tonight's story.
 
 const Play = ({ size = 14 }: { size?: number }) => (
@@ -227,6 +227,20 @@ export default function Home() {
         </section>
       )}
 
+      {recent.length > 0 && (
+        <section className="home-sec">
+          <Sec title="Recente" link="Toate" to="/retete" />
+          <div className="vt-scroll" key={recent.map((r) => r.id).join()}>
+            {recent.map((r) => (
+              <Link key={r.id} to={`/retete/${r.id}`} className="vt-tall">
+                <span className="vt-img"><Thumb r={r} /></span>
+                <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="home-sec">
         <Sec title="Săptămâna ta" link="Planifică" to="/saptamana/planifica" />
         <div className="vt-week">
@@ -243,20 +257,6 @@ export default function Home() {
           })}
         </div>
       </section>
-
-      {recent.length > 0 && (
-        <section className="home-sec">
-          <Sec title="Recente" link="Toate" to="/retete" />
-          <div className="vt-scroll" key={recent.map((r) => r.id).join()}>
-            {recent.map((r) => (
-              <Link key={r.id} to={`/retete/${r.id}`} className="vt-tall">
-                <span className="vt-img"><Thumb r={r} /></span>
-                <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       {categories.length > 0 && (
         <section className="home-sec">

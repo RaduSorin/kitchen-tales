@@ -22,7 +22,8 @@ export default function CoverSearch({ title, artist, auto, chosen, onPick }: {
     try { setFound(await findCovers(t.trim(), artist)) } catch { setError('Căutarea nu a mers acum. Încearcă din nou.') }
     setBusy(false)
   }
-  useEffect(() => { if (auto && title.trim()) run(title) }, [auto])
+  // Only when asked to search by itself (a new file picked), not again on every change of the title.
+  useEffect(() => { if (auto && title.trim()) run(title) }, [auto]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="cover-search">

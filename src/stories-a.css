@@ -1152,3 +1152,10 @@
   .vt-cover .vt-photo { left: auto; width: 300px; top: 24px; right: 24px; border-radius: 18px; overflow: hidden; -webkit-mask-image: none; mask-image: none; box-shadow: 0 24px 50px rgb(0 0 0 / .5); }
   .vt-cover .vt-text { right: 348px; }
 }
+
+/* Cards with the length badge print the title under the cover: drawn on the cover too, it ran under
+   the badge ("Scufița Roș…"). There the drawing keeps just its emoji, in the middle. */
+.sa-cover:has(> .sa-dur) .story-cover > .cover-name { display: none; }
+.sa-cover:has(> .sa-dur) .story-cover:not(.has-img) > span { transform: none; }
+/* A folder's "2 povești" stays readable over a bright cover glow. */
+:root[data-area="night"] .folder-sub > span { color: rgb(255 255 255 / .82); text-shadow: 0 1px 6px rgb(0 0 0 / .45); }

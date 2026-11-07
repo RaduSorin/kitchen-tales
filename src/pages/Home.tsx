@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listRecipes, listStories } from '../lib/db'
 import type { Recipe, Story } from '../lib/types'
@@ -13,13 +13,14 @@ import { useGlow } from '../lib/glow'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import StoryCover from '../components/StoryCover'
 import HomeHead from '../components/HomeHead'
+import Vitrine, { type VitrineSlide } from '../components/Vitrine'
 import { useSyncedList } from '../lib/synced'
 import { dayKey, mondayOf, planStore, today, weekDays } from '../lib/plan'
 import { LoadError, Loading } from '../components/LoadState'
 
 // The recipes Acasă, design "Vitrina": the dish photo fills the top of the screen (swipe between
-// the dish you're cooking, today's plan and the newest recipe), then today's menu, "Săptămâna ta"
-// as seven round plates, recent recipes, "Caietul meu" (one collection card per category) and
+// the dish you're cooking, today's plan and the newest recipe), then today's menu, recent recipes,
+// "Săptămâna ta" as seven round plates, "Caietul meu" (one collection card per category) and
 // tonight's story.
 
 const Play = ({ size = 14 }: { size?: number }) => (
@@ -37,44 +38,6 @@ const NEW_DAYS = 7
 const isNew = (r: Recipe) => !!r.createdAt && Date.now() - Date.parse(r.createdAt) < NEW_DAYS * 86400000
 
 type Slide = { r: Recipe; kicker: string; action: string; to: string }
-
-/** The top of the page: full-width dish photos you swipe through, the switch and search on them. */
-function Vitrine({ slides, active, onActive }: { slides: Slide[]; active: number; onActive: (i: number) => void }) {
-  const track = useRef<HTMLDivElement>(null)
-  const onScroll = () => {
-    const el = track.current
-    if (!el) return
-    const i = Math.round(el.scrollLeft / el.clientWidth)
-    if (i !== active) onActive(Math.max(0, Math.min(slides.length - 1, i)))
-  }
-  const go = (i: number) => track.current?.scrollTo({ left: i * track.current.clientWidth, behavior: 'smooth' })
-  return (
-    <section className="vt-hero" aria-roledescription="carusel" aria-label="De gătit">
-      <div className="vt-track" ref={track} onScroll={onScroll}>
-        {slides.map((s, i) => (
-          <div className="vt-slide" key={s.r.id} aria-hidden={i !== active}>
-            <Link to={`/retete/${s.r.id}`} className="vt-photo" tabIndex={-1} aria-hidden="true"><Thumb r={s.r} /></Link>
-            <div className="vt-text">
-              <small className="sa-kicker">{s.kicker}</small>
-              <h2 className="vt-title"><Link to={`/retete/${s.r.id}`}>{s.r.title}</Link></h2>
-              {(s.r.category || s.r.servings) && <small className="vt-meta">{[s.r.category, s.r.servings && `${s.r.servings} porții`].filter(Boolean).join(' · ')}</small>}
-              <div className="vt-btns">
-                <Link to={s.to} className="vt-btn"><Play /> {s.action}</Link>
-                <Link to={`/retete/${s.r.id}`} className="vt-ghost">Rețeta</Link>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="vt-head"><HomeHead search="/cauta" label="Caută rețete, ingrediente sau povești" field="search-input" /></div>
-      {slides.length > 1 && (
-        <div className="vt-dots">
-          {slides.map((s, i) => <button key={s.r.id} type="button" className={i === active ? 'on' : ''} aria-label={`${i + 1} din ${slides.length}`} aria-current={i === active} onClick={() => go(i)} />)}
-        </div>
-      )}
-    </section>
-  )
-}
 
 /** Tonight's story: the one paused halfway, otherwise a different one each day. */
 function pickStory(stories: Story[]) {
@@ -211,7 +174,13 @@ export default function Home() {
     <div className="home vitrina">
       <h1 className="sr-only">Ce gătim azi?</h1>
       {/* New dishes on top (the plan or the recipes arriving): start again from the first one. */}
-      <Vitrine key={slideKey} slides={slides} active={Math.min(active, slides.length - 1)} onActive={setActive} />
+      <Vitrine key={slideKey} label="De gătit" active={Math.min(active, slides.length - 1)} onActive={setActive}
+        head={<HomeHead search="/cauta" label="Caută rețete, ingrediente sau povești" field="search-input" />}
+        slides={slides.map((x): VitrineSlide => ({
+          id: x.r.id, art: <Thumb r={x.r} />, kicker: x.kicker, title: x.r.title, href: `/retete/${x.r.id}`,
+          meta: [x.r.category, x.r.servings && `${x.r.servings} porții`].filter(Boolean).join(' · ') || undefined,
+          action: x.action, actionTo: x.to, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
+        }))} />
 
       {restOfMenu.length > 0 && (
         <section className="home-sec">
@@ -219,6 +188,20 @@ export default function Home() {
           <div className="vt-scroll" key={restOfMenu.map((r) => r.id).join()}>
             {restOfMenu.map((r, i) => (
               <Link key={`${r.id}-${i}`} to={`/retete/${r.id}`} className="vt-wide">
+                <span className="vt-img"><Thumb r={r} /></span>
+                <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recent.length > 0 && (
+        <section className="home-sec">
+          <Sec title="Recente" link="Toate" to="/retete" />
+          <div className="vt-scroll" key={recent.map((r) => r.id).join()}>
+            {recent.map((r) => (
+              <Link key={r.id} to={`/retete/${r.id}`} className="vt-tall">
                 <span className="vt-img"><Thumb r={r} /></span>
                 <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
               </Link>
@@ -243,20 +226,6 @@ export default function Home() {
           })}
         </div>
       </section>
-
-      {recent.length > 0 && (
-        <section className="home-sec">
-          <Sec title="Recente" link="Toate" to="/retete" />
-          <div className="vt-scroll" key={recent.map((r) => r.id).join()}>
-            {recent.map((r) => (
-              <Link key={r.id} to={`/retete/${r.id}`} className="vt-tall">
-                <span className="vt-img"><Thumb r={r} /></span>
-                <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       {categories.length > 0 && (
         <section className="home-sec">

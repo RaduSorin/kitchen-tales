@@ -998,7 +998,23 @@
   /* The header + gives way to the floating one; the last cards can scroll clear of it. */
   .recipes .new-recipe { display: none; }
   .recipes { padding-bottom: 72px; }
+  /* Stories: same floating "+" on Acasă, the shelf and our folders; the header one gives way. */
+  :root[data-area="night"] .shelf .lib-add { display: none; }
+  .shelf, .stories-home { padding-bottom: 72px; }
 }
+/* The ways to add, in a sheet that comes up from the bottom like on iOS: a grabber, frosted dark. */
+.sheet-ios { background: rgb(0 0 0 / .5); }
+.sheet-ios .sheet { background: rgb(30 26 36 / .86); -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .08), 0 -10px 40px rgb(0 0 0 / .4); padding-top: 8px; overscroll-behavior: contain; }
+:root:not([data-area="night"]) .sheet-ios .sheet { background: rgb(34 29 25 / .88); }
+.sheet-grab { width: 38px; height: 5px; border-radius: 3px; background: rgb(255 255 255 / .25); justify-self: center; margin-bottom: 4px; }
+.sheet-ios .sheet-head h2 { font-family: Fraunces, serif; font-weight: 600; }
+.add-sheet-hint { margin: -6px 0 0; }
+.sheet-ios .add-opt, .sheet-ios .way { text-decoration: none; }
+/* Tighter rows than on the full page, so all six ways for a recipe fit on a small iPhone. */
+.sheet-ios .sheet { max-height: 92vh; max-height: 92dvh; }
+.sheet-ios .add-opt, .sheet-ios .way { padding: 9px 4px; gap: 14px; }
+.sheet-ios .add-art { width: 46px; height: 46px; }
 @keyframes fab-in { from { opacity: 0; transform: translateY(10px) scale(.9); } }
 @media (prefers-reduced-motion: reduce) { .fab-new { animation: none; } }
 
@@ -1111,3 +1127,27 @@
 .vt-coll-stack > span:first-child { margin-left: 0; }
 .vt-coll-stack > span > * { width: 100%; height: 100%; object-fit: cover; display: block; }
 .vitrina .ra-story { margin-top: 16px; }
+
+/* Stories Acasă, "Vitrina de seară": the whole square cover on top, melting into its own blurred glow. */
+.vt-cover { height: calc(min(100vw, 640px) + 176px); }
+.vt-blur { position: absolute; inset: 0; z-index: -3; overflow: hidden; pointer-events: none; }
+.vt-blur > .story-cover { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; transform: scale(1.25); filter: blur(30px) saturate(1.4) brightness(.6); }
+.vt-blur::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, var(--bg) 100%); }
+.vt-cover .vt-photo { bottom: auto; aspect-ratio: 1; -webkit-mask-image: linear-gradient(#000 62%, transparent); mask-image: linear-gradient(#000 62%, transparent); }
+.vt-cover .vt-photo > .story-cover { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+.vt-cover .vt-photo > .story-cover > span { font-size: 6rem; }
+.vt-cover .vt-photo::after { background: linear-gradient(180deg, rgb(15 14 19 / .55) 0, rgb(15 14 19 / 0) 24%); }
+.vt-progress { display: block; height: 4px; margin-top: 10px; border-radius: 2px; background: rgb(255 255 255 / .22); overflow: hidden; }
+.vt-progress > i { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
+.vt-round { width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; color: #fff; cursor: pointer;
+  background: rgb(255 255 255 / .14); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.vt-round.on { color: var(--accent); }
+.vt-round:active { transform: scale(.94); }
+.stories-home.vitrina { gap: 18px; }
+.stories-home.vitrina .vt-hero { margin-bottom: -6px; }
+.sh-coll { height: 118px; text-decoration: none; }
+@media (min-width: 760px) {
+  .vt-cover { height: 460px; }
+  .vt-cover .vt-photo { left: auto; width: 300px; top: 24px; right: 24px; border-radius: 18px; overflow: hidden; -webkit-mask-image: none; mask-image: none; box-shadow: 0 24px 50px rgb(0 0 0 / .5); }
+  .vt-cover .vt-text { right: 348px; }
+}

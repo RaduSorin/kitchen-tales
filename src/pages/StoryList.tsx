@@ -4,13 +4,14 @@ import { cachedFolders, createFolder, deleteFolder, downloadStory, listFolders, 
 import type { Story, StoryFolder } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { builtinFolderOf, folderOf, getLastStoryId, getPosition, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
+import { builtinFolderOf, folderOf, folderTime, getLastStoryId, getPosition, groupFolders, SOURCE_COLOR, SOURCE_LABEL } from '../lib/stories'
 import FolderSheet from '../components/FolderSheet'
 import Sheet from '../components/Sheet'
 import { showToast } from '../lib/toast'
 import StoryCover from '../components/StoryCover'
 import ShareIcon from '../components/ShareIcon'
 import { focusField } from '../lib/keyboard'
+import NewStoryFab from '../components/NewStoryFab'
 import { useKid } from '../lib/kidMode'
 import { KidCorner } from '../components/KidMode'
 import { useGlow } from '../lib/glow'
@@ -41,15 +42,6 @@ function Ring({ part }: { part: number }) {
     </svg>
   )
 }
-/** Total listening time of a folder: "45 min", "2 h", "1 h 30". */
-function total(items: Story[]) {
-  const min = Math.round(items.reduce((t, s) => t + (s.durationSec ?? 0), 0) / 60)
-  if (!min) return ''
-  if (min < 60) return `${min} min`
-  const h = Math.floor(min / 60), m = min % 60
-  return m && h < 10 ? `${h} h ${m}` : `${h} h`
-}
-
 export default function StoryList() {
   const [stories, setStories] = useState<Story[]>([])
   const [loading, setLoading] = useState(true)
@@ -266,6 +258,8 @@ export default function StoryList() {
         {kid && <KidCorner />}
         {parent && (!inFolder || open.mine) && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
+      {/* Phones: the floating gold "+" replaces the header one; inside our own folder it adds there. */}
+      {parent && !favMode && (!inFolder || open.mine) && <NewStoryFab folder={inFolder && !open.builtin && open.mine ? open.name : undefined} />}
 
       {available.length > 0 && !favMode && !wideShelf && (
         <div className="search-row">
@@ -307,7 +301,7 @@ export default function StoryList() {
             const art = [...f.items.filter((s) => s.coverKey), ...f.items.filter((s) => !s.coverKey)]
             const fresh = unseen(f.items)
             const started = f.items.filter((s) => getPosition(s.id) > 5).length
-            const time = total(f.items)
+            const time = folderTime(f.items)
             return (
               <button key={f.name} type="button" className="folder-card collection" onClick={() => { gridScroll.current = window.scrollY; setParams({ folder: f.name }, { state: { fromShelf: true } }) }}>
                 {art[0] && <StoryCover story={art[0]} className="collection-tint" />}

@@ -19,11 +19,13 @@ import { canGoBack, useBack } from '../lib/back'
 import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { LoadError, Loading } from '../components/LoadState'
 import AddArt from '../components/AddArt'
+import { clearPickedRecipePages, pickedRecipePages, type RecipeWay } from '../components/NewRecipeFab'
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 
 type Step = { uid: string; text: string; photoKey?: string; photoBlob?: Blob }
 type Mode = 'choose' | 'link' | 'photo' | 'text' | 'generate' | 'fridge' | 'edit'
+const WAY_MODE: Record<RecipeWay, Mode> = { link: 'link', poza: 'photo', scriu: 'edit', frigider: 'fridge', genereaza: 'generate', text: 'text' }
 
 /** Photos of one recipe read together: a book's two pages, both sides of a note. */
 const MAX_PAGES = 4
@@ -125,8 +127,8 @@ export default function RecipeEdit() {
   const [steps, setSteps] = useState<Step[]>([])
   const [drag, setDrag] = useState<Drag>()
   const [photo, setPhoto] = useState<Blob>()
-  // /retete/noua?din=frigider opens straight on the fridge ideas (linked from Search).
-  const [mode, setMode] = useState<Mode>(id ? 'edit' : new URLSearchParams(window.location.search).get('din') === 'frigider' ? 'fridge' : 'choose')
+  // /retete/noua?din=… opens straight on one way (the + sheet on the recipes page; Search links the fridge).
+  const [mode, setMode] = useState<Mode>(() => id ? 'edit' : WAY_MODE[new URLSearchParams(window.location.search).get('din') as RecipeWay] ?? 'choose')
   const [link, setLink] = useState('')
   const [paste, setPaste] = useState('')
   // Dictated text has no headings, so it goes to the AI instead of the local parser.
@@ -150,7 +152,9 @@ export default function RecipeEdit() {
   const [skipTools, setSkipTools] = useState<string[]>([])
   const [fridge, setFridge] = useState('')
   const [ideas, setIdeas] = useState<RecipeIdea[]>()
-  const [pages, setPages] = useState<File[]>([])
+  // Photos picked in the + sheet ("Din poză") arrive with the page.
+  const [pages, setPages] = useState<File[]>(() => (!id && mode === 'photo' ? pickedRecipePages() : []))
+  useEffect(() => { clearPickedRecipePages() }, [])
   // AI photo: the running job (Save waits for it) and the last unsaved key, removed if replaced.
   const [aiBusy, setAiBusy] = useState(false)
   const aiJob = useRef<Promise<string | undefined>>(undefined)

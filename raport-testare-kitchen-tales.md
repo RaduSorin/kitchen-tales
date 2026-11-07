@@ -17,6 +17,8 @@
 
 **Limite:** n-am apelat AWS-ul real (Bedrock, Polly, ElevenLabs, Transcribe, Web Push, Scheduler), n-am testat pe Safari/iOS real și nici cu microfon. Site-ul live nu se putea accesa din mediul de test. Problemele care depind de acestea sunt marcate **„De verificat”**.
 
+> **Actualizare:** H1, H2 și H3 sunt rezolvate pe branch-ul `claude/charming-clarke-6n1rqf` (detalii la fiecare problemă). Restul problemelor sunt încă deschise.
+
 **Legendă status:** 🟢 *Confirmat în browser* · 🔵 *Confirmat în cod* · 🟠 *Risc, de verificat în producție*
 
 ---
@@ -35,21 +37,24 @@
 
 ## 3. Probleme de severitate mare 🔴
 
-### H1. Operațiile AI lungi depășesc limita fixă de 30 s a AppSync 🟠
+### H1. Operațiile AI lungi depășesc limita fixă de 30 s a AppSync 🟠 — ✅ REZOLVAT
+- **Rezolvare:** aplicația pornește munca AI cu mutații asincrone (`startGenerateStory`, `startImportRecipe`, `startSuggestRecipes`, `startPlanWeek`, cu `a.handler.function(...).async()`). Funcția rulează în fundal și scrie rezultatul sau eroarea în `ai-jobs/<spațiu>/<job>.json`; aplicația așteaptă fișierul printr-un link semnat, apoi îl șterge (`amplify/shared/jobs.ts`, `jobResult.ts`, `src/lib/db.ts` `runJob`). Lambda nu mai reîncearcă singură (`retryAttempts: 0`), resturile se șterg după o zi (regulă de lifecycle pe bucket), iar `planWeek` scrie cel mult 2 rețete noi pe server (rezolvă și L7). Interogările sincrone vechi rămân pentru versiunile aplicației deja deschise.
 - **Zone:** Creează o poveste (Claude + ElevenLabs/Polly), Propune cinele săptămânii cu „Și câteva noi”, Rețetă din 2–4 poze.
 - **Detalii:** Lambda-urile au `timeoutSeconds: 180` (`amplify/functions/generate-story/resource.ts:11`) și `120` (`import-recipe/resource.ts:9`). AppSync însă oprește orice resolver după **30 s**, iar limita nu se poate mări. `planWeek` face întâi un apel Claude, apoi scrie până la 2 rețete noi (`import-recipe/handler.ts:490-497`). UI-ul chiar spune „durează cam o jumătate de minut” (`src/pages/PlanWeek.tsx:206`). La o poveste lungă (7 min, aproximativ 3 bucăți ElevenLabs succesive) depășirea e aproape sigură.
 - **Efect:** utilizatorul vede eroare sau timeout, dar Lambda continuă: MP3-ul se scrie în S3 și rămâne orfan, iar creditele ElevenLabs și costul Bedrock se plătesc. La „Încearcă din nou” se plătesc încă o dată.
 - **De verificat:** CloudWatch → durata Lambda `generate-story` și `import-recipe` față de erorile AppSync „Execution timed out”.
 - **Sugestie:** un tipar asincron: mutația pornește un job (Lambda invocată asincron), iar clientul urmărește rezultatul prin polling sau subscription pe un rând „Job”.
 
-### H2. Setările unui cont ajung în spațiul altui cont pe același dispozitiv 🟢
+### H2. Setările unui cont ajung în spațiul altui cont pe același dispozitiv 🟢 — ✅ REZOLVAT
+- **Rezolvare:** când alt cont se conectează pe dispozitiv, `space.ts` (`onAccountChange`) resetează setările de familie (alegerile dispozitivului, ca „clic pe raft”, rămân), modul copil și listele săptămânii și cumpărăturilor, inclusiv modificările netrimise. Sincronizarea așteaptă întâi să afle contul (`spaceReady()`) și abia apoi trimite ceva.
 - **Pași:** contul A folosește tableta (are copil, PIN de copil, dietă). Pe aceeași tabletă se conectează contul B (cont separat nou, încă fără rând de setări).
 - **Rezultat obținut:** la pornire aplicația creează `FamilySettings` pentru B cu numele copilului lui A, **hash-ul PIN-ului** lui A, dieta și orașul lui A. Profilul lui B arată „Ionel (copilul lui A) · modul copil: 30 min”.
 - **Rezultat așteptat:** B pornește cu setări goale.
 - **Cauză:** `src/lib/space.ts:11`. `KEEP` păstrează `kt-settings` la schimbarea contului, iar `settingsSync.ts:76` (`hasAny(shared()) → push()`) trimite setările locale ca „prima salvare” a noului spațiu. Același lucru se întâmplă prin `push()` dacă A avea modificări netrimise.
 - **Sugestie:** la schimbarea contului trebuie resetate și `kt-settings` (doar câmpurile partajate) și obiectul `current` din memorie. Alternativ, `sync()` trebuie să aștepte `spaceReady()` înainte să citească `isDirty()`.
 
-### H3. „Ieși din cont” urmat de conectarea cu alt cont, fără reîncărcarea paginii, folosește spațiul vechi 🔵
+### H3. „Ieși din cont” urmat de conectarea cu alt cont, fără reîncărcarea paginii, folosește spațiul vechi 🔵 — ✅ REZOLVAT
+- **Rezolvare:** la evenimentul Amplify `signedOut` aplicația pornește din nou de la zero (`src/main.tsx`, `Hub.listen`).
 - **Cauză:** starea se ține în module JavaScript care nu se resetează la deconectare: `spaceReady()` (`space.ts:50`, `loading ??= load()`), `me.ts:21`, `useFamily.cached` (`FamilySection.tsx:16`), harta `owners` din `db.ts`, listele sincronizate (`plan.ts:8-9`). Authenticator demontează doar `<App/>`, nu reîncarcă pagina. Nicăieri nu există `location.reload()` sau `Hub.listen('auth')`.
 - **Efect:** al doilea cont își vede propriile rețete marcate „De la …” (nu le poate edita). Rândurile noi se creează cu `spaceGroups` al primului cont și sunt refuzate de server. Operațiile netrimise ale contului vechi se trimit cu tokenul celui nou.
 - **Sugestie:** `window.location.reload()` după `signOut()`. Ar acoperi și „Am uitat PIN-ul”.
@@ -110,7 +115,7 @@
 | L4 | Cumpărături | „suc de lămâie” ajunge la Băuturi (prefixul `suc`). | 🟢 | `aisles.ts:28` |
 | L5 | Scalare porții | Substantivele nu se acordă: „1 ½ ou”, „1 ouă” (2 ouă la jumătate). | 🟢 | `scale.ts` `tidyUnit` |
 | L6 | Planificare | Serile cu „Resturi: …” nu se salvează în săptămână, așa că ziua apare goală. | 🔵 | `PlanWeek.tsx:116` |
-| L7 | Planificare (backend) | Limita „cel mult 2 rețete noi” nu se verifică pe server. Zilele omise de model devin „O cină rapidă” nouă, deci pot fi până la 7 generări în paralel (cost și timp, agravează H1). | 🔵 | `import-recipe/handler.ts:484-497` |
+| L7 ✅ | Planificare (backend) | Limita „cel mult 2 rețete noi” nu se verifică pe server. Zilele omise de model devin „O cină rapidă” nouă, deci pot fi până la 7 generări în paralel (cost și timp, agravează H1). | 🔵 | `import-recipe/handler.ts:484-497` |
 | L8 | Bibliotecă | Pe telefon, în antetul folderului, „2 povești” e acoperit de pastila „Partajat”. | 🟢 (vizual) | `shelf-head` |
 | L9 | Bibliotecă | Eticheta „1 min” acoperă titlul desenat pe copertă („Scufița Roș…”). | 🟢 (vizual) | grila de povești |
 | L10 | Mesaje | `errors?.map(...).join('; ') ?? 'Eroare…'` dă un mesaj gol când `errors = []` (folosește `\|\|`). | 🔵 | `db.ts:292, 525` |

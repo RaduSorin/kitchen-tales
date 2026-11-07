@@ -13,5 +13,7 @@ export const storage = defineStorage({
     'recipe-photos/*': [allow.resource(importRecipe).to(['read', 'write'])],
     'stories/*': [allow.resource(generateStory).to(['write'])],
     'story-covers/*': [allow.resource(findCover).to(['write'])],
+    // The outcome of long AI work, written in the background (see amplify/shared/jobs.ts).
+    'ai-jobs/*': [allow.resource(importRecipe).to(['write']), allow.resource(generateStory).to(['write'])],
   }),
 })

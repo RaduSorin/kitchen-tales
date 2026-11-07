@@ -21,7 +21,7 @@ It installs on the home screen like a native app (PWA). The app UI is in Romania
 
 1. In the AWS Amplify console (region `eu-central-1`): *Deploy an app* → GitHub → `kitchen-tales`, branch `main`.
 2. Under *Hosting → Rewrites and redirects*, add the single-page-app rule:
-   source `</^[^.]+$|\.(?!(css|gif|ico|jpg|jpeg|js|png|txt|svg|woff|woff2|ttf|map|json|webmanifest|mp3|m4a|webm)$)([^.]+$)/>`, target `/index.html`, type `200 (Rewrite)`.
+   source `</^[^.]+$|\.(?!(css|gif|ico|jpg|jpeg|js|png|txt|svg|woff|woff2|ttf|map|json|webmanifest|mp3|m4a|webm|mp4)$)([^.]+$)/>`, target `/index.html`, type `200 (Rewrite)`.
 3. In the Cognito user pool created by Amplify, create the first account. Everyone else can then be invited from Settings → Family.
 
 ## Local development

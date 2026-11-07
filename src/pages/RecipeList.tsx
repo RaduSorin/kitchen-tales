@@ -8,6 +8,7 @@ import ShareIcon from '../components/ShareIcon'
 import PopMenu, { MenuRow, MENU_ICON } from '../components/PopMenu'
 import { formatMinutes, matchesQuery } from '../lib/format'
 import { LoadError, Loading } from '../components/LoadState'
+import { useRecipeLogs } from '../lib/recipeLog'
 import { useSyncedList } from '../lib/synced'
 import { addDays, addToShopping, dayKey, dayName, fromKey, planStore, today } from '../lib/plan'
 import { showToast } from '../lib/toast'
@@ -119,6 +120,9 @@ function Grid({ items }: { items: Recipe[] }) {
   )
 }
 
+/** The "Favorite" chip's value in the category filter (no real category can have it). */
+const FAV = '\u0000fav'
+
 export default function RecipeList() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [q, setQ] = useState('')
@@ -134,14 +138,22 @@ export default function RecipeList() {
   const setView = (v: View) => { setViewState(v); writeKey(VIEW_KEY, v); setCat('') }
   const setSort = (s: Sort) => { setSortState(s); writeKey(SORT_KEY, s) }
   const plan = useSyncedList(planStore)
+  const logs = useRecipeLogs()
+  const isFav = (r: Recipe) => !!logs.get(r.id)?.favorite
+  const anyFav = recipes.some(isFav)
   const load = () => {
     listRecipes().then(setRecipes).catch(() => setFailed(true)).finally(() => setLoading(false))
   }
   useEffect(load, [])
 
   const cats = useMemo(() => [...new Set(recipes.map((r) => r.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ro')), [recipes])
-  // How often each recipe was planned (the week plan is the family's cooking diary).
-  const cooked = useMemo(() => { const m = new Map<string, number>(); for (const e of plan) m.set(e.recipeId, (m.get(e.recipeId) ?? 0) + 1); return m }, [plan])
+  // How often each recipe was cooked (finished in cooking mode); else how often it was planned.
+  const cooked = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const e of plan) m.set(e.recipeId, (m.get(e.recipeId) ?? 0) + 1)
+    for (const [id, l] of logs) if (l.cooked.length) m.set(id, Math.max(l.cooked.length, m.get(id) ?? 0))
+    return m
+  }, [plan, logs])
   const order = (a: Recipe, b: Recipe) => {
     const byTitle = a.title.localeCompare(b.title, 'ro')
     if (sort === 'new') return (b.createdAt ?? '').localeCompare(a.createdAt ?? '') || byTitle
@@ -150,7 +162,7 @@ export default function RecipeList() {
     return byTitle
   }
   const matching = recipes.filter((r) => !q || matchesQuery([r.title, r.category, ...r.ingredients].join(' '), q)).sort(order)
-  const shown = matching.filter((r) => !cat || r.category === cat)
+  const shown = matching.filter((r) => !cat || (cat === FAV ? isFav(r) : r.category === cat))
 
   // Rows view: this week's plan first, then one row per category (searching or a category picked: a grid).
   const byId = useMemo(() => new Map(recipes.map((r) => [r.id, r])), [recipes])
@@ -197,9 +209,10 @@ export default function RecipeList() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
         <input type="search" id="recipe-search" aria-label="Caută rețete" placeholder="Caută după nume sau ingredient" value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
-      {cats.length > 0 && view !== 'rows' && (
+      {(cats.length > 0 || anyFav) && view !== 'rows' && (
         <div className="cat-tabs" role="group" aria-label="Categorii">
           <button type="button" aria-pressed={!cat} onClick={() => setCat('')}>Toate</button>
+          {anyFav && <button type="button" aria-pressed={cat === FAV} onClick={() => setCat(FAV)}>Favorite</button>}
           {cats.map((c) => (
             <button type="button" key={c} aria-pressed={cat === c} onClick={() => setCat(c)}>{c}</button>
           ))}
@@ -217,6 +230,12 @@ export default function RecipeList() {
         <p className="empty">Nicio rețetă nu se potrivește cu „{q}”.</p>
       ) : rowsMode ? (
         <div className="rrows">
+          {anyFav && (
+            <section className="rrow">
+              <div className="rrow-head"><h2>Favorite</h2><button type="button" onClick={() => setCat(FAV)}>{matching.filter(isFav).length} ›</button></div>
+              <div className="rrow-scroll">{matching.filter(isFav).map((r) => <Square key={r.id} r={r} />)}</div>
+            </section>
+          )}
           {week.length > 0 && (
             <section className="rrow">
               <div className="rrow-head"><h2>Săptămâna asta</h2><Link to="/saptamana">{week.length} {week.length === 1 ? 'planificată' : 'planificate'} ›</Link></div>

@@ -2,6 +2,8 @@
 // and are sent to the cloud as soon as there is internet. Used for the week plan
 // and the shopping list, which are often used in a shop with bad signal.
 import { useEffect, useSyncExternalStore } from 'react'
+import { onAccountChange, spaceReady } from './space'
+import { showToast } from './toast'
 
 type Op<T> = { kind: 'create' | 'update'; item: T; tries?: number } | { kind: 'delete'; id: string; tries?: number }
 
@@ -26,7 +28,13 @@ function applyOp<T extends { id: string }>(items: T[], op: Op<T>): T[] {
   return next
 }
 
-export function createSyncedList<T extends { id: string }>(name: string, api: Api<T>) {
+/** How often a change that could not reach the server is tried again while the app is open. */
+const RETRY_MS = 15_000
+/** How many times a change the server refuses is sent before it is given up. */
+const MAX_REFUSED = 5
+
+/** `label`: the list as named in a message ("lista de cumpărături"), when a change can't be saved. */
+export function createSyncedList<T extends { id: string }>(name: string, api: Api<T>, label: string) {
   const itemsKey = `kt-${name}`
   const opsKey = `kt-${name}-pending`
   let items = read<T[]>(itemsKey, [])
@@ -38,9 +46,18 @@ export function createSyncedList<T extends { id: string }>(name: string, api: Ap
   const set = (next: T[]) => { items = next; write(itemsKey, items); listeners.forEach((fn) => fn()) }
   const saveOps = () => write(opsKey, ops)
 
+  // Another account signed in on this device: the previous one's items and unsent changes go
+  // (they must never be sent with the new account's sign-in, into its space).
+  onAccountChange(() => { ops = []; loaded = false; set([]) })
+
+  let retry: ReturnType<typeof setTimeout> | undefined
+  const retryLater = () => { retry ??= setTimeout(() => { retry = undefined; flush() }, RETRY_MS) }
+
   async function flush() {
     if (flushing) return flushing
     flushing = (async () => {
+      // Which account is signed in is settled first: a change left by another account is dropped then.
+      await spaceReady()
       while (ops.length && navigator.onLine) {
         const op = ops[0]
         try {
@@ -48,9 +65,20 @@ export function createSyncedList<T extends { id: string }>(name: string, api: Ap
           else if (op.kind === 'create') await api.create(op.item)
           else await api.update(op.item)
         } catch (err) {
-          // Keep it for later; give up on a change the server keeps refusing.
-          op.tries = (op.tries ?? 0) + 1
-          if (op.tries < 5) { saveOps(); console.warn(`${name}: sync failed`, err); break }
+          const refused = (err as Error | null)?.name === 'Rejected'
+          if (!refused) {
+            // Not reached (no signal, a shop with weak signal): never lost, tried again later.
+            console.warn(`${name}: not sent yet`, err)
+            retryLater()
+            break
+          }
+          // Refused because it's already done (made before, the answer got lost) or the item is gone: nothing to do.
+          if (!(err as { conditional?: boolean }).conditional) {
+            op.tries = (op.tries ?? 0) + 1
+            if (op.tries < MAX_REFUSED) { saveOps(); console.warn(`${name}: refused`, err); retryLater(); break }
+            // The server keeps refusing it: give up, but say so.
+            showToast(`Nu am putut salva o schimbare în ${label}. Încearcă din nou.`)
+          }
         }
         ops.shift()
         saveOps()
@@ -60,6 +88,7 @@ export function createSyncedList<T extends { id: string }>(name: string, api: Ap
   }
 
   async function refresh() {
+    await spaceReady()
     await flush()
     try {
       const server = await api.list()

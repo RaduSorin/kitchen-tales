@@ -4,7 +4,7 @@ import { cachedFolders, listFolders, listRecipes, listStories, setStoryFavorite 
 import type { Recipe, Story, StoryFolder } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { fmtTime, folderOf, folderTime, getLastStoryId, getPosition, greeting, groupFolders } from '../lib/stories'
+import { fmtTime, folderOf, folderTime, getLastStoryId, getPosition, greeting, groupFolders, isNewStory } from '../lib/stories'
 import { useSyncedList } from '../lib/synced'
 import { dayKey, planStore, today } from '../lib/plan'
 import { useFileUrl } from '../lib/useFileUrl'
@@ -43,6 +43,7 @@ function Row({ title, to, stories, from }: { title: string; to?: string; stories
             <span className="sa-cover">
               <StoryCover story={s} />
               {s.durationSec ? <span className="sa-dur">{minutes(s.durationSec)}</span> : null}
+              {isNewStory(s) && <span className="sa-new">Nou</span>}
             </span>
             <span className="cover-title">{s.title}</span>
             <small className="cover-meta">{folderOf(s)}</small>

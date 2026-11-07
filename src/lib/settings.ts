@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { NO_DIET, type Diet } from './diet'
+import { onAccountChange } from './space'
 
 export type ThemeChoice = 'auto' | 'light' | 'dark'
 
@@ -84,12 +85,21 @@ export function getSettings() { return current }
 
 type Patch = Partial<Omit<Settings, 'child' | 'kid'>> & { child?: Partial<ChildProfile>; kid?: Partial<KidSettings> }
 
-function set(patch: Patch) {
-  current = { ...current, ...patch, child: { ...current.child, ...patch.child }, kid: { ...current.kid, ...patch.kid } }
+function commit(next: Settings) {
+  current = next
   try { localStorage.setItem(KEY, JSON.stringify(current)) } catch { /* storage unavailable: keep in memory */ }
   applyTheme()
   listeners.forEach((l) => l())
 }
+
+function set(patch: Patch) {
+  commit({ ...current, ...patch, child: { ...current.child, ...patch.child }, kid: { ...current.kid, ...patch.kid } })
+}
+
+// Another account signed in on this device: the previous family's settings (child, kid-mode PIN,
+// diet, kitchen, narrator) go; only this device's own choices stay. The new account's settings
+// then come from the cloud.
+onAccountChange(() => commit({ ...DEFAULTS, theme: current.theme, shelfClick: current.shelfClick }))
 
 export function updateSettings(patch: Patch) {
   set(patch)

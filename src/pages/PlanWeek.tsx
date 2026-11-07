@@ -4,6 +4,7 @@ import { listRecipes, newId, planWeek, saveRecipe, type PlannedDinner } from '..
 import type { Recipe } from '../lib/types'
 import { useSettings } from '../lib/settings'
 import { useSyncedList } from '../lib/synced'
+import { useRecipeLogs } from '../lib/recipeLog'
 import { addDays, addPlanToShopping, atHome, dayKey, dayName, fromKey, planRecipe, planStore, shortDate, today } from '../lib/plan'
 import { dietSummary, dietText, hasDiet, parseAllergens, parseNutrition } from '../lib/diet'
 import { useFileUrl } from '../lib/useFileUrl'
@@ -37,6 +38,7 @@ export default function PlanWeek() {
   const nav = useNavigate()
   const { kitchenTools, diet } = useSettings()
   const plan = useSyncedList(planStore)
+  const logs = useRecipeLogs()
   const [recipes, setRecipes] = useState<Recipe[]>()
   useEffect(() => { listRecipes().then(setRecipes).catch(() => setRecipes([])) }, [])
   const byId = useMemo(() => new Map((recipes ?? []).map((r) => [r.id, r])), [recipes])
@@ -66,11 +68,14 @@ export default function PlanWeek() {
 
   const recent = useMemo(() => {
     const from = dayKey(addDays(today(), -14))
-    return [...new Set(plan.filter((e) => e.day >= from).map((e) => byId.get(e.recipeId)?.title).filter(Boolean) as string[])]
-  }, [plan, byId])
+    const cookedLately = [...logs.values()].filter((l) => l.cooked.some((d) => d >= from)).map((l) => l.recipeId)
+    const ids = [...plan.filter((e) => e.day >= from).map((e) => e.recipeId), ...cookedLately]
+    return [...new Set(ids.map((id) => byId.get(id)?.title).filter(Boolean) as string[])]
+  }, [plan, byId, logs])
   const args = () => ({
     days: JSON.stringify(chosen.map((e) => ({ day: e.k, label: e.label, minutes: e.time === 'any' ? null : +e.time }))),
-    recipes: JSON.stringify((recipes ?? []).map((r) => ({ id: r.id, title: r.title, category: r.category, minutes: r.minutes, ingredients: r.ingredients.filter((l) => !isHeading(l)).slice(0, 8) }))),
+    recipes: JSON.stringify((recipes ?? []).map((r) => ({ id: r.id, title: r.title, category: r.category, minutes: r.minutes, ingredients: r.ingredients.filter((l) => !isHeading(l)).slice(0, 8),
+      ...((l) => (l ? { favorite: l.favorite || undefined, cooked: l.cooked.length || undefined, lastCooked: l.cooked.at(-1) } : {}))(logs.get(r.id)) }))),
     recent,
     fridge: useFridge ? fridge.trim() : undefined,
     diet: hasDiet(diet) ? dietText(diet) : undefined,
@@ -203,7 +208,7 @@ export default function PlanWeek() {
             {!busy && items && <p>Atinge ↻ ca să schimbi doar seara aceea.</p>}
           </div>
           {busy ? (
-            <p className="importing"><span className="spinner" /> Aleg cinele{prefs.allowNew ? ' și scriu rețetele noi' : ''}… durează cam o jumătate de minut.</p>
+            <p className="importing"><span className="spinner" /> Aleg cinele{prefs.allowNew ? ' și scriu rețetele noi' : ''}… poate dura până la un minut.</p>
           ) : items && (
             <ul className="plan-list">
               {items.map((x) => {

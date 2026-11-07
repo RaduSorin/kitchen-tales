@@ -531,6 +531,45 @@ export async function generateStory(args: { title: string; text?: string; voice?
   return data
 }
 
+/** How long an audio file is, read from its metadata (undefined if the browser can't tell). */
+function audioSeconds(url: string): Promise<number | undefined> {
+  return new Promise((resolve) => {
+    const a = new Audio()
+    const done = (v?: number) => { a.removeAttribute('src'); resolve(v) }
+    a.preload = 'metadata'
+    a.onloadedmetadata = () => done(Number.isFinite(a.duration) ? a.duration : undefined)
+    a.onerror = () => done()
+    setTimeout(() => done(), 15000)
+    a.src = url
+  })
+}
+
+/**
+ * Reads a saved story again from its text, in another voice (empty = Polly). The story keeps its
+ * title, cover, folder and favourite; only the audio changes (the old file is deleted, and so is
+ * this phone's offline copy). Returns the updated story and why it fell back to Polly, if it did.
+ */
+export async function renarrateStory(s: Story, voice: string): Promise<{ story: Story; note?: string | null }> {
+  if (!s.text?.trim()) throw new Error('Povestea nu are text salvat.')
+  const g = await generateStory({ title: s.title, text: s.text, voice: voice || undefined })
+  const secs = await audioSeconds(await fileUrl(g.audioKey)).catch(() => undefined)
+  const durationSec = secs ? Math.round(secs) : null
+  const old = s.audioKey
+  owners.set(old, `Story:${s.id}`)
+  const res = await client.models.Story.update({ id: s.id, audioKey: g.audioKey, durationSec })
+  if (res.errors?.length) {
+    await removeFile(g.audioKey).catch(() => {})
+    throw new Error(res.errors.map((e) => e.message).join('; '))
+  }
+  fileOwner(`Story:${s.id}`, g.audioKey)
+  await removeAudio(s.id).catch(() => {})
+  if (old !== g.audioKey) await removeFile(old).catch(() => {})
+  const story = { ...s, audioKey: g.audioKey, durationSec: durationSec ?? undefined }
+  const cached = await cachedList('stories').catch(() => undefined)
+  if (cached) await cacheList('stories', cached.map((x) => (x.id === s.id ? story : x))).catch(() => {})
+  return { story, note: g.note }
+}
+
 export type NarratorVoice = { id: string; name: string; description?: string | null; gender?: string | null; age?: string | null; accent?: string | null; category?: string | null; romanian?: boolean | null }
 
 /** The voices in the family's ElevenLabs account. */

@@ -7,7 +7,8 @@ import { readAudioMeta } from '../lib/audioMeta'
 import { resizeImage } from '../lib/resizeImage'
 import type { StorySource } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
-import { childAge, getSettings, useSettings } from '../lib/settings'
+import { childAge, getSettings, updateSettings, useSettings } from '../lib/settings'
+import NarratorPicker from '../components/NarratorPicker'
 import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
@@ -81,7 +82,8 @@ export default function StoryAdd() {
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
   const mode = (['record', 'create', 'upload'] as const).find((m) => m === params.get('mod'))
-  const { child } = useSettings()
+  const { child, narrator } = useSettings()
+  const [voiceOpen, setVoiceOpen] = useState(false)
   // Name, age and girl/boy come from the child's profile in Settings; the form only asks for what's missing there.
   const known = { childName: child.name.trim() || undefined, age: childAge(child), gender: child.gender }
   const [title, setTitle] = useState('')
@@ -237,6 +239,11 @@ export default function StoryAdd() {
     const at = steps.indexOf(step)
     const next = () => { setError(''); setStepAt(at + 1) }
     const kicker = `Poveste nouă${(known.childName ?? brief.childName) ? ` pentru ${known.childName ?? brief.childName}` : ''}`
+    const voiceLine = (
+      <button type="button" className="cs-voice" onClick={() => setVoiceOpen(true)}>
+        Citită de <b>{narrator.id ? narrator.name.split(' - ')[0] : 'Carmen'}</b> · <span>Schimbă vocea</span>
+      </button>
+    )
     const forChild = [known.childName, known.age && `${known.age} ${known.age === 1 ? 'an' : 'ani'}`, known.gender && (known.gender === 'girl' ? 'fetiță' : 'băiețel')].filter(Boolean).join(' · ')
     return (
       <div className="parent create-steps">
@@ -263,6 +270,7 @@ export default function StoryAdd() {
             <label className="night-field">Titlul <small>(opțional)</small>
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Vulpița Fifi" />
             </label>
+            {voiceLine}
           </div>
         ) : step === 'who' ? (
           <div className="cs-body">
@@ -343,6 +351,7 @@ export default function StoryAdd() {
               <span>{[topics.join(', ') || brief.prompt?.trim() || 'orice temă', LENGTHS.find(([k]) => k === brief.length)?.[1]].filter(Boolean).join(' · ')}</span>
               {forChild && <span>pentru {forChild} <Link to="/profil/copil">Schimbă</Link></span>}
             </div>
+            {voiceLine}
           </div>
         )}
 
@@ -360,6 +369,14 @@ export default function StoryAdd() {
           {!ownMode && step === 'topic' && <button type="button" className="link-btn cs-own" onClick={() => setOwnMode(true)}>Am deja textul poveștii ›</button>}
           {!ownMode && step !== 'title' && step !== 'topic' && <small className="cs-next">Urmează: {step === 'who' ? 'tema' : 'titlul (opțional)'}</small>}
         </div>
+        {voiceOpen && (
+          <Sheet title="Cine citește povestea" onClose={() => setVoiceOpen(false)}>
+            <div className="settings voice-sheet">
+              <NarratorPicker compact value={narrator} onChange={(v) => updateSettings({ narrator: v })} />
+            </div>
+            <button type="button" className="btn primary voice-done" onClick={() => setVoiceOpen(false)}>Gata</button>
+          </Sheet>
+        )}
       </div>
     )
   }

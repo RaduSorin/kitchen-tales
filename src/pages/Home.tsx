@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listRecipes, listStories } from '../lib/db'
 import type { Recipe, Story } from '../lib/types'
@@ -14,11 +14,16 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import StoryCover from '../components/StoryCover'
 import HomeHead from '../components/HomeHead'
 import { useSyncedList } from '../lib/synced'
-import { dayKey, planStore, today } from '../lib/plan'
+import { dayKey, mondayOf, planStore, today, weekDays } from '../lib/plan'
 import { LoadError, Loading } from '../components/LoadState'
 
-const Play = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" /></svg>
+// The recipes Acasă, design "Vitrina": the dish photo fills the top of the screen (swipe between
+// the dish you're cooking, today's plan and the newest recipe), then today's menu, "Săptămâna ta"
+// as seven round plates, recent recipes, "Caietul meu" (one collection card per category) and
+// tonight's story.
+
+const Play = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" /></svg>
 )
 
 function Thumb({ r }: { r: Recipe }) {
@@ -27,28 +32,47 @@ function Thumb({ r }: { r: Recipe }) {
 }
 
 const meta = (r: Recipe) => [r.minutes && formatMinutes(r.minutes), r.category].filter(Boolean).join(' · ')
+const WEEK_DAYS = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D']
+const NEW_DAYS = 7
+const isNew = (r: Recipe) => !!r.createdAt && Date.now() - Date.parse(r.createdAt) < NEW_DAYS * 86400000
 
-/** A recipe as a row: photo, title, time and category (design "Seară de lux"). */
-function Row({ r, to }: { r: Recipe; to?: string }) {
-  return (
-    <Link to={to ?? `/retete/${r.id}`} className="ra-row">
-      <span className="ra-thumb"><Thumb r={r} /></span>
-      <span className="ra-row-text"><b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}</span>
-    </Link>
-  )
-}
+type Slide = { r: Recipe; kicker: string; action: string; to: string }
 
-/** The big card at the top: the dish's photo with what to do next over it. */
-function Hero({ r, kicker, action, to }: { r: Recipe; kicker: string; action: string; to: string }) {
+/** The top of the page: full-width dish photos you swipe through, the switch and search on them. */
+function Vitrine({ slides, active, onActive }: { slides: Slide[]; active: number; onActive: (i: number) => void }) {
+  const track = useRef<HTMLDivElement>(null)
+  const onScroll = () => {
+    const el = track.current
+    if (!el) return
+    const i = Math.round(el.scrollLeft / el.clientWidth)
+    if (i !== active) onActive(Math.max(0, Math.min(slides.length - 1, i)))
+  }
+  const go = (i: number) => track.current?.scrollTo({ left: i * track.current.clientWidth, behavior: 'smooth' })
   return (
-    <Link to={to} className="ra-hero">
-      <span className="ra-hero-img"><Thumb r={r} /></span>
-      <span className="ra-hero-text">
-        <small className="sa-kicker">{kicker}</small>
-        <b>{r.title}</b>
-        <span className="sa-hero-btn"><Play /> {action}</span>
-      </span>
-    </Link>
+    <section className="vt-hero" aria-roledescription="carusel" aria-label="De gătit">
+      <div className="vt-track" ref={track} onScroll={onScroll}>
+        {slides.map((s, i) => (
+          <div className="vt-slide" key={s.r.id} aria-hidden={i !== active}>
+            <Link to={`/retete/${s.r.id}`} className="vt-photo" tabIndex={-1} aria-hidden="true"><Thumb r={s.r} /></Link>
+            <div className="vt-text">
+              <small className="sa-kicker">{s.kicker}</small>
+              <h2 className="vt-title"><Link to={`/retete/${s.r.id}`}>{s.r.title}</Link></h2>
+              {(s.r.category || s.r.servings) && <small className="vt-meta">{[s.r.category, s.r.servings && `${s.r.servings} porții`].filter(Boolean).join(' · ')}</small>}
+              <div className="vt-btns">
+                <Link to={s.to} className="vt-btn"><Play /> {s.action}</Link>
+                <Link to={`/retete/${s.r.id}`} className="vt-ghost">Rețeta</Link>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="vt-head"><HomeHead search="/cauta" label="Caută rețete, ingrediente sau povești" field="search-input" /></div>
+      {slides.length > 1 && (
+        <div className="vt-dots">
+          {slides.map((s, i) => <button key={s.r.id} type="button" className={i === active ? 'on' : ''} aria-label={`${i + 1} din ${slides.length}`} aria-current={i === active} onClick={() => go(i)} />)}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -82,7 +106,29 @@ function StoryCard({ stories, evening }: { stories: Story[]; evening: boolean })
         <b>{story.title}</b>
         <small>{resume ? 'Continuă' : 'Ascultă'}{mins}</small>
       </span>
-      <span className="ra-story-play" aria-hidden="true"><Play /></span>
+      <span className="ra-story-play" aria-hidden="true"><Play size={15} /></span>
+    </Link>
+  )
+}
+
+const Sec = ({ title, link, to }: { title: string; link: string; to: string }) => (
+  <div className="sh-sec-head vt-sec"><h2>{title}</h2><Link to={to}>{link}</Link></div>
+)
+
+/** A category as a collection card: tinted from its first photo, three dishes overlapping on the right. */
+function Category({ name, items }: { name: string; items: Recipe[] }) {
+  const art = [...items.filter((r) => r.photoKey), ...items.filter((r) => !r.photoKey)].slice(0, 3)
+  const fresh = items.filter(isNew).length
+  return (
+    <Link to={`/retete?cat=${encodeURIComponent(name)}`} className="collection vt-coll">
+      <span className="vt-coll-tint" aria-hidden="true"><Thumb r={art[0]} /></span>
+      <span className="collection-text">
+        <span className="cover-title">{name}</span>
+        <small className="cover-meta">{items.length} {items.length === 1 ? 'rețetă' : 'rețete'}{fresh > 0 && ` · ${fresh} ${fresh === 1 ? 'nouă' : 'noi'}`}</small>
+      </span>
+      <span className="vt-coll-stack" aria-hidden="true">
+        {art.map((r, i) => <span key={r.id} style={{ zIndex: 3 - i }}><Thumb r={r} /></span>)}
+      </span>
     </Link>
   )
 }
@@ -105,57 +151,121 @@ export default function Home() {
   const lastCook = getLastCook()
   const cooking = lastCook && recipes?.find((r) => r.id === lastCook.id)
   const plan = useSyncedList(planStore)
-  const todayKey = dayKey(today())
-  const menu = (recipes ?? []).length ? plan.filter((e) => e.day === todayKey).map((e) => recipes!.find((r) => r.id === e.recipeId)).filter((r): r is Recipe => !!r) : []
-  // The big card: the dish you're cooking, else today's first planned dish, else the newest recipe.
-  const hero = cooking ? { r: cooking, kicker: `Continuă · pasul ${lastCook.step + 1}`, action: 'Continuă', to: `/retete/${cooking.id}/gateste` }
-    : menu[0] ? { r: menu[0], kicker: ['Azi în plan', menu[0].minutes && formatMinutes(menu[0].minutes)].filter(Boolean).join(' · '), action: 'Gătește pas cu pas', to: `/retete/${menu[0].id}/gateste` }
-    : recipes?.[0] ? { r: recipes[0], kicker: 'Adăugată recent', action: 'Vezi rețeta', to: `/retete/${recipes[0].id}` }
-    : undefined
-  const restOfMenu = menu.filter((r) => r.id !== hero?.r.id)
-  const recent = (recipes ?? []).filter((r) => r.id !== hero?.r.id).slice(0, 5)
+  const t = today()
+  const todayKey = dayKey(t)
+  const byId = useMemo(() => new Map((recipes ?? []).map((r) => [r.id, r])), [recipes])
+  const menu = plan.filter((e) => e.day === todayKey).map((e) => byId.get(e.recipeId)).filter((r): r is Recipe => !!r)
+  const newest = (recipes ?? []).reduce<Recipe | undefined>((a, r) => (!a || (r.createdAt ?? '') > (a.createdAt ?? '') ? r : a), undefined)
+
+  // The photos on top: the dish you're cooking, today's first planned dish, the newest recipe.
+  const slides: Slide[] = []
+  const add = (s: Slide | false | undefined) => { if (s && !slides.some((x) => x.r.id === s.r.id)) slides.push(s) }
+  add(cooking && { r: cooking, kicker: `Continuă · pasul ${lastCook.step + 1}`, action: 'Continuă', to: `/retete/${cooking.id}/gateste` })
+  add(menu[0] && { r: menu[0], kicker: ['Azi în plan', menu[0].minutes && formatMinutes(menu[0].minutes)].filter(Boolean).join(' · '), action: 'Gătește pas cu pas', to: `/retete/${menu[0].id}/gateste` })
+  add(newest && { r: newest, kicker: ['Adăugată recent', newest.minutes && formatMinutes(newest.minutes)].filter(Boolean).join(' · '), action: 'Gătește pas cu pas', to: `/retete/${newest.id}/gateste` })
+  // Only one so far: fill up with the recipes changed last, so there is always something to swipe to.
+  for (const r of recipes ?? []) {
+    if (slides.length >= 3) break
+    add({ r, kicker: ['Din caietul tău', r.minutes && formatMinutes(r.minutes)].filter(Boolean).join(' · '), action: 'Gătește pas cu pas', to: `/retete/${r.id}/gateste` })
+  }
+  // Which photo is on screen, for this set of dishes (a new set starts again from the first).
+  const slideKey = slides.map((s) => s.r.id).join()
+  const [pos, setPos] = useState({ key: '', i: 0 })
+  const active = pos.key === slideKey ? pos.i : 0
+  const setActive = (i: number) => setPos({ key: slideKey, i })
+  const shown = slides[Math.min(active, slides.length - 1)]
+  // The page glows in the colours of the dish on screen.
+  useGlow(shown && { id: shown.r.id, title: shown.r.title, photoKey: shown.r.photoKey })
+
+  const onTop = new Set(slides.map((s) => s.r.id))
+  const restOfMenu = menu.filter((r) => !onTop.has(r.id))
+  const recent = (recipes ?? []).filter((r) => !onTop.has(r.id)).slice(0, 8)
+  const week = weekDays(mondayOf(t)).map((d) => {
+    const key = dayKey(d)
+    const first = plan.find((e) => e.day === key && byId.has(e.recipeId))
+    return { key, d, r: first && byId.get(first.recipeId) }
+  })
+  const categories = useMemo(() => {
+    const m = new Map<string, Recipe[]>()
+    for (const r of recipes ?? []) if (r.category) m.set(r.category, [...(m.get(r.category) ?? []), r])
+    return [...m].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ro'))
+  }, [recipes])
   const playable = stories && (online ? stories : stories.filter((s) => offline.has(s.id)))
-  // The top of the screen glows in the colours of the big card's photo.
-  useGlow(hero && { id: hero.r.id, title: hero.r.title, photoKey: hero.r.photoKey })
+
+  if (!recipes || !slides.length) {
+    return (
+      <div className="home">
+        <HomeHead search="/cauta" label="Caută rețete, ingrediente sau povești" field="search-input" />
+        <h1 className="sa-greeting">Ce gătim azi?</h1>
+        {failed && !recipes ? (
+          <LoadError text="Nu am putut încărca rețetele. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
+        ) : !recipes ? <Loading /> : (
+          <Link to="/retete/noua" className="home-empty">Nicio rețetă încă. <b>Adaugă prima rețetă</b></Link>
+        )}
+        {playable && <StoryCard key={playable.length} stories={playable} evening={evening} />}
+      </div>
+    )
+  }
 
   return (
-    <div className="home">
-      <HomeHead search="/cauta" label="Caută rețete, ingrediente sau povești" field="search-input" />
-      <h1 className="sa-greeting">Ce gătim azi?</h1>
+    <div className="home vitrina">
+      <h1 className="sr-only">Ce gătim azi?</h1>
+      {/* New dishes on top (the plan or the recipes arriving): start again from the first one. */}
+      <Vitrine key={slideKey} slides={slides} active={Math.min(active, slides.length - 1)} onActive={setActive} />
 
-      {failed && !recipes ? (
-        <LoadError text="Nu am putut încărca rețetele. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
-      ) : !recipes ? <Loading /> : !hero ? (
-        <Link to="/retete/noua" className="home-empty">Nicio rețetă încă. <b>Adaugă prima rețetă</b></Link>
-      ) : <Hero {...hero} />}
-
-      {recipes && recipes.length > 0 && (
+      {restOfMenu.length > 0 && (
         <section className="home-sec">
-          <div className="sh-sec-head">
-            <h2>Azi în meniu</h2>
-            <Link to="/saptamana">Săptămâna</Link>
+          <Sec title="Azi în meniu" link="Săptămâna" to="/saptamana" />
+          <div className="vt-scroll" key={restOfMenu.map((r) => r.id).join()}>
+            {restOfMenu.map((r, i) => (
+              <Link key={`${r.id}-${i}`} to={`/retete/${r.id}`} className="vt-wide">
+                <span className="vt-img"><Thumb r={r} /></span>
+                <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
+              </Link>
+            ))}
           </div>
-          {restOfMenu.length ? (
-            <div className="ra-rows">{restOfMenu.map((r, i) => <Row key={`${r.id}-${i}`} r={r} />)}</div>
-          ) : (
-            <Link to="/saptamana" className="home-empty">{menu.length ? 'Atât pentru azi.' : 'Nimic planificat pentru azi.'} <b>Planifică săptămâna</b></Link>
-          )}
         </section>
       )}
 
-      {playable && evening && <StoryCard key={playable.length} stories={playable} evening={evening} />}
+      <section className="home-sec">
+        <Sec title="Săptămâna ta" link="Planifică" to="/saptamana/planifica" />
+        <div className="vt-week">
+          {week.map(({ key, d, r }, i) => {
+            const isToday = key === todayKey
+            const name = d.toLocaleDateString('ro-RO', { weekday: 'long' })
+            return (
+              <Link key={key} to={`/saptamana?zi=${key}`} className={isToday ? 'vt-day today' : 'vt-day'}
+                aria-label={r ? `${name}: ${r.title}` : `${name}: nimic planificat`}>
+                <span className={r ? 'vt-plate' : 'vt-plate free'}>{r ? <Thumb r={r} /> : '+'}</span>
+                <small>{isToday ? 'Azi' : WEEK_DAYS[i]}</small>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
 
       {recent.length > 0 && (
         <section className="home-sec">
-          <div className="sh-sec-head">
-            <h2>Recente</h2>
-            <Link to="/retete">Toate</Link>
+          <Sec title="Recente" link="Toate" to="/retete" />
+          <div className="vt-scroll" key={recent.map((r) => r.id).join()}>
+            {recent.map((r) => (
+              <Link key={r.id} to={`/retete/${r.id}`} className="vt-tall">
+                <span className="vt-img"><Thumb r={r} /></span>
+                <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
+              </Link>
+            ))}
           </div>
-          <div className="ra-rows">{recent.map((r) => <Row key={r.id} r={r} />)}</div>
         </section>
       )}
 
-      {playable && !evening && <StoryCard key={playable.length} stories={playable} evening={evening} />}
+      {categories.length > 0 && (
+        <section className="home-sec">
+          <Sec title="Caietul meu" link="Toate" to="/retete" />
+          <div className="collections">{categories.map(([name, items]) => <Category key={name} name={name} items={items} />)}</div>
+        </section>
+      )}
+
+      {playable && <StoryCard key={playable.length} stories={playable} evening={evening} />}
     </div>
   )
 }

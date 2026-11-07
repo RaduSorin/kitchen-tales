@@ -4,6 +4,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { Schema } from '../../data/resource'
 import { newFilePath } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
+import { apiKey, DEFAULT_MODEL, ElevenLabsError, listVoices, narrate, preview } from './elevenlabs'
 
 const bedrock = new BedrockRuntimeClient({})
 const polly = new PollyClient({})
@@ -12,9 +13,10 @@ const s3 = new S3Client({})
 const BUCKET = process.env.KITCHEN_TALES_FILES_BUCKET_NAME!
 const MODEL_ID = process.env.MODEL_ID!
 const VOICE_ID = process.env.VOICE_ID as VoiceId
+const ELEVEN_MODEL = process.env.ELEVENLABS_MODEL || DEFAULT_MODEL
 
 const MAX_TEXT_CHARS = 12_000
-// Polly bills and limits on text characters; keep each SSML request well under 3000.
+// Polly (and ElevenLabs) bill and limit on text characters; keep each SSML request well under 3000.
 const CHUNK_CHARS = 2400
 
 const SYSTEM = `Ești un povestitor pentru copii. Scrii povești de seară în limba română, cu diacritice.
@@ -79,7 +81,7 @@ export function toSsml(chunk: string) {
   return `<speak><prosody rate="90%">${body}</prosody></speak>`
 }
 
-async function speak(text: string): Promise<Buffer> {
+async function speakPolly(text: string): Promise<Buffer> {
   const parts: Buffer[] = []
   for (const chunk of chunkText(text)) {
     const res = await polly.send(new SynthesizeSpeechCommand({
@@ -91,14 +93,54 @@ async function speak(text: string): Promise<Buffer> {
   return Buffer.concat(parts)
 }
 
-export const handler: Schema['generateStory']['functionHandler'] = async (event) => {
+type Narration = { audio: Buffer; narrator: 'elevenlabs' | 'polly'; note?: string }
+
+/** ElevenLabs with the family's chosen voice; Polly when no voice is chosen, no key is set or the call fails. */
+async function speak(text: string, voice?: string | null): Promise<Narration> {
+  const key = apiKey()
+  if (key && voice) {
+    try {
+      return { audio: await narrate(key, voice, ELEVEN_MODEL, chunkText(text)), narrator: 'elevenlabs' }
+    } catch (err) {
+      console.error('ElevenLabs failed, reading with Polly instead', err)
+      const note = err instanceof ElevenLabsError && err.outOfCredits
+        ? 'S-au terminat creditele ElevenLabs, așa că am citit-o cu vocea de rezervă.'
+        : 'ElevenLabs nu a răspuns, așa că am citit-o cu vocea de rezervă.'
+      return { audio: await speakPolly(text), narrator: 'polly', note }
+    }
+  }
+  return { audio: await speakPolly(text), narrator: 'polly' }
+}
+
+type FieldEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: Record<string, unknown> }
+
+function needKey() {
+  const key = apiKey()
+  if (!key) throw new Error('Cheia ElevenLabs nu este setată încă (secretul ELEVENLABS_API_KEY din Amplify).')
+  return key
+}
+
+// One function serves generateStory, narratorVoices and previewVoice.
+export const handler = async (event: Parameters<Schema['generateStory']['functionHandler']>[0], ...rest: unknown[]) => {
+  const e = event as unknown as FieldEvent
+  const field = e.fieldName ?? e.info?.fieldName
+  if (field === 'narratorVoices') return listVoices(needKey())
+  if (field === 'previewVoice') {
+    const voice = String(e.arguments.voice ?? '')
+    if (!voice) throw new Error('Alege o voce.')
+    return (await preview(needKey(), voice, ELEVEN_MODEL)).toString('base64')
+  }
+  return (generate as (...a: unknown[]) => unknown)(event, ...rest)
+}
+
+const generate: Schema['generateStory']['functionHandler'] = async (event) => {
   const title = event.arguments.title.trim()
   const ownText = event.arguments.text?.trim()
   if (!title) throw new Error('Povestea are nevoie de un titlu.')
   const text = (ownText || (await writeStory({ ...event.arguments, title }))).slice(0, MAX_TEXT_CHARS)
 
-  const audio = await speak(text)
+  const { audio, narrator, note } = await speak(text, event.arguments.voice)
   const audioKey = newFilePath('stories', spaceOf((event as { identity?: { groups?: string[] | null } }).identity?.groups), 'mp3')
   await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: audioKey, Body: audio, ContentType: 'audio/mpeg' }))
-  return { text, audioKey }
+  return { text, audioKey, narrator, note }
 }

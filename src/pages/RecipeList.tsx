@@ -121,7 +121,8 @@ function Grid({ items }: { items: Recipe[] }) {
 export default function RecipeList() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [q, setQ] = useState('')
-  const [cat, setCat] = useState('')
+  // Opened from a category card on Acasă (?cat=Deserturi): that category already picked.
+  const [cat, setCat] = useState(() => new URLSearchParams(window.location.search).get('cat') ?? '')
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
   const [view, setViewState] = useState<View>(() => readKey(VIEW_KEY, VIEWS.map((x) => x.v), 'grid'))

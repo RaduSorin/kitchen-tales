@@ -17,7 +17,7 @@
 
 **Limite:** n-am apelat AWS-ul real (Bedrock, Polly, ElevenLabs, Transcribe, Web Push, Scheduler), n-am testat pe Safari/iOS real și nici cu microfon. Site-ul live nu se putea accesa din mediul de test. Problemele care depind de acestea sunt marcate **„De verificat”**.
 
-> **Actualizare:** H1, H2 și H3 sunt rezolvate pe branch-ul `claude/charming-clarke-6n1rqf` (detalii la fiecare problemă). Restul problemelor sunt încă deschise.
+> **Actualizare:** H1–H3 și M1–M7 sunt rezolvate pe branch-ul `claude/charming-clarke-6n1rqf` (detalii la fiecare problemă), plus L7. Problemele mici (L) sunt încă deschise.
 
 **Legendă status:** 🟢 *Confirmat în browser* · 🔵 *Confirmat în cod* · 🟠 *Risc, de verificat în producție*
 
@@ -27,8 +27,8 @@
 
 | Severitate | Număr | Pe scurt |
 |---|---|---|
-| 🔴 Mare | 3 | Timeout AppSync la AI, setările unui cont copiate în alt cont, schimbarea contului fără reîncărcare |
-| 🟠 Medie | 7 | Modificări pierdute fără semnal stabil, redenumire/ștergere folder, acces la fișiere, coperta de pe „Acasă” la Povești, PIN, gesturi în modul gătit, keep-awake pe iOS |
+| 🔴 Mare | 3 (toate rezolvate) | Timeout AppSync la AI, setările unui cont copiate în alt cont, schimbarea contului fără reîncărcare |
+| 🟠 Medie | 7 (toate rezolvate) | Modificări pierdute fără semnal stabil, redenumire/ștergere folder, acces la fișiere, coperta de pe „Acasă” la Povești, PIN, gesturi în modul gătit, keep-awake pe iOS |
 | 🟡 Mică / cosmetic | 19 | Accesibilitate, euristici, texte, performanță, mentenanță |
 
 **Ce merge bine:** toate cele 20 de rute se încarcă fără erori în consolă. Editorul de rețete (inserare pas, drag & drop), scalarea porțiilor, lista de cumpărături (cumulare cantități, raioane), modul offline de bază, căutarea (fără diacritice), modul copil (redirecționări, blocare la final de timp, ieșire cu PIN), încărcarea și generarea unei povești și protecțiile „Pleci fără să salvezi?” funcționează corect.
@@ -63,42 +63,49 @@
 
 ## 4. Probleme de severitate medie 🟠
 
-### M1. Lista de cumpărături și săptămâna pierd modificări fără să anunțe, când semnalul e slab 🟢
+### M1. Lista de cumpărături și săptămâna pierd modificări fără să anunțe, când semnalul e slab 🟢 — ✅ REZOLVAT
+- **Rezolvare:** o schimbare care nu ajunge la server (fără semnal) nu se mai pierde: rămâne în coadă și se reîncearcă la 15 s, la revenirea în aplicație și când revine internetul. Erorile de rețea, pe care Amplify le raportează tot în `errors`, dar fără `errorType`, nu se mai numără ca refuzuri. O schimbare refuzată de server de 5 ori se abandonează cu mesajul „Nu am putut salva o schimbare în lista de cumpărături”. „Există deja / a fost deja ștearsă” (răspuns pierdut) se consideră făcută (`src/lib/synced.ts`, `db.ts` `Rejected`).
 - **Pași:** semnal slab în magazin (`navigator.onLine` = true, dar cererile eșuează) → adaugi „ou de test” → aplicația reîncearcă la fiecare revenire în aplicație sau eveniment `online`.
 - **Rezultat:** după 5 încercări eșuate operația e **aruncată** (`src/lib/synced.ts:51-53`). La următorul refresh produsul dispare din listă și nu ajunge niciodată pe server.
 - **Așteptat:** modificarea rămâne în coadă până reușește, sau utilizatorul e anunțat.
 - **Sugestie:** tratează separat erorile de rețea (fără limită) de refuzurile serverului (cu limită și un toast „Nu am putut salva X”).
 
-### M2. Redenumirea sau ștergerea unui folder modifică și poveștile altui spațiu cu același nume de folder 🟢
+### M2. Redenumirea sau ștergerea unui folder modifică și poveștile altui spațiu cu același nume de folder 🟢 — ✅ REZOLVAT
+- **Rezolvare:** se mută doar poveștile proprii (`mine !== false`); redenumirea și ștergerea reușesc.
 - **Pași:** Ana partajează o poveste din folderul ei „Basme”. Tu ai propriul folder „Basme”. Redenumești folderul tău în „Basme vechi”.
 - **Rezultat:** aplicația încearcă `updateStory` și pe povestea Anei (`sx`), iar serverul refuză (Unauthorized). Folderul și poveștile tale sunt deja redenumite, dar foaia rămâne deschisă cu eroare. La **ștergere** bucla se oprește înainte de `StoryFolder.delete`, deci folderul nu se mai șterge deloc.
 - **Cauză:** `src/lib/db.ts:403` și `db.ts:411` filtrează doar după `collection === name`, fără `mine`.
 - **Fix:** `.filter((x) => x.mine !== false && x.collection === oldName)`.
 
-### M3. Funcția `files` permite citirea oricărui fișier al cărui path e cunoscut 🔵 (securitate)
+### M3. Funcția `files` permite citirea oricărui fișier al cărui path e cunoscut 🔵 (securitate) — ✅ REZOLVAT
+- **Rezolvare:** un fișier din folderul spațiului X se deschide doar prin rânduri ale spațiului X. Un fișier vechi (fără folder) se deschide doar prin rânduri create înainte de 5.11.2026, când au apărut folderele. Rândurile făcute acum care arată spre fișierul altcuiva nu mai deschid nimic, iar oprirea partajării taie accesul. Am verificat cu 8 cazuri (citire, ștergere, partajat sau nu, fișiere vechi).
 - **Cauză:** `amplify/functions/files/handler.ts:55-66`. Pentru un fișier din folderul altui spațiu, accesul se dă dacă **un rând pe care apelantul îl poate citi** pointează la acel path. Apelantul își poate crea singur un astfel de rând (o rețetă proprie cu `photoKey` = path-ul altcuiva).
 - **Efect:** oprirea partajării nu revocă accesul la poze și audio pentru cine a văzut deja path-ul (path-urile rămân în IndexedDB pe dispozitivele lor). Fișierele **vechi** (dinainte de foldere pe spațiu, fără `space-…` în path) pot fi chiar **șterse** prin același mecanism (`write=true` ajunge la verificarea pe rând).
 - **Risc practic:** mic într-o aplicație de familie pe bază de invitație, dar e o breșă de izolare între spații.
 - **Sugestie:** pentru un fișier din folderul spațiului X, acceptă doar rânduri cu `row.spaceGroups.includes(X)`. Fișierele vechi merită mutate în foldere pe spațiu, după care regula „fără folder” poate fi eliminată.
 
-### M4. „Acasă” la Povești: emoji-ul copertei desenate apare tăiat în colțul stânga-sus 🟢 (regresie din `2c1e53f`)
+### M4. „Acasă” la Povești: emoji-ul copertei desenate apare tăiat în colțul stânga-sus 🟢 (regresie din `2c1e53f`) — ✅ REZOLVAT
+- **Rezolvare:** `display: grid` pe coperta din carusel. Am scos și sublinierea linkului, care desena o bară aurie sub emoji.
 - **Unde:** caruselul de sus de pe `/povesti/acasa`, la poveștile fără poză (telefon și desktop).
 - **Rezultat:** emoji-ul (🐻) apare în colțul stânga-sus, parțial în afara ecranului, sub comutatorul Rețete/Povești, nu centrat pe copertă (pe telefon e la y = −10 px).
 - **Cauză:** `src/stories-a.css:1064` `.vt-photo > * { display: block }` suprascrie `display: grid; place-items: center` de pe `.story-cover` (`index.css:400`).
 - **Fix:** `.vt-cover .vt-photo > .story-cover { display: grid; }`.
 
-### M5. Tastatura PIN numără mai multe încercări greșite la apăsări rapide 🟢
+### M5. Tastatura PIN numără mai multe încercări greșite la apăsări rapide 🟢 — ✅ REZOLVAT
+- **Rezolvare:** cu 4 cifre introduse, alte apăsări se ignoră. 6 apăsări rapide numără acum o singură încercare greșită.
 - **Pași:** pe ecranul de blocare, copilul apasă repede de 6 ori pe „9”.
 - **Rezultat:** 3 încercări greșite (după a 4-a cifră, fiecare apăsare retrimite aceleași 4 cifre). După 8 apăsări rapide părintele e blocat 30 s, apoi câte 2 min la fiecare încercare.
 - **Cauză:** `src/components/KidMode.tsx:25-31`: `press()` acceptă cifre și când `pin.length === 4` și programează din nou `onPin`.
 - **Fix:** ignoră apăsările cât timp `pin.length === PIN_LEN` sau verificarea e în curs.
 
-### M6. Modul gătit: gesturile din foaia „Ingrediente” schimbă pasul sau închid foaia 🔵
+### M6. Modul gătit: gesturile din foaia „Ingrediente” schimbă pasul sau închid foaia 🔵 — ✅ REZOLVAT
+- **Rezolvare:** gesturile care încep în foaia de ingrediente doar derulează lista; pe pas, swipe-ul merge ca înainte.
 - **Cauză:** `onTouchStart` și `onTouchEnd` stau pe tot containerul `.cook` (`CookMode.tsx:192-204`, foaia la `:266`), deci și peste foaia de ingrediente.
 - **Efect:** când derulezi lista în sus (deget în jos > 60 px), foaia se închide. Un swipe orizontal în listă schimbă pasul.
 - **Fix:** `stopPropagation` pe foaie, sau ignoră gesturile pornite în interiorul `.cook-sheet`.
 
-### M7. Fallback-ul „ține ecranul aprins” pe iPhone probabil nu se încarcă 🟠
+### M7. Fallback-ul „ține ecranul aprins” pe iPhone probabil nu se încarcă 🟠 — ✅ REZOLVAT
+- **Rezolvare:** clipul (1,7 KB) e acum inclus în codul aplicației și rulează dintr-un link blob, deci nu mai depinde de regula de rewrite și merge și offline. Am adăugat și `mp4` în regula din README.
 - **Cauză:** `keepAwake.ts:21` folosește `/keep-awake.mp4`, iar regula SPA din README (Amplify Rewrites) nu are `mp4` în lista de extensii. Fișierul ar fi rescris la `index.html` (HTML în loc de video). Nici service worker-ul nu-l pune în cache (`vite.config.ts`, `globPatterns`).
 - **Efect:** pe iOS (unde wake lock-ul nu ține în aplicația de pe ecranul principal) telefonul se poate bloca în timpul înregistrării sau dictării, iar microfonul se oprește.
 - **De verificat:** deschide `https://main.d1b5q3cpreuzof.amplifyapp.com/keep-awake.mp4`. Dacă primești HTML, adaugă `mp4` în regex-ul de rewrite.

@@ -19,7 +19,7 @@ import { useBack } from '../lib/back'
 import { useOnline } from '../lib/useOffline'
 
 /** Choose a day in the next two weeks; days that already have this recipe are marked. */
-function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; servings?: number; onDone: (msg: string) => void; onClose: () => void }) {
+export function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; servings?: number; onDone: (msg: string) => void; onClose: () => void }) {
   const plan = useSyncedList(planStore)
   const days = Array.from({ length: 14 }, (_, i) => addDays(today(), i))
   return (

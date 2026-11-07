@@ -930,3 +930,53 @@
 .photo-page-x { position: absolute; right: 4px; top: 4px; width: 30px; height: 30px; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer;
   background: rgb(0 0 0 / .55); color: #fff; }
 .photo-more { display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+
+/* ---------- Rețetele mele: four views (list, grid, magazine, rows) and the view / order menu ---------- */
+.recipes-head-btns { display: flex; align-items: center; gap: 8px; flex: none; }
+.recipes-head-btns .menu-anchor { position: relative; }
+.recipes-view-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--text);
+  border: 1px solid rgb(255 255 255 / .08); background: rgb(0 0 0 / .28); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.recipes-view-btn[aria-expanded=true] { background: rgb(255 255 255 / .14); }
+.recipes-head-btns .pop-menu .menu-row svg { color: var(--accent); }
+
+/* Grid: two columns of photo cards, the title on a shade at the bottom. */
+.rgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+@media (min-width: 760px) { .rgrid { gap: 14px; } }
+.rgrid-col { display: grid; gap: 10px; }
+.rtile { position: relative; display: block; border-radius: 18px; overflow: hidden; background: var(--surface-2); color: #fff; text-decoration: none; box-shadow: 0 8px 20px rgb(0 0 0 / .4); }
+.rtile > img, .rtile > svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.rtile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgb(0 0 0 / .75)); }
+.rtile-text { position: absolute; z-index: 1; left: 12px; right: 10px; bottom: 10px; display: grid; gap: 2px; }
+.rtile-text b { font-size: .95rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.rtile-text small { font-size: .75rem; font-weight: 600; opacity: .85; }
+.rtile:active { transform: scale(.98); }
+
+/* Magazine: one big card per recipe. */
+.rcards { display: grid; gap: 26px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+.rcard { display: grid; gap: 10px; }
+.rcard-photo { position: relative; display: block; aspect-ratio: 16 / 10; border-radius: 20px; overflow: hidden; background: var(--surface-2); box-shadow: 0 12px 28px rgb(0 0 0 / .45); }
+.rcard-photo > img, .rcard-photo > svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rcard-cat { position: absolute; left: 12px; top: 12px; padding: 5px 11px; border-radius: 999px; background: rgb(0 0 0 / .45); color: #fff; font-size: .75rem; font-weight: 700;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.rcard-foot { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 0 2px; }
+.rcard-text { display: grid; gap: 4px; min-width: 0; color: var(--text); text-decoration: none; }
+.rcard-text b { font-family: var(--f-title); font-weight: 600; font-size: 1.35rem; line-height: 1.15; }
+.rcard-text small { color: var(--muted); font-weight: 600; font-size: .85rem; }
+.rcard-btns { display: flex; gap: 6px; flex: none; }
+.rcard-btns button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface-2); color: var(--accent); display: grid; place-items: center; cursor: pointer; }
+.rcard-btns button:active { background: rgb(255 255 255 / .14); }
+
+/* Rows: this week, then a row per category you scroll sideways. */
+.rrows { display: grid; gap: 22px; }
+.rrow { display: grid; gap: 10px; min-width: 0; }
+.rrow-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.rrow-head h2 { margin: 0; font-family: var(--f-title); font-weight: 600; font-size: 1.3rem; }
+.rrow-head a, .rrow-head button { border: 0; background: none; padding: 6px 0; color: var(--accent); font: inherit; font-size: .9rem; font-weight: 700; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.rrow-scroll { display: flex; gap: 10px; overflow-x: auto; margin: 0 -16px; padding: 0 16px 6px; scroll-snap-type: x proximity; scroll-padding-inline: 16px; scrollbar-width: none; }
+.rrow-scroll::-webkit-scrollbar { display: none; }
+.rsq { flex: none; width: 140px; display: grid; gap: 4px; align-content: start; color: var(--text); text-decoration: none; scroll-snap-align: start; }
+.rsq-photo { display: block; width: 140px; height: 140px; border-radius: 16px; overflow: hidden; background: var(--surface-2); box-shadow: 0 8px 18px rgb(0 0 0 / .4); margin-bottom: 2px; }
+.rsq-photo > img, .rsq-photo > svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rsq b { font-size: .9rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rsq small { color: var(--muted); font-size: .78rem; font-weight: 600; }
+.rows-back { justify-self: start; display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 700; cursor: pointer; }

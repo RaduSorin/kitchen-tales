@@ -33,6 +33,7 @@ const toRecipe = (r: RecipeRow): Recipe => (fileOwner(`Recipe:${r.id}`, r.photoK
   photoKey: r.photoKey ?? undefined,
   nutrition: parseNutrition(r.nutrition),
   allergens: parseAllergens(r.allergens),
+  createdAt: r.createdAt,
   updatedAt: r.updatedAt,
   mine: isMine(r.spaceGroups),
   shared: isShared(r.readerGroups),
@@ -185,7 +186,7 @@ export async function getRecipe(id: string) {
 }
 
 export async function saveRecipe(r: Recipe, isNew: boolean) {
-  const { updatedAt: _, mine: _m, shared, spaceName: _n, ...fields } = r
+  const { updatedAt: _, createdAt: _c, mine: _m, shared, spaceName: _n, ...fields } = r
   const input = { ...fields, category: fields.category || null, notes: fields.notes || null, sourceUrl: fields.sourceUrl || null,
     servings: fields.servings ?? null, minutes: fields.minutes ?? null, photoKey: fields.photoKey ?? null,
     stepPhotoKeys: fields.stepPhotoKeys?.some(Boolean) ? fields.stepPhotoKeys : null,

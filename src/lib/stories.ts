@@ -110,3 +110,12 @@ export function setPosition(id: string, sec: number | undefined) {
 export function getLastStoryId() {
   try { return localStorage.getItem(LAST) ?? undefined } catch { return undefined }
 }
+
+/** Total listening time of a folder: "45 min", "2 h", "1 h 30". */
+export function folderTime(items: Story[]) {
+  const min = Math.round(items.reduce((t, s) => t + (s.durationSec ?? 0), 0) / 60)
+  if (!min) return ''
+  if (min < 60) return `${min} min`
+  const h = Math.floor(min / 60), m = min % 60
+  return m && h < 10 ? `${h} h ${m}` : `${h} h`
+}

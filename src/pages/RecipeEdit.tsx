@@ -24,8 +24,16 @@ import { clearPickedRecipePages, pickedRecipePages, type RecipeWay } from '../co
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 
 type Step = { uid: string; text: string; photoKey?: string; photoBlob?: Blob }
-type Mode = 'choose' | 'link' | 'photo' | 'text' | 'generate' | 'fridge' | 'edit'
-const WAY_MODE: Record<RecipeWay, Mode> = { link: 'link', poza: 'photo', scriu: 'edit', frigider: 'fridge', genereaza: 'generate', text: 'text' }
+// Four ways in: a link or text (sites, videos, notes, dictation), photos, AI (a craving or the
+// fridge) and writing it yourself. The older ?din= values still open the right one.
+type Mode = 'choose' | 'paste' | 'photo' | 'ai' | 'edit'
+type AiKind = 'craving' | 'fridge'
+const WAY_MODE: Record<RecipeWay, Mode> = { link: 'paste', text: 'paste', poza: 'photo', scriu: 'edit', ai: 'ai', frigider: 'ai', genereaza: 'ai' }
+
+/** The pasted text is one web address (and nothing else). */
+const asLink = (s: string) => { const t = s.trim(); return /^https?:\/\/\S+$/i.test(t) ? t : /^(www\.)?[\w-]+(\.[\w-]+)+\/\S*$/i.test(t) && !/\s/.test(t) ? `https://${t}` : undefined }
+const VIDEO_SITE: [RegExp, string][] = [[/(^|\.)(youtube\.com|youtu\.be)$/i, 'YouTube'], [/(^|\.)tiktok\.com$/i, 'TikTok'], [/(^|\.)(instagram\.com|instagr\.am)$/i, 'Instagram']]
+const videoSite = (link: string) => { try { const h = new URL(link).hostname; return VIDEO_SITE.find(([re]) => re.test(h))?.[1] } catch { return undefined } }
 
 /** Photos of one recipe read together: a book's two pages, both sides of a note. */
 const MAX_PAGES = 4
@@ -129,8 +137,8 @@ export default function RecipeEdit() {
   const [photo, setPhoto] = useState<Blob>()
   // /retete/noua?din=… opens straight on one way (the + sheet on the recipes page; Search links the fridge).
   const [mode, setMode] = useState<Mode>(() => id ? 'edit' : WAY_MODE[new URLSearchParams(window.location.search).get('din') as RecipeWay] ?? 'choose')
-  const [link, setLink] = useState('')
   const [paste, setPaste] = useState('')
+  const [aiKind, setAiKind] = useState<AiKind>(() => new URLSearchParams(window.location.search).get('din') === 'frigider' ? 'fridge' : 'craving')
   // Dictated text has no headings, so it goes to the AI instead of the local parser.
   const [dictated, setDictated] = useState(false)
   // The step that "Dictează un pas" is writing into.
@@ -255,7 +263,10 @@ export default function RecipeEdit() {
     } catch (err) { setError(`Importul nu a reușit: ${errorText(err)}`) }
     setImporting('')
   }
-  const importLink = () => { if (link.trim()) doImport('Citesc rețeta de pe site…', () => importRecipeFromUrl(link.trim())) }
+  const importLink = (link: string) => {
+    const site = videoSite(link)
+    doImport(site ? `Citesc rețeta din videoclipul de pe ${site}…` : 'Citesc rețeta de pe site…', () => importRecipeFromUrl(link))
+  }
   const addPages = (files: FileList | null) => {
     const xs = [...(files ?? [])].filter((f) => f.type.startsWith('image/') || !f.type)
     if (!xs.length) return
@@ -330,6 +341,8 @@ export default function RecipeEdit() {
   const importText = () => {
     const text = paste.trim()
     if (!text) return
+    const link = asLink(text)
+    if (link) { importLink(link); return }
     const p = parseRecipeText(text)
     // Clear "Ingrediente / Mod de preparare" text is split on the phone; anything looser is read by the AI.
     if (!dictated && p.ingredients.length && p.steps.length) fill(p.title, p.ingredients, p.steps)
@@ -454,25 +467,26 @@ export default function RecipeEdit() {
         {mode === 'choose' && !importing && <p className="add-sub">De unde vine rețeta?</p>}
         {importing ? (
           <p className="importing"><span className="spinner" /> {importing}</p>
-        ) : mode === 'link' ? (
-          <div className="add-panel">
-            <label htmlFor="import-link">Linkul rețetei</label>
-            <input id="import-link" type="url" inputMode="url" autoFocus value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://…"
-              onKeyDown={(e) => { if (e.key === 'Enter') importLink() }} />
-            <button type="button" className="btn primary big" onClick={importLink} disabled={!link.trim()}>Importă</button>
-          </div>
-        ) : mode === 'generate' ? (
-          <div className="add-panel">
-            <label htmlFor="gen-idea">Ce ai vrea să gătești?</label>
-            <MicButton value={idea} onChange={setIdea}>
-              <textarea id="gen-idea" rows={4} autoFocus value={idea} onChange={(e) => setIdea(e.target.value)}
-                placeholder="De exemplu: o ciorbă de pui rapidă, ceva cu dovlecei și brânză, un desert fără zahăr pentru copii" />
-            </MicButton>
-            {genOptions}
-            <button type="button" className="btn primary big" onClick={runGenerate} disabled={!idea.trim()}>Generează rețeta</button>
-          </div>
-        ) : mode === 'fridge' ? (
-          ideas?.length ? (
+        ) : mode === 'paste' ? (() => {
+          const link = asLink(paste)
+          const site = link && videoSite(link)
+          return (
+            <div className="add-panel">
+              <label htmlFor="import-text">Un link sau textul rețetei</label>
+              <MicButton value={paste} onChange={setPaste} onDictated={() => setDictated(true)}>
+                <textarea id="import-text" rows={link ? 3 : 8} autoFocus value={paste} onChange={(e) => setPaste(e.target.value)}
+                  placeholder={'Lipește un link de pe un site, YouTube, TikTok sau Instagram.\n\nSau lipește, scrie ori dictează rețeta: ingredientele, cât și cum le gătești.'} />
+              </MicButton>
+              <p className="set-hint">
+                {site ? `Videoclip de pe ${site}: citim descrierea și, unde se poate, ce se spune în video.`
+                  : link ? 'Citim rețeta de pe pagină, cu poza ei.'
+                  : 'Un link de pe un site sau dintr-un videoclip, o notiță copiată sau o rețetă dictată liber. Le aranjăm noi.'}
+              </p>
+              <button type="button" className="btn primary big" onClick={importText} disabled={!paste.trim()}>{link ? 'Importă' : 'Completează rețeta'}</button>
+            </div>
+          )
+        })() : mode === 'ai' ? (
+          aiKind === 'fridge' && ideas?.length ? (
             <div className="add-panel">
               <span className="gen-label">Alege ce gătești</span>
               {dietRow}
@@ -500,14 +514,28 @@ export default function RecipeEdit() {
             </div>
           ) : (
             <div className="add-panel">
-              <label htmlFor="fridge">Ce ai în frigider?</label>
-              <MicButton value={fridge} onChange={setFridge}>
-                <textarea id="fridge" rows={5} autoFocus value={fridge} onChange={(e) => setFridge(e.target.value)}
-                  placeholder="De exemplu: piept de pui, 2 dovlecei, smântână, ouă, o ceapă, orez" />
-              </MicButton>
-              <p className="set-hint">Sarea, piperul, uleiul, zahărul și făina le considerăm deja în casă.</p>
+              <div className="seg ai-kind" role="group" aria-label="Pornesc de la">
+                <button type="button" aria-pressed={aiKind === 'craving'} onClick={() => setAiKind('craving')}>Am chef de…</button>
+                <button type="button" aria-pressed={aiKind === 'fridge'} onClick={() => setAiKind('fridge')}>Am în frigider…</button>
+              </div>
+              {aiKind === 'craving' ? (
+                <MicButton value={idea} onChange={setIdea}>
+                  <textarea id="gen-idea" aria-label="Ce ai vrea să gătești?" rows={4} autoFocus value={idea} onChange={(e) => setIdea(e.target.value)}
+                    placeholder="De exemplu: o ciorbă de pui rapidă, ceva cu dovlecei și brânză, un desert fără zahăr pentru copii" />
+                </MicButton>
+              ) : (
+                <>
+                  <MicButton value={fridge} onChange={setFridge}>
+                    <textarea id="fridge" aria-label="Ce ai în frigider?" rows={4} autoFocus value={fridge} onChange={(e) => setFridge(e.target.value)}
+                      placeholder="De exemplu: piept de pui, 2 dovlecei, smântână, ouă, o ceapă, orez" />
+                  </MicButton>
+                  <p className="set-hint">Sarea, piperul, uleiul, zahărul și făina le considerăm deja în casă.</p>
+                </>
+              )}
               {genOptions}
-              <button type="button" className="btn primary big" onClick={runSuggest} disabled={!fridge.trim()}>Propune rețete</button>
+              {aiKind === 'craving'
+                ? <button type="button" className="btn primary big" onClick={runGenerate} disabled={!idea.trim()}>Scrie rețeta</button>
+                : <button type="button" className="btn primary big" onClick={runSuggest} disabled={!fridge.trim()}>Propune rețete</button>}
             </div>
           )
         ) : mode === 'photo' ? (
@@ -528,43 +556,25 @@ export default function RecipeEdit() {
             <p className="set-hint">Dacă rețeta e pe două pagini sau pe fața și spatele unui bilet, adaugă toate pozele: le citim împreună, ca o singură rețetă. Cel mult {MAX_PAGES}.</p>
             <button type="button" className="btn primary big" onClick={importPhotos} disabled={!pages.length}>Citește rețeta</button>
           </div>
-        ) : mode === 'text' ? (
-          <div className="add-panel">
-            <label htmlFor="import-text">Lipește, scrie sau dictează rețeta</label>
-            <MicButton value={paste} onChange={setPaste} onDictated={() => setDictated(true)}>
-              <textarea id="import-text" rows={10} autoFocus value={paste} onChange={(e) => setPaste(e.target.value)}
-                placeholder={'Sarmale\nIngrediente\n- 1 varză murată\n- 500 g carne tocată\nMod de preparare\n1. …'} />
-            </MicButton>
-            <p className="set-hint">Dictează liber: ce ingrediente pui, cât și cum le gătești. Le aranjăm noi.</p>
-            <button type="button" className="btn primary big" onClick={importText} disabled={!paste.trim()}>Completează rețeta</button>
-          </div>
         ) : (
           <div className="ways">
             {/* The imports most used come first. */}
-            <button type="button" className="way" onClick={() => setMode('link')}>
+            <button type="button" className="way" onClick={() => setMode('paste')}>
               <AddArt kind="link" />
-              <span><b>Din link</b><small>De pe un blog sau un site</small></span>
+              <span><b>Din link sau text</b><small>Site, YouTube, TikTok, Instagram sau text</small></span>
             </button>
             <label className="way">
               <AddArt kind="cam" />
               <span><b>Din poză</b><small>Din carte, din caiet sau un bilet, chiar pe mai multe pagini</small></span>
               <input type="file" accept="image/*" multiple hidden onChange={(e) => { addPages(e.target.files); e.target.value = '' }} />
             </label>
+            <button type="button" className="way" onClick={() => setMode('ai')}>
+              <AddArt kind="gen" />
+              <span><b>Cu AI</b><small>Spui ce ai chef sau ce ai în frigider</small></span>
+            </button>
             <button type="button" className="way" onClick={() => setMode('edit')}>
               <AddArt kind="pen" />
               <span><b>Scriu eu</b><small>Titlu, ingrediente și pași</small></span>
-            </button>
-            <button type="button" className="way" onClick={() => setMode('fridge')}>
-              <AddArt kind="fridge" />
-              <span><b>Din frigider</b><small>Scrii ce ai, primești idei de rețete</small></span>
-            </button>
-            <button type="button" className="way" onClick={() => setMode('generate')}>
-              <AddArt kind="gen" />
-              <span><b>Generează</b><small>Spui ce ai chef, ținem cont de aparatele tale</small></span>
-            </button>
-            <button type="button" className="way" onClick={() => setMode('text')}>
-              <AddArt kind="text" />
-              <span><b>Din text sau voce</b><small>O notiță copiată sau o rețetă dictată</small></span>
             </button>
           </div>
         )}

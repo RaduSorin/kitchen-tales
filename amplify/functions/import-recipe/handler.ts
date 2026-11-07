@@ -4,6 +4,7 @@ import type { Schema } from '../../data/resource'
 import { safeFetch } from '../../shared/safeFetch'
 import { fileSpace, newFilePath } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
+import { VIDEO_RULES, videoSource, videoText } from './video'
 
 const bedrock = new BedrockRuntimeClient({})
 const s3 = new S3Client({})
@@ -192,9 +193,25 @@ async function savePhotoFrom(url: string): Promise<string | undefined> {
   }
 }
 
+async function fromVideo(raw: string): Promise<Imported | undefined> {
+  const v = await videoText(raw)
+  if (!v) return undefined
+  const recipe = await askModel([{ text: videoSource(v) }], SYSTEM + '\n' + VIDEO_RULES)
+  if (!recipe.title || !recipe.ingredients.length) {
+    throw new Error('Nu am găsit rețeta în textul videoclipului. Dacă e doar spusă în video, dictează-o sau lipește-o aici.')
+  }
+  // The video's still: YouTube's big one when there is one, else the one the platform gave.
+  const stills = v.platform === 'youtube' && v.thumbnail ? [v.thumbnail.replace('hqdefault', 'maxresdefault'), v.thumbnail] : v.thumbnail ? [v.thumbnail] : []
+  let photoKey: string | undefined
+  for (const s of stills) if (!photoKey) photoKey = await savePhotoFrom(s)
+  return { ...recipe, sourceUrl: v.url, photoKey }
+}
+
 async function fromUrl(raw: string): Promise<Imported> {
   const url = new URL(raw)
   if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('Linkul trebuie să înceapă cu http:// sau https://')
+  const video = await fromVideo(url.toString())
+  if (video) return video
   const res = await safeFetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (KitchenTales recipe import)', 'Accept-Language': 'ro,en;q=0.8' },
     signal: AbortSignal.timeout(20_000),

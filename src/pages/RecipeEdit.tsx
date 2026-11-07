@@ -84,8 +84,12 @@ function StepItem({ n, step, total, drag, onChange, onMove, onRemove, onGrab }: 
         <button type="button" className="step-grip" aria-label={`Mută pasul ${n} (trage, sau săgeți sus/jos)`}
           onPointerDown={onGrab} onContextMenu={(e) => e.preventDefault()}
           onKeyDown={(e) => {
-            if (e.key === 'ArrowUp' && n > 1) { e.preventDefault(); onMove(-1) }
-            if (e.key === 'ArrowDown' && n < total) { e.preventDefault(); onMove(1) }
+            const d = e.key === 'ArrowUp' && n > 1 ? -1 : e.key === 'ArrowDown' && n < total ? 1 : 0
+            if (!d) return
+            e.preventDefault()
+            onMove(d)
+            // The step moved in the list (and lost the focus): keep it on its grip, for the next press.
+            requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-uid="${step.uid}"] .step-grip`)?.focus())
           }}>
           <svg viewBox="0 0 12 20" width="12" height="20" aria-hidden="true">
             {[3, 10, 17].flatMap((y) => [<circle key={'a' + y} cx="3" cy={y} r="1.6" />, <circle key={'b' + y} cx="9" cy={y} r="1.6" />])}

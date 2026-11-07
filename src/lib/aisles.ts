@@ -22,6 +22,9 @@ const plain = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g
 // Word beginnings per aisle. Checked in this order, so the more specific aisles come first
 // ("lapte de cocos" is băcănie, "smântână" is lactate, "ardei iute" is legume).
 const WORDS: [string, string[]][] = [
+  // "suc de la o lămâie", "zeamă de lămâie", "coajă de portocală": squeezed or grated at home, so the fruit
+  // (orange juice by the litre stays a drink).
+  ['produce', ['suc de la', 'suc de lamai', 'suc de lime', 'zeama de lamai', 'coaja de lamai', 'coaja de portocal']],
   ['pantry', ['lapte de cocos', 'lapte condensat', 'lapte praf', 'rosii decojite', 'rosii in bulion', 'rosii la conserva', 'porumb la conserva', 'fasole la conserva']],
   ['home', ['detergent', 'sapun', 'sampon', 'hartie igienica', 'servet', 'prosop de hartie', 'burete', 'saci de gunoi', 'pasta de dinti', 'scutec', 'folie', 'hartie de copt', 'lavete', 'balsam de rufe', 'solutie']],
   ['frozen', ['congelat', 'inghetat', 'mazare congelata', 'pizza congelata']],

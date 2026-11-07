@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { childAge, updateSettings, useSettings } from '../lib/settings'
@@ -13,7 +13,8 @@ import { CheckPinSheet, NewPinSheet } from '../components/KidMode'
 import Sheet from '../components/Sheet'
 import Avatar from '../components/Avatar'
 import { Members, InviteForm, useFamily } from './FamilySection'
-import { listRecipes, setFolderShared, setRecipeShared } from '../lib/db'
+import { listRecipes, narratorVoices, previewVoice, setFolderShared, setRecipeShared, type NarratorVoice } from '../lib/db'
+import { errorText } from '../lib/errors'
 import { saveMyName, useMyName } from '../lib/me'
 import { myEmail, mySpaceName } from '../lib/space'
 import type { Recipe } from '../lib/types'
@@ -323,6 +324,95 @@ function ChildSettings() {
   )
 }
 
+// Samples already heard in this session, so playing one again costs no ElevenLabs credits.
+const samples = new Map<string, string>()
+
+/** Who reads the new stories: a voice from the family's ElevenLabs account, or Polly (Carmen). */
+function NarratorSettings() {
+  const { narrator } = useSettings()
+  const [voices, setVoices] = useState<NarratorVoice[]>()
+  const [error, setError] = useState('')
+  const [playing, setPlaying] = useState<string>()
+  const [loading, setLoading] = useState<string>()
+  const audio = useRef<HTMLAudioElement | null>(null)
+  useEffect(() => {
+    narratorVoices().then(setVoices).catch((err) => { setVoices([]); setError(errorText(err)) })
+    return () => { audio.current?.pause() }
+  }, [])
+
+  const play = async (id: string) => {
+    audio.current?.pause()
+    if (playing === id) { setPlaying(undefined); return }
+    setError('')
+    try {
+      let url = samples.get(id)
+      if (!url) { setLoading(id); url = await previewVoice(id); samples.set(id, url) }
+      const a = new Audio(url)
+      audio.current = a
+      a.onended = () => setPlaying((p) => (p === id ? undefined : p))
+      setPlaying(id)
+      await a.play()
+    } catch (err) {
+      setPlaying(undefined)
+      setError(`Nu am putut citi mostra: ${errorText(err)}`)
+    } finally {
+      setLoading(undefined)
+    }
+  }
+
+  const pick = (v?: NarratorVoice) => updateSettings({ narrator: v ? { id: v.id, name: v.name } : { id: '', name: '' } })
+  const about = (v: NarratorVoice) => [v.romanian ? 'română' : v.accent, v.gender === 'female' ? 'feminină' : v.gender === 'male' ? 'masculină' : v.gender, v.description].filter(Boolean).join(' · ')
+  const ro = voices?.filter((v) => v.romanian) ?? []
+  const other = voices?.filter((v) => !v.romanian) ?? []
+
+  const row = (v: NarratorVoice) => (
+    <div className="set-row voice-row" key={v.id}>
+      <button type="button" className="voice-pick" role="radio" aria-checked={narrator.id === v.id} onClick={() => pick(v)}>
+        <span className="voice-check" aria-hidden="true">{narrator.id === v.id ? '✓' : ''}</span>
+        <span>{v.name}{about(v) && <small className="set-sub">{about(v)}</small>}</span>
+      </button>
+      <button type="button" className="btn small voice-play" aria-label={`Ascultă vocea ${v.name}`} onClick={() => play(v.id)} disabled={!!loading && loading !== v.id}>
+        {loading === v.id ? '…' : playing === v.id ? 'Stop' : 'Ascultă'}
+      </button>
+    </div>
+  )
+
+  return (
+    <>
+      <div className="set-group">
+        <div className="set-box" role="radiogroup" aria-label="Vocea poveștilor">
+          <div className="set-row voice-row">
+            <button type="button" className="voice-pick" role="radio" aria-checked={!narrator.id} onClick={() => pick()}>
+              <span className="voice-check" aria-hidden="true">{narrator.id ? '' : '✓'}</span>
+              <span>Carmen (Amazon Polly)<small className="set-sub">vocea de până acum, gratuită</small></span>
+            </button>
+          </div>
+        </div>
+        <p className="set-hint">Dacă ElevenLabs nu răspunde sau se termină creditele, poveștile noi se citesc tot cu Carmen.</p>
+      </div>
+
+      <div className="set-group">
+        <h2 className="set-label">Voci în română (ElevenLabs)</h2>
+        <div className="set-box">
+          {!voices && <div className="set-row"><span className="muted">Se încarcă vocile…</span></div>}
+          {voices && !ro.length && <div className="set-row"><span className="muted">Nicio voce românească în cont încă.</span></div>}
+          {ro.map(row)}
+        </div>
+        <p className="set-hint">Pe elevenlabs.io, în Voice Library, filtrează după limba română și apasă „Add to my voices” la cele care îți plac. Apar aici imediat.</p>
+      </div>
+
+      {other.length > 0 && (
+        <div className="set-group">
+          <h2 className="set-label">Alte voci (citesc și în română)</h2>
+          <div className="set-box">{other.map(row)}</div>
+        </div>
+      )}
+      {error && <p className="set-hint error">{error}</p>}
+      <p className="set-hint">Fiecare mostră și fiecare poveste nouă consumă credite ElevenLabs (cam un credit pe literă). Poveștile salvate deja nu se schimbă.</p>
+    </>
+  )
+}
+
 /** Everything this space shares with the other accounts, with a switch for each recipe and folder. */
 function SharedSettings() {
   const [recipes, setRecipes] = useState<Recipe[]>()
@@ -404,6 +494,7 @@ const P = {
   lock: 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
   books: 'M4 4h4v16H4zM10 4h4v16h-4zM15.5 5.2l3.8-1 3.7 15.5-3.8 1z',
   leaf: 'M5 19c0-8 5-14 15-14 0 10-6 15-14 15M5 19l7-7',
+  voice: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3',
 }
 
 /** One row: gold line icon, label (with an optional second line), current value, chevron. */
@@ -428,7 +519,7 @@ const nameFromEmail = (email: string) => {
 
 /** The Profile tab: who you are, the child, people and sharing, preferences, this phone, sign out. */
 function ProfileHome() {
-  const { child, kid, kitchenTools, shelfClick, diet } = useSettings()
+  const { child, kid, kitchenTools, shelfClick, diet, narrator } = useSettings()
   const { user, signOut } = useAuthenticator((c) => [c.user])
   const email = user?.signInDetails?.loginId ?? myEmail()
   const name = useMyName()
@@ -490,6 +581,7 @@ function ProfileHome() {
         <div className="set-box">
           <Row to="/profil/bucatarie" icon="oven" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
           <Row to="/profil/mancare" icon="leaf" label="Ce mâncăm" value={diet.avoid.length ? `fără ${diet.avoid.map((r) => DIET_ITEMS.find((d) => d.key === r.key)?.short ?? r.key).join(', ')}` : 'orice'} />
+          <Row to="/profil/voce" icon="voice" label="Vocea poveștilor" value={narrator.id ? narrator.name : 'Carmen'} />
         </div>
       </div>
 
@@ -514,6 +606,7 @@ const PAGES: Record<string, [string, ComponentType]> = {
   partajare: ['Ce partajez', SharedSettings],
   bucatarie: ['Bucătăria mea', KitchenTools],
   mancare: ['Ce mâncăm', DietSettings],
+  voce: ['Vocea poveștilor', NarratorSettings],
   offline: ['Povești fără internet', OfflineStorage],
   raft: ['Raftul cu povești', ShelfSettings],
 }

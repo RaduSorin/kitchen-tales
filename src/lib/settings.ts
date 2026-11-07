@@ -24,7 +24,11 @@ export interface Settings {
   shelfClick: boolean
   /** What the family doesn't eat: recipe generation respects it, recipes warn about it. */
   diet: Diet
+  /** The ElevenLabs voice that reads new stories; empty id = the Polly voice (Carmen). */
+  narrator: Narrator
 }
+
+export interface Narrator { id: string; name: string }
 
 export interface KidSettings {
   /** SHA-256 of salt + PIN (hex); undefined until a PIN is set. */
@@ -39,7 +43,7 @@ export interface KidSettings {
 const KEY = 'kt-settings'
 const LEGACY_BRIEF_KEY = 'kt-story-brief'
 const KID_DEFAULTS: KidSettings = { minutes: 30, folders: [] }
-const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [], city: 'București', kid: KID_DEFAULTS, shelfClick: true, diet: NO_DIET }
+const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [], city: 'București', kid: KID_DEFAULTS, shelfClick: true, diet: NO_DIET, narrator: { id: '', name: '' } }
 
 // Earlier versions stored the age; turn it into a birth year once.
 function migrateChild(c: ChildProfile & { age?: number }): ChildProfile {
@@ -73,8 +77,8 @@ const listeners = new Set<() => void>()
 const sharedListeners = new Set<() => void>()
 
 /** Settings shared by the family and kept in the cloud; the theme stays per device. */
-export type SharedSettings = Pick<Settings, 'child' | 'city' | 'kitchenTools' | 'kid' | 'diet'>
-const SHARED_KEYS = ['child', 'city', 'kitchenTools', 'kid', 'diet'] as const
+export type SharedSettings = Pick<Settings, 'child' | 'city' | 'kitchenTools' | 'kid' | 'diet' | 'narrator'>
+const SHARED_KEYS = ['child', 'city', 'kitchenTools', 'kid', 'diet', 'narrator'] as const
 
 export function getSettings() { return current }
 

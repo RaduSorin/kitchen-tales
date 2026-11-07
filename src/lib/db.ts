@@ -484,11 +484,28 @@ export type StoryBrief = {
   length?: 'short' | 'medium' | 'long'
 }
 
-export async function generateStory(args: { title: string; text?: string } & StoryBrief) {
+export async function generateStory(args: { title: string; text?: string; voice?: string } & StoryBrief) {
   const res = await client.queries.generateStory(args)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data) throw new Error('Nu am putut crea povestea.')
   return res.data
+}
+
+export type NarratorVoice = { id: string; name: string; description?: string | null; gender?: string | null; age?: string | null; accent?: string | null; category?: string | null; romanian?: boolean | null }
+
+/** The voices in the family's ElevenLabs account. */
+export async function narratorVoices(): Promise<NarratorVoice[]> {
+  const res = await client.queries.narratorVoices()
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  return (res.data ?? []).filter((v): v is NarratorVoice => !!v)
+}
+
+/** A short Romanian sample read by one voice, as an MP3 data URL. */
+export async function previewVoice(voice: string): Promise<string> {
+  const res = await client.queries.previewVoice({ voice })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (!res.data) throw new Error('Nu am primit mostra.')
+  return `data:audio/mpeg;base64,${res.data}`
 }
 
 // ---- story covers ----
@@ -628,7 +645,7 @@ async function refreshSharedNames(name: string | undefined) {
 }
 
 /** The space's settings from the cloud, or null if they were never saved there. */
-export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid' | 'diet'> & { city?: string; kid?: SharedSettings['kid']; diet?: SharedSettings['diet'] }) | null> {
+export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' | 'kid' | 'diet' | 'narrator'> & { city?: string; kid?: SharedSettings['kid']; diet?: SharedSettings['diet']; narrator?: SharedSettings['narrator'] }) | null> {
   const res = await client.models.FamilySettings.get({ id: await mySpaceGroup() })
   check(res)
   const r = res.data
@@ -651,6 +668,8 @@ export async function getFamilySettings(): Promise<(Omit<SharedSettings, 'city' 
       folders: clean(r.kidFolders),
     },
     diet: parseDiet(r.diet),
+    // Rows saved before the narrator setting existed have none: keep this device's choice then.
+    narrator: r.narrator == null ? undefined : { id: r.narrator, name: r.narratorName ?? '' },
   }
 }
 
@@ -670,6 +689,8 @@ export async function saveFamilySettings(s: SharedSettings) {
     kidMinutes: s.kid.minutes,
     kidFolders: s.kid.folders,
     diet: JSON.stringify(s.diet),
+    narrator: s.narrator.id,
+    narratorName: s.narrator.name,
     spaceName: mySpaceName(),
   }
   const res = await client.models.FamilySettings.update(row)

@@ -126,6 +126,9 @@ const schema = a.schema({
       kidFolders: a.string().array(),
       // What the family doesn't eat (JSON, see src/lib/diet.ts): respected by recipe generation.
       diet: a.string(),
+      // The ElevenLabs voice that reads new stories (empty = Polly).
+      narrator: a.string(),
+      narratorName: a.string(),
       // The name other spaces see on what this space shares ("De la Sorin").
       spaceName: a.string(),
       spaceGroups: a.string().array(),
@@ -229,9 +232,13 @@ const schema = a.schema({
   GeneratedStory: a.customType({
     text: a.string().required(),
     audioKey: a.string().required(),
+    // Who read it: "elevenlabs" or "polly" (the fallback), and why, if ElevenLabs was skipped.
+    narrator: a.string(),
+    note: a.string(),
   }),
 
-  // Writes a story with AI (or uses the given text) and narrates it with Polly.
+  // Writes a story with AI (or uses the given text) and narrates it with ElevenLabs
+  // (voice = an ElevenLabs voice id) or, without a voice, with Polly.
   generateStory: a
     .query()
     .arguments({
@@ -242,8 +249,35 @@ const schema = a.schema({
       age: a.integer(),
       length: a.string(),
       text: a.string(),
+      voice: a.string(),
     })
     .returns(a.ref('GeneratedStory'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(generateStory)),
+
+  NarratorVoice: a.customType({
+    id: a.string().required(),
+    name: a.string().required(),
+    description: a.string(),
+    gender: a.string(),
+    age: a.string(),
+    accent: a.string(),
+    category: a.string(),
+    romanian: a.boolean(),
+  }),
+
+  // The voices in the family's ElevenLabs account, for the narrator picker in Profile.
+  narratorVoices: a
+    .query()
+    .returns(a.ref('NarratorVoice').array())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(generateStory)),
+
+  // A short Romanian sample read by one voice (MP3, base64).
+  previewVoice: a
+    .query()
+    .arguments({ voice: a.string().required() })
+    .returns(a.string())
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(generateStory)),
 

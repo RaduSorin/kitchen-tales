@@ -7,7 +7,7 @@ import { readAudioMeta } from '../lib/audioMeta'
 import { resizeImage } from '../lib/resizeImage'
 import type { StorySource } from '../lib/types'
 import { useBlobUrl } from '../lib/useBlobUrl'
-import { childAge, useSettings } from '../lib/settings'
+import { childAge, getSettings, useSettings } from '../lib/settings'
 import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
@@ -185,7 +185,9 @@ export default function StoryAdd() {
       if (generated) await removeFile(generated.audioKey)
       if (!useOwnText) saveBrief(brief)
       const forChild = { childName: known.childName ?? brief.childName, age: known.age ?? brief.age, gender: known.gender ?? brief.gender }
-      const g = await generateStory({ title: name, ...(useOwnText ? { text: ownText } : { ...brief, ...forChild, prompt }) })
+      const voice = getSettings().narrator.id || undefined
+      const g = await generateStory({ title: name, voice, ...(useOwnText ? { text: ownText } : { ...brief, ...forChild, prompt }) })
+      if (g.note) showToast(g.note)
       setGenerated({ ...g, url: await fileUrl(g.audioKey) })
       setAudio(undefined); setSource('generated'); setSeconds(undefined)
     } catch (err) {

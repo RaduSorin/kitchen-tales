@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { errorText } from '../lib/errors'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { generateRecipe, generateRecipePhoto, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhoto, importRecipeFromText, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
+import { generateRecipe, generateRecipePhoto, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhotos, importRecipeFromText, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
 import { parseRecipeText } from '../lib/parseRecipe'
 import { resizeImage } from '../lib/resizeImage'
 import type { Recipe } from '../lib/types'
@@ -23,7 +23,24 @@ import AddArt from '../components/AddArt'
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
 
 type Step = { uid: string; text: string; photoKey?: string; photoBlob?: Blob }
-type Mode = 'choose' | 'link' | 'text' | 'generate' | 'fridge' | 'edit'
+type Mode = 'choose' | 'link' | 'photo' | 'text' | 'generate' | 'fridge' | 'edit'
+
+/** Photos of one recipe read together: a book's two pages, both sides of a note. */
+const MAX_PAGES = 4
+
+function PageThumb({ file, n, onRemove }: { file: File; n: number; onRemove: () => void }) {
+  const url = useBlobUrl(file)
+  return (
+    <li className="photo-page">
+      {url && <img src={url} alt={`Pagina ${n}`} />}
+      <span className="photo-page-n" aria-hidden="true">{n}</span>
+      <button type="button" className="photo-page-x" onClick={onRemove} aria-label={`Scoate pagina ${n}`}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </li>
+  )
+}
+
 
 const empty = (): Recipe => ({ id: newId(), title: '', category: '', ingredients: [], steps: [] })
 const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
@@ -118,6 +135,7 @@ export default function RecipeEdit() {
   const [skipTools, setSkipTools] = useState<string[]>([])
   const [fridge, setFridge] = useState('')
   const [ideas, setIdeas] = useState<RecipeIdea[]>()
+  const [pages, setPages] = useState<File[]>([])
   // AI photo: the running job (Save waits for it) and the last unsaved key, removed if replaced.
   const [aiBusy, setAiBusy] = useState(false)
   const aiJob = useRef<Promise<string | undefined>>(undefined)
@@ -219,8 +237,16 @@ export default function RecipeEdit() {
     setImporting('')
   }
   const importLink = () => { if (link.trim()) doImport('Citesc rețeta de pe site…', () => importRecipeFromUrl(link.trim())) }
-  const importPhoto = (f?: File) => {
-    if (f) doImport('Citesc rețeta din poză…', async () => importRecipeFromPhoto(await resizeImage(f, 2000, 0.85)))
+  const addPages = (files: FileList | null) => {
+    const xs = [...(files ?? [])].filter((f) => f.type.startsWith('image/') || !f.type)
+    if (!xs.length) return
+    setPages((cur) => [...cur, ...xs].slice(0, MAX_PAGES))
+    setMode('photo')
+  }
+  const importPhotos = () => {
+    if (!pages.length) return
+    doImport(pages.length > 1 ? `Citesc rețeta din ${pages.length} poze…` : 'Citesc rețeta din poză…',
+      async () => importRecipeFromPhotos(await Promise.all(pages.map((f) => resizeImage(f, 2000, 0.85)))))
   }
   const useTools = kitchenTools.filter((t) => !skipTools.includes(t))
   const runGenerate = () => {
@@ -341,7 +367,7 @@ export default function RecipeEdit() {
       <section className="add-recipe">
         {/* "Renunță" closes the page (top right, like an iOS sheet); "‹ Alte variante" steps back to the choices. */}
         {mode !== 'choose' && (
-          <button type="button" className="add-recipe-back" onClick={() => setMode('choose')}>
+          <button type="button" className="add-recipe-back" onClick={() => { setMode('choose'); setPages([]) }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
             Alte variante
           </button>
@@ -409,6 +435,24 @@ export default function RecipeEdit() {
               <button type="button" className="btn primary big" onClick={runSuggest} disabled={!fridge.trim()}>Propune rețete</button>
             </div>
           )
+        ) : mode === 'photo' ? (
+          <div className="add-panel">
+            <span className="gen-label">Pozele rețetei, în ordine</span>
+            {pages.length > 0 && (
+              <ol className="photo-pages">
+                {pages.map((f, i) => <PageThumb key={`${f.name}-${f.lastModified}-${i}`} file={f} n={i + 1} onRemove={() => setPages((cur) => cur.filter((_, j) => j !== i))} />)}
+              </ol>
+            )}
+            {pages.length < MAX_PAGES && (
+              <label className="btn photo-more">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                {pages.length ? 'Încă o pagină' : 'Alege o poză'}
+                <input type="file" accept="image/*" multiple hidden onChange={(e) => { addPages(e.target.files); e.target.value = '' }} />
+              </label>
+            )}
+            <p className="set-hint">Dacă rețeta e pe două pagini sau pe fața și spatele unui bilet, adaugă toate pozele: le citim împreună, ca o singură rețetă. Cel mult {MAX_PAGES}.</p>
+            <button type="button" className="btn primary big" onClick={importPhotos} disabled={!pages.length}>Citește rețeta</button>
+          </div>
         ) : mode === 'text' ? (
           <div className="add-panel">
             <label htmlFor="import-text">Lipește, scrie sau dictează rețeta</label>
@@ -428,8 +472,8 @@ export default function RecipeEdit() {
             </button>
             <label className="way">
               <AddArt kind="cam" />
-              <span><b>Din poză</b><small>O pagină din carte sau din caiet</small></span>
-              <input type="file" accept="image/*" hidden onChange={(e) => importPhoto(e.target.files?.[0])} />
+              <span><b>Din poză</b><small>Din carte, din caiet sau un bilet, chiar pe mai multe pagini</small></span>
+              <input type="file" accept="image/*" multiple hidden onChange={(e) => { addPages(e.target.files); e.target.value = '' }} />
             </label>
             <button type="button" className="way" onClick={() => setMode('edit')}>
               <AddArt kind="pen" />

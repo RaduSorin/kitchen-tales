@@ -33,6 +33,7 @@ const toRecipe = (r: RecipeRow): Recipe => (fileOwner(`Recipe:${r.id}`, r.photoK
   photoKey: r.photoKey ?? undefined,
   nutrition: parseNutrition(r.nutrition),
   allergens: parseAllergens(r.allergens),
+  createdAt: r.createdAt,
   updatedAt: r.updatedAt,
   mine: isMine(r.spaceGroups),
   shared: isShared(r.readerGroups),
@@ -185,7 +186,7 @@ export async function getRecipe(id: string) {
 }
 
 export async function saveRecipe(r: Recipe, isNew: boolean) {
-  const { updatedAt: _, mine: _m, shared, spaceName: _n, ...fields } = r
+  const { updatedAt: _, createdAt: _c, mine: _m, shared, spaceName: _n, ...fields } = r
   const input = { ...fields, category: fields.category || null, notes: fields.notes || null, sourceUrl: fields.sourceUrl || null,
     servings: fields.servings ?? null, minutes: fields.minutes ?? null, photoKey: fields.photoKey ?? null,
     stepPhotoKeys: fields.stepPhotoKeys?.some(Boolean) ? fields.stepPhotoKeys : null,
@@ -417,7 +418,7 @@ export async function deleteFolder(name: string, row: StoryFolder | undefined, s
 
 export type ImportedRecipe = NonNullable<Awaited<ReturnType<typeof client.queries.importRecipe>>['data']>
 
-async function runImport(args: { url?: string; photoKey?: string; text?: string; idea?: string; tools?: string[]; servings?: number; diet?: string; adaptFrom?: string }) {
+async function runImport(args: { url?: string; photoKey?: string; photoKeys?: string[]; text?: string; idea?: string; tools?: string[]; servings?: number; diet?: string; adaptFrom?: string }) {
   const res = await client.queries.importRecipe(args)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data?.title) throw new Error('Nu am găsit o rețetă aici.')
@@ -445,6 +446,15 @@ export const generateRecipe = (idea: string, tools: string[], servings?: number,
 export const adaptRecipe = (r: Recipe, diet: string, tools: string[]) =>
   runImport({ adaptFrom: JSON.stringify({ title: r.title, servings: r.servings, ingredients: r.ingredients, steps: r.steps, notes: r.notes }), diet, tools })
 
+export type PlannedDinner = { day: string; kind: 'existing' | 'new' | 'leftovers'; recipeId?: string; title: string; reason?: string; recipe?: ImportedRecipe }
+
+/** Plans the given evenings' dinners (AI): from our recipes, and a few new ones when allowed. */
+export async function planWeek(args: { days: string; recipes: string; recent: string[]; fridge?: string; diet?: string; tools: string[]; allowNew: boolean; swapDay?: string; keep?: string[] }): Promise<PlannedDinner[]> {
+  const res = await client.queries.planWeek(args)
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  try { return JSON.parse(res.data ?? '[]') } catch { throw new Error('Nu am putut citi planul.') }
+}
+
 /** Draws a photo for a recipe with AI and returns its storage path. */
 export async function generateRecipePhoto(title: string, ingredients: string[]): Promise<string> {
   const res = await client.mutations.generateRecipePhoto({ title, ingredients })
@@ -453,12 +463,14 @@ export async function generateRecipePhoto(title: string, ingredients: string[]):
   return res.data
 }
 
-export async function importRecipeFromPhoto(photo: Blob) {
-  const photoKey = await uploadFile('recipe-photos', photo, 'jpg')
+/** One recipe from one or more photos (pages of a book, both sides of a note), read together. */
+export async function importRecipeFromPhotos(photos: Blob[]) {
+  const photoKeys: string[] = []
   try {
-    return await runImport({ photoKey })
+    for (const p of photos) photoKeys.push(await uploadFile('recipe-photos', p, 'jpg'))
+    return await runImport({ photoKeys })
   } finally {
-    await removeFile(photoKey)
+    await Promise.all(photoKeys.map((k) => removeFile(k).catch(() => {})))
   }
 }
 

@@ -80,7 +80,7 @@ export function addToShopping(recipe: Recipe, servings?: number, only?: string[]
  * twice the amounts), scaled to its servings. A recipe's lines not yet bought are replaced by
  * the new totals, so pressing again never adds them twice. Returns how many lines were added.
  */
-export function addPlanToShopping(entries: { recipe: Recipe; servings?: number }[]) {
+export function addPlanToShopping(entries: { recipe: Recipe; servings?: number }[], skip?: (line: string) => boolean) {
   const byRecipe = new Map<string, { recipe: Recipe; factor: number }>()
   for (const { recipe, servings } of entries) {
     const one = recipe.servings && servings ? servings / recipe.servings : 1
@@ -89,7 +89,7 @@ export function addPlanToShopping(entries: { recipe: Recipe; servings?: number }
   }
   let added = 0
   for (const { recipe, factor } of byRecipe.values()) {
-    const want = [...new Set(recipe.ingredients.filter((l) => l.trim() && !isHeading(l)).map((l) => scaleIngredient(l.trim(), factor)))]
+    const want = [...new Set(recipe.ingredients.filter((l) => l.trim() && !isHeading(l) && !skip?.(l)).map((l) => scaleIngredient(l.trim(), factor)))]
     const open = shoppingStore.get().filter((s) => !s.checked && s.recipeId === recipe.id)
     const have = new Set(open.map((s) => s.text))
     // Old amounts for this recipe (e.g. one cooking's worth) make way for the totals.
@@ -101,6 +101,17 @@ export function addPlanToShopping(entries: { recipe: Recipe; servings?: number }
     }
   }
   return added
+}
+
+/**
+ * Whether a recipe line asks for something already at home, from a free list like "dovlecei,
+ * piept de pui, smântână": a word of the list (its start, to allow for plurals) in the line.
+ */
+export function atHome(fridge: string) {
+  const words = norm(fridge).split(/[,;\n]+/).map((x) => x.replace(/[\d.,/]+/g, ' ').trim())
+    .map((x) => x.split(/\s+/).filter((w) => w.length >= 3 && !['pentru', 'bucati', 'grame', 'din', 'sau', 'mai', 'cam'].includes(w)).sort((a, b) => b.length - a.length)[0])
+    .filter((w): w is string => !!w).map((w) => w.slice(0, Math.max(4, Math.min(6, w.length - 1))))
+  return (line: string) => { const l = withoutAmount(line); return words.some((w) => l.split(/\s+/).some((x) => x.startsWith(w))) }
 }
 
 export function addShoppingText(text: string) {

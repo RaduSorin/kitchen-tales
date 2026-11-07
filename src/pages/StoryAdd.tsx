@@ -11,8 +11,8 @@ import { childAge, useSettings } from '../lib/settings'
 import Recorder from '../components/Recorder'
 import StoryCover from '../components/StoryCover'
 import CoverSearch from '../components/CoverSearch'
-import { groupFolders, SCENES, sceneIndex } from '../lib/stories'
-import CoverScene from '../components/CoverScene'
+import { groupFolders, sceneIndex } from '../lib/stories'
+import CoverDrawing, { COVER_EMOJIS } from '../components/CoverDrawing'
 import Sheet from '../components/Sheet'
 import { fmtTime } from '../lib/stories'
 import AddArt, { type AddArtKind } from '../components/AddArt'
@@ -39,7 +39,6 @@ const saveBrief = (b: StoryBrief) => {
 const AGES = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 const TOPICS = ['animale', 'prietenie', 'curaj', 'pădurea', 'marea', 'spațiu', 'dragoni', 'somn']
 const LENGTHS = [['short', '2 min'], ['medium', '4 min'], ['long', '7 min']] as const
-const EMOJIS = ['🐻', '🦊', '🐰', '🦁', '🐉', '🧚', '👑', '🚀', '🌙', '⭐', '🐢', '🦄']
 
 type Mode = 'record' | 'create' | 'upload'
 type Step = 'who' | 'topic' | 'length' | 'title'
@@ -90,7 +89,7 @@ export default function StoryAdd() {
   // Name, age and girl/boy come from the child's profile in Settings; the form only asks for what's missing there.
   const known = { childName: child.name.trim() || undefined, age: childAge(child), gender: child.gender }
   const [title, setTitle] = useState('')
-  const [emoji, setEmoji] = useState(EMOJIS[0])
+  const [emoji, setEmoji] = useState(COVER_EMOJIS[0])
   // The drawn cover's colours; undefined until picked (then the title decides, as before).
   const [scene, setScene] = useState<number>()
   // Cover picture: found inside the audio file, found online by title, or a photo the parent picked. The emoji is the fallback.
@@ -472,24 +471,7 @@ export default function StoryAdd() {
               <CoverSearch key={`${source}-${fileName}`} title={title} artist={artist} auto={autoSearch} chosen={cover?.url}
                 onPick={(c) => setCover({ url: c.url, from: 'web' })} />
             )}
-            {!cover && (
-              <div className="emoji-pick fin-emoji" role="group" aria-label="Desenul de pe copertă">
-                {EMOJIS.map((x) => <button type="button" key={x} className={x === emoji ? 'on' : ''} aria-pressed={x === emoji} onClick={() => setEmoji(x)}>{x}</button>)}
-              </div>
-            )}
-            {!cover && (
-              <div className="fin-scenes" role="radiogroup" aria-label="Culorile copertei">
-                {SCENES.map((_, i) => {
-                  const on = (scene ?? sceneIndex(title || 'Poveste')) === i
-                  return (
-                    <button type="button" key={i} role="radio" aria-checked={on} aria-label={`Culorile ${i + 1}`} className={on ? 'on' : undefined} onClick={() => setScene(i)}>
-                      <CoverScene title="" scene={i} />
-                      <span aria-hidden="true">{emoji}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
+            {!cover && <CoverDrawing title={title} emoji={emoji} scene={scene} onEmoji={setEmoji} onScene={setScene} />}
           </div>
 
           <div className="set-group">

@@ -503,6 +503,20 @@ export async function setStoryCover(s: Story, coverKey: string) {
   if (old) await removeFile(old)
 }
 
+/**
+ * The drawn cover: emoji and colours. With `dropPicture` the cover picture goes, so the drawing
+ * shows (the picture file is deleted).
+ */
+export async function setStoryDrawing(s: Story, emoji: string, scene: number, dropPicture = false) {
+  const old = dropPicture ? s.coverKey : undefined
+  if (old) owners.set(old, `Story:${s.id}`)
+  const res = await client.models.Story.update({ id: s.id, emoji, scene, ...(dropPicture ? { coverKey: null } : {}) })
+  if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (old) await removeFile(old).catch(() => {})
+  const cached = await cachedList('stories').catch(() => undefined)
+  if (cached) await cacheList('stories', cached.map((x) => (x.id === s.id ? { ...x, emoji, scene, ...(dropPicture ? { coverKey: undefined } : {}) } : x))).catch(() => {})
+}
+
 // ---- family accounts ----
 
 /** An account; `sameSpace` = in the signed-in account's space (sees everything there). */

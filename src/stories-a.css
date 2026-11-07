@@ -837,3 +837,10 @@
 .fin-scenes button span { position: relative; font-size: 1.9rem; line-height: 1; filter: drop-shadow(0 3px 5px rgb(0 0 0 / .3)); }
 .fin-scenes button.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
 .mic-detail { display: block; margin-top: 4px; color: var(--muted); font-size: .75rem; overflow-wrap: anywhere; }
+
+/* The player's "Coperta" sheet: a preview, the drawing (emoji and colours), then a picture. */
+.cover-change { display: grid; gap: 14px; }
+.cover-change .cover-change-preview { justify-self: center; width: min(44vw, 170px); border-radius: 14px; box-shadow: 0 16px 34px rgb(0 0 0 / .45); }
+.cover-change .cover-change-preview > span { font-size: min(18vw, 72px); }
+.cover-change h2.fin-label { margin-top: 6px; }
+.cover-change .moon-btn { width: 100%; }

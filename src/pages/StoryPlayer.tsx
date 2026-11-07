@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, setStoryShared, uploadFile, setStoryFavorite } from '../lib/db'
+import { deleteStory, downloadStory, getStory, removeOfflineAudio, saveFoundCover, setStoryCover, setStoryDrawing, setStoryShared, uploadFile, setStoryFavorite } from '../lib/db'
+import CoverDrawing from '../components/CoverDrawing'
 import PopMenu, { MENU_ICON, MenuRow } from '../components/PopMenu'
 import { saveCover } from '../lib/offline'
 import { resizeImage } from '../lib/resizeImage'
@@ -11,7 +12,7 @@ import { showToast } from '../lib/toast'
 import type { Story } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
-import { builtinFolderOf, fmtTime, folderOf, SOURCE_LABEL } from '../lib/stories'
+import { builtinFolderOf, fmtTime, folderOf, sceneIndex, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
 import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
 import { useKid } from '../lib/kidMode'
@@ -47,6 +48,9 @@ function StoryPlayer() {
   const [deleting, setDeleting] = useState(false)
   const [msg, setMsg] = useState('')
   const [coverOpen, setCoverOpen] = useState(false)
+  // The drawing being chosen in the Coperta sheet (not saved yet).
+  const [drawing, setDrawing] = useState<{ emoji: string; scene: number }>()
+  useEffect(() => { if (!coverOpen) setDrawing(undefined) }, [coverOpen])
   const [coverBusy, setCoverBusy] = useState(false)
   const [moveOpen, setMoveOpen] = useState(false)
   const [parentsOpen, setParentsOpen] = useState(false)
@@ -128,6 +132,16 @@ function StoryPlayer() {
     } catch { setMsg('Nu am putut schimba coperta. Încearcă din nou.') }
     setCoverBusy(false)
   }
+  const saveDrawing = async () => {
+    if (!drawing) return
+    setCoverBusy(true); setMsg('')
+    try {
+      await setStoryDrawing(s, drawing.emoji, drawing.scene, !!s.coverKey)
+      const next = { ...s, ...drawing, coverKey: undefined }
+      setS(next); player.update(next); setCoverOpen(false)
+    } catch { setMsg('Nu am putut schimba coperta. Încearcă din nou.') }
+    setCoverBusy(false)
+  }
   const coverFromPhoto = (f: File) => changeCover(async () => {
     const small = await resizeImage(f, 800, 0.85)
     const key = await uploadFile('story-covers', small, 'jpg')
@@ -188,7 +202,7 @@ function StoryPlayer() {
                     setSaving(false)
                   }}>{saving ? 'Se salvează…' : 'Salvează offline'}</MenuRow>
                 ) : null}
-                {online && s.mine !== false && <MenuRow icon={MENU_ICON.image} onClick={() => { closeMenu(); setCoverOpen(true) }}>{s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'}</MenuRow>}
+                {online && s.mine !== false && <MenuRow icon={MENU_ICON.image} onClick={() => { closeMenu(); setCoverOpen(true) }}>Coperta</MenuRow>}
                 {online && s.mine !== false && <MenuRow icon={MENU_ICON.folder} onClick={() => { closeMenu(); setMoveOpen(true) }}>Mută în folder</MenuRow>}
                 {s.text && <MenuRow icon={MENU_ICON.text} onClick={() => { closeMenu(); setTextOpen(true) }}>Textul poveștii</MenuRow>}
                 {online && s.mine !== false && (confirmDelete ? (
@@ -285,17 +299,29 @@ function StoryPlayer() {
       </div>
 
       {!kid && coverOpen && online && (
-        <Sheet title={s.coverKey ? 'Schimbă coperta' : 'Caută o copertă'} onClose={() => setCoverOpen(false)}>
+        <Sheet title="Coperta" onClose={() => setCoverOpen(false)}>
           <div className="cover-change">
             {coverBusy ? <p className="importing"><span className="spinner" /> Salvez coperta…</p> : (
               <>
-                <CoverSearch title={s.title} auto onPick={(c) => changeCover(() => saveFoundCover(c.url))} />
-                <div className="row">
-                  <label className="btn small file-btn">Alege o poză
+                {/* The drawing: emoji and colours, saved with one tap; a picture cover gives way to it. */}
+                <StoryCover story={drawing ? { ...s, ...drawing, coverKey: undefined } : s} className="cover-change-preview" />
+                <h2 className="fin-label">Desen</h2>
+                <CoverDrawing title={s.title} emoji={drawing?.emoji ?? s.emoji} scene={drawing?.scene ?? s.scene}
+                  onEmoji={(emoji) => setDrawing({ emoji, scene: drawing?.scene ?? s.scene ?? sceneIndex(s.title) })}
+                  onScene={(scene) => setDrawing({ emoji: drawing?.emoji ?? s.emoji, scene })} />
+                {drawing && (
+                  <button type="button" className="moon-btn" onClick={saveDrawing}>{s.coverKey ? 'Folosește desenul' : 'Salvează coperta'}</button>
+                )}
+                {drawing && s.coverKey && <p className="fin-note">Poza de acum se șterge și rămâne desenul.</p>}
+                <h2 className="fin-label">Poză</h2>
+                <div className="fin-cover-actions">
+                  <label className="fin-chip file-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 9.5h.01" /></svg>
+                    Alege o poză
                     <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) coverFromPhoto(f) }} />
                   </label>
-                  <button className="btn small" onClick={() => setCoverOpen(false)}>Renunță</button>
                 </div>
+                <CoverSearch title={s.title} auto={!!s.coverKey} onPick={(c) => changeCover(() => saveFoundCover(c.url))} />
               </>
             )}
             {msg && <p className="error">{msg}</p>}

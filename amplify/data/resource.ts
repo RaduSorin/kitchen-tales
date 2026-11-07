@@ -171,6 +171,30 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(importRecipe)),
 
+  // Long AI work can't fit AppSync's fixed 30 s limit, so the app starts it with these async
+  // mutations instead: the function runs in the background and writes its outcome to
+  // ai-jobs/<space>/<jobId>.json (see amplify/shared/jobs.ts), which the app waits for.
+  // `jobId` is a UUID made by the app. The synchronous queries stay for app versions still open.
+  startImportRecipe: a
+    .mutation()
+    .arguments({
+      jobId: a.string().required(),
+      url: a.string(),
+      photoKey: a.string(),
+      // Several photos of one recipe (pages of a book, both sides of a note), in order.
+      photoKeys: a.string().array(),
+      text: a.string(),
+      idea: a.string(),
+      tools: a.string().array(),
+      servings: a.integer(),
+      // What the family doesn't eat, in words (for generation and adapting).
+      diet: a.string(),
+      // A saved recipe (JSON) to rewrite so it fits `diet`.
+      adaptFrom: a.string(),
+    })
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(importRecipe).async()),
+
   // Draws a photo for a recipe that has none (AI) and returns its storage path.
   generateRecipePhoto: a
     .mutation()
@@ -198,6 +222,12 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(importRecipe)),
 
+  startSuggestRecipes: a
+    .mutation()
+    .arguments({ jobId: a.string().required(), ingredients: a.string().required(), tools: a.string().array(), diet: a.string() })
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(importRecipe).async()),
+
   RecipeFacts: a.customType({ nutrition: a.string(), allergens: a.string() }),
 
   // Plans the week's dinners: picks from the family's recipes (and writes a few new ones if
@@ -220,6 +250,24 @@ const schema = a.schema({
     .returns(a.string())
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(importRecipe)),
+
+  startPlanWeek: a
+    .mutation()
+    .arguments({
+      jobId: a.string().required(),
+      days: a.string().required(),
+      recipes: a.string(),
+      recent: a.string().array(),
+      fridge: a.string(),
+      diet: a.string(),
+      tools: a.string().array(),
+      allowNew: a.boolean(),
+      // Only this day again, avoiding what the rest of the week already has.
+      swapDay: a.string(),
+      keep: a.string().array(),
+    })
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(importRecipe).async()),
 
   // Estimates a saved recipe's values per serving and its allergens from the ingredients.
   analyzeRecipe: a
@@ -254,6 +302,22 @@ const schema = a.schema({
     .returns(a.ref('GeneratedStory'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(generateStory)),
+
+  startGenerateStory: a
+    .mutation()
+    .arguments({
+      jobId: a.string().required(),
+      title: a.string().required(),
+      prompt: a.string(),
+      childName: a.string(),
+      gender: a.string(),
+      age: a.integer(),
+      length: a.string(),
+      text: a.string(),
+      voice: a.string(),
+    })
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(generateStory).async()),
 
   NarratorVoice: a.customType({
     id: a.string().required(),

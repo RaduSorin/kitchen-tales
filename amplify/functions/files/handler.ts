@@ -79,7 +79,8 @@ export const handler = async (event: Event) => {
   if (event.fieldName === 'uploadUrl') {
     // New files go in the caller's space folder, under a fresh name, so nothing can be overwritten.
     const prefix = event.arguments.prefix as FilePrefix
-    if (!FILE_PREFIXES.includes(prefix)) throw new Error('Unknown file kind')
+    // ai-jobs/ holds what the AI functions write for the app (shared/jobs.ts), never uploads.
+    if (!FILE_PREFIXES.includes(prefix) || prefix === 'ai-jobs') throw new Error('Unknown file kind')
     if (!mySpace) throw new Error('Contul tău nu are încă un spațiu.')
     const ext = (event.arguments.ext ?? '').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'bin'
     const path = `${prefix}/${mySpace}/${randomUUID()}.${ext}`

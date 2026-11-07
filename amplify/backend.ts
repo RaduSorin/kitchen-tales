@@ -9,6 +9,7 @@ import { timerAlarm } from './functions/timer-alarm/resource'
 import { files } from './functions/files/resource'
 import { FILE_PREFIXES } from './shared/files'
 import { IMAGE_MODEL_ID, IMAGE_MODEL_REGION, MODEL_ID } from './shared/model'
+import { JOB_PREFIX } from './shared/jobs'
 import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { storage } from './storage/resource'
@@ -84,3 +85,13 @@ for (const [model, env] of [['Story', 'STORY_TABLE'], ['Recipe', 'RECIPE_TABLE']
   backend.files.addEnvironment(env, table.tableName)
   filesFn.addToRolePolicy(new PolicyStatement({ actions: ['dynamodb:BatchGetItem', 'dynamodb:GetItem'], resources: [table.tableArn] }))
 }
+
+// Long AI work runs in the background (async mutations, see amplify/shared/jobs.ts). A failed run
+// already tells the app why (it writes the error), so Lambda must not run it again: that would
+// write and narrate the same story twice and charge Bedrock and ElevenLabs twice.
+for (const fn of [backend.importRecipe, backend.generateStory]) fn.resources.lambda.configureAsyncInvoke({ retryAttempts: 0 })
+// The outcome files are read once and deleted by the app; whatever is left (the app was closed) goes after a day.
+backend.storage.resources.cfnResources.cfnBucket.lifecycleConfiguration = {
+  rules: [{ id: 'ai-job-outcomes', status: 'Enabled', prefix: `${JOB_PREFIX}/`, expirationInDays: 1 }],
+}
+

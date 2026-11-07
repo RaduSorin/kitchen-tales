@@ -203,7 +203,7 @@ export default function PlanWeek() {
             {!busy && items && <p>Atinge ↻ ca să schimbi doar seara aceea.</p>}
           </div>
           {busy ? (
-            <p className="importing"><span className="spinner" /> Aleg cinele{prefs.allowNew ? ' și scriu rețetele noi' : ''}… durează cam o jumătate de minut.</p>
+            <p className="importing"><span className="spinner" /> Aleg cinele{prefs.allowNew ? ' și scriu rețetele noi' : ''}… poate dura până la un minut.</p>
           ) : items && (
             <ul className="plan-list">
               {items.map((x) => {

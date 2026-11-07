@@ -4,6 +4,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { Schema } from '../../data/resource'
 import { newFilePath } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
+import { runJob } from '../../shared/jobResult'
 import { apiKey, DEFAULT_MODEL, ElevenLabsError, listVoices, narrate, preview } from './elevenlabs'
 
 const bedrock = new BedrockRuntimeClient({})
@@ -112,7 +113,7 @@ async function speak(text: string, voice?: string | null): Promise<Narration> {
   return { audio: await speakPolly(text), narrator: 'polly' }
 }
 
-type FieldEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: Record<string, unknown> }
+type FieldEvent = { fieldName?: string; info?: { fieldName?: string }; arguments: Record<string, unknown>; identity?: { groups?: string[] | null } | null }
 
 function needKey() {
   const key = apiKey()
@@ -120,27 +121,35 @@ function needKey() {
   return key
 }
 
-// One function serves generateStory, narratorVoices and previewVoice.
-export const handler = async (event: Parameters<Schema['generateStory']['functionHandler']>[0], ...rest: unknown[]) => {
+type StoryArgs = Schema['generateStory']['args']
+
+// One function serves generateStory, narratorVoices and previewVoice, and startGenerateStory: the
+// same work as generateStory, run in the background (it takes longer than AppSync's 30 s), with the
+// outcome written for the app (amplify/shared/jobs.ts).
+export const handler = async (event: Parameters<Schema['generateStory']['functionHandler']>[0]) => {
   const e = event as unknown as FieldEvent
   const field = e.fieldName ?? e.info?.fieldName
+  if (field === 'startGenerateStory') {
+    await runJob(s3, BUCKET, e, () => generate(e.arguments as unknown as StoryArgs, spaceOf(e.identity?.groups)))
+    return { success: true }
+  }
   if (field === 'narratorVoices') return listVoices(needKey())
   if (field === 'previewVoice') {
     const voice = String(e.arguments.voice ?? '')
     if (!voice) throw new Error('Alege o voce.')
     return (await preview(needKey(), voice, ELEVEN_MODEL)).toString('base64')
   }
-  return (generate as (...a: unknown[]) => unknown)(event, ...rest)
+  return generate(event.arguments, spaceOf(e.identity?.groups))
 }
 
-const generate: Schema['generateStory']['functionHandler'] = async (event) => {
-  const title = event.arguments.title.trim()
-  const ownText = event.arguments.text?.trim()
+async function generate(args: StoryArgs, space: string | undefined) {
+  const title = (args.title ?? '').trim()
+  const ownText = args.text?.trim()
   if (!title) throw new Error('Povestea are nevoie de un titlu.')
-  const text = (ownText || (await writeStory({ ...event.arguments, title }))).slice(0, MAX_TEXT_CHARS)
+  const text = (ownText || (await writeStory({ ...args, title }))).slice(0, MAX_TEXT_CHARS)
 
-  const { audio, narrator, note } = await speak(text, event.arguments.voice)
-  const audioKey = newFilePath('stories', spaceOf((event as { identity?: { groups?: string[] | null } }).identity?.groups), 'mp3')
+  const { audio, narrator, note } = await speak(text, args.voice)
+  const audioKey = newFilePath('stories', space, 'mp3')
   await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: audioKey, Body: audio, ContentType: 'audio/mpeg' }))
   return { text, audioKey, narrator, note }
 }

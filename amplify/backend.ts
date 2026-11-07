@@ -90,8 +90,24 @@ for (const [model, env] of [['Story', 'STORY_TABLE'], ['Recipe', 'RECIPE_TABLE']
 // already tells the app why (it writes the error), so Lambda must not run it again: that would
 // write and narrate the same story twice and charge Bedrock and ElevenLabs twice.
 for (const fn of [backend.importRecipe, backend.generateStory]) fn.resources.lambda.configureAsyncInvoke({ retryAttempts: 0 })
-// The outcome files are read once and deleted by the app; whatever is left (the app was closed) goes after a day.
-backend.storage.resources.cfnResources.cfnBucket.lifecycleConfiguration = {
-  rules: [{ id: 'ai-job-outcomes', status: 'Enabled', prefix: `${JOB_PREFIX}/`, expirationInDays: 1 }],
-}
+// The outcome files are read once and deleted by the app; whatever is left (the app was closed)
+// goes after a day (the rule is with the backup rules below).
 
+// Backups. The family's recipes and recorded stories cannot be made again, so every table keeps
+// point-in-time recovery (any second of the last 35 days can be restored) and the bucket keeps a
+// deleted or replaced file for 30 days before it is really gone.
+for (const table of Object.values(backend.data.resources.cfnResources.amplifyDynamoDbTables)) {
+  table.pointInTimeRecoveryEnabled = true
+}
+const cfnBucket = backend.storage.resources.cfnResources.cfnBucket
+cfnBucket.versioningConfiguration = { status: 'Enabled' }
+// One list of rules for the bucket: old versions go after 30 days, AI job outcomes after a day.
+cfnBucket.lifecycleConfiguration = {
+  rules: [{ id: 'ai-job-outcomes', status: 'Enabled', prefix: `${JOB_PREFIX}/`, expirationInDays: 1 }, {
+    id: 'keep-old-versions-30-days',
+    status: 'Enabled',
+    noncurrentVersionExpiration: { noncurrentDays: 30 },
+    expiredObjectDeleteMarker: true,
+    abortIncompleteMultipartUpload: { daysAfterInitiation: 7 },
+  }],
+}

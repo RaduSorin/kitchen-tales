@@ -3,16 +3,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import Sheet from './Sheet'
 import AddArt, { type AddArtKind } from './AddArt'
 
-/** How a new recipe starts: /retete/noua?din=… opens the editor straight on that way. */
-export type RecipeWay = 'link' | 'poza' | 'scriu' | 'frigider' | 'genereaza' | 'text'
+/**
+ * How a new recipe starts: /retete/noua?din=… opens the editor straight on that way. `ai` opens
+ * AI on "Am chef de…"; the older values (text, frigider, genereaza) still work.
+ */
+export type RecipeWay = 'link' | 'poza' | 'scriu' | 'ai' | 'frigider' | 'genereaza' | 'text'
 // The imports most used come first (same order as on the "Rețetă nouă" page).
 const WAYS: { din: RecipeWay; art: AddArtKind; title: string; text: string }[] = [
-  { din: 'link', art: 'link', title: 'Din link', text: 'De pe un blog sau un site' },
+  { din: 'link', art: 'link', title: 'Din link sau text', text: 'Site, YouTube, TikTok, Instagram sau text' },
   { din: 'poza', art: 'cam', title: 'Din poză', text: 'Din carte, din caiet sau un bilet, chiar pe mai multe pagini' },
+  { din: 'ai', art: 'gen', title: 'Cu AI', text: 'Spui ce ai chef sau ce ai în frigider' },
   { din: 'scriu', art: 'pen', title: 'Scriu eu', text: 'Titlu, ingrediente și pași' },
-  { din: 'frigider', art: 'fridge', title: 'Din frigider', text: 'Scrii ce ai, primești idei de rețete' },
-  { din: 'genereaza', art: 'gen', title: 'Generează', text: 'Spui ce ai chef, ținem cont de aparatele tale' },
-  { din: 'text', art: 'text', title: 'Din text sau voce', text: 'O notiță copiată sau o rețetă dictată' },
 ]
 
 // Photos picked in the sheet, handed to the editor it opens (files can't go in the URL).

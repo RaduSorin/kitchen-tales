@@ -77,3 +77,20 @@ export interface ShoppingItem {
   recipeTitle?: string
   createdAt?: string
 }
+
+/** A note written after cooking a recipe. `day` is a local date, YYYY-MM-DD; `by` the writer's name. */
+export interface CookNote {
+  day: string
+  text: string
+  by?: string
+}
+
+/** What the space remembers about a recipe (src/lib/recipeLog.ts). */
+export interface RecipeLog {
+  id: string
+  recipeId: string
+  favorite: boolean
+  /** Days it was cooked, YYYY-MM-DD, oldest first. */
+  cooked: string[]
+  notes: CookNote[]
+}

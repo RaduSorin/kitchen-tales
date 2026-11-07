@@ -29,8 +29,9 @@ export function useCookAlarms() {
         saveTimers(id, timers)
         const step = +done[0][0]
         ringAlarm()
-        showToast(`Cronometrul e gata: ${done[0][1].title ?? 'rețeta'}, pasul ${step + 1}`,
-          () => navigate(`/retete/${id}/gateste`), { label: 'Deschide', ms: 15_000 })
+        // Stays on screen until opened or replaced: the alarm is easy to miss across the kitchen.
+        showToast(`Cronometrul e gata: ${done[0][1].title ?? 'rețeta'}, pasul ${step + 1}`, undefined,
+          { action: { label: 'Deschide', run: () => navigate(`/retete/${id}/gateste`) }, sticky: true })
       }
     }
     check()

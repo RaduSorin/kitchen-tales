@@ -4,6 +4,7 @@ import type { Schema } from '../../data/resource'
 import { safeFetch } from '../../shared/safeFetch'
 import { fileSpace, newFilePath } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
+import { VIDEO_RULES, videoSource, videoText } from './video'
 import { runJob } from '../../shared/jobResult'
 
 const bedrock = new BedrockRuntimeClient({})
@@ -193,9 +194,25 @@ async function savePhotoFrom(url: string): Promise<string | undefined> {
   }
 }
 
+async function fromVideo(raw: string): Promise<Imported | undefined> {
+  const v = await videoText(raw)
+  if (!v) return undefined
+  const recipe = await askModel([{ text: videoSource(v) }], SYSTEM + '\n' + VIDEO_RULES)
+  if (!recipe.title || !recipe.ingredients.length) {
+    throw new Error('Nu am găsit rețeta în textul videoclipului. Dacă e doar spusă în video, dictează-o sau lipește-o aici.')
+  }
+  // The video's still: YouTube's big one when there is one, else the one the platform gave.
+  const stills = v.platform === 'youtube' && v.thumbnail ? [v.thumbnail.replace('hqdefault', 'maxresdefault'), v.thumbnail] : v.thumbnail ? [v.thumbnail] : []
+  let photoKey: string | undefined
+  for (const s of stills) if (!photoKey) photoKey = await savePhotoFrom(s)
+  return { ...recipe, sourceUrl: v.url, photoKey }
+}
+
 async function fromUrl(raw: string): Promise<Imported> {
   const url = new URL(raw)
   if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('Linkul trebuie să înceapă cu http:// sau https://')
+  const video = await fromVideo(url.toString())
+  if (video) return video
   const res = await safeFetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (KitchenTales recipe import)', 'Accept-Language': 'ro,en;q=0.8' },
     signal: AbortSignal.timeout(20_000),
@@ -400,7 +417,7 @@ async function suggest(ingredients: string, tools: string[], diet?: string | nul
 // ---- planning the week's dinners ----
 
 type PlanDay = { day: string; label: string; minutes?: number | null }
-type PlanRecipe = { id: string; title: string; category?: string; minutes?: number; ingredients?: string[] }
+type PlanRecipe = { id: string; title: string; category?: string; minutes?: number; ingredients?: string[]; favorite?: boolean; cooked?: number; lastCooked?: string }
 type PlanArgs = {
   days: string; recipes?: string | null; recent?: (string | null)[] | null; fridge?: string | null; diet?: string | null
   tools?: (string | null)[] | null; allowNew?: boolean | null; swapDay?: string | null; keep?: (string | null)[] | null
@@ -412,7 +429,8 @@ const PLAN_SYSTEM = `Ești bucătarul unei familii din România și le planifici
 Răspunde apelând unealta plan_week, cu exact o intrare pentru fiecare seară cerută, în ordine.
 Reguli:
 - Pentru fiecare seară, rețeta trebuie să încapă în timpul disponibil (minutes; lipsă = oricât).
-- Preferă rețetele familiei (kind = existing, cu recipeId exact din listă). Dacă ai voie la rețete noi (allowNew), poți propune
+- Preferă rețetele familiei (kind = existing, cu recipeId exact din listă), mai ales cele marcate ♥ (preferate) și pe cele bune
+  care n-au mai fost gătite de mult (ultima dată). Dacă ai voie la rețete noi (allowNew), poți propune
   cel mult 2 rețete noi (kind = new, cu un titlu clar și scurt), când lipsește varietate sau nimic nu încape în timp.
 - Varietate: nu repeta același fel principal (pui, porc, vită, pește, paste, supă, vegetarian) în seri la rând; nu propune ce au gătit recent.
 - Folosește întâi ce e în frigider, mai ales ce se strică repede, și spune asta în reason.
@@ -464,7 +482,7 @@ async function planWeek(a: PlanArgs): Promise<Planned[]> {
   const tools = cleanTools(a.tools)
   const text = [
     `Serile de planificat: ${days.map((d) => `${d.day} (${d.label}): ${d.minutes ? `${d.minutes} minute` : 'oricât'}`).join('; ')}`,
-    `Rețetele familiei (id | titlu | categorie | minute | ingrediente principale):\n${recipes.map((r) => `${r.id} | ${r.title} | ${r.category ?? ''} | ${r.minutes ?? '?'} | ${(r.ingredients ?? []).slice(0, 8).join(', ')}`).join('\n') || '(niciuna)'}`,
+    `Rețetele familiei (id | titlu | categorie | minute | ingrediente principale | ♥ preferată, de câte ori și ultima dată gătită):\n${recipes.map((r) => `${r.id} | ${r.title} | ${r.category ?? ''} | ${r.minutes ?? '?'} | ${(r.ingredients ?? []).slice(0, 8).join(', ')} | ${[r.favorite ? '♥' : '', r.cooked ? `${r.cooked}x, ultima dată ${r.lastCooked ?? '?'}` : ''].filter(Boolean).join(' ')}`).join('\n') || '(niciuna)'}`,
     a.recent?.length ? `Gătite recent (nu le repeta): ${a.recent.filter(Boolean).join(', ')}` : '',
     keep.length ? `Restul săptămânii are deja: ${keep.join(', ')} (alege altceva, diferit de acestea).` : '',
     a.fridge?.trim() ? `Ce e în frigider: ${a.fridge.trim().slice(0, MAX_IDEA_CHARS)}` : '',

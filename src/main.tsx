@@ -23,6 +23,7 @@ import './stories-a.css'
 import { applyTheme } from './lib/settings'
 import { offlineFirstTokenProvider } from './lib/offlineAuth'
 import App from './App.tsx'
+import { watchForUpdates } from './lib/update'
 import { AuthFooter, AuthHeader } from './components/AuthScene'
 
 Amplify.configure(outputs)
@@ -31,6 +32,7 @@ Amplify.configure(Amplify.getConfig(), {
   Auth: { tokenProvider: offlineFirstTokenProvider, credentialsProvider: cognitoCredentialsProvider },
 })
 applyTheme()
+watchForUpdates()
 
 // Signed out: start the app again from scratch. What it keeps in memory for an account (its space,
 // settings, lists, the family) belongs to that account; without a fresh start, the next account to

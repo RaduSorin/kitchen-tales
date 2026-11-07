@@ -1152,6 +1152,9 @@
   .vt-cover .vt-photo { left: auto; width: 300px; top: 24px; right: 24px; border-radius: 18px; overflow: hidden; -webkit-mask-image: none; mask-image: none; box-shadow: 0 24px 50px rgb(0 0 0 / .5); }
   .vt-cover .vt-text { right: 348px; }
 }
+/* A story added lately and not started on this device yet. */
+.sa-new { position: absolute; left: 7px; top: 7px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1a1408; font-size: .68rem; font-weight: 800; letter-spacing: .02em;
+  box-shadow: 0 2px 8px rgb(0 0 0 / .35); }
 
 /* Cards with the length badge print the title under the cover: drawn on the cover too, it ran under
    the badge ("Scufița Roș…"). There the drawing keeps just its emoji, in the middle. */

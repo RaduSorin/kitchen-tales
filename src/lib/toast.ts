@@ -1,16 +1,17 @@
 /**
- * One short message at the bottom of the screen, optionally with a button (like iOS / Android
- * apps): "Anulează" by default, or `label` (e.g. "Deschide"); `ms` keeps it longer on screen.
+ * One short message at the bottom of the screen, optionally with an undo button (like iOS /
+ * Android apps), or another action. A sticky toast stays until it is used or replaced.
  */
-export type Toast = { id: number; text: string; undo?: () => void; label?: string; ms?: number }
+export type ToastAction = { label: string; run: () => void }
+export type Toast = { id: number; text: string; undo?: () => void; action?: ToastAction; sticky?: boolean }
 
 let current: Toast | undefined
 let nextId = 1
 const listeners = new Set<() => void>()
 const emit = () => listeners.forEach((fn) => fn())
 
-export function showToast(text: string, undo?: () => void, opts?: { label?: string; ms?: number }) {
-  current = { id: nextId++, text, undo, ...opts }
+export function showToast(text: string, undo?: () => void, more?: { action?: ToastAction; sticky?: boolean }) {
+  current = { id: nextId++, text, undo, ...more }
   emit()
 }
 

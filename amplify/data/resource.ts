@@ -87,6 +87,19 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
 
+  // What a space remembers about a recipe, its own or one another space shared: whether it is a
+  // favourite, the days it was cooked (YYYY-MM-DD) and the notes written after cooking (JSON
+  // {day, text, by} each). One row per recipe and space.
+  RecipeLog: a
+    .model({
+      recipeId: a.string().required(),
+      favorite: a.boolean(),
+      cooked: a.string().array(),
+      notes: a.string().array(),
+      spaceGroups: a.string().array(),
+    })
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
+
   // A recipe planned for a day in "Săptămâna mea". `day` is a local date, YYYY-MM-DD.
   MealPlanEntry: a
     .model({

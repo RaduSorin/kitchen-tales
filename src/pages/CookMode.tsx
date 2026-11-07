@@ -9,6 +9,9 @@ import { ringAlarm, unlockAlarm } from '../lib/alarm'
 import { canGoBack } from '../lib/back'
 import { isHeading } from '../lib/scale'
 import { alarmId, cancelAlarm, pushProblem, scheduleAlarm } from '../lib/timerPush'
+import { addCookNote, cookedLabel, markCooked, useRecipeLog } from '../lib/recipeLog'
+import { useMyName } from '../lib/me'
+import { canSpeak, speak, spokenDuration, stopSpeaking, useHandsFree, type Command } from '../lib/handsFree'
 
 // Timers are kept per recipe (lib/cooking.ts); one that ends while you are elsewhere in the app
 // rings there too (lib/cookAlarms.ts).
@@ -69,7 +72,48 @@ export default function CookMode() {
   const setTimers = useCallback((next: Record<number, Timer>) => { setTimersState(next); if (id) saveTimers(id, next) }, [id])
   const [now, setNow] = useState(() => Date.now())
   const touch = useRef<{ x: number; y: number }>(null)
+  const log = useRecipeLog(id)
+  const me = useMyName()
+  const [note, setNote] = useState('')
   useWakeLock()
+
+  // Hands-free: each step is read aloud and voice commands move through the recipe.
+  const [handsFree, setHandsFree] = useState(false)
+  const [hfAttempt, setHfAttempt] = useState(0)
+  const speakingUntil = useRef(0)
+  const say = useCallback(async (text: string) => {
+    speakingUntil.current = Date.now() + 120_000
+    await speak(text)
+    // The microphone still hears the end of our own voice for a moment.
+    speakingUntil.current = Date.now() + 700
+  }, [])
+  const onCommand = useRef<(c: Command) => void>(() => {})
+  const hf = useHandsFree(handsFree, hfAttempt, (c) => onCommand.current(c), () => Date.now() < speakingUntil.current)
+  const spokenKey = useRef('')
+  const stepSpeech = useCallback((x: Recipe, k: number) => {
+    const d = detectDuration(x.steps[k])
+    return `Pasul ${k + 1}. ${x.steps[k]}${d ? ` Are un timer de ${spokenDuration(d)}. Spune: pornește timerul.` : ''}`
+  }, [])
+  useEffect(() => {
+    if (!handsFree || !r) return
+    const key = finished ? 'done' : String(i)
+    if (spokenKey.current === key) return
+    spokenKey.current = key
+    say(finished ? `Poftă bună! Ai terminat ${r.title}.` : stepSpeech(r, i))
+  }, [handsFree, r, i, finished, say, stepSpeech])
+  useEffect(() => { if (!handsFree) stopSpeaking() }, [handsFree])
+  useEffect(() => () => stopSpeaking(), [])
+  const toggleHandsFree = () => {
+    if (!r) return
+    // It stopped hearing (no internet, the microphone taken): a tap starts listening again.
+    if (handsFree && hf.error) { setHfAttempt((n) => n + 1); say('Te ascult.'); return }
+    if (handsFree) { setHandsFree(false); return }
+    unlockAlarm()
+    // Spoken straight from the tap: iOS lets a page speak only after a touch.
+    spokenKey.current = finished ? 'done' : String(i)
+    say(`Te ascult. Spune: următorul, înapoi, repetă, ingrediente sau pornește timerul. ${finished ? '' : stepSpeech(r, i)}`)
+    setHandsFree(true)
+  }
 
   const [failed, setFailed] = useState(false)
   const load = useCallback(() => {
@@ -88,7 +132,7 @@ export default function CookMode() {
     if (finished) { if (d < 0) setFinished(false); return }
     const n = i + d
     if (n < 0) return
-    if (n >= count) { setFinished(true); setProgress(r.id, undefined); return }
+    if (n >= count) { setFinished(true); setProgress(r.id, undefined); markCooked(r.id); return }
     setI(n); setProgress(r.id, n)
   }, [r, i, count, finished])
 
@@ -176,6 +220,23 @@ export default function CookMode() {
   const otherRunning = Object.entries(timers).filter(([k, t]) => +k !== i && (t.endsAt || t.left === 0))
   const forStep = ingredientsForStep(step, r.ingredients)
 
+  onCommand.current = (c: Command) => {
+    if (c.kind === 'next') go(1)
+    else if (c.kind === 'prev') go(-1)
+    else if (c.kind === 'repeat') say(finished ? 'Poftă bună!' : stepSpeech(r, i))
+    else if (c.kind === 'ingredients') {
+      const list = (forStep.length ? forStep : r.ingredients.filter((x) => !isHeading(x)))
+      say(list.length ? `${forStep.length ? `Pentru pasul ${i + 1}` : 'Ingrediente'}: ${list.join(', ')}.` : 'Rețeta nu are ingrediente scrise.')
+    } else if (c.kind === 'timer') {
+      if (!timer) say('Pasul acesta nu are timer.')
+      else if (!running) { toggleTimer(); say(`Am pornit timerul de ${spokenDuration(timerLeft || timer.total)}.`) }
+    } else if (c.kind === 'pause') { if (running) { toggleTimer(); say('Am oprit timerul.') } }
+    else if (c.kind === 'step') {
+      if (c.n >= 1 && c.n <= count) { setFinished(false); setSheet(false); setI(c.n - 1); setProgress(r.id, c.n - 1) }
+      else say(`Rețeta are ${count} pași.`)
+    } else if (c.kind === 'stop') { setHandsFree(false); say('Gata, nu mai ascult.') }
+  }
+
   // Swipes change the step or open the ingredients; inside the ingredients sheet a finger scrolls the
   // list instead (scrolling back up must not close it, sideways must not change the step).
   const onTouchStart = (e: React.TouchEvent) => {
@@ -198,8 +259,16 @@ export default function CookMode() {
           <PlatePlaceholder seed={r.title} className="cook-done-art" />
           <h1>Poftă bună!</h1>
           <p>Ai terminat {r.title}.</p>
+          {cookedLabel(log) && <small className="cook-done-count">{cookedLabel(log)}</small>}
+          <label className="cook-done-note">
+            <span>O notă pentru data viitoare? (opțional)</span>
+            <textarea rows={2} maxLength={500} placeholder="ex. mai puțină sare, copilului i-a plăcut" value={note} onChange={(e) => setNote(e.target.value)} />
+          </label>
           <div className="cook-done-actions">
-            <button className="btn big" onClick={close}>Gata</button>
+            <button className="btn big" onClick={() => {
+              if (note.trim()) addCookNote(r.id, note, me || undefined)
+              close()
+            }}>{note.trim() ? 'Salvează nota și închide' : 'Gata'}</button>
             <button className="btn" onClick={() => go(-1)}>Înapoi la ultimul pas</button>
           </div>
         </div>
@@ -212,9 +281,17 @@ export default function CookMode() {
             </div>
             <div className="cook-head">
               <span className="cook-name"><span className="cook-title">{r.title}</span> <span className="cook-pos">{i + 1} din {count}</span></span>
+              <span className="cook-head-btns">
+              {canSpeak() && (
+                <button className={`cook-mic${handsFree ? ' on' : ''}${hf.listening ? ' live' : ''}`} aria-pressed={handsFree}
+                  aria-label={handsFree ? 'Oprește gătitul fără mâini' : 'Gătește fără mâini: citesc pașii și te ascult'} onClick={toggleHandsFree}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" /></svg>
+                </button>
+              )}
               <button className="cook-close" aria-label="Închide modul de gătit" onClick={close}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
+              </span>
               {otherRunning.length > 0 && <span className="cook-timers">{otherRunning.map(([k, t]) => (
                 <button key={k} className={leftOf(t, now) === 0 ? 'cook-mini ring' : 'cook-mini'} onClick={() => { setI(+k); setProgress(r.id, +k) }}>
                   Pasul {+k + 1} · {leftOf(t, now) === 0 ? 'gata!' : formatClock(leftOf(t, now))}
@@ -229,6 +306,14 @@ export default function CookMode() {
           </div>
 
           <div className="cook-panel" aria-live="polite">
+            {handsFree && (
+              <div className="cook-listen" role="status">
+                {hf.error ? <span className="cook-listen-err">{hf.error}</span> : <>
+                  <b>{hf.listening ? 'Te ascult' : 'Pornesc microfonul…'}</b>
+                  <span>{hf.heard ? `„${hf.heard}”` : '„următorul” · „înapoi” · „repetă” · „pornește timerul”'}</span>
+                </>}
+              </div>
+            )}
             <div className="cook-no">Pasul {i + 1}</div>
             <p className="cook-text">{step}</p>
             {forStep.length > 0 && (

@@ -6,7 +6,7 @@ import { generateClient } from 'aws-amplify/data'
 import type { Schema } from '../../amplify/data/resource'
 import type { SharedSettings } from './settings'
 import { parseAllergens, parseDiet, parseNutrition } from './diet'
-import type { PlanEntry, Recipe, ShoppingItem, Story, StoryFolder, StorySource } from './types'
+import type { PlanEntry, Recipe, RecipeLog, ShoppingItem, Story, StoryFolder, StorySource } from './types'
 import { cachedList, cacheList, getAudio, pruneAudio, removeAudio, removePhoto, saveAudio } from './offline'
 import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './kidMode'
 import { folderOf, receivedFolderName, type Folder } from './stories'
@@ -680,6 +680,23 @@ export const shoppingApi = {
   },
   update: async (s: ShoppingItem) => check(await client.models.ShoppingItem.update({ id: s.id, text: s.text, checked: s.checked })),
   remove: async (id: string) => check(await client.models.ShoppingItem.delete({ id })),
+}
+
+// ---- what the space remembers about each recipe (favourite, days cooked, notes) ----
+
+type RecipeLogRow = Schema['RecipeLog']['type']
+const toLog = (l: RecipeLogRow): RecipeLog => ({
+  id: l.id, recipeId: l.recipeId, favorite: !!l.favorite,
+  cooked: (l.cooked ?? []).filter((x): x is string => !!x),
+  notes: (l.notes ?? []).flatMap((x) => { try { return x ? [JSON.parse(x)] : [] } catch { return [] } }),
+})
+const logFields = (l: RecipeLog) => ({ favorite: l.favorite, cooked: l.cooked, notes: l.notes.map((n) => JSON.stringify(n)) })
+
+export const recipeLogApi = {
+  list: async () => (await listAll((nextToken) => client.models.RecipeLog.list({ nextToken, limit: 500 }))).map(toLog),
+  create: async (l: RecipeLog) => check(await client.models.RecipeLog.create({ id: l.id, recipeId: l.recipeId, ...logFields(l), spaceGroups: [await mySpaceGroup()] })),
+  update: async (l: RecipeLog) => check(await client.models.RecipeLog.update({ id: l.id, ...logFields(l) })),
+  remove: async (id: string) => check(await client.models.RecipeLog.delete({ id })),
 }
 
 // ---- space settings (one row per space, id = the space group) ----

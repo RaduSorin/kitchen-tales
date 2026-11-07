@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { Story } from './types'
 import { fileUrl, getOfflineAudio, listStories } from './db'
-import { folderOf, getPosition, setPosition } from './stories'
+import { folderOf, getPosition, markPlayed, setPosition } from './stories'
 import { useOfflineIds, useOnline } from './useOffline'
 import { useCoverUrl } from './useCoverUrl'
 import { storyArtwork } from './artwork'
@@ -167,6 +167,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     // A story you pick yourself starts a new run; one that follows on its own continues it.
     if (!opts?.continued) { played.current = 0; heard.current = new Set() }
     heard.current.add(s.id)
+    markPlayed(s.id)
     if (cur && audio.current) setPosition(cur.id, audio.current.currentTime)
     autoplay.current = !!opts?.autoplay
     setT(0); setDur(0); setEnded(false); setPlaying(false)

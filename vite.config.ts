@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // A new version waits until the family taps Reîncarcă (src/lib/update.ts).
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       // push-sw.js adds the cooking-timer notifications to the generated service worker.
       workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'], importScripts: ['push-sw.js'] },

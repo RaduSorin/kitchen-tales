@@ -355,12 +355,24 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .editor-section { display: grid; gap: 10px; }
 .editor-section h2 { margin: 6px 0 0; }
 .editor-section .set-hint { padding: 0; }
-.edit-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.edit-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+/* The thin gold thread between two steps, with a + that inserts a step right there. */
+.step-insert { position: relative; display: grid; place-items: center; height: 34px; }
+.step-insert::before { content: ""; position: absolute; left: 44px; right: 44px; top: 50%; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 40%, transparent), transparent); pointer-events: none; }
+.step-insert button { position: relative; width: 26px; height: 26px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; background: var(--bg); color: var(--gold); cursor: pointer;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 50%, transparent), 0 0 12px color-mix(in srgb, var(--gold) 28%, transparent); transition: transform .15s; }
+.step-insert button::after { content: ""; position: absolute; inset: -9px -40px; }
+.step-insert button:active { transform: scale(.88); }
+.step-insert svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.edit-steps.dragging .step-insert button { opacity: .25; pointer-events: none; }
+.edit-steps.dragging { user-select: none; -webkit-user-select: none; }
+.edit-step.shifting { transition: transform .2s cubic-bezier(.2, .8, .3, 1); }
+.edit-step.lifted { position: relative; z-index: 5; box-shadow: 0 0 0 1.5px var(--gold), 0 18px 40px rgb(0 0 0 / .5); scale: 1.03; transition: scale .15s, box-shadow .15s; }
+.step-grip { width: 44px; height: 44px; border: 0; padding: 0; background: none; color: var(--muted); display: grid; place-items: center; cursor: grab; touch-action: none; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; border-radius: 10px; }
+.step-grip svg { fill: currentColor; }
+.edit-step.lifted .step-grip { color: var(--gold); cursor: grabbing; }
 .edit-step { display: grid; grid-template-columns: 44px 1fr 56px; gap: 10px; align-items: start; background: var(--surface); border-radius: 16px; padding: 10px; }
 .edit-step-side { display: grid; gap: 4px; justify-items: center; }
-.icon-btn { width: 44px; height: 40px; font-size: 1.1rem; border: 0; border-radius: 8px; background: none; color: var(--muted); font: inherit; cursor: pointer; }
-.icon-btn:disabled { opacity: .3; cursor: default; }
-.icon-btn:not(:disabled):hover { background: var(--surface-2); }
 .edit-step-main { display: grid; gap: 6px; min-width: 0; }
 .edit-step-main textarea { resize: vertical; line-height: 1.45; field-sizing: content; min-height: 3.6em; }
 .edit-step-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }

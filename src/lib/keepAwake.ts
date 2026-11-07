@@ -7,6 +7,8 @@
  * (older iOS, some home-screen apps), a tiny silent video loops in the background instead,
  * which iOS also treats as "something is playing, don't lock".
  */
+const IOS = typeof navigator !== 'undefined' && (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+
 export function keepAwake(): () => void {
   let lock: WakeLockSentinel | undefined
   let video: HTMLVideoElement | undefined
@@ -29,6 +31,9 @@ export function keepAwake(): () => void {
 
   const take = () => {
     if (done) return
+    // On iPhone the wake lock can be granted and still not hold (apps added to the home screen,
+    // before iOS 18.4), and a locked phone cuts the microphone: run the silent video as well.
+    if (IOS) { startVideo(); video?.play().catch(() => {}) }
     if (!navigator.wakeLock) { startVideo(); video?.play().catch(() => {}); return }
     navigator.wakeLock.request('screen')
       .then((l) => { if (done) l.release().catch(() => {}); else lock = l })

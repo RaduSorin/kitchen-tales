@@ -749,6 +749,7 @@
 .rec-main i { width: 40px; height: 40px; border-radius: 50%; background: #ff6b6b; }
 .rec-main:active { transform: scale(.96); }
 .rec-full .rec-hint { font-size: .95rem; line-height: 1.45; }
+.rec-full .rec-note { margin: 0; max-width: 320px; font-size: .9rem; font-weight: 700; line-height: 1.4; color: var(--accent); }
 .rec-actions { width: 100%; max-width: 480px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .rec-again, .rec-done { height: 56px; border-radius: 28px; font: inherit; font-weight: 800; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 .rec-again { border: 1px solid rgb(255 255 255 / .1); background: rgb(255 255 255 / .07); color: var(--text); }

@@ -17,7 +17,7 @@
 
 **Limite:** n-am apelat AWS-ul real (Bedrock, Polly, ElevenLabs, Transcribe, Web Push, Scheduler), n-am testat pe Safari/iOS real și nici cu microfon. Site-ul live nu se putea accesa din mediul de test. Problemele care depind de acestea sunt marcate **„De verificat”**.
 
-> **Actualizare:** H1–H3 și M1–M7 sunt rezolvate pe branch-ul `claude/charming-clarke-6n1rqf` (detalii la fiecare problemă), plus L7. Problemele mici (L) sunt încă deschise.
+> **Actualizare:** pe branch-ul `claude/charming-clarke-6n1rqf` sunt rezolvate toate problemele mari și medii și 14 din cele 19 mici (L14 parțial). L15, L16, L17 și L19 sunt lăsate intenționat; motivele sunt în secțiunea 5.
 
 **Legendă status:** 🟢 *Confirmat în browser* · 🔵 *Confirmat în cod* · 🟠 *Risc, de verificat în producție*
 
@@ -29,7 +29,7 @@
 |---|---|---|
 | 🔴 Mare | 3 (toate rezolvate) | Timeout AppSync la AI, setările unui cont copiate în alt cont, schimbarea contului fără reîncărcare |
 | 🟠 Medie | 7 (toate rezolvate) | Modificări pierdute fără semnal stabil, redenumire/ștergere folder, acces la fișiere, coperta de pe „Acasă” la Povești, PIN, gesturi în modul gătit, keep-awake pe iOS |
-| 🟡 Mică / cosmetic | 19 | Accesibilitate, euristici, texte, performanță, mentenanță |
+| 🟡 Mică / cosmetic | 19 (14 rezolvate, 1 parțial, 4 lăsate intenționat) | Accesibilitate, euristici, texte, performanță, mentenanță |
 
 **Ce merge bine:** toate cele 20 de rute se încarcă fără erori în consolă. Editorul de rețete (inserare pas, drag & drop), scalarea porțiilor, lista de cumpărături (cumulare cantități, raioane), modul offline de bază, căutarea (fără diacritice), modul copil (redirecționări, blocare la final de timp, ieșire cu PIN), încărcarea și generarea unei povești și protecțiile „Pleci fără să salvezi?” funcționează corect.
 
@@ -116,25 +116,45 @@
 
 | ID | Zonă | Problemă | Status | Unde |
 |---|---|---|---|---|
-| L1 | Mod gătit | Cronometrele sună în aplicație doar cât stai pe ecranul de gătit. Dacă revii la rețetă și nu ai push activ (desktop, Android fără notificări, iOS neinstalat), alarma nu sună. | 🔵 | `CookMode.tsx:127-145` |
-| L2 | Editor rețete (a11y) | Mutarea unui pas cu ↑/↓ pe mâner pierde focusul după o singură mutare. | 🟢 | `RecipeEdit.tsx` `StepItem` |
-| L3 | Mod gătit (a11y) | Tasta Space trece mereu la pasul următor, chiar și pe butoane sau bife din foaia de ingrediente. | 🔵 | `CookMode.tsx:113` |
-| L4 | Cumpărături | „suc de lămâie” ajunge la Băuturi (prefixul `suc`). | 🟢 | `aisles.ts:28` |
-| L5 | Scalare porții | Substantivele nu se acordă: „1 ½ ou”, „1 ouă” (2 ouă la jumătate). | 🟢 | `scale.ts` `tidyUnit` |
-| L6 | Planificare | Serile cu „Resturi: …” nu se salvează în săptămână, așa că ziua apare goală. | 🔵 | `PlanWeek.tsx:116` |
+| L1 ✅ | Mod gătit | Cronometrele sună în aplicație doar cât stai pe ecranul de gătit. Dacă revii la rețetă și nu ai push activ (desktop, Android fără notificări, iOS neinstalat), alarma nu sună. | 🔵 | `CookMode.tsx:127-145` |
+| L2 ✅ | Editor rețete (a11y) | Mutarea unui pas cu ↑/↓ pe mâner pierde focusul după o singură mutare. | 🟢 | `RecipeEdit.tsx` `StepItem` |
+| L3 ✅ | Mod gătit (a11y) | Tasta Space trece mereu la pasul următor, chiar și pe butoane sau bife din foaia de ingrediente. | 🔵 | `CookMode.tsx:113` |
+| L4 ✅ | Cumpărături | „suc de lămâie” ajunge la Băuturi (prefixul `suc`). | 🟢 | `aisles.ts:28` |
+| L5 ✅ | Scalare porții | Substantivele nu se acordă: „1 ½ ou”, „1 ouă” (2 ouă la jumătate). | 🟢 | `scale.ts` `tidyUnit` |
+| L6 ✅ | Planificare | Serile cu „Resturi: …” nu se salvează în săptămână, așa că ziua apare goală. | 🔵 | `PlanWeek.tsx:116` |
 | L7 ✅ | Planificare (backend) | Limita „cel mult 2 rețete noi” nu se verifică pe server. Zilele omise de model devin „O cină rapidă” nouă, deci pot fi până la 7 generări în paralel (cost și timp, agravează H1). | 🔵 | `import-recipe/handler.ts:484-497` |
-| L8 | Bibliotecă | Pe telefon, în antetul folderului, „2 povești” e acoperit de pastila „Partajat”. | 🟢 (vizual) | `shelf-head` |
-| L9 | Bibliotecă | Eticheta „1 min” acoperă titlul desenat pe copertă („Scufița Roș…”). | 🟢 (vizual) | grila de povești |
-| L10 | Mesaje | `errors?.map(...).join('; ') ?? 'Eroare…'` dă un mesaj gol când `errors = []` (folosește `\|\|`). | 🔵 | `db.ts:292, 525` |
-| L11 | Profil | Numele spațiului („Spațiul Sorin”) nu se poate schimba din UI; vine din email sau din rândul vechi. | 🔵 | `space.ts`, `Profile.tsx` |
-| L12 | Povești Acasă | „Povestea de diseară” se schimbă la miezul nopții UTC (02:00/03:00 în România), nu la miezul nopții local. | 🔵 | `StoriesHome.tsx:111` |
-| L13 | Performanță | Un singur chunk JS de 1,3 MB; rutele nu se încarcă leneș (`React.lazy`). | 🟢 | build |
-| L14 | Calitate cod | 25 de avertismente oxlint: `set-state-in-effect` (8), `purity` (`Date.now` în render, 3), `refs` (1), `exhaustive-deps` în `CoverSearch.tsx:25` (lipsesc `title` și `run`). | 🟢 | lint |
-| L15 | Rețete | Valorile nutriționale se calculează automat cu AI la prima deschidere a oricărei rețete fără valori. Pentru rețetele altui spațiu se recalculează pe fiecare dispozitiv (cost). | 🔵 | `RecipeFacts.tsx:45` |
-| L16 | Securitate / cost | Bedrock, ElevenLabs (`previewVoice`), Transcribe și Polly pot fi apelate de orice cont conectat, fără limită de frecvență. | 🔵 | `data/resource.ts`, `backend.ts` |
-| L17 | Securitate | `safeFetch` verifică DNS-ul și apoi face `fetch` separat (fereastră pentru DNS rebinding). | 🔵 | `shared/safeFetch.ts` |
-| L18 | Robustețe | Ștergerea unei povești sau rețete șterge întâi fișierele. Dacă ștergerea rândului eșuează, rămâne un rând cu audio sau poză lipsă. Invers, `createStory` eșuat după upload lasă un fișier orfan. | 🔵 | `db.ts:217-223, 296-303` |
-| L19 | Build | `amplify.yml` folosește `npm install`, nu `npm ci` (build-uri nereproductibile; e documentat în fișier). | 🔵 | `amplify.yml` |
+| L8 ✅ | Bibliotecă | Pe telefon, în antetul folderului, „2 povești” e acoperit de pastila „Partajat”. | 🟢 (vizual) | `shelf-head` |
+| L9 ✅ | Bibliotecă | Eticheta „1 min” acoperă titlul desenat pe copertă („Scufița Roș…”). | 🟢 (vizual) | grila de povești |
+| L10 ✅ | Mesaje | `errors?.map(...).join('; ') ?? 'Eroare…'` dă un mesaj gol când `errors = []` (folosește `\|\|`). | 🔵 | `db.ts:292, 525` |
+| L11 ✅ | Profil | Numele spațiului („Spațiul Sorin”) nu se poate schimba din UI; vine din email sau din rândul vechi. | 🔵 | `space.ts`, `Profile.tsx` |
+| L12 ✅ | Povești Acasă | „Povestea de diseară” se schimbă la miezul nopții UTC (02:00/03:00 în România), nu la miezul nopții local. | 🔵 | `StoriesHome.tsx:111` |
+| L13 ✅ | Performanță | Un singur chunk JS de 1,3 MB; rutele nu se încarcă leneș (`React.lazy`). | 🟢 | build |
+| L14 ◐ | Calitate cod | 25 de avertismente oxlint: `set-state-in-effect` (8), `purity` (`Date.now` în render, 3), `refs` (1), `exhaustive-deps` în `CoverSearch.tsx:25` (lipsesc `title` și `run`). | 🟢 | lint |
+| L15 ➖ | Rețete | Valorile nutriționale se calculează automat cu AI la prima deschidere a oricărei rețete fără valori. Pentru rețetele altui spațiu se recalculează pe fiecare dispozitiv (cost). | 🔵 | `RecipeFacts.tsx:45` |
+| L16 ➖ | Securitate / cost | Bedrock, ElevenLabs (`previewVoice`), Transcribe și Polly pot fi apelate de orice cont conectat, fără limită de frecvență. | 🔵 | `data/resource.ts`, `backend.ts` |
+| L17 ➖ | Securitate | `safeFetch` verifică DNS-ul și apoi face `fetch` separat (fereastră pentru DNS rebinding). | 🔵 | `shared/safeFetch.ts` |
+| L18 ✅ | Robustețe | Ștergerea unei povești sau rețete șterge întâi fișierele. Dacă ștergerea rândului eșuează, rămâne un rând cu audio sau poză lipsă. Invers, `createStory` eșuat după upload lasă un fișier orfan. | 🔵 | `db.ts:217-223, 296-303` |
+| L19 ➖ | Build | `amplify.yml` folosește `npm install`, nu `npm ci` (build-uri nereproductibile; e documentat în fișier). | 🔵 | `amplify.yml` |
+
+### Ce s-a făcut la problemele mici
+
+- **L1:** un cronometru care se termină pe alt ecran al aplicației sună acolo, cu mesajul „Cronometrul e gata: …, pasul N” și butonul „Deschide”, care duce la pas (`src/lib/cookAlarms.ts`).
+- **L2:** după mutarea unui pas cu ↑/↓, focusul rămâne pe mâner. **L3:** în modul gătit, Space pe un buton sau o bifă nu mai schimbă pasul.
+- **L4:** „suc de la o lămâie”, „zeamă/coajă de lămâie” ajung la Legume și fructe; „1 l suc de portocale” rămâne la Băuturi.
+- **L5:** la scalare se acordă și substantivele (ou/ouă, ceapă/cepe, roșie/roșii, cartof/cartofi…) și „mare/mari”: „1 ou”, „1 ½ cepe mari”, „½ ceapă mare”.
+- **L6:** serile cu resturi se salvează în săptămână ca „Resturi: …”, cu rețeta din seara de dinainte. Nu intră la cumpărături și nici la „Azi în plan” (câmpul nou `MealPlanEntry.leftovers`).
+- **L8:** „2 povești” era de fapt doar greu de citit pe fundalul auriu; acum are contrast. **L9:** pe cardurile cu durată, coperta desenată nu mai repetă titlul (e scris oricum sub card).
+- **L10:** mesajele de eroare nu mai pot ieși goale. **L12:** „Povestea de diseară” se schimbă la miezul nopții local.
+- **L11:** Profil › „Numele spațiului”: se poate schimba, iar numele nou ajunge și pe ce e deja partajat.
+- **L13:** paginile se încarcă la prima deschidere; codul de pornire scade de la 1,35 MB la circa 1,08 MB. Dacă după o versiune nouă lipsește fișierul unei pagini, aplicația se reîncarcă o singură dată.
+- **L14 (parțial):** am explicat în cod singurul avertisment care ascundea o intenție (`CoverSearch`). Celelalte 24 sunt de stil (`set-state-in-effect`, `Date.now` în render) și nu produc erori.
+- **L18:** la ștergere, fișierele din folderul spațiului se șterg după rând (un rând care nu se poate șterge nu-și mai pierde audio-ul); fișierele încărcate de o salvare de poveste eșuată se șterg.
+
+**Lăsate intenționat:**
+- **L15:** valorile nutriționale ale rețetelor altui spațiu nu se pot salva pe rândul lor; un apel AI per dispozitiv și versiune de rețetă e un cost mic.
+- **L16:** o limită de folosire pentru funcțiile AI cere o decizie (câte pe zi, pe cont); aplicația e doar pe invitație.
+- **L17:** Lambda nu are adresa de metadate 169.254.169.254, iar credențialele ei sunt în variabile de mediu, deci DNS rebinding n-are ce expune.
+- **L19:** `npm install` e folosit intenționat, din cauza unei probleme a npm cu un pachet Amplify (e explicat în `amplify.yml`).
 
 ---
 

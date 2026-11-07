@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
@@ -132,16 +132,6 @@ export default function RecipeList() {
   const setView = (v: View) => { setViewState(v); writeKey(VIEW_KEY, v); setCat('') }
   const setSort = (s: Sort) => { setSortState(s); writeKey(SORT_KEY, s) }
   const plan = useSyncedList(planStore)
-  // Scrolled past the title (and its +): a small + floats above the tab bar, within thumb's reach.
-  const head = useRef<HTMLDivElement>(null)
-  const [headGone, setHeadGone] = useState(false)
-  useEffect(() => {
-    const el = head.current
-    if (!el || typeof IntersectionObserver === 'undefined') return
-    const io = new IntersectionObserver(([e]) => setHeadGone(!e.isIntersecting), { threshold: 0 })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
   const load = () => {
     listRecipes().then(setRecipes).catch(() => setFailed(true)).finally(() => setLoading(false))
   }
@@ -172,7 +162,7 @@ export default function RecipeList() {
 
   return (
     <section className={`recipes recipes-${view}`}>
-      <div className="recipes-head" ref={head}>
+      <div className="recipes-head">
         <h1>Rețetele mele</h1>
         <div className="recipes-head-btns">
           <span className="menu-anchor">
@@ -252,9 +242,8 @@ export default function RecipeList() {
       ) : (
         <Grid items={shown} />
       )}
-      {headGone && (
-        <Link to="/retete/noua" className="fab-new" aria-label="Rețetă nouă" title="Rețetă nouă">{PLUS}</Link>
-      )}
+      {/* Phones: "+" floats at the bottom right, above the tab bar, always within the thumb's reach. */}
+      <Link to="/retete/noua" className="fab-new" aria-label="Rețetă nouă" title="Rețetă nouă">{PLUS}</Link>
       {planning && <DayPicker r={planning} servings={planning.servings} onClose={() => setPlanning(undefined)} onDone={(msg) => { setPlanning(undefined); showToast(msg) }} />}
     </section>
   )

@@ -481,18 +481,19 @@ export default function RecipeEdit() {
   if (mode !== 'edit') {
     return (
       <section className="add-recipe">
-        {/* "Renunță" closes the page (top right, like an iOS sheet); "‹ Alte variante" steps back to the choices. */}
-        {mode !== 'choose' && (
-          <button type="button" className="add-recipe-back" onClick={() => { setMode('choose'); setPages([]) }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
-            Alte variante
+        {/* Like "Poveste nouă": a round ‹ (back to the choices, or out of the page from the choices),
+            a small gold label and a big title. */}
+        <div className="parent-head stacked add-recipe-top">
+          <button type="button" className="editor-back" data-leaves={mode === 'choose' ? '' : undefined}
+            aria-label={mode === 'choose' ? 'Renunță' : 'Alte variante'}
+            onClick={mode === 'choose' ? back : () => { setMode('choose'); setPages([]) }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
           </button>
-        )}
-        <div className="add-recipe-head">
-          <h1>Rețetă nouă</h1>
-          <button type="button" className="link-btn" onClick={back}>Renunță</button>
+          <div>
+            <span className="pbadge">Rețetă nouă</span>
+            <h1>{mode === 'choose' ? 'De unde vine rețeta?' : mode === 'paste' ? 'Din link sau text' : mode === 'photo' ? 'Din poză' : 'Cu AI'}</h1>
+          </div>
         </div>
-        {mode === 'choose' && !importing && <p className="add-sub">De unde vine rețeta?</p>}
         {importing ? (
           <p className="importing"><span className="spinner" /> {importing}</p>
         ) : mode === 'paste' ? (() => {

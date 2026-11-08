@@ -1207,3 +1207,26 @@
   /* "Rețetă nouă" moves out of the bar: a small gold label right above the name. */
   :root .editor .editor-kicker { display: block; line-height: 1.2; margin: -6px 0 -14px; font-family: var(--f-body); font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
 }
+
+/* ---------- The last pieces of the old look ---------- */
+/* Add a recipe: the same head as "Poveste nouă" (round ‹, small gold label, big title). */
+.add-recipe-top { margin-bottom: 4px; }
+.add-recipe-top .editor-back { justify-self: auto; }
+.add-recipe-top h1 { font-family: var(--f-title, Fraunces, serif); font-weight: 600; }
+
+/* Pages that are not a main tab (the Profile pages): the ‹ is a round glass button, no "Înapoi" text. */
+.page-back:not(.over) { margin: -2px 0 8px; }
+.page-back:not(.over) .back-btn { width: 44px; height: 44px; min-height: 0; margin: 0; padding: 0; justify-content: center; border-radius: 50%;
+  color: var(--accent); border: 1px solid rgb(255 255 255 / .1); background: rgb(255 255 255 / .06);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
+.page-back:not(.over) .back-btn svg { color: var(--accent); margin-left: -2px; }
+.page-back:not(.over) .back-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Buttons are pills, like the rest of the app (no gold boxes); a gold button you can't press yet is a
+   faint gold glass instead of a muddy brown box. Menu rows stay rows. */
+:root .btn:not(.menu-list > .btn) { border-radius: 999px; }
+:root .btn.primary { font-weight: 800; }
+:root .btn.primary:disabled { opacity: 1; background: rgb(242 200 121 / .14); border-color: rgb(242 200 121 / .22); color: rgb(242 200 121 / .55); }
+/* The fields next to such a button are rounded to match. */
+.shop-add input, .invite-row input, .set-row .tool-add { border-radius: 999px; padding-inline: 16px; }
+.shop-add .btn, .invite-row .btn, .set-row .btn { padding-inline: 18px; min-height: 44px; }

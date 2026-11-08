@@ -197,6 +197,30 @@ export default function RecipeEdit() {
   // Unsaved changes: "Renunță", the tab bar and the iPhone swipe back ask first.
   const dirty = mode === 'edit' && !!r && snap(r, ing, steps, photo) !== base
   useLeaveGuard(dirty && !saving, LEAVE_EDITS)
+  // The bar floats over the photo; once the photo slides under it, it gets the blur, and once the
+  // name slides under it too, the name shows small in the middle (like the rest of the app).
+  const bar = useRef<HTMLDivElement>(null)
+  const cover = useRef<HTMLDivElement>(null)
+  const nameRef = useRef<HTMLTextAreaElement>(null)
+  const editing = mode === 'edit' && !!r
+  useEffect(() => {
+    if (!editing) return
+    let frame = 0
+    const check = () => {
+      frame = 0
+      const b = bar.current, c = cover.current, t = nameRef.current
+      if (!b || !c) return
+      const edge = b.getBoundingClientRect().bottom
+      // A little before the photo is gone, so its buttons never pass under the bar unblurred.
+      b.classList.toggle('stuck', c.getBoundingClientRect().bottom - 72 <= edge)
+      b.classList.toggle('titled', !!t && t.getBoundingClientRect().bottom <= edge)
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(check) }
+    check()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll) }
+  }, [editing])
   const newPhotoUrl = useBlobUrl(photo)
   const savedPhotoUrl = useFileUrl(photo ? undefined : r?.photoKey)
   const img = newPhotoUrl ?? savedPhotoUrl
@@ -589,17 +613,19 @@ export default function RecipeEdit() {
 
   return (
     <form className="editor" onSubmit={save}>
-      <div className="editor-bar">
+      <div className="editor-bar" ref={bar}>
         <button type="button" className="editor-back" data-leaves onClick={back} aria-label="Renunță">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
-        <span className="editor-bar-title">{id ? 'Editează' : 'Rețetă nouă'}</span>
+        {/* On phones this is the name, shown only once you have scrolled past it; wide screens keep the label. */}
+        <span className="editor-bar-title" aria-hidden="true">
+          <span className="editor-bar-label">{id ? 'Editează' : 'Rețetă nouă'}</span>
+          <span className="editor-bar-name">{r.title.trim() || (id ? 'Editează' : 'Rețetă nouă')}</span>
+        </span>
         <button type="submit" className="btn primary small" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
       </div>
 
-      {found && <p className="found">{found}</p>}
-
-      <div className="editor-photo-wrap">
+      <div className="editor-photo-wrap" ref={cover}>
         <label className="editor-photo">
           {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title || 'rețetă'} />}
           <span className="editor-photo-btn">{img ? 'Schimbă poza' : 'Adaugă o poză'}</span>
@@ -610,8 +636,11 @@ export default function RecipeEdit() {
           : r.title.trim() && <button type="button" className="editor-ai-btn" onClick={() => makeAiPhoto(r.title, lines(ing))}>✨ {img ? 'Altă poză AI' : 'Poză AI'}</button>}
       </div>
 
+      {found && <p className="found">{found}</p>}
+
+      <h1 className="editor-kicker">{id ? 'Editează' : 'Rețetă nouă'}</h1>
       {/* Grows to fit a long name instead of cutting it off; Enter does not add a new line. */}
-      <textarea className="editor-title" aria-label="Titlu" required rows={1} value={r.title} placeholder="Numele rețetei" ref={(el) => fitHeight(el)}
+      <textarea className="editor-title" aria-label="Titlu" required rows={1} value={r.title} placeholder="Numele rețetei" ref={(el) => { nameRef.current = el; fitHeight(el) }}
         onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
         onChange={(e) => set('title', e.target.value.replace(/\s*\n\s*/g, ' '))} />
 

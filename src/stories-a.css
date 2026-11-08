@@ -1168,3 +1168,65 @@
 .cs-voice span { color: var(--accent); font-weight: 600; }
 .voice-sheet { padding: 0; }
 .voice-done { width: 100%; margin-top: 12px; }
+
+/* ---------- Recipe editor, concept A "Copertă": the photo runs up under the clock like on the
+   recipe page, ‹ and Salvează float over it, and the bar gets the even top blur (with the name
+   small in the middle) only once the photo has scrolled under it. ---------- */
+.editor-kicker { display: none; }
+.editor-bar-name { display: none; }
+@media (max-width: 759px) {
+  :root .editor-bar { position: fixed; z-index: 12; top: 0; left: 0; right: 0; margin: 0; padding: calc(8px + var(--status-h)) 16px 18px;
+    background: none; -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none;
+    grid-template-columns: 44px minmax(0, 1fr) auto; isolation: isolate; }
+  /* The blur sits on its own layer so it can fade in, reaching from under the clock to a soft lower edge. */
+  .editor-bar::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .2s;
+    background: linear-gradient(180deg, rgb(19 16 14 / .78), rgb(19 16 14 / .5));
+    -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+    -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 18px), transparent); }
+  .editor-bar.stuck::before { opacity: 1; }
+  :root:has(.editor-bar) .status-fill { background: none; }
+  .editor-back { color: var(--accent); background: rgb(20 16 14 / .45); border-color: rgb(255 255 255 / .16);
+    -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
+  .editor-bar > .btn.primary { min-height: 40px; height: 40px; padding: 0 18px; border-radius: 999px; font-weight: 800; box-shadow: 0 4px 18px rgb(242 200 121 / .28); align-self: center; }
+  .editor-bar-label { display: none; }
+  .editor-bar-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1.05rem; padding: 0 8px;
+    opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s; }
+  .editor-bar.titled .editor-bar-name { opacity: 1; transform: none; }
+
+  /* The cover: edge to edge from the very top, fading into the page at the bottom. */
+  .editor-photo-wrap { margin: calc(-8px - var(--status-h)) -16px 0; }
+  .editor-photo { height: calc(300px + var(--status-h)); border-radius: 0; background: none; }
+  .editor-photo::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 110px; pointer-events: none;
+    background: linear-gradient(180deg, transparent, var(--bg)); }
+  .editor-photo img { filter: brightness(.9); }
+  .editor-photo-btn, .editor-ai-btn, .editor-ai-busy { z-index: 1; bottom: 26px; min-height: 38px; padding: 7px 16px; font-weight: 700;
+    background: rgb(10 9 8 / .58); border: 1px solid rgb(255 255 255 / .12); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .editor-photo-btn { right: 16px; }
+  .editor-ai-btn, .editor-ai-busy { left: 16px; color: var(--accent); border-color: rgb(242 200 121 / .3); }
+
+  /* "Rețetă nouă" moves out of the bar: a small gold label right above the name. */
+  :root .editor .editor-kicker { display: block; line-height: 1.2; margin: -6px 0 -14px; font-family: var(--f-body); font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+}
+
+/* ---------- The last pieces of the old look ---------- */
+/* Add a recipe: the same head as "Poveste nouă" (round ‹, small gold label, big title). */
+.add-recipe-top { margin-bottom: 4px; }
+.add-recipe-top .editor-back { justify-self: auto; }
+.add-recipe-top h1 { font-family: var(--f-title, Fraunces, serif); font-weight: 600; }
+
+/* Pages that are not a main tab (the Profile pages): the ‹ is a round glass button, no "Înapoi" text. */
+.page-back:not(.over) { margin: -2px 0 8px; }
+.page-back:not(.over) .back-btn { width: 44px; height: 44px; min-height: 0; margin: 0; padding: 0; justify-content: center; border-radius: 50%;
+  color: var(--accent); border: 1px solid rgb(255 255 255 / .1); background: rgb(255 255 255 / .06);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
+.page-back:not(.over) .back-btn svg { color: var(--accent); margin-left: -2px; }
+.page-back:not(.over) .back-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Buttons are pills, like the rest of the app (no gold boxes); a gold button you can't press yet is a
+   faint gold glass instead of a muddy brown box. Menu rows stay rows. */
+:root .btn:not(.menu-list > .btn) { border-radius: 999px; }
+:root .btn.primary { font-weight: 800; }
+:root .btn.primary:disabled { opacity: 1; background: rgb(242 200 121 / .14); border-color: rgb(242 200 121 / .22); color: rgb(242 200 121 / .55); }
+/* The fields next to such a button are rounded to match. */
+.shop-add input, .invite-row input, .set-row .tool-add { border-radius: 999px; padding-inline: 16px; }
+.shop-add .btn, .invite-row .btn, .set-row .btn { padding-inline: 18px; min-height: 44px; }

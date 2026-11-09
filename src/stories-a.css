@@ -370,6 +370,10 @@
     overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .story-cover:not(.round):not(.has-img) > span { transform: translateY(-12%); }
 }
+/* Where the title is already written right next to the cover (the big cover at the top of Acasă,
+   the player), the drawn cover leaves it out, so the title isn't shown twice. */
+:is(.vt-hero, .player-art) .cover-name, .story-cover.player-art > .cover-name { display: none !important; }
+:is(.vt-hero .story-cover, .story-cover.player-art):not(.round):not(.has-img) > span { transform: none; }
 
 /* ---------- Cover Flow (concept A3): flat covers, the side ones tilted, with a reflection ---------- */
 .flow-stage { perspective: 900px; perspective-origin: 50% 40%; }
@@ -508,10 +512,6 @@
   position: relative;
   animation: auth-sheet .6s cubic-bezier(.32, .72, .25, 1) both;
 }
-[data-amplify-authenticator] [data-amplify-router]::before {
-  content: ''; position: absolute; top: 10px; left: 50%; width: 38px; height: 5px; margin-left: -19px;
-  border-radius: 3px; background: rgb(255 255 255 / .2);
-}
 @keyframes auth-sheet { from { transform: translateY(40px); opacity: 0; } }
 [data-amplify-authenticator] [data-amplify-form] { padding: 0; }
 [data-amplify-authenticator] .amplify-label { color: #aaa3b2; font-size: .85rem; }
@@ -543,7 +543,6 @@
   [data-amplify-authenticator] [data-amplify-container] { justify-content: center; padding: 40px 0; }
   .auth-scene { flex: 0; }
   [data-amplify-authenticator] [data-amplify-router] { border-radius: 28px 28px 0 0; border: 1px solid rgb(255 255 255 / .08); border-bottom: 0; }
-  [data-amplify-authenticator] [data-amplify-router]::before { display: none; }
   .auth-note { border-radius: 0 0 28px 28px; border: 1px solid rgb(255 255 255 / .08); border-top: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1037,11 +1036,11 @@
 .plan-day-name small { color: var(--muted); font-weight: 500; font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plan-day.taken .plan-day-name { color: var(--muted); }
 .plan-seg { flex: none; grid-auto-columns: auto; background: rgb(0 0 0 / .3); font-size: .78rem; }
-.plan-seg button { padding: 8px 8px; font-weight: 600; color: var(--muted); }
+.plan-seg button { min-height: 44px; min-width: 44px; padding: 8px 8px; font-weight: 600; color: var(--muted); }
 .plan-seg button[aria-pressed=true] { background: var(--accent); color: var(--on-accent); font-weight: 800; }
 .plan-seg button:first-child[aria-pressed=true] { background: var(--surface-2); color: var(--text); }
 .plan-source { background: rgb(0 0 0 / .3); }
-.plan-source button { padding: 11px 6px; font-size: .9rem; }
+.plan-source button { min-height: 44px; padding: 11px 6px; font-size: .9rem; }
 .plan-source button[aria-pressed=true] { background: #3a332d; font-weight: 800; }
 .plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .plan-list li { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 18px; background: rgb(255 255 255 / .05); border: 1px solid rgb(255 255 255 / .07); transition: opacity .2s; }
@@ -1138,6 +1137,19 @@
 .vt-coll-stack > span:first-child { margin-left: 0; }
 .vt-coll-stack > span > * { width: 100%; height: 100%; object-fit: cover; display: block; }
 .vitrina .ra-story { margin-top: 16px; }
+/* Phones: two small cards a row, so six categories take three rows instead of a whole screen. */
+@media (max-width: 759px) {
+  .home.vitrina .collections { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .home.vitrina .vt-coll { height: 108px; border-radius: 18px; }
+  .home.vitrina .vt-coll .collection-text { left: 14px; top: 12px; bottom: auto; width: calc(100% - 28px); min-width: 0; }
+  .home.vitrina .vt-coll .cover-title { font-size: 1.05rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .home.vitrina .vt-coll .cover-meta { font-size: .8rem; }
+  .home.vitrina .vt-coll-stack { top: auto; bottom: 10px; right: 10px; transform: none; }
+  .home.vitrina .vt-coll-stack > span { width: 40px; height: 40px; margin-left: -22px; border-radius: 10px; }
+  .home.vitrina .vt-coll-stack > span:first-child { margin-left: 0; }
+}
+/* The day letters under the plates (L, Ma, Mi…) were 10px. */
+.vt-day small { font-size: .75rem; }
 
 /* Stories Acasă, "Vitrina de seară": the whole square cover on top, melting into its own blurred glow. */
 .vt-cover { height: calc(min(100vw, 640px) + 176px); }
@@ -1244,3 +1256,14 @@
 /* The fields next to such a button are rounded to match. */
 .shop-add input, .invite-row input, .set-row .tool-add { border-radius: 999px; padding-inline: 16px; }
 .shop-add .btn, .invite-row .btn, .set-row .btn { padding-inline: 18px; min-height: 44px; }
+
+/* Small text links ("Toate", "Planifică") keep their look but get a finger-sized touch area. */
+.home-sec-head a, .sh-sec-head a { position: relative; }
+.home-sec-head a::after, .sh-sec-head a::after { content: ""; position: absolute; inset: -12px -10px; }
+
+/* Acasă (stories): a bright cover glows behind the sections (a yellow moon, a white sky), so the
+   gold "Toate" links sit on a dark pill and the grey lines under the covers turn light with a shadow. */
+.stories-home .sh-sec-head a { padding: 4px 10px; margin-right: -6px; border-radius: 999px; background: rgb(15 14 19 / .5);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.stories-home .sh-sec-head h2 { text-shadow: 0 1px 6px rgb(0 0 0 / .35); }
+.stories-home .sh-card .cover-meta { color: rgb(255 255 255 / .82); text-shadow: 0 1px 3px rgb(0 0 0 / .6); }

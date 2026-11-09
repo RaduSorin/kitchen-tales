@@ -275,7 +275,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .cook-done .btn.big { background: #fff; color: #1f2a24; }
 
 /* Step photo slot (editor) */
-.step-photo-add { width: 56px; height: 56px; border-radius: 12px; border: 1.5px dashed var(--muted); display: grid; place-items: center; text-align: center; font-size: .78rem; color: var(--muted); cursor: pointer; font-weight: 500; }
+.step-photo-add { width: 56px; height: 56px; border-radius: 12px; border: 1.5px dashed var(--muted); display: grid; place-items: center; color: var(--muted); cursor: pointer; }
+.edit-step-aside { display: grid; justify-items: center; gap: 4px; }
+.step-remove { width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+.step-remove:hover, .step-remove:active { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
 .step-photo-thumb { position: relative; width: 56px; height: 56px; }
 .step-photo-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
 .step-photo-thumb button::before { content: ""; position: absolute; inset: -10px; }
@@ -736,6 +739,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .search-cats { display: flex; flex-wrap: wrap; gap: 8px; }
 .search-fridge { display: grid; gap: 2px; margin-top: 22px; padding: 16px; border-radius: 18px; background: var(--accent-soft); color: var(--text); text-decoration: none; }
 .search-fridge small { color: var(--muted); }
+/* A chevron at the right says the card opens something. */
+.search-fridge { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+.search-fridge > * { grid-column: 1; }
+.search-fridge::after { content: "›"; grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 1.6rem; line-height: 1; color: var(--accent); }
 .search-stories { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 .search-story { display: flex; align-items: center; gap: 12px; color: var(--text); text-decoration: none; font-weight: 600; }
 .search-story .story-cover { flex: none; width: 56px; height: 56px; border-radius: 14px; }

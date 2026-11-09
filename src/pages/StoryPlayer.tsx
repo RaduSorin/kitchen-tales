@@ -243,7 +243,8 @@ function StoryPlayer() {
       <div className="player-head">
         <div className="player-title">
           <h1>{s.title}</h1>
-          <small>{s.collection ? `${s.collection} · ${SOURCE_LABEL[s.source]}` : SOURCE_LABEL[s.source]}</small>
+          {/* Where it came from, except "fișier audio": that says nothing to the family. */}
+          <small>{[s.collection, s.source !== 'upload' && SOURCE_LABEL[s.source]].filter(Boolean).join(' · ')}</small>
         </div>
         {/* Favourites are the family's list: in kid mode the heart only shows, it can't be changed. */}
         {kid ? (

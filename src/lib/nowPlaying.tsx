@@ -248,7 +248,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     setStory(undefined); setEnded(false); played.current = 0
   }, [])
 
-  // Lock-screen / headphone buttons: play, pause and 15 s skips like in the app. None when nothing is loaded.
+  // Lock-screen / headphone buttons: play, pause, next and previous story. None when nothing is loaded.
   const hasStory = !!story
   useEffect(() => {
     if (!('mediaSession' in navigator)) return
@@ -258,8 +258,10 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     if (!hasStory) { actions.forEach((x) => set(x, null)); return }
     set('play', play)
     set('pause', () => audio.current?.pause())
-    set('seekbackward', (d) => skip(-(d.seekOffset || 15)))
-    set('seekforward', (d) => skip(d.seekOffset || 15))
+    // No 15 s skips here: iOS shows those instead of next/previous story when both are set, and on the
+    // lock screen the story buttons are wanted. The scrubber (seekto) still moves within the story.
+    set('seekbackward', null)
+    set('seekforward', null)
     set('seekto', (d) => { if (d.seekTime != null) seek(d.seekTime) })
     // Headphones (double / triple press) and car stereos: next and previous story of the folder.
     set('nexttrack', () => { const n = nextRef.current; if (n && !isKidLocked()) load(n, { autoplay: true, continued: true }) })
@@ -271,7 +273,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
       if (p && !isKidLocked()) load(p, { autoplay: true, continued: true })
     })
     return () => actions.forEach((x) => set(x, null))
-  }, [hasStory, skip, seek, play, load])
+  }, [hasStory, seek, play, load])
 
   // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
   const coverUrl = useCoverUrl(story?.coverKey)

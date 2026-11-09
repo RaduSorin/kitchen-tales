@@ -156,7 +156,9 @@ export default function Coach() {
       <form className="rg-compose" onSubmit={send}>
         <textarea rows={2} value={text} maxLength={4000} aria-label="Mesajul tău" onChange={(e) => setText(e.target.value)} placeholder="Scrie…"
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send() }} />
-        <button type="submit" className="moon-btn rg-small" disabled={!text.trim() || !!busy}>Trimite</button>
+        <button type="submit" className="rg-send" aria-label="Trimite" disabled={!text.trim() || !!busy}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+        </button>
       </form>
       {list.length > 1 && (
         <div className="rg-row-btns">

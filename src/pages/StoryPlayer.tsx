@@ -275,7 +275,9 @@ function StoryPlayer() {
       </div>
       {current && player.error && <p className="player-error" role="alert">{player.error}</p>}
       <div className="night-controls">
-        <button className="track" aria-label={prev ? `Povestea anterioară: ${prev.title}` : 'Povestea anterioară'} disabled={!prev} onClick={() => prev && goTo(prev)}>
+        {/* Like music apps: a few seconds into a story, "previous" first takes it back to the start. */}
+        <button className="track" aria-label={t > 5 ? 'De la începutul poveștii' : prev ? `Povestea anterioară: ${prev.title}` : 'Povestea anterioară'}
+          disabled={!prev && !(current && t > 5)} onClick={() => { if (current && t > 5) player.seek(0); else if (prev) goTo(prev) }}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M20 5v14L8.5 12z" fill="currentColor" /></svg>
         </button>
         <button aria-label={`Înapoi ${SKIP} secunde`} onClick={() => skip(-SKIP)}>

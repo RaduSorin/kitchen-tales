@@ -11,7 +11,7 @@
 /* Title: a small gold label, the month right under it (tap: jump to a day), the days right below. */
 .wk-head { display: flex; align-items: flex-end; gap: 10px; padding: 2px 0 6px; }
 .wk-titles { flex: 1; min-width: 0; display: grid; gap: 0; }
-:root .wk-kicker { margin: 0; font-family: var(--f-body); font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); line-height: 1.4; }
+:root .wk-kicker { margin: 0; font-family: var(--f-body); font-size: var(--fs-2xs); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); line-height: 1.4; }
 .wk-month { justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0; border: 0; background: none; color: var(--text);
   font-family: var(--f-title); font-weight: 600; font-size: clamp(1.45rem, 7.2vw, 1.9rem); line-height: 1.15; letter-spacing: -.01em; cursor: pointer; white-space: nowrap; }
 .wk-month svg { color: var(--accent); margin-top: 4px; }
@@ -22,7 +22,7 @@
 .wk-today { position: fixed; z-index: 14; left: 50%; transform: translateX(-50%); bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 84px);
   display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; border-radius: 20px; border: 1px solid rgb(242 200 121 / .35);
   background: rgb(30 26 23 / .9); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 8px 24px rgb(0 0 0 / .5);
-  color: var(--accent); font: inherit; font-weight: 800; font-size: .92rem; cursor: pointer; animation: wk-pop .18s ease-out; }
+  color: var(--accent); font: inherit; font-weight: 800; font-size: var(--fs-md); cursor: pointer; animation: wk-pop .18s ease-out; }
 .wk-today svg { width: 16px; height: 16px; }
 @keyframes wk-pop { from { opacity: 0; transform: translateX(-50%) translateY(8px); } }
 @media (min-width: 760px) { .wk-today { bottom: 24px; } }
@@ -37,8 +37,8 @@
 .wk-col { flex: none; width: var(--col); display: flex; flex-direction: column; min-height: 0; scroll-snap-align: start; position: relative; }
 .wk-col + .wk-col::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 0; width: 1px; background: rgb(255 255 255 / .07); }
 .wk-day { flex: none; display: grid; justify-items: center; gap: 2px; padding: 4px 0 10px; }
-.wk-day small { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
-.wk-day b { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-title); font-weight: 600; font-size: 1.5rem;
+.wk-day small { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); white-space: nowrap; }
+.wk-day b { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-title); font-weight: 600; font-size: var(--fs-2xl);
   font-variant-numeric: lining-nums tabular-nums; }
 .wk-col.today .wk-day small { color: var(--accent); font-weight: 800; }
 .wk-col.today .wk-day b { background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 16px rgb(242 200 121 / .3); }
@@ -57,9 +57,9 @@
 .wk-photo { display: block; aspect-ratio: 1; border-radius: 16px; overflow: hidden; background: var(--surface-2); box-shadow: 0 8px 20px rgb(0 0 0 / .4); transition: transform .15s; }
 .wk-photo > * { width: 100%; height: 100%; object-fit: cover; display: block; }
 .wk-card-foot { display: grid; grid-template-columns: minmax(0, 1fr) 36px; align-items: start; gap: 2px; padding-left: 2px; }
-.wk-card-title { font-family: var(--f-title); font-weight: 600; font-size: .98rem; line-height: 1.2; overflow-wrap: anywhere;
+.wk-card-title { font-family: var(--f-title); font-weight: 600; font-size: .98rem; /* off the scale: sized for the narrow day column */ line-height: 1.2; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.wk-card-title small { display: block; font-family: var(--f-body); font-weight: 600; font-size: .78rem; color: var(--muted); margin-top: 2px; }
+.wk-card-title small { display: block; font-family: var(--f-body); font-weight: 600; font-size: var(--fs-xs); color: var(--muted); margin-top: 2px; }
 /* 44px to tap, drawn over the column's edge so the title keeps its width. */
 .wk-more { width: 44px; height: 44px; margin: -10px -8px 0 0; border: 0; border-radius: 10px; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
 .wk-more:active, .wk-more[aria-expanded="true"] { background: rgb(255 255 255 / .08); color: var(--text); }
@@ -75,18 +75,18 @@
 .wk-menu-pin .pop-menu { right: auto; left: 0; transform: translateX(-100%); transform-origin: top right; }
 .wk-menu-pin:not(.up) .pop-menu { top: 6px; }
 .wk-menu-pin.up .pop-menu { top: auto; bottom: 6px; transform-origin: bottom right; }
-.wk-servings { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 0 6px; font-weight: 600; font-size: .95rem; }
+.wk-servings { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 0 6px; font-weight: 600; font-size: var(--fs-md); }
 .wk-servings div { display: flex; align-items: center; gap: 4px; }
 .wk-servings b { min-width: 26px; text-align: center; font-variant-numeric: tabular-nums; }
-.wk-servings button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgb(255 255 255 / .1); color: var(--text); font: inherit; font-size: 1.2rem; font-weight: 700; cursor: pointer; }
+.wk-servings button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgb(255 255 255 / .1); color: var(--text); font: inherit; font-size: var(--fs-lg); font-weight: 700; cursor: pointer; }
 .wk-servings button:disabled { opacity: .4; }
 .wk-servings + .menu-row, .menu-row + .wk-servings { box-shadow: 0 -1px 0 rgb(255 255 255 / .07); }
 
 /* Jump to a day. */
 .wk-cal-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
-.wk-cal-head b { font-family: var(--f-title); font-weight: 600; font-size: 1.2rem; }
+.wk-cal-head b { font-family: var(--f-title); font-weight: 600; font-size: var(--fs-lg); }
 .wk-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.wk-cal-dow { text-align: center; font-size: .75rem; font-weight: 800; color: var(--muted); padding: 4px 0; }
+.wk-cal-dow { text-align: center; font-size: var(--fs-xs); font-weight: 800; color: var(--muted); padding: 4px 0; }
 .wk-cal-day { position: relative; aspect-ratio: 1; max-height: 48px; border: 0; border-radius: 50%; background: none; color: var(--text); font: inherit; font-weight: 600;
   font-variant-numeric: tabular-nums; cursor: pointer; justify-self: center; width: 100%; max-width: 48px; }
 .wk-cal-day.out { color: var(--muted); opacity: .5; }

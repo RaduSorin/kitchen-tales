@@ -2,8 +2,6 @@ import { useSyncExternalStore } from 'react'
 import { NO_DIET, type Diet } from './diet'
 import { onAccountChange } from './space'
 
-export type ThemeChoice = 'auto' | 'light' | 'dark'
-
 export interface ChildProfile {
   name: string
   /** Year of birth; the age is worked out from it so it never goes stale. */
@@ -13,7 +11,6 @@ export interface ChildProfile {
 }
 
 export interface Settings {
-  theme: ThemeChoice
   child: ChildProfile
   /** Appliances the family has, used when generating recipes. */
   kitchenTools: string[]
@@ -44,7 +41,7 @@ export interface KidSettings {
 const KEY = 'kt-settings'
 const LEGACY_BRIEF_KEY = 'kt-story-brief'
 const KID_DEFAULTS: KidSettings = { minutes: 30, folders: [] }
-const DEFAULTS: Settings = { theme: 'auto', child: { name: '', canRead: false }, kitchenTools: [], city: 'București', kid: KID_DEFAULTS, shelfClick: true, diet: NO_DIET, narrator: { id: '', name: '' } }
+const DEFAULTS: Settings = { child: { name: '', canRead: false }, kitchenTools: [], city: 'București', kid: KID_DEFAULTS, shelfClick: true, diet: NO_DIET, narrator: { id: '', name: '' } }
 
 // Earlier versions stored the age; turn it into a birth year once.
 function migrateChild(c: ChildProfile & { age?: number }): ChildProfile {
@@ -77,7 +74,7 @@ let current = read()
 const listeners = new Set<() => void>()
 const sharedListeners = new Set<() => void>()
 
-/** Settings shared by the family and kept in the cloud; the theme stays per device. */
+/** Settings shared by the family and kept in the cloud; the shelf click stays per device. */
 export type SharedSettings = Pick<Settings, 'child' | 'city' | 'kitchenTools' | 'kid' | 'diet' | 'narrator'>
 const SHARED_KEYS = ['child', 'city', 'kitchenTools', 'kid', 'diet', 'narrator'] as const
 
@@ -99,7 +96,7 @@ function set(patch: Patch) {
 // Another account signed in on this device: the previous family's settings (child, kid-mode PIN,
 // diet, kitchen, narrator) go; only this device's own choices stay. The new account's settings
 // then come from the cloud.
-onAccountChange(() => commit({ ...DEFAULTS, theme: current.theme, shelfClick: current.shelfClick }))
+onAccountChange(() => commit({ ...DEFAULTS, shelfClick: current.shelfClick }))
 
 export function updateSettings(patch: Patch) {
   set(patch)
@@ -132,12 +129,8 @@ export function useSettings() {
   return useSyncExternalStore((l) => { listeners.add(l); return () => { listeners.delete(l) } }, getSettings)
 }
 
-/**
- * The app is always dark now (design "Seară de lux", like the concepts): data-theme stays "dark"
- * so the dark-only rules apply. The old Aspect choice is kept in settings but no longer used.
- */
+/** The app is always dark (design "Seară de lux"): only the phone's status bar follows the side. */
 export function applyTheme() {
-  document.documentElement.dataset.theme = 'dark'
   setStatusBarColor(document.documentElement.dataset.area === 'night' ? '#0f0e13' : '#13100e')
 }
 

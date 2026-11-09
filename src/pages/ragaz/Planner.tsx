@@ -1,0 +1,170 @@
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useBack } from '../../lib/back'
+import { Loading } from '../../components/LoadState'
+import { showToast } from '../../lib/toast'
+import { dayName, fridaysOf, monthName, proposeFridays, thisMonth, today, type Exercise, type Friday, type MonthPlan } from '../../lib/mind/model'
+import { getMonth, listExercises, listMonths, saveMonth } from '../../lib/mind/store'
+import { importPack, listPacks, type Pack } from '../../lib/mind/packs'
+import '../../ragaz.css'
+
+type Step = 'intention' | 'success' | 'fridays'
+const STEPS: Step[] = ['intention', 'success', 'fridays']
+const NEXT: Record<Step, string> = { intention: 'semnul de reușită', success: 'temele de vineri', fridays: '' }
+/** In the first setup these are cards 3–5 of 5 (Setup.tsx has 1–2). */
+const SETUP_BEFORE = 2
+
+const Arrow = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+
+/** No exercises yet: import a family pack right here, or go write your own. */
+function EmptyBank({ onImported }: { onImported: () => void }) {
+  const [packs, setPacks] = useState<Pack[]>()
+  const [busy, setBusy] = useState('')
+  useEffect(() => { listPacks().then(setPacks, () => setPacks([])) }, [])
+  if (!packs) return <Loading />
+  return (
+    <div className="rg-empty">
+      <p>Banca ta de exerciții e goală. {packs.length ? 'Importă un pachet din familie' : 'Nimeni din familie n-a partajat încă un pachet'}, apoi îl poți schimba cum vrei.</p>
+      {packs.map((p) => (
+        <div className="rg-card" key={p.id}>
+          <div><b>{p.title}</b><small>{[p.author && `de la ${p.author}`, `${p.exercises.length} exerciții`].filter(Boolean).join(' · ')}</small></div>
+          <button type="button" className="btn small" disabled={!!busy}
+            onClick={() => { setBusy(p.id); importPack(p).then(onImported, (e: Error) => showToast(e.message)).finally(() => setBusy('')) }}>
+            {busy === p.id ? '…' : 'Importă'}
+          </button>
+        </div>
+      ))}
+      <Link to="/ragaz/exercitii" className="link-btn">Scrie exercițiile tale ›</Link>
+    </div>
+  )
+}
+
+/**
+ * /ragaz/planifica: the month in three cards (intention, sign of success, Friday themes).
+ * ?luna=2026-12 picks the month (default: this one); ?setup=1 continues the first setup.
+ */
+export default function Planner() {
+  const [params] = useSearchParams()
+  const setup = params.has('setup')
+  const id = params.get('luna') ?? thisMonth()
+  const nav = useNavigate()
+  const leave = useBack('/ragaz')
+  const [at, setAt] = useState(0)
+  const [plan, setPlan] = useState<MonthPlan>()
+  const [bank, setBank] = useState<Exercise[]>()
+  const [busy, setBusy] = useState(false)
+
+  const loadBank = () => listExercises().then((b) => { setBank(b); return b })
+  useEffect(() => {
+    Promise.all([getMonth(id), loadBank(), listMonths()]).then(([m, b, months]) => {
+      // Fridays still ahead (this month) or all of them (a month to come).
+      const dates = fridaysOf(id, id === thisMonth() ? today() : undefined)
+      const used = months.filter((x) => x.id !== id).slice(0, 2).flatMap((x) => x.fridays.map((f) => f.exerciseId ?? ''))
+      setPlan(m ?? { id, intention: '', success: '', target: Math.max(1, dates.length - 1), fridays: proposeFridays(dates, b, used), savedAt: 0 })
+    }, (e: Error) => showToast(e.message))
+  }, [id])
+
+  if (!plan || !bank) return <Loading />
+  const step = STEPS[at]
+  const set = (patch: Partial<MonthPlan>) => setPlan({ ...plan, ...patch })
+  const setFriday = (i: number, f: Partial<Friday>) => set({ fridays: plan.fridays.map((x, j) => (j === i ? { ...x, ...f } : x)) })
+  const back = () => (at > 0 ? setAt(at - 1) : leave())
+  const imported = () => loadBank().then((b) => set({ fridays: proposeFridays(plan.fridays.map((f) => f.date), b) }))
+
+  const finish = async () => {
+    setBusy(true)
+    try {
+      await saveMonth({ ...plan, intention: plan.intention.trim(), success: plan.success?.trim() })
+      showToast(setup ? 'Gata. Ne vedem vineri.' : 'Luna e planificată.')
+      nav('/ragaz', { replace: true })
+    } catch (e) {
+      showToast((e as Error).message)
+      setBusy(false)
+    }
+  }
+
+  const total = setup ? SETUP_BEFORE + STEPS.length : STEPS.length
+  const pos = (setup ? SETUP_BEFORE : 0) + at
+  const kicker = `Răgaz · ${monthName(id)}`
+  return (
+    <section className="ragaz">
+      <div className="parent create-steps">
+        <div className="cs-top">
+          <button type="button" className="night-btn" aria-label={at > 0 ? 'Pasul anterior' : 'Înapoi'} onClick={back}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          <div className="cs-dots" role="img" aria-label={`Pasul ${pos + 1} din ${total}`}>
+            {Array.from({ length: total }, (_, i) => <span key={i} className={i === pos ? 'on' : i < pos ? 'done' : undefined} />)}
+          </div>
+          <span />
+        </div>
+
+        {step === 'intention' ? (
+          <div className="cs-body">
+            <div className="cs-q">
+              <span className="cs-kicker">{kicker}</span>
+              <h1>Intenția lunii</h1>
+              <p>O propoziție despre ce vrei să-ți dai luna asta. Stă sus pe pagina Răgaz și pe fiecare exercițiu de vineri.</p>
+            </div>
+            <textarea className="cs-text" rows={3} maxLength={200} aria-label="Intenția lunii" value={plan.intention}
+              onChange={(e) => set({ intention: e.target.value })} placeholder="Ex.: Să am grijă de energia mea, nu doar de a celorlalți." />
+          </div>
+        ) : step === 'success' ? (
+          <div className="cs-body">
+            <div className="cs-q">
+              <span className="cs-kicker">{kicker}</span>
+              <h1>Cum știi că a mers?</h1>
+              <p>Un semn mic, pe care îl poți observa. Opțional.</p>
+            </div>
+            <label className="night-field">Semnul de reușită
+              <input value={plan.success ?? ''} maxLength={160} onChange={(e) => set({ success: e.target.value })} placeholder="Ex.: Mă culc înainte de 23:00" />
+            </label>
+            {plan.fridays.length > 0 && (
+              <div className="night-field">
+                <span>Mi-ajunge dacă fac exercițiul în</span>
+                <div className="pills">
+                  {plan.fridays.map((_, i) => i + 1).map((n) => (
+                    <button type="button" key={n} aria-pressed={plan.target === n} onClick={() => set({ target: n })}>{n} din {plan.fridays.length}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="cs-body">
+            <div className="cs-q">
+              <span className="cs-kicker">{kicker}</span>
+              <h1>Temele de vineri</h1>
+              <p>{plan.fridays.length ? 'Câte un exercițiu pe vineri, seara. Le poți schimba oricând.' : 'Luna asta nu mai are nicio vineri. Planifică luna următoare.'}</p>
+            </div>
+            {!bank.length ? <EmptyBank onImported={imported} /> : (
+              <div className="rg-fridays">
+                {plan.fridays.map((f, i) => (
+                  <label key={f.date} className="rg-friday-pick">
+                    <span>Vineri, {dayName(f.date)}</span>
+                    <select value={f.exerciseId ?? ''} onChange={(e) => {
+                      const x = bank.find((b) => b.id === e.target.value)
+                      setFriday(i, { exerciseId: x?.id, title: x?.title ?? '' })
+                    }}>
+                      <option value="">Liber, fără temă</option>
+                      {bank.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="cs-foot">
+          {step === 'fridays' ? (
+            <button type="button" className="moon-btn" disabled={busy || !plan.intention.trim()} onClick={finish}>{busy ? 'Se salvează…' : 'Confirmă luna'}</button>
+          ) : (
+            <button type="button" className="moon-btn" disabled={step === 'intention' && !plan.intention.trim()} onClick={() => setAt(at + 1)}>Mai departe <Arrow /></button>
+          )}
+          {NEXT[step] && <small className="cs-next">Urmează: {NEXT[step]}</small>}
+        </div>
+      </div>
+    </section>
+  )
+}

@@ -12,7 +12,9 @@ import '../../ragaz.css'
 
 type Step = 'about' | 'protect'
 const STEPS: Step[] = ['about', 'protect']
-const NEXT: Record<Step, string> = { about: 'protecția', protect: '' }
+/** The month's cards (Planner.tsx) follow these two in the first setup. */
+const TOTAL = 5
+const NEXT: Record<Step, string> = { about: 'protecția', protect: 'intenția lunii' }
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
@@ -110,8 +112,8 @@ export default function RagazSetup() {
     setError('')
     try {
       await createVault(code, passkey, { backup })
-      showToast('Răgaz e pornit.')
-      nav('/ragaz', { replace: true })
+      // Cards 3–5 (the month) are the planner's, in setup mode.
+      nav('/ragaz/planifica?setup=1', { replace: true })
     } catch (e) {
       setError((e as Error).message)
       setBusy(false)
@@ -127,8 +129,8 @@ export default function RagazSetup() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
           </button>
           {!restoring && (
-            <div className="cs-dots" role="img" aria-label={`Pasul ${at + 1} din ${STEPS.length}`}>
-              {STEPS.map((x, i) => <span key={x} className={i === at ? 'on' : i < at ? 'done' : undefined} />)}
+            <div className="cs-dots" role="img" aria-label={`Pasul ${at + 1} din ${TOTAL}`}>
+              {Array.from({ length: TOTAL }, (_, i) => <span key={i} className={i === at ? 'on' : i < at ? 'done' : undefined} />)}
             </div>
           )}
           <span />
@@ -186,7 +188,7 @@ export default function RagazSetup() {
         {!restoring && (
           <div className="cs-foot">
             {step === 'protect' ? (
-              <button type="button" className="moon-btn" disabled={busy || !codeOk(code) || code !== again} onClick={finish}>{busy ? 'Se pornește…' : 'Pornește Răgaz'}</button>
+              <button type="button" className="moon-btn" disabled={busy || !codeOk(code) || code !== again} onClick={finish}>{busy ? 'Se pornește…' : 'Mai departe'}</button>
             ) : (
               <button type="button" className="moon-btn" onClick={() => setAt(at + 1)}>Mai departe <Arrow /></button>
             )}

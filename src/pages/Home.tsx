@@ -14,6 +14,7 @@ import PlatePlaceholder from '../components/PlatePlaceholder'
 import StoryCover from '../components/StoryCover'
 import HomeHead from '../components/HomeHead'
 import Vitrine, { type VitrineSlide } from '../components/Vitrine'
+import MonthCard from '../components/MonthCard'
 import { useSyncedList } from '../lib/synced'
 import { dayKey, mondayOf, planStore, today, weekDays } from '../lib/plan'
 import { LoadError, Loading } from '../components/LoadState'
@@ -161,6 +162,7 @@ export default function Home() {
       <div className="home">
         <HomeHead search="/cauta" label="Caută rețete, ingrediente sau povești" field="search-input" />
         <h1 className="sa-greeting">Ce gătim azi?</h1>
+        <MonthCard />
         {failed && !recipes ? (
           <LoadError text="Nu am putut încărca rețetele. Verifică internetul." onRetry={() => { setFailed(false); load() }} />
         ) : !recipes ? <Loading /> : (
@@ -182,6 +184,8 @@ export default function Home() {
           meta: [x.r.category, x.r.servings && `${x.r.servings} porții`].filter(Boolean).join(' · ') || undefined,
           action: x.action, actionTo: x.to, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
         }))} />
+
+      <MonthCard />
 
       {restOfMenu.length > 0 && (
         <section className="home-sec">

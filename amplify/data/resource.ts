@@ -100,6 +100,20 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
 
+  // Răgaz: a pack of exercises someone in the space shares (e.g. Loredana's 28-day program).
+  // Each person imports a copy into their own encrypted bank on the phone and changes it there;
+  // the pack itself only changes when its author shares it again. `exercises` is JSON (see
+  // src/lib/mind/model.ts). Space only: the program's materials are for the family's own use.
+  ExercisePack: a
+    .model({
+      title: a.string().required(),
+      description: a.string(),
+      author: a.string(),
+      exercises: a.string().required(),
+      spaceGroups: a.string().array(),
+    })
+    .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
+
   // A recipe planned for a day in "Săptămâna mea". `day` is a local date, YYYY-MM-DD.
   MealPlanEntry: a
     .model({

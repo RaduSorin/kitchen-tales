@@ -69,7 +69,7 @@ const SOLID: Record<string, ReactNode> = {
  */
 const hidesTabBar = (path: string, search: string) =>
   path.endsWith('/gateste') || isPlayerPage(path)
-  || path === '/retete/noua' || path.endsWith('/editeaza') || path === '/saptamana/planifica'
+  || path === '/retete/noua' || path.endsWith('/editeaza') || path === '/saptamana/planifica' || path === '/ragaz/incepe'
   || (path === '/povesti/adauga' && new URLSearchParams(search).has('mod'))
 
 

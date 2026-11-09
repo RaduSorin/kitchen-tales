@@ -1,8 +1,8 @@
 import { BatchGetItemCommand, DynamoDBClient, type AttributeValue, type BatchGetItemCommandOutput } from '@aws-sdk/client-dynamodb'
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { randomUUID } from 'node:crypto'
-import { FILE_PREFIXES, fileSpace, type FilePrefix } from '../../shared/files'
+import { FILE_PREFIXES, fileSpace, mindBackupPath, type FilePrefix } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
 
 const s3 = new S3Client({})
@@ -74,11 +74,38 @@ function allowed(path: string, ref: string | undefined, rows: Map<string, Row>, 
 
 type Event = {
   fieldName: string
-  arguments: { paths?: (string | null)[] | null; refs?: (string | null)[] | null; prefix?: string; ext?: string; contentType?: string | null }
-  identity?: { groups?: string[] | null }
+  arguments: { paths?: (string | null)[] | null; refs?: (string | null)[] | null; prefix?: string; ext?: string; contentType?: string | null; op?: string }
+  identity?: { groups?: string[] | null; sub?: string }
+}
+
+/**
+ * Răgaz's encrypted backup, always the caller's own (the path comes from the token's sub, never
+ * from an argument). read: a link to download it, if there is one; write: a link to replace it;
+ * delete: removes it (the bucket keeps old versions 30 days, see backend.ts).
+ */
+async function mindBackup(sub: string | undefined, op: string | undefined) {
+  if (!sub) throw new Error('Nu ești conectat.')
+  const Key = mindBackupPath(sub)
+  if (op === 'write') {
+    const url = await getSignedUrl(s3, new PutObjectCommand({ Bucket: BUCKET, Key, ContentType: 'application/json' }), { expiresIn: 300 })
+    return { exists: true, url }
+  }
+  if (op === 'delete') {
+    await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key }))
+    return { exists: false, url: '' }
+  }
+  try {
+    const head = await s3.send(new HeadObjectCommand({ Bucket: BUCKET, Key }))
+    const url = await getSignedUrl(s3, new GetObjectCommand({ Bucket: BUCKET, Key, ResponseCacheControl: 'no-store' }), { expiresIn: 300 })
+    return { exists: true, url, updatedAt: head.LastModified?.toISOString(), size: head.ContentLength }
+  } catch (err) {
+    if ((err as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode === 404) return { exists: false, url: '' }
+    throw err
+  }
 }
 
 export const handler = async (event: Event) => {
+  if (event.fieldName === 'mindBackup') return mindBackup(event.identity?.sub, event.arguments.op)
   const groups = event.identity?.groups ?? []
   const mySpace = spaceOf(groups)
   const paths = (event.arguments.paths ?? []).slice(0, 100).map((p) => p ?? '')

@@ -13,3 +13,9 @@ export const fileSpace = (path: string) => {
 /** Where a function stores a new file for the caller's space. */
 export const newFilePath = (prefix: FilePrefix, space: string | undefined, ext: string) =>
   `${prefix}/${space ? `${space}/` : ''}${crypto.randomUUID()}.${ext}`
+
+// Răgaz's encrypted backups (src/lib/mind/backup.ts): one file per account, named after its
+// Cognito sub, encrypted on the phone with a key the server never has. Not in FILE_PREFIXES: the
+// files function reaches it only through mindBackup, for the caller's own sub.
+export const MIND_PREFIX = 'mind'
+export const mindBackupPath = (sub: string) => `${MIND_PREFIX}/${sub}/backup.json`

@@ -5,11 +5,11 @@ export type Area = 'day' | 'night'
 
 let lastArea: Area = 'day'
 
-/** The Profile belongs to the side you opened it from, so the colors, switch and tab bar don't jump. */
+/** The Profile (and Răgaz, opened from it) belongs to the side you opened it from, so the colors, switch and tab bar don't jump. */
 export function areaOf(pathname: string): Area {
   let area: Area
   if (pathname.startsWith('/povesti')) area = 'night'
-  else if (pathname.startsWith('/profil')) area = lastArea
+  else if (pathname.startsWith('/profil') || pathname.startsWith('/ragaz')) area = lastArea
   else area = 'day'
   lastArea = area
   return area

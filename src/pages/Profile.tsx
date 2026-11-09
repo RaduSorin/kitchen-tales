@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { childAge, updateSettings, useSettings } from '../lib/settings'
@@ -21,6 +21,10 @@ import { myEmail, mySpaceName } from '../lib/space'
 import type { Recipe } from '../lib/types'
 import type { Folder } from '../lib/stories'
 import type { ComponentType, FormEvent } from 'react'
+import { loadVault, useVault } from '../lib/mind/vault'
+
+// Răgaz's settings load with the page (they bring the backup and passkey code).
+const RagazSettings = lazy(() => import('./ragaz/Settings'))
 
 const THIS_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 15 }, (_, i) => THIS_YEAR - i)
@@ -438,6 +442,23 @@ const P = {
   books: 'M4 4h4v16H4zM10 4h4v16h-4zM15.5 5.2l3.8-1 3.7 15.5-3.8 1z',
   leaf: 'M5 19c0-8 5-14 15-14 0 10-6 15-14 15M5 19l7-7',
   voice: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3',
+  moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+}
+
+// Whether the account has a Răgaz backup in the cloud: asked once per app start, and only when
+// this phone has no Răgaz, to show "Pornit pe alt telefon".
+let cloudRagaz: Promise<boolean> | undefined
+const ragazElsewhere = () => (cloudRagaz ??= import('../lib/mind/backup').then((m) => m.cloudBackupInfo()).then((i) => i.exists, () => { cloudRagaz = undefined; return false }))
+
+/** Răgaz's state on this phone, for its Profile row. */
+function useRagazState() {
+  const vault = useVault()
+  const [elsewhere, setElsewhere] = useState(false)
+  useEffect(() => { loadVault() }, [])
+  useEffect(() => { if (vault.status === 'none') ragazElsewhere().then(setElsewhere) }, [vault.status])
+  if (vault.status === 'loading') return ''
+  if (vault.status === 'none') return elsewhere ? 'Pornit pe alt telefon' : 'Nepornit'
+  return 'Pornit'
 }
 
 /** One row: gold line icon, label (with an optional second line), current value, chevron. */
@@ -483,6 +504,7 @@ function ProfileHome() {
   const age = childAge(child)
   const others = members?.filter((m) => m.sameSpace && m.email !== email?.toLowerCase()).map((m) => nameFromEmail(m.email)) ?? []
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+  const ragaz = useRagazState()
   return (
     <section className="settings profile">
       {/* Wide screens show the title in the top bar (App.tsx); phones have none, so it shows here. */}
@@ -530,12 +552,17 @@ function ProfileHome() {
       </div>
 
       <div className="set-group">
+        <h2 className="set-label">Pentru mine</h2>
+        <div className="set-box">
+          <Row to="/profil/ragaz" icon="moon" label="Răgaz" sub="intenția lunii, exerciții, jurnal" value={ragaz} />
+        </div>
+      </div>
+
+      <div className="set-group">
         <h2 className="set-label">Pe acest telefon</h2>
         <div className="set-box">
           <Row to="/profil/offline" icon="down" label="Povești fără internet" value={saved ? `${saved.count} · ${fmtSize(saved.bytes)}` : ''} />
           <Row to="/profil/raft" icon="books" label="Clic pe raft" value={shelfClick ? 'Pornit' : 'Oprit'} />
-          {/* Temporary: the Răgaz Face ID test has to run inside the Home Screen app, which has no address bar. */}
-          <Row to="/ragaz/test" icon="lock" label="Răgaz · test Face ID" sub="temporar" />
         </div>
       </div>
 
@@ -556,6 +583,7 @@ const PAGES: Record<string, [string, ComponentType]> = {
   voce: ['Vocea poveștilor', NarratorSettings],
   offline: ['Povești fără internet', OfflineStorage],
   raft: ['Raftul cu povești', ShelfSettings],
+  ragaz: ['Răgaz', RagazSettings],
 }
 
 /** The Profile page's title, shown in the top bar instead of the Rețete / Povești switch. */

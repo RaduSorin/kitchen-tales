@@ -47,7 +47,9 @@ import StoriesHome from './pages/StoriesHome'
 const Week = page(() => import('./pages/Week'))
 const PlanWeek = page(() => import('./pages/PlanWeek'))
 const Shopping = page(() => import('./pages/Shopping'))
-const RagazTest = page(() => import('./pages/RagazTest'))
+const RagazHome = page(() => import('./pages/ragaz/RagazHome'))
+const RagazSetup = page(() => import('./pages/ragaz/Setup'))
+const RagazGate = page(() => import('./pages/ragaz/Unlock').then((m) => ({ default: m.RagazGate })))
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
 import { useCookAlarms } from './lib/cookAlarms'
@@ -77,6 +79,7 @@ function NightArea() {
 function backFallback(pathname: string) {
   if (/^\/retete\/[^/]+$/.test(pathname) && pathname !== '/retete/noua') return '/retete'
   if (pathname.startsWith('/profil/')) return '/profil'
+  if (pathname === '/ragaz') return '/profil/ragaz'
   return undefined
 }
 
@@ -191,8 +194,11 @@ function Shell() {
           <Route path="/cumparaturi" element={<Shopping />} />
           <Route path="/profil" element={<Profile />} />
           <Route path="/profil/:page" element={<Profile />} />
-          {/* Răgaz technical test (Face ID unlocking an encryption key); not linked anywhere. */}
-          <Route path="/ragaz/test" element={<RagazTest />} />
+          {/* Răgaz: setup first, then every page behind Face ID or the code (pages/ragaz). */}
+          <Route path="/ragaz/incepe" element={<RagazSetup />} />
+          <Route element={<RagazGate />}>
+            <Route path="/ragaz" element={<RagazHome />} />
+          </Route>
           {/* Old Settings links (bookmarks, notes) */}
           <Route path="/setari" element={<Navigate to="/profil" replace />} />
           <Route path="/setari/povesti" element={<Navigate to="/profil/copil" replace />} />

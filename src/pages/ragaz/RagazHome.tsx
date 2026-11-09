@@ -4,7 +4,7 @@ import { Loading } from '../../components/LoadState'
 import { showToast } from '../../lib/toast'
 import { lockVault } from '../../lib/mind/vault'
 import { dayName, fridaysOf, monthName, nextMonth, thisMonth, today, type MonthPlan, type Note } from '../../lib/mind/model'
-import { getMonth, listNotes } from '../../lib/mind/store'
+import { getMonth, listMonths, listNotes, rememberPlanned } from '../../lib/mind/store'
 import '../../ragaz.css'
 
 const CHECK = 'M5 12.5l4.5 4.5L19 7'
@@ -16,6 +16,8 @@ export default function RagazHome() {
     const id = thisMonth()
     Promise.all([getMonth(id), getMonth(nextMonth(id)), listNotes()])
       .then(([month, next, notes]) => setData({ month, next, notes }), (e: Error) => showToast(e.message))
+    // For the Home card: which months are planned (also for plans made before it kept track).
+    listMonths().then(rememberPlanned).catch(() => {})
   }, [])
   if (!data) return <Loading />
   const { month, next, notes } = data

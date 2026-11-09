@@ -26,7 +26,8 @@ function defaultMonth() {
  */
 export default function Reflection() {
   const [params] = useSearchParams()
-  const id = params.get('luna') ?? defaultMonth()
+  const asked = params.get('luna')
+  const id = asked && /^\d{4}-(0[1-9]|1[0-2])$/.test(asked) ? asked : defaultMonth()
   const nav = useNavigate()
   const [data, setData] = useState<{ plan?: MonthPlan; notes: Note[]; had?: Note }>()
   const [answers, setAnswers] = useState<Record<string, string>>({})

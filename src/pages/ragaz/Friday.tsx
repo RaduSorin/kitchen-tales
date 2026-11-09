@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Loading } from '../../components/LoadState'
 import { showToast } from '../../lib/toast'
-import { dayName, type Exercise, type MonthPlan, type Note } from '../../lib/mind/model'
+import { dayName, parseDay, today, type Exercise, type MonthPlan, type Note } from '../../lib/mind/model'
 import { getExercise, getMonth, listNotes, saveNote } from '../../lib/mind/store'
 import '../../ragaz.css'
 
@@ -23,13 +23,16 @@ export function Scale({ label, value, onChange }: { label: string; value?: numbe
 }
 
 /** The note after an exercise: how strong it felt before and after, whether it fit, and free text. */
-export function NoteForm({ note, onSave, busy }: { note: Note; onSave: (n: Note) => void; busy?: boolean }) {
+/** `scales`: the before/after intensity, for a note after an exercise (not for a free note). */
+export function NoteForm({ note, onSave, busy, scales = true }: { note: Note; onSave: (n: Note) => void; busy?: boolean; scales?: boolean }) {
   const [n, setN] = useState(note)
   const set = (patch: Partial<Note>) => setN({ ...n, ...patch })
   return (
     <div className="rg-note">
-      <Scale label="Cât de intens era înainte?" value={n.before} onChange={(v) => set({ before: v })} />
-      <Scale label="Și după?" value={n.after} onChange={(v) => set({ after: v })} />
+      {scales && <>
+        <Scale label="Cât de intens era înainte?" value={n.before} onChange={(v) => set({ before: v })} />
+        <Scale label="Și după?" value={n.after} onChange={(v) => set({ after: v })} />
+      </>}
       {n.exerciseId && (
         <div className="pills" role="radiogroup" aria-label="Cum s-a potrivit">
           {FIT.map(([k, l]) => <button type="button" key={k} aria-pressed={n.fit === k} onClick={() => set({ fit: n.fit === k ? undefined : k })}>{l}</button>)}
@@ -43,9 +46,16 @@ export function NoteForm({ note, onSave, busy }: { note: Note; onSave: (n: Note)
   )
 }
 
+/** A real Friday as YYYY-MM-DD (an old or hand-typed link can carry anything). */
+const isFriday = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && parseDay(s).getDay() === 5
+
 /** /ragaz/vineri/:date: the intention, the Friday's exercise, and the note after it. */
 export default function Friday() {
   const { date = '' } = useParams()
+  return isFriday(date) ? <FridayPage date={date} /> : <Navigate to="/ragaz" replace />
+}
+
+function FridayPage({ date }: { date: string }) {
   const nav = useNavigate()
   const [data, setData] = useState<{ month?: MonthPlan; exercise?: Exercise; note: Note }>()
   const [busy, setBusy] = useState(false)
@@ -81,7 +91,9 @@ export default function Friday() {
         <p className="rg-sub">Nicio temă pentru seara asta. {note.title ? 'Exercițiul nu mai e în banca ta.' : <Link to="/ragaz/planifica">Alege o temă</Link>}</p>
       )}
       <h2 className="rg-label">După exercițiu</h2>
-      <NoteForm note={note} onSave={save} busy={busy} />
+      {date > today()
+        ? <p className="rg-sub">Nota o scrii vineri, după exercițiu. Până atunci poți citi tema.</p>
+        : <NoteForm note={note} onSave={save} busy={busy} />}
     </section>
   )
 }

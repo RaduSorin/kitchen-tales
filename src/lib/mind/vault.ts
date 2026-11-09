@@ -29,6 +29,11 @@ export type VaultLocal = {
   pending?: boolean
   /** Reminders turned on from this phone, with their times (the server has the same). */
   reminders?: import('../../../amplify/shared/mindPush').Rhythms
+  /**
+   * The months planned, with the Fridays that have a theme (dates only, no titles), so the Home
+   * card can say "plan the month" or "a free evening" while the vault is locked.
+   */
+  planned?: Record<string, string[]>
 }
 
 type Item = { key: string; kind: string; updatedAt: number; sealed: Sealed }

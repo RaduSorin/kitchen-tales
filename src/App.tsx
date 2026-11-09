@@ -55,6 +55,7 @@ const RagazFriday = page(() => import('./pages/ragaz/Friday'))
 const RagazJournal = page(() => import('./pages/ragaz/Journal'))
 const RagazWorry = page(() => import('./pages/ragaz/Worry'))
 const RagazReflection = page(() => import('./pages/ragaz/Reflection'))
+const RagazCoach = page(() => import('./pages/ragaz/Coach'))
 const RagazGate = page(() => import('./pages/ragaz/Unlock').then((m) => ({ default: m.RagazGate })))
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
@@ -211,6 +212,7 @@ function Shell() {
             <Route path="/ragaz/jurnal" element={<RagazJournal />} />
             <Route path="/ragaz/griji" element={<RagazWorry />} />
             <Route path="/ragaz/reflectie" element={<RagazReflection />} />
+            <Route path="/ragaz/claude" element={<RagazCoach />} />
           </Route>
           {/* Old Settings links (bookmarks, notes) */}
           <Route path="/setari" element={<Navigate to="/profil" replace />} />

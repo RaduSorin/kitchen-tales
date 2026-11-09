@@ -4,6 +4,7 @@ import { useBack } from '../../lib/back'
 import { showToast } from '../../lib/toast'
 import { thisMonth, today, type Worry as WorryData } from '../../lib/mind/model'
 import { saveNote } from '../../lib/mind/store'
+import { sortWorries } from '../../lib/mind/coach'
 import '../../ragaz.css'
 
 type Step = 'list' | 'sort' | 'clay' | 'step' | 'parent'
@@ -39,6 +40,7 @@ export default function Worry() {
   const [step, setStep] = useState('')
   const [parent, setParent] = useState({ what: '', hardest: '', need: '' })
   const [busy, setBusy] = useState(false)
+  const [askClaude, setAskClaude] = useState<'confirm' | 'busy'>()
 
   const items = [...new Set(text.split('\n').map((l) => l.replace(/^[-•*\d.)\s]+/, '').trim()).filter(Boolean))]
   const current = STEPS[at]
@@ -47,9 +49,19 @@ export default function Worry() {
     if (current === 'sort') {
       // Clay in the order it was, keeping an order already chosen.
       const want = items.filter((i) => sides[i] !== 'stone')
-      setClay([...clay.filter((c) => want.includes(c)), ...want.filter((c) => !clay.includes(c))])
+      setClay((old) => [...old.filter((c) => want.includes(c)), ...want.filter((c) => !old.includes(c))])
     }
     setAt(at + 1)
+  }
+  const claudeSort = () => {
+    setAskClaude('busy')
+    sortWorries(items).then((r) => {
+      const next: Record<string, Side> = {}
+      for (const i of items) next[i] = r.stone.includes(i) && r.clay.includes(i) ? 'both' : r.stone.includes(i) ? 'stone' : 'clay'
+      setSides(next)
+      setClay(r.clay.filter((c) => items.includes(c)))
+      if (r.step) setStep(r.step)
+    }, (e: Error) => showToast(e.message)).finally(() => setAskClaude(undefined))
   }
   const move = (i: number, d: -1 | 1) => setClay((c) => { const x = [...c]; [x[i], x[i + d]] = [x[i + d], x[i]]; return x })
   const stone = items.filter((i) => sides[i] === 'stone' || sides[i] === 'both')
@@ -97,6 +109,17 @@ export default function Worry() {
               <h1>Piatră sau plastilină?</h1>
               <p><b>Plastilina</b> depinde de tine, <b>piatra</b> nu. Când nu știi: ce parte din asta poți influența?</p>
             </div>
+            {askClaude === 'confirm' ? (
+              <div className="rg-warn">
+                Lista pleacă la Claude, pe Bedrock. Formulările scurte și generale ajung („termen la serviciu”).
+                <div className="rg-row-btns">
+                  <button type="button" className="btn small" onClick={claudeSort}>Trimite</button>
+                  <button type="button" className="btn small" onClick={() => setAskClaude(undefined)}>Renunță</button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" className="link-btn" disabled={askClaude === 'busy'} onClick={() => setAskClaude('confirm')}>{askClaude === 'busy' ? 'Claude sortează…' : 'Ajută-mă să sortez cu Claude ›'}</button>
+            )}
             <div className="rg-sort">
               {items.map((i) => (
                 <div className="rg-sort-row" key={i}>

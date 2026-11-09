@@ -82,6 +82,10 @@ export default function RagazHome() {
         <Link to="/ragaz/jurnal" className="rg-tile"><b>Jurnal</b><small>{notes.length ? `${notes.length} ${notes.length === 1 ? 'notă' : 'note'}` : 'gol încă'}</small></Link>
         <Link to="/ragaz/exercitii" className="rg-tile"><b>Exercițiile mele</b><small>pachete și banca ta</small></Link>
       </div>
+      <Link to="/ragaz/claude" className="rg-card rg-link">
+        <div><b>Vorbește cu Claude</b><small>Opțional. Pleacă doar ce trimiți tu.</small></div>
+        <span aria-hidden="true">›</span>
+      </Link>
       <Link to="/profil/ragaz" className="link-btn rg-alt">Setări Răgaz ›</Link>
     </section>
   )

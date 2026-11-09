@@ -7,6 +7,7 @@ import { family } from '../functions/family/resource'
 import { timerAlarm } from '../functions/timer-alarm/resource'
 import { files } from '../functions/files/resource'
 import { mindPush } from '../functions/mind-push/resource'
+import { mindCoach } from '../functions/mind-coach/resource'
 
 // Every row belongs to a space (a household): its Cognito group `space-<id>` is in `spaceGroups`
 // and its members can read and edit it. A recipe, story or folder that is shared also has the
@@ -468,6 +469,15 @@ const schema = a.schema({
     .returns(a.string())
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(mindPush)),
+
+  // Răgaz's optional Claude (functions/mind-coach): input is JSON CoachInput from
+  // amplify/shared/mindCoach.ts, the answer JSON CoachOutput. Nothing is stored on the server.
+  mindCoach: a
+    .mutation()
+    .arguments({ input: a.string().required() })
+    .returns(a.string())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(mindCoach)),
 
   // Cooking timers: a push notification when the timer ends, even with the app closed.
   scheduleTimerAlarm: a

@@ -8,14 +8,16 @@ import { getMonth, listExercises, listMonths, saveMonth } from '../../lib/mind/s
 import { importPack, listPacks, type Pack } from '../../lib/mind/packs'
 import { syncMonth } from '../../lib/mind/push'
 import Reminders from './Reminders'
+import { ImportSheet } from './Coach'
+import { suggestThemes } from '../../lib/mind/coach'
 import '../../ragaz.css'
 
-type Step = 'intention' | 'success' | 'fridays' | 'reminders'
+type Step = 'intention' | 'success' | 'fridays' | 'reminders' | 'claude'
 const STEPS: Step[] = ['intention', 'success', 'fridays']
 /** The first setup ends with the reminders (card 6). */
-const SETUP_STEPS: Step[] = [...STEPS, 'reminders']
-const NEXT: Record<Step, string> = { intention: 'semnul de reușită', success: 'temele de vineri', fridays: '', reminders: '' }
-/** In the first setup these are cards 3–6 of 6 (Setup.tsx has 1–2). */
+const SETUP_STEPS: Step[] = [...STEPS, 'reminders', 'claude']
+const NEXT: Record<Step, string> = { intention: 'semnul de reușită', success: 'temele de vineri', fridays: '', reminders: 'Claude (opțional)', claude: '' }
+/** In the first setup these are cards 3–7 of 7 (Setup.tsx has 1–2). */
 const SETUP_BEFORE = 2
 
 const Arrow = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
@@ -57,6 +59,10 @@ export default function Planner() {
   const [plan, setPlan] = useState<MonthPlan>()
   const [bank, setBank] = useState<Exercise[]>()
   const [busy, setBusy] = useState(false)
+  const [askClaude, setAskClaude] = useState<'confirm' | 'busy'>()
+  const [importing, setImporting] = useState(false)
+  // Read once: a suggestion from Claude's chat to start the intention with.
+  const [prefill] = useState(() => params.get('intentie')?.slice(0, 200) ?? '')
 
   const loadBank = () => listExercises().then((b) => { setBank(b); return b })
   useEffect(() => {
@@ -64,9 +70,10 @@ export default function Planner() {
       // Fridays still ahead (this month) or all of them (a month to come).
       const dates = fridaysOf(id, id === thisMonth() ? today() : undefined)
       const used = months.filter((x) => x.id !== id).slice(0, 2).flatMap((x) => x.fridays.map((f) => f.exerciseId ?? ''))
-      setPlan(m ?? { id, intention: '', success: '', target: Math.max(1, dates.length - 1), fridays: proposeFridays(dates, b, used), savedAt: 0 })
+      // A planned month opened with a suggested intention shows it, to confirm or change.
+      setPlan(m ? (prefill ? { ...m, intention: prefill } : m) : { id, intention: prefill, success: '', target: Math.max(1, dates.length - 1), fridays: proposeFridays(dates, b, used), savedAt: 0 })
     }, (e: Error) => showToast(e.message))
-  }, [id])
+  }, [id, prefill])
 
   if (!plan || !bank) return <Loading />
   const steps = setup ? SETUP_STEPS : STEPS
@@ -91,6 +98,16 @@ export default function Planner() {
       setBusy(false)
     }
   }
+  const propose = () => {
+    if (!plan || !bank) return
+    setAskClaude('busy')
+    suggestThemes(plan.intention, plan.fridays.map((f) => f.date), bank.map((b) => ({ title: b.title, category: b.category })))
+      .then((picks) => {
+        if (!picks.length) { showToast('Claude nu a găsit potriviri. Alege tu.'); return }
+        setPlan({ ...plan, fridays: plan.fridays.map((f, i) => { const x = bank.find((b) => b.title === picks[i]); return x ? { ...f, exerciseId: x.id, title: x.title } : f }) })
+      }, (e: Error) => showToast(e.message))
+      .finally(() => setAskClaude(undefined))
+  }
   const done = () => { showToast('Gata. Ne vedem vineri.'); nav('/ragaz', { replace: true }) }
 
   const total = setup ? SETUP_BEFORE + steps.length : steps.length
@@ -100,7 +117,7 @@ export default function Planner() {
     <section className="ragaz">
       <div className="parent create-steps">
         <div className="cs-top">
-          <button type="button" className="night-btn" aria-label={at > 0 ? 'Pasul anterior' : 'Înapoi'} onClick={step === 'reminders' ? done : back}>
+          <button type="button" className="night-btn" aria-label={at > 0 ? 'Pasul anterior' : 'Înapoi'} onClick={step === 'reminders' || step === 'claude' ? done : back}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
           </button>
           <div className="cs-dots" role="img" aria-label={`Pasul ${pos + 1} din ${total}`}>
@@ -140,6 +157,19 @@ export default function Planner() {
               </div>
             )}
           </div>
+        ) : step === 'claude' ? (
+          <div className="cs-body">
+            <div className="cs-q">
+              <span className="cs-kicker">Răgaz · Claude (opțional)</span>
+              <h1>Vrei și un partener de vorbă?</h1>
+              <p>Claude te poate ajuta să alegi temele sau să sortezi grijile, și poți vorbi cu el oricând. Pleacă la el doar ce trimiți tu; jurnalul nu pleacă niciodată.</p>
+            </div>
+            <div className="rg-card">
+              <div><b>Ai deja o conversație în claude.ai?</b><small>Adu un rezumat al ei, ca să nu iei totul de la capăt. Îl vezi și îl schimbi înainte de salvare.</small></div>
+              <button type="button" className="btn small" onClick={() => setImporting(true)}>Importă</button>
+            </div>
+            {importing && <ImportSheet stay onClose={() => setImporting(false)} />}
+          </div>
         ) : step === 'reminders' ? (
           <div className="cs-body">
             <div className="cs-q">
@@ -156,6 +186,17 @@ export default function Planner() {
               <h1>Temele de vineri</h1>
               <p>{plan.fridays.length ? 'Câte un exercițiu pe vineri, seara. Le poți schimba oricând.' : 'Luna asta nu mai are nicio vineri. Planifică luna următoare.'}</p>
             </div>
+            {bank.length > 0 && plan.fridays.length > 0 && (askClaude === 'confirm' ? (
+              <div className="rg-warn">
+                Pleacă la Claude intenția lunii și titlurile exercițiilor din banca ta. Nimic din jurnal.
+                <div className="rg-row-btns">
+                  <button type="button" className="btn small" onClick={propose}>Trimite</button>
+                  <button type="button" className="btn small" onClick={() => setAskClaude(undefined)}>Renunță</button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" className="link-btn" disabled={askClaude === 'busy'} onClick={() => setAskClaude('confirm')}>{askClaude === 'busy' ? 'Claude se gândește…' : 'Propune cu Claude ›'}</button>
+            ))}
             {!bank.length ? <EmptyBank onImported={imported} /> : (
               <div className="rg-fridays">
                 {plan.fridays.map((f, i) => (
@@ -176,8 +217,10 @@ export default function Planner() {
         )}
 
         <div className="cs-foot">
-          {step === 'reminders' ? (
+          {step === 'claude' ? (
             <button type="button" className="moon-btn" onClick={done}>Gata</button>
+          ) : step === 'reminders' ? (
+            <button type="button" className="moon-btn" onClick={() => setAt(at + 1)}>Mai departe <Arrow /></button>
           ) : step === 'fridays' ? (
             <button type="button" className="moon-btn" disabled={busy || !plan.intention.trim()} onClick={confirm}>{busy ? 'Se salvează…' : 'Confirmă luna'}</button>
           ) : (

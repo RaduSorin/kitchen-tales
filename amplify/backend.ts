@@ -8,6 +8,7 @@ import { family } from './functions/family/resource'
 import { timerAlarm } from './functions/timer-alarm/resource'
 import { files } from './functions/files/resource'
 import { mindPush } from './functions/mind-push/resource'
+import { mindCoach } from './functions/mind-coach/resource'
 import { FILE_PREFIXES, MIND_PREFIX } from './shared/files'
 import { IMAGE_MODEL_ID, IMAGE_MODEL_REGION, MODEL_ID } from './shared/model'
 import { JOB_PREFIX } from './shared/jobs'
@@ -15,7 +16,7 @@ import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { storage } from './storage/resource'
 
-const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover, family, timerAlarm, files, mindPush })
+const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover, family, timerAlarm, files, mindPush, mindCoach })
 
 // Invite-only: nobody can create an account from the app.
 // Family members invite each other from Settings (see functions/family).
@@ -113,6 +114,14 @@ mindFn.addToRolePolicy(new PolicyStatement({
   resources: [`arn:aws:scheduler:${mindStack.region}:${mindStack.account}:schedule/default/ktm-*`],
 }))
 mindFn.addToRolePolicy(new PolicyStatement({ actions: ['iam:PassRole'], resources: [mindSchedulerRole.roleArn] }))
+
+// Răgaz's optional Claude: the same model as the rest of the app, and the monthly message count
+// in mind/<sub>/usage.json.
+const coachFn = backend.mindCoach.resources.lambda
+coachFn.addToRolePolicy(invokeClaude)
+backend.mindCoach.addEnvironment('BUCKET_NAME', bucket.bucketName)
+coachFn.addToRolePolicy(new PolicyStatement({ actions: ['s3:GetObject', 's3:PutObject'], resources: [`${bucket.bucketArn}/${MIND_PREFIX}/*`] }))
+coachFn.addToRolePolicy(new PolicyStatement({ actions: ['s3:ListBucket'], resources: [bucket.bucketArn], conditions: { StringLike: { 's3:prefix': [`${MIND_PREFIX}/*`] } } }))
 
 // Long AI work runs in the background (async mutations, see amplify/shared/jobs.ts). A failed run
 // already tells the app why (it writes the error), so Lambda must not run it again: that would

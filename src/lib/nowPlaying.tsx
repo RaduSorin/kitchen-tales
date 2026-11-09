@@ -172,6 +172,10 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     markPlayed(s.id)
     // A story that finished keeps no place (onEnded cleared it), so it isn't shown as half-heard.
     if (cur && audio.current && !audio.current.ended) setPosition(cur.id, audio.current.currentTime)
+    // A story that follows on its own (queue, next/previous buttons) starts from the beginning,
+    // even if it was left halfway before: in a run of stories, jumping into the middle is confusing,
+    // and with the phone locked there is then no seek before it starts.
+    if (opts?.continued) setPosition(s.id, undefined)
     autoplay.current = !!opts?.autoplay
     starting.current = false
     setT(0); setDur(0); setEnded(false); setPlaying(false)

@@ -9,11 +9,15 @@ import '../../ragaz.css'
 
 const FACE = 'M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 16c1.5 1 3.5 1 5 0'
 
-/** The six-or-more-digit backup code field. */
+/**
+ * The six-or-more-digit backup code field. A text field hidden with CSS (rg-code), not a password
+ * field: on a password field iOS ignores the number pad and offers a strong password instead.
+ */
 export function CodeInput({ value, onChange, label, autoFocus }: { value: string; onChange: (v: string) => void; label: string; autoFocus?: boolean }) {
   return (
     <label className="night-field rg-code">{label}
-      <input type="password" inputMode="numeric" autoComplete="off" pattern="[0-9]*" maxLength={12} value={value} autoFocus={autoFocus}
+      <input type="text" inputMode="numeric" autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} pattern="[0-9]*" maxLength={12}
+        name="ragaz-code" data-1p-ignore data-lpignore="true" value={value} autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value.replace(/\D/g, ''))} placeholder="••••••" />
     </label>
   )

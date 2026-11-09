@@ -56,11 +56,12 @@
 .wk-card-link:active .wk-photo { transform: scale(.97); }
 .wk-photo { display: block; aspect-ratio: 1; border-radius: 16px; overflow: hidden; background: var(--surface-2); box-shadow: 0 8px 20px rgb(0 0 0 / .4); transition: transform .15s; }
 .wk-photo > * { width: 100%; height: 100%; object-fit: cover; display: block; }
-.wk-card-foot { display: grid; grid-template-columns: minmax(0, 1fr) 32px; align-items: start; gap: 2px; padding-left: 2px; }
+.wk-card-foot { display: grid; grid-template-columns: minmax(0, 1fr) 36px; align-items: start; gap: 2px; padding-left: 2px; }
 .wk-card-title { font-family: var(--f-title); font-weight: 600; font-size: .98rem; line-height: 1.2; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .wk-card-title small { display: block; font-family: var(--f-body); font-weight: 600; font-size: .78rem; color: var(--muted); margin-top: 2px; }
-.wk-more { width: 32px; height: 36px; margin-top: -6px; border: 0; border-radius: 10px; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+/* 44px to tap, drawn over the column's edge so the title keeps its width. */
+.wk-more { width: 44px; height: 44px; margin: -10px -8px 0 0; border: 0; border-radius: 10px; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
 .wk-more:active, .wk-more[aria-expanded="true"] { background: rgb(255 255 255 / .08); color: var(--text); }
 
 .wk-add { width: 100%; height: 56px; margin-top: 14px; border-radius: 16px; border: 1.5px dashed rgb(242 200 121 / .32); background: none; color: var(--accent);

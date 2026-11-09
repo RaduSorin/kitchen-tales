@@ -236,9 +236,9 @@ export default function Week() {
     return () => { delete root.dataset.weekBoard; window.removeEventListener('resize', fit); ro.disconnect() }
   }, [])
 
-  // Opened from a day on Acasă (?zi=2026-11-07): that day comes second on screen, like today does.
+  // Today comes first on screen (the past is a swipe away), or the day opened from Acasă (?zi=2026-11-07).
   const asked = new URLSearchParams(window.location.search).get('zi')
-  const pendingJump = useRef<Date | undefined>(addDays(asked && /^\d{4}-\d{2}-\d{2}$/.test(asked) ? fromKey(asked) : t, -1))
+  const pendingJump = useRef<Date | undefined>(asked && /^\d{4}-\d{2}-\d{2}$/.test(asked) ? fromKey(asked) : t)
   const colWidth = () => board.current?.querySelector<HTMLElement>('.wk-col')?.offsetWidth || 150
   /** Brings a day to the left edge (as the first of the three columns on screen). */
   const scrollToDay = useCallback((d: Date, smooth = true) => {
@@ -261,7 +261,7 @@ export default function Week() {
   }, [range])
 
   // The month in the title and the "Azi" button follow the days on screen.
-  const [first, setFirst] = useState(BEFORE - 1)
+  const [first, setFirst] = useState(BEFORE)
   useEffect(() => {
     const el = board.current
     if (!el) return
@@ -323,7 +323,7 @@ export default function Week() {
 
       {/* Away from today: a pill above the tab bar brings it back, like "Today" in Calendar. */}
       {!todayOnScreen && (
-        <button type="button" className="wk-today" onClick={() => scrollToDay(addDays(t, -1))}>
+        <button type="button" className="wk-today" onClick={() => scrollToDay(t)}>
           {todayIndex < first && <Chevron dir="left" />}Azi{todayIndex > first + 2 && <Chevron dir="right" />}
         </button>
       )}
@@ -367,7 +367,7 @@ export default function Week() {
       {picking && <RecipePicker day={picking} recipes={recipes} onClose={() => setPicking(undefined)} />}
       {calendar && (
         <MonthSheet month={shownMonth} planned={new Set(plan.map((e) => e.day))} onClose={() => setCalendar(false)}
-          onPick={(d) => { setCalendar(false); scrollToDay(addDays(d, -1)) }} />
+          onPick={(d) => { setCalendar(false); scrollToDay(d) }} />
       )}
     </section>
   )

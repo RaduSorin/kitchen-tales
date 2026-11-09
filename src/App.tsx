@@ -47,6 +47,7 @@ import StoriesHome from './pages/StoriesHome'
 const Week = page(() => import('./pages/Week'))
 const PlanWeek = page(() => import('./pages/PlanWeek'))
 const Shopping = page(() => import('./pages/Shopping'))
+const RagazTest = page(() => import('./pages/RagazTest'))
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
 import { useCookAlarms } from './lib/cookAlarms'
@@ -190,6 +191,8 @@ function Shell() {
           <Route path="/cumparaturi" element={<Shopping />} />
           <Route path="/profil" element={<Profile />} />
           <Route path="/profil/:page" element={<Profile />} />
+          {/* Răgaz technical test (Face ID unlocking an encryption key); not linked anywhere. */}
+          <Route path="/ragaz/test" element={<RagazTest />} />
           {/* Old Settings links (bookmarks, notes) */}
           <Route path="/setari" element={<Navigate to="/profil" replace />} />
           <Route path="/setari/povesti" element={<Navigate to="/profil/copil" replace />} />

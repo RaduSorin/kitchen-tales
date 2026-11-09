@@ -49,6 +49,10 @@ const PlanWeek = page(() => import('./pages/PlanWeek'))
 const Shopping = page(() => import('./pages/Shopping'))
 const RagazHome = page(() => import('./pages/ragaz/RagazHome'))
 const RagazSetup = page(() => import('./pages/ragaz/Setup'))
+const RagazPlanner = page(() => import('./pages/ragaz/Planner'))
+const RagazExercises = page(() => import('./pages/ragaz/Exercises'))
+const RagazFriday = page(() => import('./pages/ragaz/Friday'))
+const RagazJournal = page(() => import('./pages/ragaz/Journal'))
 const RagazGate = page(() => import('./pages/ragaz/Unlock').then((m) => ({ default: m.RagazGate })))
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
@@ -79,7 +83,8 @@ function NightArea() {
 function backFallback(pathname: string) {
   if (/^\/retete\/[^/]+$/.test(pathname) && pathname !== '/retete/noua') return '/retete'
   if (pathname.startsWith('/profil/')) return '/profil'
-  if (pathname === '/ragaz') return '/profil/ragaz'
+  if (pathname === '/ragaz') return '/'
+  if (pathname.startsWith('/ragaz/') && pathname !== '/ragaz/incepe' && pathname !== '/ragaz/planifica') return '/ragaz'
   return undefined
 }
 
@@ -198,6 +203,10 @@ function Shell() {
           <Route path="/ragaz/incepe" element={<RagazSetup />} />
           <Route element={<RagazGate />}>
             <Route path="/ragaz" element={<RagazHome />} />
+            <Route path="/ragaz/planifica" element={<RagazPlanner />} />
+            <Route path="/ragaz/exercitii" element={<RagazExercises />} />
+            <Route path="/ragaz/vineri/:date" element={<RagazFriday />} />
+            <Route path="/ragaz/jurnal" element={<RagazJournal />} />
           </Route>
           {/* Old Settings links (bookmarks, notes) */}
           <Route path="/setari" element={<Navigate to="/profil" replace />} />

@@ -25,7 +25,7 @@
 .rg-card b { font-weight: 800; }
 .rg-card small { color: var(--muted); font-size: .88rem; line-height: 1.35; }
 .rg-chip { font-size: .8rem; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 4px 10px; flex: none; }
-.rg-code input { font-size: 1.3rem; letter-spacing: .3em; font-variant-numeric: tabular-nums; }
+.rg-code input { -webkit-text-security: disc; text-security: disc; font-size: 1.3rem; letter-spacing: .3em; font-variant-numeric: tabular-nums; }
 
 .rg-unlock { display: grid; justify-items: center; text-align: center; gap: 14px; padding: 48px 4px 24px; max-width: 420px; margin: 0 auto; }
 .rg-unlock h1 { margin: 0; font-family: var(--f-title, Georgia, serif); font-weight: 600; font-size: 1.9rem; line-height: 1.1; }
@@ -49,3 +49,67 @@
 .rg-intro { margin: 0; line-height: 1.45; }
 .rg-form { display: grid; gap: 10px; width: 100%; }
 .rg-stop { flex-direction: column; align-items: flex-start; }
+
+/* Pages (PR 2): the month, the bank, Fridays, the journal */
+.rg-page { display: grid; gap: 16px; padding-bottom: 40px; }
+.rg-sub { margin: 0; color: var(--muted); line-height: 1.4; }
+.rg-sub a { color: var(--accent); font-weight: 700; }
+.rg-sec { display: grid; gap: 10px; }
+.rg-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rg-small { padding: 10px 18px; font-size: .95rem; }
+.rg-intent { color: var(--text); text-decoration: none; }
+.rg-intent p.on { color: var(--text); }
+.rg-intent small { color: var(--muted); font-size: .88rem; }
+.rg-intent .moon-btn { margin-top: 8px; }
+.rg-intent.small { padding: 12px 16px; border-radius: 18px; }
+.rg-intent.small p { font-size: 1.05rem; color: var(--text); }
+
+.rg-fri { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 14px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); color: var(--text); text-decoration: none; min-height: 52px; }
+.rg-fri-date { color: var(--muted); font-size: .9rem; font-weight: 600; }
+.rg-fri-title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rg-fri.next { border: 2px solid var(--accent); background: var(--accent-soft); }
+.rg-fri.next .rg-fri-date { color: var(--accent); }
+.rg-fri.past { opacity: .7; }
+.rg-fri-done { color: var(--accent); }
+.rg-tile { display: grid; gap: 2px; padding: 14px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); color: var(--text); text-decoration: none; min-height: 72px; align-content: center; }
+.rg-tile small { color: var(--muted); font-size: .85rem; }
+.rg-link { color: var(--text); text-decoration: none; }
+.rg-link > span { color: var(--accent); font-size: 1.4rem; }
+
+.rg-group { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+.rg-group-name { display: block; padding: 10px 16px 0; color: var(--accent); font-size: .74rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.rg-ex { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; min-height: 52px; border: 0; border-bottom: 1px solid var(--border); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.rg-ex:last-child { border-bottom: 0; }
+.rg-ex > svg { color: var(--muted); flex: none; }
+.rg-ex small { display: block; color: var(--muted); font-size: .82rem; }
+.rg-tag { margin-left: 8px; font-size: .7rem; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; vertical-align: 2px; }
+.rg-ic-btn { width: 36px; height: 36px; border-radius: 18px; border: 0; background: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
+.rg-empty { display: grid; gap: 10px; }
+.rg-empty p { margin: 0; color: var(--muted); line-height: 1.4; }
+
+.rg-fridays { display: grid; gap: 10px; }
+.rg-friday-pick { display: grid; gap: 6px; font-weight: 700; }
+.rg-friday-pick select { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 500; }
+
+.rg-steps { display: grid; gap: 10px; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); line-height: 1.5; }
+.rg-steps p { margin: 0; white-space: pre-line; }
+.rg-note { display: grid; gap: 14px; }
+.rg-scale { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; }
+.rg-scale button { min-height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 700; padding: 0; cursor: pointer; }
+.rg-scale button[aria-checked=true] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.rg-entry { display: grid; gap: 4px; width: 100%; padding: 14px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.rg-entry small { color: var(--muted); font-size: .85rem; font-weight: 600; }
+.rg-entry-line { color: var(--accent); font-weight: 700; font-size: .9rem; }
+.rg-entry p { margin: 0; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+
+/* Home: the Răgaz card (components/MonthCard.tsx) */
+.month-card { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; margin: 4px 0 8px; padding: 12px 14px; border-radius: 20px; text-decoration: none; color: #f4efe6;
+  background: linear-gradient(135deg, rgb(116 66 150 / .5), rgb(190 122 62 / .3)); border: 1px solid rgb(242 200 121 / .25); }
+.month-card-ic { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; background: rgb(242 200 121 / .18); color: #f2c879; }
+.month-card-text { display: grid; gap: 2px; min-width: 0; }
+.month-card-text small { color: #f2c879; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.month-card-text b { font-weight: 700; line-height: 1.25; }
+.month-card-go { color: #f2c879; font-size: 1.5rem; }
+:root .ragaz h2.rg-label { margin: 4px 0 0; font-family: var(--f-body); font-weight: 800; font-size: .74rem; letter-spacing: .12em; }
+.rg-card .rg-row-btns { flex-wrap: nowrap; flex: none; }

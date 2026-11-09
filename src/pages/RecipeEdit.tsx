@@ -107,22 +107,33 @@ function StepItem({ n, step, total, drag, onChange, onMove, onRemove, onGrab }: 
       <div className="edit-step-main">
         <textarea id={`step-${step.uid}`} aria-label={`Pasul ${n}`} rows={Math.max(2, Math.ceil(step.text.length / 32))} value={step.text} placeholder="Ce faci la acest pas?"
           onChange={(e) => onChange({ ...step, text: e.target.value })} />
-        <div className="edit-step-meta">
-          {secs > 0 && <span className="timer-chip">Cronometru {formatMinutes(Math.max(1, Math.round(secs / 60)))}</span>}
-          <button type="button" className="link-btn danger-text" onClick={onRemove}>Șterge pasul</button>
-        </div>
+        {secs > 0 && (
+          <div className="edit-step-meta">
+            <span className="timer-chip">Cronometru {formatMinutes(Math.max(1, Math.round(secs / 60)))}</span>
+          </div>
+        )}
       </div>
-      {url ? (
-        <span className="step-photo-thumb">
-          <img src={url} alt="" />
-          <button type="button" aria-label={`Scoate poza de la pasul ${n}`} onClick={() => onChange({ ...step, photoKey: undefined, photoBlob: undefined })}>×</button>
-        </span>
-      ) : (
-        <label className="step-photo-add">
-          + poză
-          <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange({ ...step, photoBlob: f }) }} />
-        </label>
-      )}
+      {/* The step's photo and, under it, a quiet bin: a red "Șterge pasul" under every step was loud. */}
+      <div className="edit-step-aside">
+        {url ? (
+          <span className="step-photo-thumb">
+            <img src={url} alt="" />
+            <button type="button" aria-label={`Scoate poza de la pasul ${n}`} onClick={() => onChange({ ...step, photoKey: undefined, photoBlob: undefined })}>×</button>
+          </span>
+        ) : (
+          <label className="step-photo-add" aria-label={`Adaugă o poză la pasul ${n}`} title="Adaugă o poză">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 8h3l2-2.5h6L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.2" />
+            </svg>
+            <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange({ ...step, photoBlob: f }) }} />
+          </label>
+        )}
+        <button type="button" className="step-remove" aria-label={`Șterge pasul ${n}`} title="Șterge pasul" onClick={onRemove}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" />
+          </svg>
+        </button>
+      </div>
     </li>
   )
 }

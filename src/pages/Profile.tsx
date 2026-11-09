@@ -516,7 +516,7 @@ function ProfileHome() {
           {admin && <Row to="/profil/invita" icon="mail" label="Invită pe cineva" />}
           <Row to="/profil/spatiu" icon="users" label="Numele spațiului" value={mySpaceName()} />
           <Row to="/profil/partajare" icon="share" label="Ce partajez"
-            value={counts ? `${plural(counts.stories, 'poveste', 'povești')} · ${plural(counts.recipes, 'rețetă', 'rețete')}` : ''} />
+            value={counts ? (counts.stories + counts.recipes ? String(counts.stories + counts.recipes) : 'nimic') : ''} />
         </div>
       </div>
 
@@ -532,7 +532,7 @@ function ProfileHome() {
       <div className="set-group">
         <h2 className="set-label">Pe acest telefon</h2>
         <div className="set-box">
-          <Row to="/profil/offline" icon="down" label="Povești fără internet" value={saved ? `${saved.count} · ${fmtSize(saved.bytes)}` : ''} />
+          <Row to="/profil/offline" icon="down" label="Povești fără internet" value={saved ? (saved.count ? `${saved.count} · ${fmtSize(saved.bytes)}` : 'niciuna') : ''} />
           <Row to="/profil/raft" icon="books" label="Clic pe raft" value={shelfClick ? 'Pornit' : 'Oprit'} />
         </div>
       </div>

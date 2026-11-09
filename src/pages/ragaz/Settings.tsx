@@ -9,6 +9,8 @@ import {
 } from '../../lib/mind/vault'
 import { backupNow, cloudBackupInfo, deleteCloudBackup, exportBackup, parseBackup, restoreBackup, type Backup } from '../../lib/mind/backup'
 import { CodeInput, UnlockHeader, UnlockPanel } from './Unlock'
+import Reminders from './Reminders'
+import { remindersOff, removeThisPhone } from '../../lib/mind/push'
 import '../../ragaz.css'
 
 const when = (ms?: number) => {
@@ -121,8 +123,7 @@ export default function RagazSettings() {
     if (on) await backupNow()
   }, on ? 'Copia criptată e pornită.' : 'Copia din cloud e oprită. Ce scrii rămâne doar pe acest telefon.')
   const turnOff = (removeCloud: boolean) => run('stop', async () => {
-    if (removeCloud) await deleteCloudBackup()
-    else await backupNow()
+    if (removeCloud) { await deleteCloudBackup(); await remindersOff() } else { await backupNow(); await removeThisPhone() }
     await deleteVault()
     nav('/profil')
   }, removeCloud ? 'Răgaz e oprit și datele sunt șterse.' : 'Răgaz e oprit pe acest telefon. Copia criptată rămâne în cloud.')
@@ -152,6 +153,9 @@ export default function RagazSettings() {
           </div>
         </div>
       </div>
+
+      <h2 className="set-label">Notificări</h2>
+      <Reminders />
 
       <div className="set-group">
         <h2 className="set-label">Copii de siguranță</h2>

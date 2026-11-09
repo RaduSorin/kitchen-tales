@@ -40,14 +40,14 @@ export function vapidAuth(endpoint: string, publicKey: string, privateKey: strin
 }
 
 /** Sends one notification. Returns the push service's HTTP status (404/410: the subscription is gone). */
-export async function sendPush(sub: PushSubscriptionJson, data: object, keys: { publicKey: string; privateKey: string; subject: string }) {
+export async function sendPush(sub: PushSubscriptionJson, data: object, keys: { publicKey: string; privateKey: string; subject: string }, ttlSeconds = 600) {
   const res = await fetch(sub.endpoint, {
     method: 'POST',
     headers: {
       Authorization: vapidAuth(sub.endpoint, keys.publicKey, keys.privateKey, keys.subject),
       'Content-Encoding': 'aes128gcm',
       'Content-Type': 'application/octet-stream',
-      TTL: '600',
+      TTL: String(ttlSeconds),
       Urgency: 'high',
     },
     body: encrypt(Buffer.from(JSON.stringify(data)), sub),

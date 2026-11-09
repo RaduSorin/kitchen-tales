@@ -2,9 +2,9 @@
    default; the stories side (data-area="night", see lib/area.ts) changes a few of them. */
 :root {
   --bg: #13100e; --surface: #1e1a17; --surface-2: #2a2521; --text: #f4efe6; --muted: #a89f95; --border: rgb(255 255 255 / .09);
-  --accent: #f2c879; --accent-soft: rgb(242 200 121 / .15); --on-accent: #1a1410; --gold: #f2c879; --danger: #ff8f7a;
-  --night: #f2c879; --night-soft: rgb(255 255 255 / .08); --moon: #f2c879; --moon-ink: #f2c879; --on-text: #1a1410;
-  --track: rgb(255 255 255 / .2); --knob: #f4efe6;
+  --accent: #f2c879; --accent-hi: #ffe3a3; --accent-soft: rgb(242 200 121 / .15); --on-accent: #1a1410; --gold: var(--accent); --danger: #ff8f7a;
+  --night: var(--accent); --night-soft: rgb(255 255 255 / .08); --moon: var(--accent); --moon-ink: var(--accent); --on-text: var(--on-accent);
+  --track: rgb(255 255 255 / .2); --knob: var(--text);
   --f-display: 'Fraunces', Georgia, serif; --f-title: 'Fraunces', Georgia, serif;
   --f-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --f-kids: 'Baloo 2', 'Figtree', system-ui, sans-serif;

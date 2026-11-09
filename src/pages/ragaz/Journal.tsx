@@ -45,7 +45,9 @@ export default function Journal() {
       {open && (
         <Sheet title={open.title ?? dayName(open.date)} onClose={close}>
           <div className="settings ragaz rg-form">
-            <NoteForm note={open} onSave={(n) => saveNote(n).then(() => { close(); load() }, (e: Error) => showToast(e.message))} />
+            {open.kind === 'worry' || open.kind === 'reflection'
+              ? <div className="rg-steps"><p>{open.text}</p></div>
+              : <NoteForm note={open} onSave={(n) => saveNote(n).then(() => { close(); load() }, (e: Error) => showToast(e.message))} />}
             {notes.some((n) => n.id === open.id) && (confirmDel ? (
               <span className="confirm">Ștergi nota?
                 <button type="button" className="btn danger small" onClick={() => removeNote(open.id).then(() => { close(); load() })}>Da, șterge</button>

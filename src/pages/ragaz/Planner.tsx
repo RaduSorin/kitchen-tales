@@ -145,7 +145,7 @@ export default function Planner() {
             <div className="cs-q">
               <span className="cs-kicker">Răgaz · notificări</span>
               <h1>Să-ți amintim?</h1>
-              <p>Vineri seara, o notificare cu tema zilei. Poți schimba ora sau le poți opri oricând din Profil › Răgaz.</p>
+              <p>Vineri seara, tema zilei. Luni dimineața, lista de griji. Le poți schimba sau opri oricând din Profil › Răgaz.</p>
             </div>
             <Reminders compact />
           </div>

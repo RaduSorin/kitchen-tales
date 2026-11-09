@@ -53,6 +53,8 @@ const RagazPlanner = page(() => import('./pages/ragaz/Planner'))
 const RagazExercises = page(() => import('./pages/ragaz/Exercises'))
 const RagazFriday = page(() => import('./pages/ragaz/Friday'))
 const RagazJournal = page(() => import('./pages/ragaz/Journal'))
+const RagazWorry = page(() => import('./pages/ragaz/Worry'))
+const RagazReflection = page(() => import('./pages/ragaz/Reflection'))
 const RagazGate = page(() => import('./pages/ragaz/Unlock').then((m) => ({ default: m.RagazGate })))
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
@@ -84,7 +86,7 @@ function backFallback(pathname: string) {
   if (/^\/retete\/[^/]+$/.test(pathname) && pathname !== '/retete/noua') return '/retete'
   if (pathname.startsWith('/profil/')) return '/profil'
   if (pathname === '/ragaz') return '/'
-  if (pathname.startsWith('/ragaz/') && pathname !== '/ragaz/incepe' && pathname !== '/ragaz/planifica') return '/ragaz'
+  if (pathname.startsWith('/ragaz/') && pathname !== '/ragaz/incepe' && pathname !== '/ragaz/planifica' && pathname !== '/ragaz/griji') return '/ragaz'
   return undefined
 }
 
@@ -207,6 +209,8 @@ function Shell() {
             <Route path="/ragaz/exercitii" element={<RagazExercises />} />
             <Route path="/ragaz/vineri/:date" element={<RagazFriday />} />
             <Route path="/ragaz/jurnal" element={<RagazJournal />} />
+            <Route path="/ragaz/griji" element={<RagazWorry />} />
+            <Route path="/ragaz/reflectie" element={<RagazReflection />} />
           </Route>
           {/* Old Settings links (bookmarks, notes) */}
           <Route path="/setari" element={<Navigate to="/profil" replace />} />

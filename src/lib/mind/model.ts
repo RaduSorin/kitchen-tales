@@ -45,6 +45,22 @@ export type Note = {
   fit?: 'da' | 'partial' | 'nu'
   text: string
   createdAt: number
+  /** What the note is: after a Friday exercise (default when exerciseId is set), free, the worry list, the monthly reflection. */
+  kind?: 'friday' | 'free' | 'worry' | 'reflection'
+  /** The worry list's parts (kind "worry"). */
+  worry?: Worry
+  /** The reflection's answers, by question (kind "reflection"). */
+  answers?: Record<string, string>
+}
+
+/** The worry list: what is stone (not up to me), what is clay (up to me, biggest first), one small step, and the Good Parent's answers. */
+export type Worry = {
+  stone: string[]
+  clay: string[]
+  /** The biggest clay, broken into small steps. */
+  breakdown?: string[]
+  step?: string
+  parent?: { what?: string; hardest?: string; need?: string }
 }
 
 // The vault's kinds (vault.ts keeps one encrypted record per item).

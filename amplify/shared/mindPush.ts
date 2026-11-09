@@ -8,9 +8,8 @@ export type Rhythms = Record<Rhythm, RhythmSetting>
 export const DEFAULT_RHYTHMS: Rhythms = {
   // The week's theme, Friday evening.
   friday: { on: true, time: '20:00' },
-  // The worry list (and, the first Monday of the month, the monthly reflection). Its screens come
-  // with the next step of the plan, so it starts off.
-  monday: { on: false, time: '08:30' },
+  // The worry list (and, the first Monday of the month, the monthly reflection).
+  monday: { on: true, time: '08:30' },
 }
 
 export const RHYTHM_DAY: Record<Rhythm, string> = { friday: 'FRI', monday: 'MON' }

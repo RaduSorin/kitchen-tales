@@ -12,7 +12,7 @@ const PROBLEM = {
 }
 
 /**
- * The reminders: Friday's theme (the worry list on Monday comes with its screens). Used in the
+ * The reminders: Friday's theme and Monday morning (worry list, or the monthly reflection). Used in the
  * setup's last card and in Profile › Răgaz.
  */
 export default function Reminders({ compact }: { compact?: boolean }) {
@@ -48,6 +48,7 @@ export default function Reminders({ compact }: { compact?: boolean }) {
   }
 
   const fri = draft.friday
+  const mon = draft.monday
   return (
     <div className={compact ? 'rg-reminders' : 'set-group'}>
       <div className={compact ? 'rg-group' : 'set-box'}>
@@ -61,6 +62,16 @@ export default function Reminders({ compact }: { compact?: boolean }) {
             <input type="time" className="rg-time" value={fri.time} disabled={!!busy} onChange={(e) => e.target.value && change({ ...draft, friday: { ...fri, time: e.target.value } })} />
           </label>
         )}
+        <label className="set-row">
+          <span>Luni dimineața<small className="set-sub">Lista de griji; în prima luni din lună, reflecția lunii</small></span>
+          <input type="checkbox" className="switch" checked={mon.on} disabled={!!busy} onChange={(e) => change({ ...draft, monday: { ...mon, on: e.target.checked } })} />
+        </label>
+        {mon.on && (
+          <label className="set-row">
+            <span>Ora</span>
+            <input type="time" className="rg-time" value={mon.time} disabled={!!busy} onChange={(e) => e.target.value && change({ ...draft, monday: { ...mon, time: e.target.value } })} />
+          </label>
+        )}
         {!compact && on && (
           <div className="set-row">
             <span>Încearcă acum<small className="set-sub">Trimite o notificare de test pe telefoanele tale</small></span>
@@ -69,7 +80,7 @@ export default function Reminders({ compact }: { compact?: boolean }) {
         )}
       </div>
       {problem ? <p className="set-hint">{PROBLEM[problem]}</p> : !on && (
-        <button type="button" className={compact ? 'btn rg-wide' : 'btn primary'} disabled={!!busy || !fri.on} onClick={enable}>{busy === 'on' ? 'Se pornesc…' : 'Pornește notificările pe acest telefon'}</button>
+        <button type="button" className={compact ? 'btn rg-wide' : 'btn primary'} disabled={!!busy || (!fri.on && !mon.on)} onClick={enable}>{busy === 'on' ? 'Se pornesc…' : 'Pornește notificările pe acest telefon'}</button>
       )}
       {on && <p className="set-hint">Pornite pe acest telefon. Pe un telefon nou le pornești din nou de aici.</p>}
     </div>

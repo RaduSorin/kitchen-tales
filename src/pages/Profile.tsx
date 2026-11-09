@@ -534,6 +534,8 @@ function ProfileHome() {
         <div className="set-box">
           <Row to="/profil/offline" icon="down" label="Povești fără internet" value={saved ? `${saved.count} · ${fmtSize(saved.bytes)}` : ''} />
           <Row to="/profil/raft" icon="books" label="Clic pe raft" value={shelfClick ? 'Pornit' : 'Oprit'} />
+          {/* Temporary: the Răgaz Face ID test has to run inside the Home Screen app, which has no address bar. */}
+          <Row to="/ragaz/test" icon="lock" label="Răgaz · test Face ID" sub="temporar" />
         </div>
       </div>
 

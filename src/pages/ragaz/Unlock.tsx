@@ -39,11 +39,14 @@ export function UnlockPanel({ hasFaceId, faceId, code, title = 'Răgaz e blocat'
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [wrong, setWrong] = useState(0)
+  const [hint, setHint] = useState(false)
 
   const face = () => {
     setError('')
     setBusy(true)
-    faceId().catch((e: Error) => { if (!cancelled(e)) setError(e.message); else setError('') }).finally(() => setBusy(false))
+    setHint(false)
+    // A cancel and a phone without this passkey look the same to the page: offer the code either way.
+    faceId().catch((e: Error) => { if (!cancelled(e)) setError(e.message); else setHint(true) }).finally(() => setBusy(false))
   }
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -77,6 +80,7 @@ export function UnlockPanel({ hasFaceId, faceId, code, title = 'Răgaz e blocat'
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={FACE} /></svg>
             {busy ? 'Se deschide…' : 'Deschide cu Face ID'}
           </button>
+          {hint && <p className="set-hint">Dacă Face ID nu a apărut, pe acest telefon poate lipsi cheia lui. Deschide cu codul, apoi îl pornești din nou din Setări Răgaz.</p>}
           <button type="button" className="link-btn rg-alt" onClick={() => { setUseCode(true); setError('') }}>Folosește codul</button>
         </div>
       ) : (

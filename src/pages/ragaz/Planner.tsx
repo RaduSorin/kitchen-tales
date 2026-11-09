@@ -52,7 +52,8 @@ function EmptyBank({ onImported }: { onImported: () => void }) {
 export default function Planner() {
   const [params] = useSearchParams()
   const setup = params.has('setup')
-  const id = params.get('luna') ?? thisMonth()
+  const asked = params.get('luna')
+  const id = asked && /^\d{4}-(0[1-9]|1[0-2])$/.test(asked) ? asked : thisMonth()
   const nav = useNavigate()
   const leave = useBack('/ragaz')
   const [at, setAt] = useState(0)
@@ -131,10 +132,11 @@ export default function Planner() {
             <div className="cs-q">
               <span className="cs-kicker">{kicker}</span>
               <h1>Intenția lunii</h1>
-              <p>O propoziție despre ce vrei să-ți dai luna asta. Stă sus pe pagina Răgaz și pe fiecare exercițiu de vineri.</p>
+              <p>O propoziție despre ce vrei să-ți dai {id === thisMonth() ? 'luna asta' : `în ${monthName(id)}`}. Stă sus pe pagina Răgaz și pe fiecare exercițiu de vineri.</p>
             </div>
             <textarea className="cs-text" rows={3} maxLength={200} aria-label="Intenția lunii" value={plan.intention}
               onChange={(e) => set({ intention: e.target.value })} placeholder="Ex.: Să am grijă de energia mea, nu doar de a celorlalți." />
+            {plan.intention.length >= 150 && <small className={`rg-count${plan.intention.length >= 200 ? ' full' : ''}`}>{plan.intention.length} / 200{plan.intention.length >= 200 ? ' · o propoziție scurtă ajunge' : ''}</small>}
           </div>
         ) : step === 'success' ? (
           <div className="cs-body">

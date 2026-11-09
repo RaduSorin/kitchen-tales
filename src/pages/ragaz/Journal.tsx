@@ -19,7 +19,7 @@ export default function Journal() {
   if (!notes) return <Loading />
 
   const months = [...new Set(notes.map((n) => n.month))]
-  const write = () => setOpen({ id: crypto.randomUUID(), date: today(), month: thisMonth(), text: '', createdAt: Date.now() })
+  const write = () => setOpen({ id: crypto.randomUUID(), kind: 'free', date: today(), month: thisMonth(), text: '', createdAt: Date.now() })
   const close = () => { setOpen(undefined); setConfirmDel(false) }
   return (
     <section className="ragaz rg-page">
@@ -47,7 +47,7 @@ export default function Journal() {
           <div className="settings ragaz rg-form">
             {open.kind === 'worry' || open.kind === 'reflection'
               ? <div className="rg-steps"><p>{open.text}</p></div>
-              : <NoteForm note={open} onSave={(n) => saveNote(n).then(() => { close(); load() }, (e: Error) => showToast(e.message))} />}
+              : <NoteForm note={open} scales={open.id.startsWith('fri-') || open.before !== undefined || open.after !== undefined} onSave={(n) => saveNote(n).then(() => { close(); load() }, (e: Error) => showToast(e.message))} />}
             {notes.some((n) => n.id === open.id) && (confirmDel ? (
               <span className="confirm">Ștergi nota?
                 <button type="button" className="btn danger small" onClick={() => removeNote(open.id).then(() => { close(); load() })}>Da, șterge</button>

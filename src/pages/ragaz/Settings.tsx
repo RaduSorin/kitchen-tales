@@ -136,10 +136,10 @@ export default function RagazSettings() {
         <h2 className="set-label">Deschidere</h2>
         <div className="set-box">
           <div className="set-row">
-            <span>Face ID<small className="set-sub">{faceOn ? 'Răgaz se deschide cu fața ta' : faceIdPossible ? 'Oprit: Răgaz se deschide cu codul' : 'Indisponibil pe acest telefon'}</small></span>
-            {faceOn
+            <span>Face ID<small className="set-sub">{faceOn ? (faceIdPossible ? 'Pornit. Nu merge pe acest telefon? Pornește-l din nou.' : 'Răgaz se deschide cu fața ta') : faceIdPossible ? 'Oprit: Răgaz se deschide cu codul' : 'Indisponibil pe acest telefon'}</small></span>
+            {faceOn && !faceIdPossible
               ? <span className="set-value">Pornit</span>
-              : faceIdPossible && <button type="button" className="btn small" disabled={!!busy} onClick={addFaceId}>{busy === 'face' ? '…' : 'Pornește'}</button>}
+              : faceIdPossible && <button type="button" className="btn small" disabled={!!busy} onClick={addFaceId}>{busy === 'face' ? '…' : faceOn ? 'Din nou' : 'Pornește'}</button>}
           </div>
           <div className="set-row">
             {editCode ? <ChangeCode onDone={() => setEditCode(false)} /> : <>

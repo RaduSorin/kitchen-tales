@@ -1,7 +1,7 @@
 // Răgaz's data, read and written through the encrypted vault (vault.ts). Every call needs the
 // vault open; the pages sit behind the unlock gate.
 
-import { getItem, listItems, putItem, removeItem } from './vault'
+import { getItem, getLocal, listItems, putItem, removeItem, setLocal } from './vault'
 import { KIND, type Exercise, type MonthPlan, type Note } from './model'
 
 const byTitle = (a: Exercise, b: Exercise) => a.title.localeCompare(b.title, 'ro')
@@ -22,7 +22,17 @@ export const removeExercise = (id: string) => removeItem(KIND.exercise, id)
 // ---- months ----
 
 export const getMonth = (id: string) => getItem<MonthPlan>(KIND.month, id)
-export const saveMonth = (m: MonthPlan) => putItem(KIND.month, m.id, { ...m, savedAt: Date.now() })
+export async function saveMonth(m: MonthPlan) {
+  await putItem(KIND.month, m.id, { ...m, savedAt: Date.now() })
+  await rememberPlanned([m])
+}
+
+/** Notes on this phone which months are planned and which Fridays have a theme (for the Home card). */
+export async function rememberPlanned(months: MonthPlan[]) {
+  const planned = { ...(await getLocal()).planned }
+  for (const m of months) planned[m.id] = m.fridays.filter((f) => f.exerciseId || f.title).map((f) => f.date)
+  await setLocal({ planned })
+}
 export async function listMonths() {
   return (await listItems<MonthPlan>(KIND.month)).map((i) => i.value).sort((a, b) => b.id.localeCompare(a.id))
 }

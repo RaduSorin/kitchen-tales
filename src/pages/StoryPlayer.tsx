@@ -80,7 +80,15 @@ function StoryPlayer() {
   const autoplay = !!navState?.autoplay
   const from = navState?.from
   const { load } = player
-  useEffect(() => { if (s) load(s, { autoplay, from }) }, [s, load, autoplay, from])
+  // Autoplay only once per story opened: later updates (a new cover, a favourite) must not
+  // start it again after it was paused.
+  const autoplayed = useRef<string>(undefined)
+  useEffect(() => {
+    if (!s) return
+    const go = autoplay && autoplayed.current !== s.id
+    if (go) autoplayed.current = s.id
+    load(s, { autoplay: go, from })
+  }, [s, load, autoplay, from])
   const toggleFavorite = async () => {
     if (!s) return
     const favorite = !s.favorite

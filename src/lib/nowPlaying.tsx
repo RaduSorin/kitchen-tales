@@ -165,7 +165,13 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const load = useCallback((s: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom }) => {
     const cur = storyRef.current
     if (!opts?.continued) setFrom(opts?.from ?? 'folder')
-    if (cur?.id === s.id) { setStory(s); return }
+    if (cur?.id === s.id) {
+      setStory(s)
+      // Already loaded but paused (e.g. "Continuă" on the story in the mini player): play it now.
+      const a = audio.current
+      if (opts?.autoplay && a && a.paused && a.src && !isKidLocked()) a.play().catch(() => {})
+      return
+    }
     // A story you pick yourself starts a new run; one that follows on its own continues it.
     if (!opts?.continued) { played.current = 0; heard.current = new Set() }
     heard.current.add(s.id)

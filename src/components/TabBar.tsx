@@ -61,8 +61,16 @@ const SOLID: Record<string, ReactNode> = {
   [SEARCH]: <path d={SEARCH} strokeWidth="2.8" />,
 }
 
-/** Hidden in full-screen cooking and on the story player, which has its own big controls. */
-const hidesTabBar = (path: string) => path.endsWith('/gateste') || isPlayerPage(path)
+/**
+ * Hidden in full-screen cooking, on the story player (it has its own big controls) and while
+ * adding or editing something: there the page's own button takes the bottom of the screen, and
+ * the tabs would only invite leaving halfway. The "Poveste nouă" choice itself is a tab, so the
+ * bar goes only once a way to add is picked (?mod=).
+ */
+const hidesTabBar = (path: string, search: string) =>
+  path.endsWith('/gateste') || isPlayerPage(path)
+  || path === '/retete/noua' || path.endsWith('/editeaza') || path === '/saptamana/planifica'
+  || (path === '/povesti/adauga' && new URLSearchParams(search).has('mod'))
 
 
 /**
@@ -187,7 +195,7 @@ function useTypingFlag() {
 export default function TabBar() {
   const { pathname, search } = useLocation()
   const { bar, bubble } = useTabBubble(pathname + search)
-  const hidden = hidesTabBar(pathname)
+  const hidden = hidesTabBar(pathname, search)
   const stories = useArea() === 'night'
   const shopping = useSyncedList(shoppingStore)
   const toBuy = mergeShopping(shopping.filter((s) => !s.checked)).length

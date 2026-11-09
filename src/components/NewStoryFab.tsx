@@ -13,16 +13,16 @@ export const ADD_OPTIONS: { mode: AddMode; art: AddArtKind; text: string }[] = [
 ]
 
 /**
- * Phones: the gold "+" floating above the stories tab bar (like "+" on the recipes page). It opens
- * a sheet from the bottom with the three ways to add a story, so the "Poveste nouă" page is skipped.
- * Opened inside one of our folders, the new story goes into that folder.
+ * Phones: the round gold "+" in the header of one of our folders (elsewhere the "Adaugă" tab adds).
+ * It opens a sheet from the bottom with the three ways to add a story, and the new story goes into
+ * that folder.
  */
-export default function NewStoryFab({ folder }: { folder?: string }) {
+export default function NewStoryFab({ folder, className = 'head-add' }: { folder?: string; className?: string }) {
   const [open, setOpen] = useState(false)
   const href = (m: AddMode) => `/povesti/adauga?mod=${m}${folder ? `&folder=${encodeURIComponent(folder)}` : ''}`
   return (
     <>
-      <button type="button" className="fab-new" aria-label="Adaugă o poveste" title="Adaugă o poveste" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <button type="button" className={className} aria-label="Adaugă o poveste" title="Adaugă o poveste" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
       </button>
       {open && (

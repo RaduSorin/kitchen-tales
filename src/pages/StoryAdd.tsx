@@ -104,10 +104,9 @@ export default function StoryAdd() {
   // The shelf folder for the new story: opened from a folder, it goes there; '' = by how it was made.
   const [collection, setCollection] = useState(params.get('folder') ?? '')
   const [folderNames, setFolderNames] = useState(() => cachedFolders().filter((f) => f.mine !== false).map((f) => f.name))
-  // Who sees the new story: what the parent picked, else the folder's sharing, else every account.
+  // Who sees the new story: only our space, unless the parent turns sharing on (whatever the folder).
   const [shareChoice, setShareChoice] = useState<boolean>()
-  const folderShared = collection ? cachedFolders().find((f) => f.mine !== false && f.name === collection)?.shared : undefined
-  const share = shareChoice ?? folderShared ?? true
+  const share = shareChoice ?? false
   useEffect(() => {
     Promise.all([listStories(), listFolders()])
       // Only our own folders: a folder another space shared can't take new stories.
@@ -500,7 +499,7 @@ export default function StoryAdd() {
               {folderNames.length > 0 && (
                 <label className="set-row">
                   <span>Folderul</span>
-                  <select value={collection} onChange={(e) => { setCollection(e.target.value); setShareChoice(undefined) }}>
+                  <select value={collection} onChange={(e) => setCollection(e.target.value)}>
                     <option value="">Automat</option>
                     {[...new Set([...folderNames, ...(collection ? [collection] : [])])].sort((a, b) => a.localeCompare(b, 'ro')).map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>

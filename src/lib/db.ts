@@ -294,9 +294,8 @@ export { getAudio as getOfflineAudio, removeAudio as removeOfflineAudio }
 
 export async function createStory(story: Omit<Story, 'id' | 'createdAt'>) {
   const { mine: _m, shared, spaceName: _n, ...s } = story
-  // A new story starts shared with every account, unless asked otherwise or its folder is private.
-  const folder = s.collection ? cachedFolders().find((f) => f.mine !== false && f.name === s.collection) : undefined
-  const share = shared ?? folder?.shared ?? true
+  // A new story stays in our space unless sharing was asked for.
+  const share = shared ?? false
   const res = await client.models.Story.create({
     ...s, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(share), sharedDirect: share, spaceName: mySpaceName(),
   })

@@ -207,7 +207,7 @@ export default function StoriesHome() {
         slides={slides.map((x): VitrineSlide => ({
           id: x.story.id, art: <StoryCover story={x.story} />, blur: <StoryCover story={x.story} />,
           kicker: x.kicker, title: x.story.title, href: `/povesti/${x.story.id}`, meta: x.meta, progress: x.progress,
-          action: x.action, actionTo: `/povesti/${x.story.id}`, actionState: { fromFolder: true },
+          action: x.action, actionTo: `/povesti/${x.story.id}`, actionState: { fromFolder: true, autoplay: true },
           side: (
             <button type="button" className={isFav(x.story) ? 'vt-round on' : 'vt-round'} aria-pressed={isFav(x.story)}
               aria-label={isFav(x.story) ? 'Scoate de la favorite' : 'Adaugă la favorite'} onClick={() => toggle(x.story)}>

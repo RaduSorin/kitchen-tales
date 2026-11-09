@@ -50,8 +50,13 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   useEffect(() => () => { const s = session.current; if (s) { s.discard = true; if (s.mr.state !== 'inactive') s.mr.stop(); else s.stream.getTracks().forEach((t) => t.stop()) } }, [])
 
   // While a recording is open (also paused): the screen stays on, and leaving the screen asks first.
+  // The lock is taken in the tap on the microphone itself (start): Safari grants it only right
+  // after a tap, and taking it later, once the microphone was open, left the screen to lock after 30 s.
   const open = state !== 'idle'
-  useEffect(() => (open ? keepAwake() : undefined), [open])
+  const awake = useRef<(() => void) | null>(null)
+  const release = () => { awake.current?.(); awake.current = null }
+  useEffect(() => { if (!open) release() }, [open])
+  useEffect(() => release, [])
   useLeaveGuard(open, LEAVE)
 
   // The app went to the background: pause, so nothing odd is recorded; "Continuă" picks it up again.
@@ -111,6 +116,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
 
   const start = async () => {
     setError(''); setNote('')
+    if (!awake.current) awake.current = keepAwake()
     // Made in the tap itself, before the first await: iOS only lets a context started by a tap run,
     // and a context made after the microphone opened is what made iPhones drop the sound.
     let ctx: AudioContext | undefined
@@ -160,6 +166,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
       setState('rec')
     } catch {
       ctx?.close().catch(() => {})
+      release()
       setError('Nu am acces la microfon. Verifică permisiunile browserului.')
     }
   }

@@ -97,6 +97,8 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const played = useRef(0) // stories finished in this run, for "stop after N stories"
   const heard = useRef(new Set<string>()) // stories already played in this run, so shuffle doesn't repeat
   const autoplay = useRef(false)
+  // Set while a story that should play on its own has been asked to play but has not started yet.
+  const starting = useRef(false)
   const storyRef = useRef<Story>(undefined)
   storyRef.current = story
 
@@ -163,13 +165,25 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const load = useCallback((s: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom }) => {
     const cur = storyRef.current
     if (!opts?.continued) setFrom(opts?.from ?? 'folder')
-    if (cur?.id === s.id) { setStory(s); return }
+    if (cur?.id === s.id) {
+      setStory(s)
+      // Already loaded but paused (e.g. "Continuă" on the story in the mini player): play it now.
+      const a = audio.current
+      if (opts?.autoplay && a && a.paused && a.src && !isKidLocked()) a.play().catch(() => {})
+      return
+    }
     // A story you pick yourself starts a new run; one that follows on its own continues it.
     if (!opts?.continued) { played.current = 0; heard.current = new Set() }
     heard.current.add(s.id)
     markPlayed(s.id)
-    if (cur && audio.current) setPosition(cur.id, audio.current.currentTime)
+    // A story that finished keeps no place (onEnded cleared it), so it isn't shown as half-heard.
+    if (cur && audio.current && !audio.current.ended) setPosition(cur.id, audio.current.currentTime)
+    // A story that follows on its own (queue, next/previous buttons) starts from the beginning,
+    // even if it was left halfway before: in a run of stories, jumping into the middle is confusing,
+    // and with the phone locked there is then no seek before it starts.
+    if (opts?.continued) setPosition(s.id, undefined)
     autoplay.current = !!opts?.autoplay
+    starting.current = false
     setT(0); setDur(0); setEnded(false); setPlaying(false)
     setStory(s)
   }, [])
@@ -325,6 +339,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
         onPlay={(e) => {
           // Time is up in kid mode: nothing plays, not even from the lock-screen or headphone buttons.
           if (isKidLocked()) { e.currentTarget.pause(); return }
+          starting.current = false
           setPlaying(true); setEnded(false); setError(undefined); resigned.current = false
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing' }}
         onPause={(e) => { setPlaying(false); if ('mediaSession' in navigator && e.currentTarget.src) navigator.mediaSession.playbackState = 'paused'; if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
@@ -336,8 +351,19 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
           setDur(isFinite(a.duration) ? a.duration : 0)
           const cur = storyRef.current
           const pos = cur ? getPosition(cur.id) : 0
-          if (pos && (!isFinite(a.duration) || pos < a.duration - 5)) a.currentTime = pos
-          if (autoplay.current && !isKidLocked()) { autoplay.current = false; a.play().catch(() => {}) }
+          const resume = !!pos && (!isFinite(a.duration) || pos < a.duration - 5)
+          if (autoplay.current && !isKidLocked()) {
+            autoplay.current = false
+            // Play first, then jump to the saved place. With the phone locked, iOS does not fetch
+            // audio for a paused element, so seeking a story that was left halfway before playing it
+            // left the queue stuck on that story: the seek waited for data and play() never started.
+            starting.current = true
+            a.play().catch(() => {})
+            if (resume) a.currentTime = pos
+            // If it still has not started after a few seconds, ask once more.
+            const src = a.src
+            setTimeout(() => { if (starting.current && a.src === src && a.paused && !isKidLocked()) a.play().catch(() => {}) }, 4000)
+          } else if (resume) a.currentTime = pos
         }} />
     </Ctx.Provider>
   )

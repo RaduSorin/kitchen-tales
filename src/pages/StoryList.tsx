@@ -229,6 +229,8 @@ export default function StoryList() {
                 </div>
               )}
             </div>
+            {/* Phones: a round "+" that adds a story straight into this folder (elsewhere the "Adaugă" tab adds). */}
+            {parent && open.mine && <NewStoryFab folder={!open.builtin ? open.name : undefined} />}
             {parent && (
               <span className="folder-more-wrap menu-anchor">
                 <button type="button" className="night-btn folder-more" aria-label={`Mai multe pentru folderul ${open.name}`} aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
@@ -258,8 +260,6 @@ export default function StoryList() {
         {kid && <KidCorner />}
         {parent && (!inFolder || open.mine) && <Link to={inFolder && !open.builtin && open.mine ? `/povesti/adauga?folder=${encodeURIComponent(open.name)}` : '/povesti/adauga'} className="night-btn wide-add" aria-label="Adaugă o poveste">+</Link>}
       </div>
-      {/* Phones: the floating gold "+" replaces the header one; inside our own folder it adds there. */}
-      {parent && !favMode && (!inFolder || open.mine) && <NewStoryFab folder={inFolder && !open.builtin && open.mine ? open.name : undefined} />}
 
       {available.length > 0 && !favMode && !wideShelf && (
         <div className="search-row">

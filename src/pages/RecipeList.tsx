@@ -203,6 +203,8 @@ export default function RecipeList() {
             )}
           </span>
           <Link to="/retete/noua" className="btn primary new-recipe" aria-label="Rețetă nouă" title="Rețetă nouă">{PLUS}<span className="new-recipe-text" aria-hidden="true">Rețetă nouă</span></Link>
+          {/* Phones: a round "+" in its place, which opens the ways to add a recipe from the bottom. */}
+          <NewRecipeFab />
         </div>
       </div>
       <label className="search-box">
@@ -263,8 +265,6 @@ export default function RecipeList() {
       ) : (
         <Grid items={shown} />
       )}
-      {/* Phones: "+" floats at the bottom right, above the tab bar, always within the thumb's reach; it opens the ways to add a recipe from the bottom. */}
-      <NewRecipeFab />
       {planning && <DayPicker r={planning} servings={planning.servings} onClose={() => setPlanning(undefined)} onDone={(msg) => { setPlanning(undefined); showToast(msg) }} />}
     </section>
   )

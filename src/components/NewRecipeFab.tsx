@@ -22,10 +22,10 @@ export const pickedRecipePages = () => pickedPages
 export const clearPickedRecipePages = () => { pickedPages = [] }
 
 /**
- * Phones: the gold "+" floating above the tab bar on the recipes page. It opens a sheet from the
+ * Phones: the round gold "+" in the recipes header. It opens a sheet from the
  * bottom with the ways to add a recipe; "Din poză" opens the photo picker right from the sheet.
  */
-export default function NewRecipeFab() {
+export default function NewRecipeFab({ className = 'head-add' }: { className?: string }) {
   const [open, setOpen] = useState(false)
   const nav = useNavigate()
   const onPhotos = (files: FileList | null) => {
@@ -37,7 +37,7 @@ export default function NewRecipeFab() {
   }
   return (
     <>
-      <button type="button" className="fab-new" aria-label="Rețetă nouă" title="Rețetă nouă" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <button type="button" className={className} aria-label="Rețetă nouă" title="Rețetă nouă" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
       </button>
       {open && (

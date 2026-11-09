@@ -700,9 +700,16 @@
 .cs-summary { display: grid; gap: 4px; padding: 12px 16px; border-radius: 16px; background: var(--surface); color: var(--muted); font-size: .92rem; font-weight: 600; }
 .cs-summary span:first-child { color: var(--text); }
 .cs-summary a { color: var(--accent); margin-left: 6px; }
-.cs-foot { position: sticky; bottom: calc(102px + env(safe-area-inset-bottom)); display: grid; justify-items: center; gap: 8px; padding-top: 8px; }
-:root:has(.mini-player) .cs-foot { bottom: calc(176px + env(safe-area-inset-bottom)); }
-@media (min-width: 760px) { .cs-foot, :root:has(.mini-player) .cs-foot { bottom: 16px; } }
+/* The page's main button stays at the bottom of the screen. Its strip has the page's background
+   (fading in at the top), so what scrolls under it never shows through its text. The tab bar is
+   hidden on these pages (see hidesTabBar in TabBar.tsx), so the strip sits on the screen's edge. */
+.cs-foot { position: sticky; z-index: 2; bottom: 0; display: grid; justify-items: center; gap: 8px;
+  margin-inline: -16px; padding: 22px 16px calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, var(--bg) 22px); }
+:root[data-tabbar] .cs-foot { bottom: calc(84px + env(safe-area-inset-bottom)); padding-bottom: 10px; }
+:root:has(.mini-player) .cs-foot { bottom: calc(76px + env(safe-area-inset-bottom)); padding-bottom: 10px; }
+:root[data-tabbar]:has(.mini-player) .cs-foot { bottom: calc(160px + env(safe-area-inset-bottom)); }
+@media (min-width: 760px) { .cs-foot, :root[data-tabbar] .cs-foot, :root:has(.mini-player) .cs-foot { bottom: 0; padding-bottom: 16px; } }
 .cs-foot .moon-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 10px 30px rgb(242 200 121 / .22); }
 .cs-own { color: var(--muted); font-weight: 700; justify-self: center; }
 .cs-next { color: var(--muted); font-size: .85rem; }
@@ -995,12 +1002,16 @@
   .fab-new svg { display: block; }
   .fab-new:active { transform: scale(.94); }
   :root:has(.mini-player) .fab-new { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 178px); }
-  /* The header + gives way to the floating one; the last cards can scroll clear of it. */
+  /* Recipes: the round "+" in the header (it opens the ways to add) takes the place of the wide
+     "Rețetă nouă" link. Stories add from the "Adaugă" tab, or from the "+" in one of our folders. */
   .recipes .new-recipe { display: none; }
-  .recipes { padding-bottom: 72px; }
-  /* Stories: same floating "+" on Acasă, the shelf and our folders; the header one gives way. */
   :root[data-area="night"] .shelf .lib-add { display: none; }
-  .shelf, .stories-home { padding-bottom: 72px; }
+}
+.head-add { display: none; }
+@media (max-width: 759px) {
+  .head-add { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 14px rgb(0 0 0 / .3); }
+  .head-add:active { transform: scale(.94); }
 }
 /* The ways to add, in a sheet that comes up from the bottom like on iOS: a grabber, frosted dark. */
 .sheet-ios { background: rgb(0 0 0 / .5); }

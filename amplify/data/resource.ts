@@ -435,6 +435,16 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(files)),
 
+  // Răgaz's encrypted backup, one per account (see functions/files and src/lib/mind/backup.ts).
+  // op: read (a link to download it, if any), write (a link to replace it) or delete.
+  MindBackupLink: a.customType({ exists: a.boolean().required(), url: a.string().required(), updatedAt: a.string(), size: a.integer() }),
+  mindBackup: a
+    .mutation()
+    .arguments({ op: a.string().required() })
+    .returns(a.ref('MindBackupLink'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(files)),
+
   // Cooking timers: a push notification when the timer ends, even with the app closed.
   scheduleTimerAlarm: a
     .mutation()

@@ -108,3 +108,6 @@ export const isAdmin = () => !!info?.admin
 
 /** The signed-in account's email, as this device last knew it. */
 export const myEmail = () => info?.email
+
+/** The signed-in account's own id (Cognito sub), as this device last knew it. */
+export const myUserId = () => info?.user

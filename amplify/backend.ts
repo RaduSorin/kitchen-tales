@@ -7,7 +7,7 @@ import { findCover } from './functions/find-cover/resource'
 import { family } from './functions/family/resource'
 import { timerAlarm } from './functions/timer-alarm/resource'
 import { files } from './functions/files/resource'
-import { FILE_PREFIXES } from './shared/files'
+import { FILE_PREFIXES, MIND_PREFIX } from './shared/files'
 import { IMAGE_MODEL_ID, IMAGE_MODEL_REGION, MODEL_ID } from './shared/model'
 import { JOB_PREFIX } from './shared/jobs'
 import { auth } from './auth/resource'
@@ -78,7 +78,13 @@ const bucket = backend.storage.resources.bucket
 backend.files.addEnvironment('BUCKET_NAME', bucket.bucketName)
 filesFn.addToRolePolicy(new PolicyStatement({
   actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject'],
-  resources: FILE_PREFIXES.map((p) => `${bucket.bucketArn}/${p}/*`),
+  resources: [...FILE_PREFIXES, MIND_PREFIX].map((p) => `${bucket.bucketArn}/${p}/*`),
+}))
+// Răgaz backups: listing lets a missing backup answer 404 (not found) instead of 403.
+filesFn.addToRolePolicy(new PolicyStatement({
+  actions: ['s3:ListBucket'],
+  resources: [bucket.bucketArn],
+  conditions: { StringLike: { 's3:prefix': [`${MIND_PREFIX}/*`] } },
 }))
 for (const [model, env] of [['Story', 'STORY_TABLE'], ['Recipe', 'RECIPE_TABLE']] as const) {
   const table = backend.data.resources.tables[model]

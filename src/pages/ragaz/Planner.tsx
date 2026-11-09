@@ -6,12 +6,16 @@ import { showToast } from '../../lib/toast'
 import { dayName, fridaysOf, monthName, proposeFridays, thisMonth, today, type Exercise, type Friday, type MonthPlan } from '../../lib/mind/model'
 import { getMonth, listExercises, listMonths, saveMonth } from '../../lib/mind/store'
 import { importPack, listPacks, type Pack } from '../../lib/mind/packs'
+import { syncMonth } from '../../lib/mind/push'
+import Reminders from './Reminders'
 import '../../ragaz.css'
 
-type Step = 'intention' | 'success' | 'fridays'
+type Step = 'intention' | 'success' | 'fridays' | 'reminders'
 const STEPS: Step[] = ['intention', 'success', 'fridays']
-const NEXT: Record<Step, string> = { intention: 'semnul de reușită', success: 'temele de vineri', fridays: '' }
-/** In the first setup these are cards 3–5 of 5 (Setup.tsx has 1–2). */
+/** The first setup ends with the reminders (card 6). */
+const SETUP_STEPS: Step[] = [...STEPS, 'reminders']
+const NEXT: Record<Step, string> = { intention: 'semnul de reușită', success: 'temele de vineri', fridays: '', reminders: '' }
+/** In the first setup these are cards 3–6 of 6 (Setup.tsx has 1–2). */
 const SETUP_BEFORE = 2
 
 const Arrow = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
@@ -65,32 +69,38 @@ export default function Planner() {
   }, [id])
 
   if (!plan || !bank) return <Loading />
-  const step = STEPS[at]
+  const steps = setup ? SETUP_STEPS : STEPS
+  const step = steps[at]
   const set = (patch: Partial<MonthPlan>) => setPlan({ ...plan, ...patch })
   const setFriday = (i: number, f: Partial<Friday>) => set({ fridays: plan.fridays.map((x, j) => (j === i ? { ...x, ...f } : x)) })
   const back = () => (at > 0 ? setAt(at - 1) : leave())
   const imported = () => loadBank().then((b) => set({ fridays: proposeFridays(plan.fridays.map((f) => f.date), b) }))
 
-  const finish = async () => {
+  const confirm = async () => {
     setBusy(true)
     try {
-      await saveMonth({ ...plan, intention: plan.intention.trim(), success: plan.success?.trim() })
-      showToast(setup ? 'Gata. Ne vedem vineri.' : 'Luna e planificată.')
+      const saved = { ...plan, intention: plan.intention.trim(), success: plan.success?.trim() }
+      await saveMonth(saved)
+      syncMonth(saved)
+      setBusy(false)
+      if (setup) { setAt(at + 1); return }
+      showToast('Luna e planificată.')
       nav('/ragaz', { replace: true })
     } catch (e) {
       showToast((e as Error).message)
       setBusy(false)
     }
   }
+  const done = () => { showToast('Gata. Ne vedem vineri.'); nav('/ragaz', { replace: true }) }
 
-  const total = setup ? SETUP_BEFORE + STEPS.length : STEPS.length
+  const total = setup ? SETUP_BEFORE + steps.length : steps.length
   const pos = (setup ? SETUP_BEFORE : 0) + at
   const kicker = `Răgaz · ${monthName(id)}`
   return (
     <section className="ragaz">
       <div className="parent create-steps">
         <div className="cs-top">
-          <button type="button" className="night-btn" aria-label={at > 0 ? 'Pasul anterior' : 'Înapoi'} onClick={back}>
+          <button type="button" className="night-btn" aria-label={at > 0 ? 'Pasul anterior' : 'Înapoi'} onClick={step === 'reminders' ? done : back}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
           </button>
           <div className="cs-dots" role="img" aria-label={`Pasul ${pos + 1} din ${total}`}>
@@ -130,6 +140,15 @@ export default function Planner() {
               </div>
             )}
           </div>
+        ) : step === 'reminders' ? (
+          <div className="cs-body">
+            <div className="cs-q">
+              <span className="cs-kicker">Răgaz · notificări</span>
+              <h1>Să-ți amintim?</h1>
+              <p>Vineri seara, o notificare cu tema zilei. Poți schimba ora sau le poți opri oricând din Profil › Răgaz.</p>
+            </div>
+            <Reminders compact />
+          </div>
         ) : (
           <div className="cs-body">
             <div className="cs-q">
@@ -157,8 +176,10 @@ export default function Planner() {
         )}
 
         <div className="cs-foot">
-          {step === 'fridays' ? (
-            <button type="button" className="moon-btn" disabled={busy || !plan.intention.trim()} onClick={finish}>{busy ? 'Se salvează…' : 'Confirmă luna'}</button>
+          {step === 'reminders' ? (
+            <button type="button" className="moon-btn" onClick={done}>Gata</button>
+          ) : step === 'fridays' ? (
+            <button type="button" className="moon-btn" disabled={busy || !plan.intention.trim()} onClick={confirm}>{busy ? 'Se salvează…' : 'Confirmă luna'}</button>
           ) : (
             <button type="button" className="moon-btn" disabled={step === 'intention' && !plan.intention.trim()} onClick={() => setAt(at + 1)}>Mai departe <Arrow /></button>
           )}

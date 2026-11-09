@@ -7,6 +7,7 @@ import { findCover } from './functions/find-cover/resource'
 import { family } from './functions/family/resource'
 import { timerAlarm } from './functions/timer-alarm/resource'
 import { files } from './functions/files/resource'
+import { mindPush } from './functions/mind-push/resource'
 import { FILE_PREFIXES, MIND_PREFIX } from './shared/files'
 import { IMAGE_MODEL_ID, IMAGE_MODEL_REGION, MODEL_ID } from './shared/model'
 import { JOB_PREFIX } from './shared/jobs'
@@ -14,7 +15,7 @@ import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { storage } from './storage/resource'
 
-const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover, family, timerAlarm, files })
+const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover, family, timerAlarm, files, mindPush })
 
 // Invite-only: nobody can create an account from the app.
 // Family members invite each other from Settings (see functions/family).
@@ -91,6 +92,27 @@ for (const [model, env] of [['Story', 'STORY_TABLE'], ['Recipe', 'RECIPE_TABLE']
   backend.files.addEnvironment(env, table.tableName)
   filesFn.addToRolePolicy(new PolicyStatement({ actions: ['dynamodb:BatchGetItem', 'dynamodb:GetItem'], resources: [table.tableArn] }))
 }
+
+// Răgaz reminders: the mind-push function keeps each person's reminder settings in
+// mind/<sub>/push.json and makes one recurring schedule per rhythm (ktm-<sub>-<rhythm>), which
+// invokes it at that time. Same pattern as the cooking timers above.
+const mindFn = backend.mindPush.resources.lambda
+const mindStack = Stack.of(mindFn)
+backend.mindPush.addEnvironment('BUCKET_NAME', bucket.bucketName)
+mindFn.addToRolePolicy(new PolicyStatement({ actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject'], resources: [`${bucket.bucketArn}/${MIND_PREFIX}/*`] }))
+// Listing lets a missing settings file answer "no such key" instead of "access denied".
+mindFn.addToRolePolicy(new PolicyStatement({ actions: ['s3:ListBucket'], resources: [bucket.bucketArn], conditions: { StringLike: { 's3:prefix': [`${MIND_PREFIX}/*`] } } }))
+const mindSchedulerRole = new Role(mindStack, 'MindPushSchedulerRole', { assumedBy: new ServicePrincipal('scheduler.amazonaws.com') })
+new Policy(mindStack, 'MindPushInvoke', {
+  roles: [mindSchedulerRole],
+  statements: [new PolicyStatement({ actions: ['lambda:InvokeFunction'], resources: [mindFn.functionArn, `${mindFn.functionArn}:*`] })],
+})
+backend.mindPush.addEnvironment('SCHEDULER_ROLE_ARN', mindSchedulerRole.roleArn)
+mindFn.addToRolePolicy(new PolicyStatement({
+  actions: ['scheduler:CreateSchedule', 'scheduler:UpdateSchedule', 'scheduler:DeleteSchedule', 'scheduler:GetSchedule'],
+  resources: [`arn:aws:scheduler:${mindStack.region}:${mindStack.account}:schedule/default/ktm-*`],
+}))
+mindFn.addToRolePolicy(new PolicyStatement({ actions: ['iam:PassRole'], resources: [mindSchedulerRole.roleArn] }))
 
 // Long AI work runs in the background (async mutations, see amplify/shared/jobs.ts). A failed run
 // already tells the app why (it writes the error), so Lambda must not run it again: that would

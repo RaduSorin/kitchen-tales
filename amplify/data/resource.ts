@@ -6,6 +6,7 @@ import { findCover } from '../functions/find-cover/resource'
 import { family } from '../functions/family/resource'
 import { timerAlarm } from '../functions/timer-alarm/resource'
 import { files } from '../functions/files/resource'
+import { mindPush } from '../functions/mind-push/resource'
 
 // Every row belongs to a space (a household): its Cognito group `space-<id>` is in `spaceGroups`
 // and its members can read and edit it. A recipe, story or folder that is shared also has the
@@ -458,6 +459,15 @@ const schema = a.schema({
     .returns(a.ref('MindBackupLink'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(files)),
+
+  // Răgaz reminders (functions/mind-push): op save (data: JSON PushSave from amplify/shared/mindPush.ts),
+  // test (a notification now), status, or off. Always the caller's own; returns a JSON summary.
+  mindPush: a
+    .mutation()
+    .arguments({ op: a.string().required(), data: a.string() })
+    .returns(a.string())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(mindPush)),
 
   // Cooking timers: a push notification when the timer ends, even with the app closed.
   scheduleTimerAlarm: a

@@ -27,6 +27,8 @@ export type VaultLocal = {
   /** When the last copy reached the cloud (ms), and whether changes since then are waiting. */
   backupAt?: number
   pending?: boolean
+  /** Reminders turned on from this phone, with their times (the server has the same). */
+  reminders?: import('../../../amplify/shared/mindPush').Rhythms
 }
 
 type Item = { key: string; kind: string; updatedAt: number; sealed: Sealed }

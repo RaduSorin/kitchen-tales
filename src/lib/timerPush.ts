@@ -16,7 +16,7 @@ export function pushProblem(): '' | 'browser' | 'install' | 'denied' {
 }
 
 /** This device's short id, so two phones cooking the same recipe keep separate alarms. */
-function deviceId() {
+export function deviceId() {
   try {
     let id = localStorage.getItem(DEVICE_KEY)
     if (!id) { id = crypto.randomUUID().slice(0, 8); localStorage.setItem(DEVICE_KEY, id) }
@@ -41,7 +41,8 @@ const keyBytes = (b64url: string) => {
   return Uint8Array.from(s, (c) => c.charCodeAt(0))
 }
 
-async function subscription() {
+/** This phone's push subscription (made once), as JSON for the server. */
+export async function subscription() {
   const reg = await navigator.serviceWorker.ready
   const sub = await reg.pushManager.getSubscription()
     ?? await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(VAPID_PUBLIC_KEY) })

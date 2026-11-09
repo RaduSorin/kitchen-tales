@@ -113,3 +113,5 @@
 .month-card-go { color: #f2c879; font-size: 1.5rem; }
 :root .ragaz h2.rg-label { margin: 4px 0 0; font-family: var(--f-body); font-weight: 800; font-size: .74rem; letter-spacing: .12em; }
 .rg-card .rg-row-btns { flex-wrap: nowrap; flex: none; }
+.rg-time { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-variant-numeric: tabular-nums; color-scheme: dark; }
+.rg-reminders { display: grid; gap: 10px; }

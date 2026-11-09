@@ -13,7 +13,7 @@ import '../../ragaz.css'
 type Step = 'about' | 'protect'
 const STEPS: Step[] = ['about', 'protect']
 /** The month's cards (Planner.tsx) follow these two in the first setup. */
-const TOTAL = 5
+const TOTAL = 6
 const NEXT: Record<Step, string> = { about: 'protecția', protect: 'intenția lunii' }
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }) : '')

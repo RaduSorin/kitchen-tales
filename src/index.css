@@ -1,29 +1,26 @@
-/* Design tokens. Recipes follow the calm "Liniște" direction; stories use the night palette.
-   The theme is chosen in Settings and applied as data-theme on <html> (see src/lib/settings.ts). */
+/* Design tokens: "Seară de lux", the app's only look (always dark). The recipes side is the
+   default; the stories side (data-area="night", see lib/area.ts) changes a few of them. */
 :root {
-  --bg: #f2f3ee; --surface: #ffffff; --surface-2: #e3e7de; --text: #1f2a24; --muted: #5c675f; --border: #dde1d8;
-  --accent: #3e6a51; --accent-soft: #e3e7de; --on-accent: #ffffff; --gold: #d6a72b; --danger: #b3412e;
-  --night: #2c2368; --night-soft: #e6e4f4; --moon: #ffd76a; --track: #d3d9cf; --knob: #ffffff;
-  --moon-ink: var(--night); --on-text: #171a45;
-  --f-display: 'Young Serif', Georgia, serif;
+  --bg: #13100e; --surface: #1e1a17; --surface-2: #2a2521; --text: #f4efe6; --muted: #a89f95; --border: rgb(255 255 255 / .09);
+  --accent: #f2c879; --accent-soft: rgb(242 200 121 / .15); --on-accent: #1a1410; --gold: #f2c879; --danger: #ff8f7a;
+  --night: #f2c879; --night-soft: rgb(255 255 255 / .08); --moon: #f2c879; --moon-ink: #f2c879; --on-text: #1a1410;
+  --track: rgb(255 255 255 / .2); --knob: #f4efe6;
+  --f-display: 'Fraunces', Georgia, serif; --f-title: 'Fraunces', Georgia, serif;
   --f-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --f-kids: 'Baloo 2', 'Figtree', system-ui, sans-serif;
-  --topbar-bg: rgb(255 255 255 / .9);
-  --statusbar: #3e6a51;
+  --topbar-bg: rgb(19 16 14 / .6); --statusbar: #13100e;
   /* Liquid-glass tab bar */
-  --glass-bg: rgb(255 255 255 / .66); --glass-edge: rgb(255 255 255 / .7); --glass-shine: rgb(255 255 255 / .9); --glass-shadow: rgb(31 42 36 / .16);
-  --glass-pill: rgb(62 106 81 / .14);
-  font-family: var(--f-body); color: var(--text); color-scheme: light;
+  --glass-bg: rgb(30 27 25 / .8); --glass-edge: rgb(255 255 255 / .09); --glass-shine: rgb(255 255 255 / .1); --glass-shadow: rgb(0 0 0 / .5);
+  --glass-pill: rgb(242 200 121 / .16);
+  font-family: var(--f-body); color: var(--text); color-scheme: dark;
 }
-:root[data-theme="dark"] {
-  --bg: #131915; --surface: #1c231e; --surface-2: #252e28; --text: #e7ebe4; --muted: #929e95; --border: #2a332d;
-  --accent: #8fc4a6; --accent-soft: #23302a; --on-accent: #131915; --gold: #e2b84f; --danger: #f08a75;
-  --night: #cfc9ff; --night-soft: #232463; --moon: #ffd76a; --track: #3a453e; --knob: #e7ebe4;
-  --topbar-bg: rgb(28 35 30 / .9);
-  --statusbar: #131915;
-  --glass-bg: rgb(40 50 44 / .62); --glass-edge: rgb(255 255 255 / .14); --glass-shine: rgb(255 255 255 / .22); --glass-shadow: rgb(0 0 0 / .45);
-  --glass-pill: rgb(143 196 166 / .2);
-  color-scheme: dark;
+:root[data-area="night"] {
+  --night-bg: #0f0e13; --bg: #0f0e13; --statusbar: #0f0e13;
+  --surface: rgb(255 255 255 / .07); --surface-2: rgb(255 255 255 / .11); --muted: #aaa3b2; --border: rgb(255 255 255 / .1);
+  --accent-soft: rgb(242 200 121 / .16); --gold: #e2b84f; --danger: #ff8fa3;
+  --glass-bg: rgb(30 28 37 / .74); --glass-shine: rgb(255 255 255 / .12);
+  --topbar-bg: rgb(15 14 19 / .45);
+  --f-display: 'Young Serif', Georgia, serif;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); }
@@ -186,7 +183,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .recipe { margin: -16px -16px 0; }
 .recipe-hero { position: relative; height: clamp(220px, 42vw, 380px); background: var(--surface-2); }
 .recipe-hero img, .recipe-hero svg { width: 100%; height: 100%; object-fit: cover; display: block; }
-:root[data-theme="dark"] .recipe-hero img, :root[data-theme="dark"] .recipe-hero svg, :root[data-theme="dark"] .recipe-thumb svg { filter: brightness(.82); }
+.recipe-hero img, .recipe-hero svg, .recipe-thumb svg { filter: brightness(.82); }
 .recipe-sheet { position: relative; margin-top: -28px; background: var(--bg); border-radius: 28px 28px 0 0; padding: 22px 16px 8px; display: grid; gap: 14px; }
 .recipe-sheet h1 { margin: 0; font-size: 2.2rem; }
 .recipe-sheet h2 { margin: 0; }
@@ -382,18 +379,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .edit-step-meta .link-btn { padding: 0; font-size: .9rem; font-weight: 500; }
 .timer-chip { background: var(--surface-2); color: var(--accent); border-radius: 999px; padding: 2px 10px; font-size: .8rem; font-weight: 600; }
 
-/* Stories: always the night palette */
-:root[data-area="night"] {
-  --statusbar: #171a45;
-  --glass-bg: rgb(36 31 92 / .62); --glass-edge: rgb(255 255 255 / .16); --glass-shine: rgb(255 255 255 / .22); --glass-shadow: rgb(0 0 0 / .45);
-  --glass-pill: rgb(255 215 106 / .16);
-  --bg: #171a45; --surface: rgb(255 255 255 / .08); --surface-2: rgb(255 255 255 / .12); --text: #fff6d6; --muted: rgb(255 246 214 / .68);
-  --border: rgb(255 255 255 / .14); --accent: #ffd76a; --accent-soft: rgb(255 215 106 / .16); --on-accent: #171a45; --danger: #ff8fa3;
-  --night: #ffd76a; --night-soft: rgb(255 255 255 / .1); --track: rgb(255 255 255 / .2); --knob: #fff6d6;
-  --topbar-bg: rgb(23 26 69 / .88);
-  --moon-ink: #ffd76a; --on-text: #171a45;
-  color-scheme: dark;
-}
+/* Stories (the night side): its tokens are at the top of this file. */
 :root[data-area="night"] body { background: linear-gradient(180deg, #171a45 0, #2c2368 100%) fixed; font-family: var(--f-kids); }
 :root[data-area="night"] .topbar { border-bottom-color: rgb(255 255 255 / .08); }
 

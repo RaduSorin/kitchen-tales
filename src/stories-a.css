@@ -2,20 +2,6 @@
    cover of the story in focus glowing behind every screen (components/CoverGlow.tsx).
    Loaded after index.css; everything here applies to the stories side only, except the tab bar. */
 
-:root[data-area="night"] {
-  --night-bg: #0f0e13;
-  --statusbar: #0f0e13;
-  --bg: #0f0e13; --surface: rgb(255 255 255 / .07); --surface-2: rgb(255 255 255 / .11);
-  --text: #f4efe6; --muted: #aaa3b2; --border: rgb(255 255 255 / .1);
-  --accent: #f2c879; --accent-soft: rgb(242 200 121 / .16); --on-accent: #1a1410; --danger: #ff8fa3;
-  --night: #f2c879; --night-soft: rgb(255 255 255 / .08); --moon: #f2c879; --moon-ink: #f2c879; --on-text: #1a1410;
-  --track: rgb(255 255 255 / .2); --knob: #f4efe6;
-  --glass-bg: rgb(30 28 37 / .74); --glass-edge: rgb(255 255 255 / .09); --glass-shine: rgb(255 255 255 / .12); --glass-shadow: rgb(0 0 0 / .5);
-  --glass-pill: rgb(242 200 121 / .16);
-  --topbar-bg: rgb(15 14 19 / .45);
-  --f-title: 'Fraunces', Georgia, serif;
-  color-scheme: dark;
-}
 :root[data-area="night"] body { background: var(--night-bg); font-family: var(--f-body); }
 :root[data-area="night"] .topbar { border-bottom-color: transparent; -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); }
 :root[data-area="night"] h1, :root[data-area="night"] h2 { font-family: var(--f-title); font-weight: 600; letter-spacing: -.01em; }
@@ -236,17 +222,7 @@
    ====================================================================================== */
 
 /* ---------- Recipes side: the same "Seară de lux" mood, a little warmer ---------- */
-:root:not([data-area="night"]) {
-  --bg: #13100e; --surface: #1e1a17; --surface-2: #2a2521; --text: #f4efe6; --muted: #a89f95; --border: rgb(255 255 255 / .09);
-  --accent: #f2c879; --accent-soft: rgb(242 200 121 / .15); --on-accent: #1a1410; --gold: #f2c879; --danger: #ff8f7a;
-  --night: #f2c879; --night-soft: rgb(255 255 255 / .08); --moon: #f2c879; --moon-ink: #f2c879; --on-text: #1a1410;
-  --track: rgb(255 255 255 / .2); --knob: #f4efe6;
-  --glass-bg: rgb(30 27 25 / .8); --glass-edge: rgb(255 255 255 / .09); --glass-shine: rgb(255 255 255 / .1); --glass-shadow: rgb(0 0 0 / .5);
-  --glass-pill: rgb(242 200 121 / .16);
-  --topbar-bg: rgb(19 16 14 / .6); --statusbar: #13100e;
-  --f-display: 'Fraunces', Georgia, serif; --f-title: 'Fraunces', Georgia, serif;
-  color-scheme: dark;
-}
+/* (Its colours and fonts are the default tokens in index.css.) */
 :root:not([data-area="night"]) body { background: var(--bg); }
 :root:not([data-area="night"]) h1, :root:not([data-area="night"]) h2 { font-family: var(--f-title); font-weight: 600; letter-spacing: -.01em; }
 :root:not([data-area="night"]) .cover-glow { background: var(--bg); }

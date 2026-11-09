@@ -8,7 +8,7 @@ type Info = { user: string; space?: string; admin: boolean; email?: string; name
 
 const KEY = 'kt-space'
 // Device copies that belong to whoever was signed in are cleared when another account signs in
-// here. kt-settings stays: it also holds this device's own choices (theme, shelf click); its
+// here. kt-settings stays: it also holds this device's own choices (shelf click); its
 // family part is reset by settings.ts (onAccountChange).
 const KEEP = new Set([KEY, 'kt-settings'])
 

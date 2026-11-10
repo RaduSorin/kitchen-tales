@@ -16,6 +16,20 @@ type Session = {
   analyser?: AnalyserNode
   discard: boolean
   byUser: boolean
+  /** Hands over what was recorded, once; called by the recorder's "stopped" event or a fallback. */
+  finish?: () => void
+}
+
+/**
+ * Turns the microphone off now: every track it ever opened, and the audio context. Safe to call
+ * more than once. Done right when the recording ends rather than waiting for the recorder's own
+ * "stopped" event, which iOS sometimes delivers late or not at all (after a pause, or with the
+ * audio context suspended), and that left the iPhone's microphone light on after "Gata".
+ */
+function releaseMic(s: Session) {
+  s.stream.getTracks().forEach((t) => { t.onended = null; t.onmute = null; t.onunmute = null; t.stop() })
+  try { s.source?.disconnect() } catch { /* already gone */ }
+  if (s.ctx && s.ctx.state !== 'closed') { s.ctx.onstatechange = null; s.ctx.close().catch(() => {}) }
 }
 
 /** One mono microphone, with the phone's own echo and noise cleanup. */
@@ -46,8 +60,24 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   const onDoneRef = useRef(onDone)
   onDoneRef.current = onDone
 
+  /** True while the microphone is being asked for: a second tap then must not open a second one. */
+  const starting = useRef(false)
+  /** False once the screen is gone, so a microphone that opens after that is closed straight away. */
+  const alive = useRef(true)
+
   // Stop the microphone if the parent leaves mid-recording; nothing is kept.
-  useEffect(() => () => { const s = session.current; if (s) { s.discard = true; if (s.mr.state !== 'inactive') s.mr.stop(); else s.stream.getTracks().forEach((t) => t.stop()) } }, [])
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+      const s = session.current
+      session.current = null
+      if (!s) return
+      s.discard = true
+      try { if (s.mr.state !== 'inactive') s.mr.stop() } catch { /* already stopped */ }
+      releaseMic(s)
+    }
+  }, [])
 
   // While a recording is open (also paused): the screen stays on, and leaving the screen asks first.
   // The lock is taken in the tap on the microphone itself (start): Safari grants it only right
@@ -115,6 +145,8 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   }, [state])
 
   const start = async () => {
+    if (starting.current || session.current) return
+    starting.current = true
     setError(''); setNote('')
     if (!awake.current) awake.current = keepAwake()
     // Made in the tap itself, before the first await: iOS only lets a context started by a tap run,
@@ -125,6 +157,8 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
     if (np.playing) np.toggle()
     try {
       const stream = await getMic()
+      // The screen was left while iOS was still asking for the microphone: close it again.
+      if (!alive.current) { stream.getTracks().forEach((t) => t.stop()); ctx?.close().catch(() => {}); release(); return }
       const chunks: Blob[] = []
       const s: Session = { mr: undefined as unknown as MediaRecorder, stream, ctx, discard: false, byUser: false }
       // The recording is taken from the audio context, not from the microphone directly: when iOS
@@ -148,15 +182,19 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
       s.mr = mr
       mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data) }
       // "Gata" stops on purpose; anything else (the microphone could not be brought back) is an interruption.
-      mr.onstop = () => {
-        s.stream.getTracks().forEach((t) => t.stop())
-        s.ctx?.close().catch(() => {})
+      let finished = false
+      const finish = () => {
+        if (finished) return
+        finished = true
+        releaseMic(s)
         const interrupted = !s.byUser
         if (session.current === s) { session.current = null; setState('idle'); setNote('') }
         if (s.discard) return
         if (chunks.length && secRef.current >= 1) onDoneRef.current(new Blob(chunks, { type: mr.mimeType }), secRef.current, interrupted)
         else if (interrupted) { secRef.current = 0; setSec(0); setError('Înregistrarea s-a oprit. Apasă microfonul ca să începi din nou.') }
       }
+      s.finish = finish
+      mr.onstop = finish
       watchTrack(s)
       // iOS "interrupts" the context during a call or Siri; start it again as soon as it allows.
       if (ctx) ctx.onstatechange = () => { if (ctx.state !== 'running' && ctx.state !== 'closed' && document.visibilityState === 'visible') ctx.resume().catch(() => {}) }
@@ -168,6 +206,8 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
       ctx?.close().catch(() => {})
       release()
       setError('Nu am acces la microfon. Verifică permisiunile browserului.')
+    } finally {
+      starting.current = false
     }
   }
 
@@ -186,7 +226,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
   // Plug a fresh microphone into the same recording. Without the audio context (very old
   // browsers) there is nothing to plug into: stop and keep what was recorded.
   const reconnect = async (s: Session) => {
-    if (!s.input || !s.ctx) { if (s.mr.state !== 'inactive') s.mr.stop(); return }
+    if (!s.input || !s.ctx) { if (s.mr.state !== 'inactive') s.mr.stop(); releaseMic(s); return }
     s.source?.disconnect()
     setNote('Microfonul s-a întrerupt. Îl pornesc din nou…')
     for (const wait of [0, 500, 1500, 3000]) {
@@ -197,7 +237,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
       if (session.current !== s) return
       try {
         const stream = await getMic()
-        if (session.current !== s) { stream.getTracks().forEach((t) => t.stop()); return }
+        if (session.current !== s || s.mr.state === 'inactive') { stream.getTracks().forEach((t) => t.stop()); return }
         s.stream = stream
         s.source = s.ctx.createMediaStreamSource(stream)
         s.source.connect(s.input)
@@ -207,7 +247,7 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
         return
       } catch { /* try again */ }
     }
-    if (session.current === s && s.mr.state !== 'inactive') s.mr.stop()
+    if (session.current === s && s.mr.state !== 'inactive') { s.mr.stop(); releaseMic(s) }
   }
 
   const main = () => {
@@ -223,7 +263,11 @@ export default function Recorder({ onDone }: { onDone: (audio: Blob, seconds: nu
     s.discard = !keep
     s.byUser = true
     session.current = null
-    if (s.mr.state !== 'inactive') s.mr.stop()
+    // Stopping hands over the last bit of sound first; the microphone itself goes off right away.
+    try { if (s.mr.state !== 'inactive') s.mr.stop() } catch { /* already stopped */ }
+    releaseMic(s)
+    // If iOS never says the recorder stopped, hand over what is there anyway instead of losing it.
+    if (keep) setTimeout(() => { if (alive.current) s.finish?.() }, 2500)
     secRef.current = keep ? secRef.current : 0
     setState('idle')
     if (!keep) setSec(0)

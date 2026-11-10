@@ -105,7 +105,7 @@ export default function RecipeView() {
   const [confirming, setConfirming] = useState(false)
   const [menu, setMenu] = useState(false)
   const [planning, setPlanning] = useState(false)
-  const [note, setNote] = useState<{ text: string; to: string; link: string }>()
+  const [tab, setTab] = useState<'ingrediente' | 'pasi' | 'note'>('ingrediente')
   const [failed, setFailed] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -141,6 +141,8 @@ export default function RecipeView() {
   const load = () => {
     getRecipe(id!).then((x) => { setR(x ?? null); setServings(x?.servings) }).catch(() => setFailed(true))
   }
+  // Another recipe opened on the same page: start it fresh (nothing ticked, first tab).
+  useEffect(() => { setHave(new Set()); setDone(new Set()); setTab('ingrediente'); setMenu(false); setPlanning(false) }, [id])
   useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   const img = useFileUrl(r?.photoKey)
   // Step photos too, so cooking mode shows them without internet later.
@@ -160,13 +162,25 @@ export default function RecipeView() {
   const toggle = (set: typeof setHave) => (i: number) => set((s) => { const n = new Set(s); if (n.has(i)) n.delete(i); else n.add(i); return n })
   const factor = r.servings && servings ? servings / r.servings : 1
 
+  const saved = r.steps.length > 0 ? getProgress(r.id) : null
+  const resume = saved != null && saved > 0 && saved < r.steps.length
+  const addToList = () => {
+    // Ingredients ticked as "I have it" stay off the list.
+    const need = r.ingredients.filter((_, i) => !have.has(i))
+    const n = addToShopping(r, servings, need)
+    showToast(n ? `Am pus ${n} ${n === 1 ? 'ingredient' : 'ingrediente'} în listă.` : 'Sunt deja în listă.', undefined, { action: { label: 'Vezi lista', run: () => navigate('/cumparaturi') } })
+  }
+  const kicker = [r.category, r.mine === false ? `de la ${r.spaceName ?? 'alt cont'}` : r.shared ? 'partajată' : ''].filter(Boolean).join(' · ')
+  const left = toBuy - have.size
+
   return (
-    <article className="recipe">
+    <article className="recipe rv">
       <div className="recipe-hero">
         {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title} />}
       </div>
-      {/* The ⋯ menu opens under its button, like the story player's. */}
+      {/* Heart and ⋯ float on the photo, the ⋯ menu opens under its button, like the story player's. */}
       <span className="menu-anchor hero-more-anchor">
+        <RecipeHeart recipeId={r.id} favorite={!!log?.favorite} />
         <button type="button" className="hero-more" aria-label="Opțiuni rețetă" aria-haspopup="menu" aria-expanded={menu}
           onClick={() => { setMenu((o) => !o); setConfirming(false); setDeleteError('') }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
@@ -198,99 +212,102 @@ export default function RecipeView() {
         )}
       </span>
       <div className="recipe-sheet">
-        <div className="recipe-title-row">
+        <header className="rv-head">
+          {kicker && <p className="rv-kicker">{r.mine !== false && r.shared && <ShareIcon shared size={13} />}{kicker}</p>}
           <h1>{r.title}</h1>
-          <RecipeHeart recipeId={r.id} favorite={!!log?.favorite} />
-        </div>
-        <div className="pills">
-          {r.minutes ? <span className="pill">{formatMinutes(r.minutes)}</span> : null}
-          {r.category && <span className="pill">{r.category}</span>}
-          {r.mine === false
-            ? <span className="pill">De la {r.spaceName ?? 'alt cont'}</span>
-            : r.shared && <span className="pill pill-shared"><ShareIcon shared size={14} /> Partajată</span>}
-        </div>
+          <div className="rv-meta">
+            {r.minutes ? (
+              <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>{formatMinutes(r.minutes)}</span>
+            ) : null}
+            {r.servings && servings ? (
+              <span className="rv-servings" role="group" aria-label="Porții">
+                <output>{servings} {servings === 1 ? 'porție' : 'porții'}</output>
+                <button type="button" aria-label="Mai puține porții" disabled={servings <= 1} onClick={() => setServings(servings - 1)}>−</button>
+                <button type="button" aria-label="Mai multe porții" onClick={() => setServings(servings + 1)}>+</button>
+              </span>
+            ) : null}
+            {r.steps.length > 0 && <span>{r.steps.length} {r.steps.length === 1 ? 'pas' : 'pași'}</span>}
+          </div>
+          {cookedLabel(log) && <p className="recipe-cooked">{cookedLabel(log)}</p>}
+        </header>
 
-        {cookedLabel(log) && <p className="recipe-cooked">{cookedLabel(log)}</p>}
-
-        <RecipeFacts r={r} onFacts={(f) => setR((cur) => (cur ? { ...cur, ...f } : cur))} />
-
-        {r.steps.length > 0 && (() => {
-          const saved = getProgress(r.id)
-          return (
-            <Link to={`/retete/${r.id}/gateste`} state={{ fromRecipe: true }} className="btn primary big cook-cta">
-              {saved != null && saved > 0 && saved < r.steps.length ? `Continuă de la pasul ${saved + 1}` : 'Gătește pas cu pas'}
-            </Link>
-          )
-        })()}
-
-        <div className="recipe-plan-actions">
-          <button type="button" className="btn" onClick={() => setPlanning(true)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 2v4M16 2v4" /></svg>
-            În săptămână
-          </button>
-          {r.ingredients.length > 0 && (
-            <button type="button" className="btn" onClick={() => {
-              // Ingredients ticked as "I have it" stay off the list.
-              const need = r.ingredients.filter((_, i) => !have.has(i))
-              const n = addToShopping(r, servings, need)
-              setNote({ text: n ? `Am pus ${n} ${n === 1 ? 'ingredient' : 'ingrediente'} în listă.` : 'Sunt deja în listă.', to: '/cumparaturi', link: 'Vezi lista' })
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01" /></svg>
-              Pune în listă{have.size > 0 && toBuy > have.size ? ` (${toBuy - have.size})` : ''}
+        <div className="rv-tabs" role="tablist" aria-label="Rețeta">
+          {(['ingrediente', 'pasi', 'note'] as const).map((t) => (
+            <button key={t} type="button" role="tab" id={`rv-tab-${t}`} aria-controls={`rv-panel-${t}`} aria-selected={tab === t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>
+              {t === 'ingrediente' ? 'Ingrediente' : t === 'pasi' ? 'Pași' : 'Note'}
             </button>
-          )}
-          {note && <p className="recipe-plan-note" role="status">{note.text} <Link to={note.to}>{note.link}</Link></p>}
-        </div>
-        {have.size > 0 && <small className="recipe-plan-hint">Ce ai bifat la ingrediente nu ajunge în lista de cumpărături.</small>}
-
-        <div className="recipe-cols">
-          <section>
-            <div className="section-head">
-              <h2>Ingrediente</h2>
-              {r.servings && servings ? (
-                <div className="stepper" role="group" aria-label="Porții">
-                  <button type="button" aria-label="Mai puține porții" disabled={servings <= 1} onClick={() => setServings(servings - 1)}>−</button>
-                  <output>{servings} {servings === 1 ? 'porție' : 'porții'}</output>
-                  <button type="button" aria-label="Mai multe porții" onClick={() => setServings(servings + 1)}>+</button>
-                </div>
-              ) : null}
-            </div>
-            <ul className="checklist">
-              {r.ingredients.map((x, i) => isHeading(x) ? (
-                // "Pentru dresat:" groups the lines under it; nothing to tick.
-                <li key={i} className="checklist-heading">{x.trim().replace(/:\s*$/, '')}</li>
-              ) : (
-                <li key={i}>
-                  <label className={have.has(i) ? 'done' : ''}>
-                    <input type="checkbox" checked={have.has(i)} onChange={() => toggle(setHave)(i)} />
-                    <span>{scaleIngredient(x, factor)}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section>
-            <h2>Mod de preparare</h2>
-            <ol className="step-list">
-              {r.steps.map((x, i) => (
-                <li key={i} className={done.has(i) ? 'done' : ''}>
-                  <button type="button" onClick={() => toggle(setDone)(i)} aria-pressed={done.has(i)}>
-                    <span className="step-no">{i + 1}</span>
-                    <span>{x}</span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </section>
+          ))}
         </div>
 
-        {r.notes && (<section><h2>Note</h2><p className="notes">{r.notes}</p></section>)}
-        <CookNotes recipeId={r.id} />
-        {r.sourceUrl && <p><a href={r.sourceUrl} target="_blank" rel="noreferrer">Sursa originală</a></p>}
+        {tab === 'ingrediente' && (
+          <section className="rv-panel" role="tabpanel" id="rv-panel-ingrediente" aria-labelledby="rv-tab-ingrediente">
+            <RecipeFacts r={r} onFacts={(f) => setR((cur) => (cur ? { ...cur, ...f } : cur))} />
+            {r.ingredients.length > 0 ? (
+              <ul className="checklist">
+                {r.ingredients.map((x, i) => isHeading(x) ? (
+                  // "Pentru dresat:" groups the lines under it; nothing to tick.
+                  <li key={i} className="checklist-heading">{x.trim().replace(/:\s*$/, '')}</li>
+                ) : (
+                  <li key={i}>
+                    <label className={have.has(i) ? 'done' : ''}>
+                      <input type="checkbox" checked={have.has(i)} onChange={() => toggle(setHave)(i)} />
+                      <span>{scaleIngredient(x, factor)}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="muted-note">Rețeta nu are ingrediente.</p>}
+            {have.size > 0 && <small className="recipe-plan-hint">Ce ai bifat nu ajunge în lista de cumpărături.</small>}
+          </section>
+        )}
 
+        {tab === 'pasi' && (
+          <section className="rv-panel" role="tabpanel" id="rv-panel-pasi" aria-labelledby="rv-tab-pasi">
+            {r.steps.length > 0 ? (
+              <ol className="step-list">
+                {r.steps.map((x, i) => (
+                  <li key={i} className={done.has(i) ? 'done' : ''}>
+                    <button type="button" onClick={() => toggle(setDone)(i)} aria-pressed={done.has(i)}>
+                      <span className="step-no">{i + 1}</span>
+                      <span>{x}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            ) : <p className="muted-note">Rețeta nu are încă pași.</p>}
+          </section>
+        )}
+
+        {tab === 'note' && (
+          <section className="rv-panel" role="tabpanel" id="rv-panel-note" aria-labelledby="rv-tab-note">
+            {r.notes && <p className="notes">{r.notes}</p>}
+            <CookNotes recipeId={r.id} />
+            {r.sourceUrl && <p><a href={r.sourceUrl} target="_blank" rel="noreferrer">Sursa originală</a></p>}
+          </section>
+        )}
       </div>
-      {planning && <DayPicker r={r} servings={servings} onClose={() => setPlanning(false)} onDone={(text) => { setPlanning(false); setNote({ text, to: '/saptamana', link: 'Vezi săptămâna' }) }} />}
+
+      {/* The main action stays at the bottom of the screen, with the week and the shopping list beside it. */}
+      <div className={`rv-foot${r.steps.length ? '' : ' no-cook'}`}>
+        {r.steps.length > 0 && (
+          <Link to={`/retete/${r.id}/gateste`} state={{ fromRecipe: true }} className="rv-cook">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 14.5a4 4 0 0 1-.5-7.9 5.5 5.5 0 0 1 11 0 4 4 0 0 1-.5 7.9V19H7z" /><path d="M7 16.5h10" /></svg>
+            {resume ? `Continuă de la pasul ${saved! + 1}` : 'Începe să gătești'}
+          </Link>
+        )}
+        <button type="button" className="rv-round" onClick={() => setPlanning(true)} aria-label="Pune în săptămână">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 2v4M16 2v4" /></svg>
+          <span>În săptămână</span>
+        </button>
+        {r.ingredients.length > 0 && (
+          <button type="button" className="rv-round" onClick={addToList} aria-label={`Pune în listă${have.size > 0 && left > 0 ? ` (${left})` : ''}`}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2M9.5 20.5h.01M17 20.5h.01" /></svg>
+            <span>Pune în listă</span>
+            {have.size > 0 && left > 0 && <b className="rv-count">{left}</b>}
+          </button>
+        )}
+      </div>
+      {planning && <DayPicker r={r} servings={servings} onClose={() => setPlanning(false)} onDone={(text) => { setPlanning(false); showToast(text, undefined, { action: { label: 'Vezi săptămâna', run: () => navigate('/saptamana') } }) }} />}
     </article>
   )
 }

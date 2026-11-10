@@ -1514,3 +1514,22 @@
   .prof-calm .profile-h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
   .prof-calm .prof-hero { margin-top: 18px; }
 }
+
+/* ---------- Acasă: tabs that stay under the clock, and fuller Azi / Săptămâna tabs ---------- */
+@media (max-width: 759px) {
+  .home-tabs { --tabs-top: calc(var(--status-h, 0px) + 6px); }
+  .home-tabs > .seg-tabs { position: sticky; top: var(--tabs-top); z-index: 8; background: rgb(32 28 25 / .88);
+    box-shadow: 0 8px 24px rgb(0 0 0 / .35); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); }
+  :root[data-area="night"] .home-tabs > .seg-tabs { background: rgb(28 26 36 / .88); }
+}
+.home-idea { display: flex; align-items: center; gap: 8px; }
+.home-idea > a { flex: 1; min-width: 0; }
+.home-idea-add { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgb(242 200 121 / .45); background: rgb(242 200 121 / .1);
+  color: var(--accent); font: inherit; font-size: var(--fs-sm); font-weight: 800; cursor: pointer; }
+.home-idea-add:active { transform: scale(.95); }
+@media (max-width: 759px) {
+  .home-tabs > .seg-tabs { isolation: isolate; }
+  .home-tabs > .seg-tabs::before { content: ''; position: absolute; z-index: -1; left: -16px; right: -16px; top: calc(-1 * var(--tabs-top)); bottom: -14px;
+    background: linear-gradient(var(--bg) calc(100% - 14px), transparent); opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .home-tabs.stuck > .seg-tabs::before { opacity: 1; }
+}

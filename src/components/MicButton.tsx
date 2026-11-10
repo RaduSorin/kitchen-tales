@@ -54,8 +54,9 @@ export default function MicButton({ value, onChange, onDictated, onStart, asLine
   const online = useOnline()
   const session = useRef<Dictation>(undefined)
 
-  // Stop listening if the screen is left mid-dictation.
-  useEffect(() => () => session.current?.stop(), [])
+  // Stop listening if the screen is left mid-dictation (also while the microphone is still opening).
+  const alive = useRef(true)
+  useEffect(() => { alive.current = true; return () => { alive.current = false; session.current?.stop() } }, [])
 
   useEffect(() => {
     if (state !== 'on') return
@@ -88,6 +89,7 @@ export default function MicButton({ value, onChange, onDictated, onStart, asLine
           if (err) fail(err)
         },
       })
+      if (!alive.current) { session.current?.stop(); return }
       setState((s) => (s === 'starting' ? 'on' : s))
     } catch (err) {
       session.current = undefined

@@ -24,6 +24,8 @@ import { applyTheme } from './lib/settings'
 import { offlineFirstTokenProvider } from './lib/offlineAuth'
 import App from './App.tsx'
 import { watchForUpdates } from './lib/update'
+import { watchForErrors } from './lib/errorReport'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { AuthFooter, AuthHeader } from './components/AuthScene'
 
 Amplify.configure(outputs)
@@ -33,6 +35,7 @@ Amplify.configure(Amplify.getConfig(), {
 })
 applyTheme()
 watchForUpdates()
+watchForErrors()
 
 // Signed out: start the app again from scratch. What it keeps in memory for an account (its space,
 // settings, lists, the family) belongs to that account; without a fresh start, the next account to
@@ -88,7 +91,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <Authenticator hideSignUp components={{ Header: AuthHeader, Footer: AuthFooter }}>
-        <App />
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
       </Authenticator>
     </ThemeProvider>
   </StrictMode>,

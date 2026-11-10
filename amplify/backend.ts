@@ -9,6 +9,7 @@ import { timerAlarm } from './functions/timer-alarm/resource'
 import { files } from './functions/files/resource'
 import { mindPush } from './functions/mind-push/resource'
 import { mindCoach } from './functions/mind-coach/resource'
+import { clientLog } from './functions/client-log/resource'
 import { FILE_PREFIXES, MIND_PREFIX } from './shared/files'
 import { IMAGE_MODEL_ID, IMAGE_MODEL_REGION, MODEL_ID } from './shared/model'
 import { JOB_PREFIX } from './shared/jobs'
@@ -16,7 +17,7 @@ import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { storage } from './storage/resource'
 
-const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover, family, timerAlarm, files, mindPush, mindCoach })
+const backend = defineBackend({ auth, data, storage, importRecipe, generateStory, findCover, family, timerAlarm, files, mindPush, mindCoach, clientLog })
 
 // Invite-only: nobody can create an account from the app.
 // Family members invite each other from Settings (see functions/family).

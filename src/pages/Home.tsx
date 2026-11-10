@@ -15,14 +15,15 @@ import StoryCover from '../components/StoryCover'
 import HomeHead from '../components/HomeHead'
 import Vitrine, { type VitrineSlide } from '../components/Vitrine'
 import MonthCard from '../components/MonthCard'
+import HomeTabs from '../components/HomeTabs'
 import { useSyncedList } from '../lib/synced'
 import { dayKey, mondayOf, planStore, today, weekDays } from '../lib/plan'
 import { LoadError, Loading } from '../components/LoadState'
 
-// The recipes Acasă, design "Vitrina": the dish photo fills the top of the screen (swipe between
-// the dish you're cooking, today's plan and the newest recipe), then today's menu, recent recipes,
-// "Săptămâna ta" as seven round plates, "Caietul meu" (one collection card per category) and
-// tonight's story.
+// The recipes Acasă, design A1 "Topit în poză": the dish photo fills most of the screen (swipe
+// between the dish you're cooking, today's plan and the newest recipe) and fades into the page,
+// where three tabs hold the rest: Azi (today's menu, tonight's story, Răgaz), Săptămâna (seven
+// round plates) and Caiet (recent recipes and one collection card per category).
 
 const Play = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" /></svg>
@@ -74,6 +75,10 @@ function StoryCard({ stories, evening }: { stories: Story[]; evening: boolean })
     </Link>
   )
 }
+
+const Chevron = () => (
+  <svg className="home-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+)
 
 const Sec = ({ title, link, to }: { title: string; link: string; to: string }) => (
   <div className="sh-sec-head vt-sec"><h2>{title}</h2><Link to={to}>{link}</Link></div>
@@ -190,61 +195,65 @@ export default function Home() {
           action: x.action, actionTo: x.to, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
         }))} />
 
-      <MonthCard />
-
-      {restOfMenu.length > 0 && (
-        <section className="home-sec">
-          <Sec title="Azi în meniu" link="Săptămâna" to="/saptamana" />
-          <div className="vt-scroll" key={restOfMenu.map((r) => r.id).join()}>
-            {restOfMenu.map((r, i) => (
-              <Link key={`${r.id}-${i}`} to={`/retete/${r.id}`} className="vt-wide">
-                <span className="vt-img"><Thumb r={r} /></span>
-                <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
-              </Link>
-            ))}
+      <HomeTabs memory="kt-home-tab" label="Acasă" tabs={[
+        { key: 'azi', label: 'Azi', body: <>
+          {restOfMenu.length > 0 ? (
+            <ul className="home-rows">
+              {restOfMenu.map((r, i) => (
+                <li key={`${r.id}-${i}`}>
+                  <Link to={`/retete/${r.id}`}>
+                    <span className="home-row-img"><Thumb r={r} /></span>
+                    <span className="home-row-text"><b>{r.title}</b>{meta(r) && <small>Azi în meniu · {meta(r)}</small>}</span>
+                    <Chevron />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Link to="/saptamana" className="home-note">{menu.length ? 'Atât e azi în meniu.' : 'Nimic în plan azi.'} <b>Săptămâna</b></Link>
+          )}
+          {playable && <StoryCard key={playable.length} stories={playable} evening={evening} />}
+          <MonthCard />
+        </> },
+        { key: 'saptamana', label: 'Săptămâna', body: <>
+          <div className="vt-week">
+            {week.map(({ key, d, r }, i) => {
+              const isToday = key === todayKey
+              const name = d.toLocaleDateString('ro-RO', { weekday: 'long' })
+              return (
+                <Link key={key} to={`/saptamana?zi=${key}`} className={isToday ? 'vt-day today' : 'vt-day'}
+                  aria-label={r ? `${name}: ${r.title}` : `${name}: nimic planificat`}>
+                  <span className={r ? 'vt-plate' : 'vt-plate free'}>{r ? <Thumb r={r} /> : '+'}</span>
+                  <small>{isToday ? 'Azi' : WEEK_DAYS[i]}</small>
+                </Link>
+              )
+            })}
           </div>
-        </section>
-      )}
-
-      {recent.length > 0 && (
-        <section className="home-sec">
-          <Sec title="Recente" link="Toate" to="/retete" />
-          <div className="vt-scroll" key={recent.map((r) => r.id).join()}>
-            {recent.map((r) => (
-              <Link key={r.id} to={`/retete/${r.id}`} className="vt-tall">
-                <span className="vt-img"><Thumb r={r} /></span>
-                <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="home-sec">
-        <Sec title="Săptămâna ta" link="Planifică" to="/saptamana/planifica" />
-        <div className="vt-week">
-          {week.map(({ key, d, r }, i) => {
-            const isToday = key === todayKey
-            const name = d.toLocaleDateString('ro-RO', { weekday: 'long' })
-            return (
-              <Link key={key} to={`/saptamana?zi=${key}`} className={isToday ? 'vt-day today' : 'vt-day'}
-                aria-label={r ? `${name}: ${r.title}` : `${name}: nimic planificat`}>
-                <span className={r ? 'vt-plate' : 'vt-plate free'}>{r ? <Thumb r={r} /> : '+'}</span>
-                <small>{isToday ? 'Azi' : WEEK_DAYS[i]}</small>
-              </Link>
-            )
-          })}
-        </div>
-      </section>
-
-      {categories.length > 0 && (
-        <section className="home-sec">
-          <Sec title="Caietul meu" link="Toate" to="/retete" />
-          <div className="collections">{categories.map(([name, items]) => <Category key={name} name={name} items={items} />)}</div>
-        </section>
-      )}
-
-      {playable && <StoryCard key={playable.length} stories={playable} evening={evening} />}
+          <div className="home-links"><Link to="/saptamana">Toată săptămâna</Link><Link to="/saptamana/planifica">Planifică</Link></div>
+        </> },
+        { key: 'caiet', label: 'Caiet', body: <>
+          {recent.length > 0 && (
+            <section className="home-sec">
+              <Sec title="Recente" link="Toate" to="/retete" />
+              <div className="vt-scroll" key={recent.map((r) => r.id).join()}>
+                {recent.map((r) => (
+                  <Link key={r.id} to={`/retete/${r.id}`} className="vt-tall">
+                    <span className="vt-img"><Thumb r={r} /></span>
+                    <b>{r.title}</b>{meta(r) && <small>{meta(r)}</small>}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+          {categories.length > 0 && (
+            <section className="home-sec">
+              <Sec title="Caietul meu" link="Toate" to="/retete" />
+              <div className="collections">{categories.map(([name, items]) => <Category key={name} name={name} items={items} />)}</div>
+            </section>
+          )}
+          {!recent.length && !categories.length && <Link to="/retete" className="home-note">Toate rețetele <b>Rețete</b></Link>}
+        </> },
+      ]} />
     </div>
   )
 }

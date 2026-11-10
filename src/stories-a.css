@@ -1273,3 +1273,90 @@
 .cb-book.dark b { color: #f4efe6; }
 .cb-bar { width: 72%; height: 6px; border-radius: 999px; background: rgb(255 255 255 / .1); overflow: hidden; margin-top: 4px; }
 .cb-bar span { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .25s ease-out; }
+/* ---------- Recipe page (redesign concept 1): photo melts into the page, title, one meta line,
+   Ingrediente / Pași / Note on a segmented control, and the main action fixed at the bottom. ---------- */
+.rv .recipe-hero::after { content: ""; position: absolute; inset: auto 0 0; height: 55%; background: linear-gradient(transparent, var(--bg)); pointer-events: none; }
+.rv .recipe-hero img, .rv .recipe-hero svg { filter: none; }
+.rv .recipe-sheet { margin-top: -96px; background: none; border-radius: 0; padding: 0 20px; gap: 18px; }
+.rv .hero-more-anchor { display: flex; gap: 10px; }
+.rv .hero-more-anchor .recipe-fav { width: 44px; height: 44px; margin: 0; color: #fff; border: 1px solid rgb(255 255 255 / .35); background: rgb(20 16 14 / .45);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); box-shadow: 0 4px 14px rgb(0 0 0 / .25); }
+.rv .hero-more-anchor .recipe-fav.on { color: var(--accent); }
+.rv .hero-more-anchor .recipe-fav svg { width: 21px; height: 21px; }
+.rv .hero-more-anchor .pop-menu, .rv .hero-more-anchor [role="menu"] { right: 0; }
+.rv-head { position: relative; display: grid; gap: 6px; }
+.rv-kicker { margin: 0; display: flex; align-items: center; gap: 6px; color: var(--accent); font-size: 11.5px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; text-shadow: 0 1px 6px rgb(0 0 0 / .5); }
+.rv .rv-head h1 { font-size: clamp(28px, 8vw, 40px); line-height: 1.05; margin: 2px 0 6px; text-shadow: 0 2px 14px rgb(0 0 0 / .45); }
+.rv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; color: var(--muted); font-size: var(--fs-sm); font-weight: 700; }
+.rv-meta > span { display: inline-flex; align-items: center; gap: 5px; }
+.rv-servings output { color: var(--muted); margin-right: 2px; }
+.rv-servings button { width: 32px; height: 32px; margin: -6px -4px; border: 0; border-radius: 50%; background: none; color: var(--accent); font: inherit; font-size: 19px; font-weight: 800; line-height: 1; cursor: pointer; }
+.rv-servings button:disabled { opacity: .35; cursor: default; }
+.rv-servings button:active { background: rgb(255 255 255 / .1); }
+.rv .recipe-cooked { margin: 0; font-size: var(--fs-sm); }
+.rv-tabs { display: flex; padding: 3px; border-radius: 14px; background: rgb(255 255 255 / .08); }
+.rv-tabs button { flex: 1; min-height: 38px; border: 0; border-radius: 11px; background: none; color: var(--muted); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; transition: background .2s, color .2s; }
+.rv-tabs button.on { background: rgb(255 255 255 / .16); color: var(--text); }
+.rv-panel { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.rv .checklist input { width: 22px; height: 22px; margin: 0; border-radius: 50%; border: 2px solid rgb(255 255 255 / .35); }
+.rv .checklist input:checked { background: var(--accent); border-color: var(--accent); }
+.rv .checklist label { align-items: center; padding: 9px 2px; }
+.rv .recipe-plan-hint { margin: 0; }
+.rv .cook-notes { margin-top: 4px; }
+/* Room at the end so the last line scrolls clear of the bottom bar (and the story bar above it). */
+.rv { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+:root:has(.mini-player) .rv { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
+
+.rv-foot { position: fixed; z-index: 19; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; justify-content: center;
+  padding: 18px 16px max(14px, calc(env(safe-area-inset-bottom) - 4px)); background: linear-gradient(transparent, var(--bg) 40%); }
+.rv-cook { flex: 1; max-width: 420px; min-height: 56px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 28px;
+  background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: var(--fs-lg); white-space: nowrap; padding: 0 16px; text-decoration: none; box-shadow: 0 8px 24px rgb(242 200 121 / .25); }
+.rv-cook:active, .rv-round:active { transform: scale(.97); }
+.rv-round { position: relative; flex: none; width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; cursor: pointer; color: var(--text);
+  border: 1px solid rgb(255 255 255 / .14); background: rgb(40 36 44 / .7); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); }
+.rv-round span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.rv-count { position: absolute; top: -3px; right: -3px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+/* No steps to cook: the week and the list become the two wide buttons. */
+.rv-foot.no-cook .rv-round { flex: 1; max-width: 220px; width: auto; border-radius: 28px; display: inline-flex; justify-content: center; gap: 8px; font: inherit; font-weight: 700; }
+.rv-foot.no-cook .rv-round span { position: static; width: auto; height: auto; clip: auto; }
+/* The story keeps playing just above the bar; toasts too. */
+:root:has(.rv-foot) .mini-player { bottom: calc(max(14px, calc(env(safe-area-inset-bottom) - 4px)) + 68px); }
+:root:has(.rv-foot) .toast { bottom: calc(max(14px, calc(env(safe-area-inset-bottom) - 4px)) + 68px); }
+:root:has(.rv-foot):has(.mini-player) .toast { bottom: calc(max(14px, calc(env(safe-area-inset-bottom) - 4px)) + 136px); }
+:root:has(.rv-foot) .mini-spacer { display: none; }
+@media (max-width: 380px) { .rv-cook { font-size: var(--fs-md); gap: 8px; } .rv-foot { gap: 8px; } .rv-round { width: 52px; height: 52px; } .rv-cook { min-height: 52px; } }
+@media (max-width: 759px) {
+  .rv .recipe-hero { height: calc(clamp(300px, 92vw, 400px) + var(--status-h)); }
+}
+@media (min-width: 760px) {
+  .rv .recipe-sheet { margin: -110px 24px 0; padding: 0 8px; max-width: 760px; }
+  .rv .recipe-hero::after { height: 60%; }
+}
+
+/* ---------- Both Acasă screens, design A1 "Topit în poză": a taller picture that fades into the
+   page, then three tabs (the recipe page's segmented control) and the open tab's lists. ---------- */
+.seg-tabs { display: flex; padding: 3px; border-radius: 14px; background: rgb(255 255 255 / .08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.seg-tabs button { flex: 1; min-height: 38px; border: 0; border-radius: 11px; background: none; color: var(--muted); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; transition: background .2s, color .2s; }
+.seg-tabs button.on { background: rgb(255 255 255 / .16); color: var(--text); }
+.home-tabs { position: relative; z-index: 1; display: grid; gap: 16px; margin-top: 6px; }
+.home-tab-panel { display: grid; gap: 14px; align-content: start; min-height: 180px; }
+.home-tab-panel .home-sec .vt-sec, .home-tab-panel .sh-sec-head h2 { margin-top: 0; }
+.home-tab-panel .ra-story, .home-tab-panel .month-card { margin: 0; }
+/* Today's dishes as plain rows: photo, name, one muted line. */
+.home-rows { list-style: none; margin: 0; padding: 0; }
+.home-rows a { display: flex; align-items: center; gap: 14px; padding: 10px 0; color: var(--text); text-decoration: none; border-bottom: 1px solid rgb(255 255 255 / .07); }
+.home-rows li:last-child a { border-bottom: 0; }
+.home-row-img { flex: none; width: 52px; height: 52px; border-radius: 14px; overflow: hidden; background: var(--surface-2); }
+.home-row-img > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-row-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.home-row-text b { font-weight: 700; font-size: var(--fs-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-row-text small { color: var(--muted); font-size: var(--fs-xs); font-weight: 600; }
+.home-chev { flex: none; color: var(--muted); }
+.home-rows a:active { opacity: .7; }
+.home-note { display: block; margin: 0; color: var(--muted); font-size: var(--fs-sm); text-decoration: none; }
+.home-note b { color: var(--accent); margin-left: 6px; }
+.home-links { display: flex; justify-content: space-between; }
+.home-links a { color: var(--accent); font-weight: 700; font-size: var(--fs-sm); text-decoration: none; padding: 6px 0; }
+/* Stories: a slightly shorter cover so the tabs show on the first screen, like the concept. */
+@media (max-width: 759px) { .stories-home.vitrina .vt-cover { height: calc(min(100vw, 640px) + 118px); } }
+.vt-cover .sa-kicker { text-shadow: 0 1px 8px rgb(0 0 0 / .85), 0 0 2px rgb(0 0 0 / .6); }

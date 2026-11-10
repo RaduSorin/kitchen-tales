@@ -4,7 +4,7 @@ import { listRecipes } from '../lib/db'
 import { useRecipeLogs } from '../lib/recipeLog'
 import { reportError } from '../lib/errorReport'
 import type { Recipe } from '../lib/types'
-import type { CookbookStyle } from '../lib/cookbook'
+import type { CookbookSize, CookbookStyle } from '../lib/cookbook'
 
 type Which = 'all' | 'favorites' | 'categories'
 type Phase = { at: 'pick' } | { at: 'making'; done: number; total: number; title: string } | { at: 'ready'; file: File; pages: number } | { at: 'error'; text: string }
@@ -43,6 +43,7 @@ export default function CookbookSheet({ authors, onClose }: { authors?: string; 
   const [cats, setCats] = useState<string[]>([])
   const [style, setStyle] = useState<CookbookStyle>('classic')
   const [photos, setPhotos] = useState(true)
+  const [size, setSize] = useState<CookbookSize>('a5')
   const [phase, setPhase] = useState<Phase>({ at: 'pick' })
   const [estimate, setEstimate] = useState<{ pages: number; mb: number }>()
 
@@ -63,16 +64,16 @@ export default function CookbookSheet({ authors, onClose }: { authors?: string; 
   useEffect(() => {
     // The estimate lives with the PDF code, which loads only once the sheet is open.
     let live = true
-    import('../lib/cookbook').then((m) => live && setEstimate(m.estimate(chosen, photos))).catch(() => {})
+    import('../lib/cookbook').then((m) => live && setEstimate(m.estimate(chosen, photos, size))).catch(() => {})
     return () => { live = false }
-  }, [chosen, photos])
+  }, [chosen, photos, size])
 
   const make = async () => {
     setPhase({ at: 'making', done: 0, total: 1, title: '' })
     try {
       const { makeCookbook } = await import('../lib/cookbook')
       const { file, pages } = await makeCookbook({
-        recipes: chosen, logs, style, photos, authors,
+        recipes: chosen, logs, style, size, photos, authors,
         onProgress: (done, total, title) => setPhase({ at: 'making', done, total, title }),
       })
       setPhase({ at: 'ready', file, pages })
@@ -127,6 +128,12 @@ export default function CookbookSheet({ authors, onClose }: { authors?: string; 
           <div className="cb-styles" role="group" aria-label="Stil">
             <button type="button" className="cb-style" aria-pressed={style === 'classic'} onClick={() => setStyle('classic')}><StyleArt /><span>Clasic</span></button>
             <button type="button" className="cb-style" aria-pressed={style === 'evening'} onClick={() => setStyle('evening')}><StyleArt dark /><span>Seară</span></button>
+          </div>
+
+          <h3 className="cb-label">Mărime</h3>
+          <div className="seg cb-seg" role="group" aria-label="Mărime">
+            <button type="button" aria-pressed={size === 'a5'} onClick={() => setSize('a5')}>A5<small>recomandat pe telefon</small></button>
+            <button type="button" aria-pressed={size === 'a4'} onClick={() => setSize('a4')}>A4<small>recomandat la tipărit</small></button>
           </div>
 
           <h3 className="cb-label">Poze</h3>

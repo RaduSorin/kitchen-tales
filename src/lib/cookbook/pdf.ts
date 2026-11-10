@@ -11,6 +11,7 @@ import { isHeading } from '../scale'
 import type { CookNote, Recipe } from '../types'
 
 export type CookbookStyle = 'classic' | 'evening'
+export type CookbookSize = 'a5' | 'a4'
 
 export type FontName = 'serif' | 'serifItalic' | 'sans' | 'sansBold' | 'sansBlack'
 /** TTF bytes for each face (public/fonts/pdf/). */
@@ -32,6 +33,8 @@ export interface CookbookRecipe {
 export interface CookbookInput {
   recipes: CookbookRecipe[]
   style: CookbookStyle
+  /** A5 (default) reads best on a phone; A4 prints straight onto a sheet. */
+  size?: CookbookSize
   fonts: CookbookFonts
   /** "Sorin și Loredana", under the title on the cover. */
   authors?: string
@@ -40,12 +43,15 @@ export interface CookbookInput {
   onProgress?: (done: number, total: number, title: string) => void
 }
 
-// A5 in points. The layout is written in the concept's pixels (design-polish/cookbook/board.html,
-// pages 440 px wide) and scaled: 1 px = K pt, so the PDF matches the concept's proportions.
-const W = 419.53
-const H = 595.28
-const K = W / 440
-const PH = H / K // page height in px (~624)
+// The layout is written in the concept's pixels (design-polish/cookbook/board.html, pages 440 px
+// wide) and scaled to the page. A5 is the concept exactly. On A4 the cover keeps the concept's
+// 440 px, while the contents and recipe pages are laid out 540 px wide: fuller pages, with the
+// 11.5 px body text at 12.7 pt.
+const SIZES: Record<CookbookSize, { W: number; H: number; pageVw: number }> = {
+  a5: { W: 419.53, H: 595.28, pageVw: 440 },
+  a4: { W: 595.28, H: 841.89, pageVw: 540 },
+}
+const COVER_VW = 440
 
 const hex = (h: string) => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255)
 
@@ -123,6 +129,8 @@ const romanianDate = (day: string) => {
 
 export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint8Array; pages: number }> {
   const t = THEMES[input.style]
+  const { W, H, pageVw: PAGE_VW } = SIZES[input.size ?? 'a5']
+  const f = PAGE_VW / COVER_VW // how much wider recipe pages are than the concept's
   const dark = input.style === 'evening'
   const doc = await PDFDocument.create()
   doc.registerFontkit(fontkit)
@@ -140,6 +148,9 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
   for (const r of all) if (r.photo) images.set(r, await doc.embedJpg(r.photo.jpeg))
 
   // ---- drawing in concept pixels, measured from the top of the page ----
+  /** VW: the page's width in px; 1 px = K pt; PH: the page's height in px. */
+  let VW = PAGE_VW, K = W / VW, PH = H / K
+  const scale = (vw: number) => { VW = vw; K = W / vw; PH = H / K }
   const X = (x: number) => x * K
   const Y = (top: number) => H - top * K
   const width = (s: string, font: PDFFont, size: number, track = 0) => font.widthOfTextAtSize(s, size) + track * size * Math.max(0, s.length - 1)
@@ -150,7 +161,7 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
     if (track) p.pushOperators(setCharacterSpacing(0))
   }
   const centered = (p: PDFPage, s: string, base: number, font: PDFFont, size: number, color: RGB, track = 0) =>
-    text(p, s, (440 - width(s, font, size, track)) / 2, base, font, size, color, track)
+    text(p, s, (VW - width(s, font, size, track)) / 2, base, font, size, color, track)
   const box = (p: PDFPage, x: number, top: number, w: number, h: number, o: { color?: RGB; border?: RGB; bw?: number; opacity?: number }) =>
     p.drawRectangle({ x: X(x), y: Y(top + h), width: X(w), height: X(h), color: o.color, borderColor: o.border, borderWidth: o.border ? (o.bw ?? 1) * K : undefined, opacity: o.opacity })
   const hline = (p: PDFPage, x: number, top: number, w: number, color: RGB, th = 1) => box(p, x, top, w, th, { color })
@@ -196,7 +207,7 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
   const newPage = () => {
     const p = doc.addPage([W, H])
     p.drawRectangle({ x: 0, y: 0, width: W, height: H, color: t.page })
-    if (glow) stretch(p, glow, 0, 0, 440, PH * 0.6)
+    if (glow) stretch(p, glow, 0, 0, VW, PH * 0.6)
     return p
   }
   /** Draws `img` filling the box (cropped to it, like CSS background-size: cover). */
@@ -237,13 +248,14 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
   }
 
   // ---- cover ----
+  scale(COVER_VW)
   {
     const p = newPage()
     const meta = (cats: boolean) => [count(all.length, 'rețetă', 'rețete'), cats ? count(groups.length, 'categorie', 'categorii') : '', `${MONTHS[input.date.getMonth()]} ${input.date.getFullYear()}`].filter(Boolean)
     if (dark) {
       const hero = all.find((r) => r.favorite && images.has(r)) ?? all.find((r) => images.has(r))
-      if (hero) cover(p, images.get(hero)!, 0, 0, 440, PH)
-      if (hero && coverShade) stretch(p, coverShade, 0, 0, 440, PH)
+      if (hero) cover(p, images.get(hero)!, 0, 0, VW, PH)
+      if (hero && coverShade) stretch(p, coverShade, 0, 0, VW, PH)
       // .tx: left 36, bottom 60; kicker, 48 px title (line-height 1), 13 px line.
       const bottom = PH - 60
       text(p, meta(false).join(' · '), 36, bottom - 3, sans, 13, t.chips)
@@ -251,15 +263,15 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
       text(p, 'Rețetele', 36, bottom - 16 - 10 - 10 - 48, serif, 48, t.ink)
       kicker(p, 'Bucătăria cu povești', 36, bottom - 16 - 10 - 96 - 10 - 2, 11, 0.24)
     } else {
-      box(p, 16, 16, 440 - 32, PH - 32, { border: hex('#d6c39a') })
-      box(p, 21, 21, 440 - 42, PH - 42, { border: hex('#ecdfc3') })
+      box(p, 16, 16, VW - 32, PH - 32, { border: hex('#d6c39a') })
+      box(p, 21, 21, VW - 42, PH - 42, { border: hex('#ecdfc3') })
       centered(p, 'BUCĂTĂRIA CU POVEȘTI', 73, sansBlack, 11, t.gold, 0.24)
       centered(p, 'Rețetele', 128, serif, 46, t.ink)
       centered(p, 'noastre', 175, serif, 46, t.ink)
       if (input.authors) centered(p, `adunate de ${input.authors}`, 205, serifItalic, 16, hex('#7b6a55'))
       // Three photos, favourites first, then the most cooked: one tall on the left, two on the right.
       const picks = [...all].filter((r) => images.has(r)).sort((a, b) => Number(b.favorite) - Number(a.favorite) || b.cooked - a.cooked).slice(0, 3)
-      const top = 248, left = 46, w = 440 - 92, gap = 6
+      const top = 248, left = 46, w = VW - 92, gap = 6
       const big = ((w - gap) * 1.3) / 2.3, small = w - gap - big
       if (picks.length >= 3) {
         cover(p, images.get(picks[0])!, left, top, big, 242)
@@ -275,18 +287,20 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
       const parts = meta(true)
       const sep = '  ·  '
       const full = width(parts[0], sansBold, 12, 0.06) + width(sep + parts.slice(1).join(sep), sans, 12, 0.06)
-      const x0 = (440 - full) / 2, base = PH - 48
+      const x0 = (VW - full) / 2, base = PH - 48
       text(p, parts[0], x0, base, sansBold, 12, t.ink, 0.06)
       text(p, sep + parts.slice(1).join(sep), x0 + width(parts[0], sansBold, 12, 0.06), base, sans, 12, hex('#7b6a55'), 0.06)
     }
   }
 
   const tocPages = tocPlan.map(() => newPage())
+  scale(PAGE_VW)
 
   // ---- recipes ----
   const firstPage = new Map<CookbookRecipe, PDFPage>()
   const pageNo = new Map<CookbookRecipe, number>()
-  const L = 30, LW = 150, R = 200, RW = 210 // the two columns: .cols 150px 1fr, gap 20, page padding 30
+  // The concept's columns (.cols 150px 1fr, gap 20, padding 30 on 440 px), in proportion to the page.
+  const L = Math.round(30 * f), LW = Math.round(150 * f), R = L + LW + Math.round(20 * f), RW = PAGE_VW - L - R
   const SIZE = 11.5, LH = 17.25 // font-size 11.5px, line-height 1.5
   const END = PH - 46 // content stops above the folio
   const firstBase = (lh: number, size: number) => (lh - size) / 2 + size * 0.78
@@ -303,10 +317,10 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
       const img = images.get(r)
       let y: number
       if (img) {
-        const hh = dark ? 230 : 176
-        cover(p, img, 0, 0, 440, hh)
-        if (heroFade) stretch(p, heroFade, 0, 0, 440, hh + 0.5)
-        y = dark ? hh - 30 : hh + 20
+        const hh = ((dark ? 230 : 176) * PAGE_VW) / COVER_VW
+        cover(p, img, 0, 0, VW, hh)
+        if (heroFade) stretch(p, heroFade, 0, 0, VW, hh + 0.5)
+        y = dark ? hh - 30 * f : hh + 20 * f
       } else {
         y = 44
       }
@@ -314,7 +328,7 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
       y += 12
       const ts = img ? 30 : 34, tl = ts * 1.05
       y += 6
-      for (const line of wrap(printable(rec.title), serif, ts, 440 - 2 * L)) { text(p, line, L, y + firstBase(tl, ts), serif, ts, t.ink); y += tl }
+      for (const line of wrap(printable(rec.title), serif, ts, VW - 2 * L)) { text(p, line, L, y + firstBase(tl, ts), serif, ts, t.ink); y += tl }
       y += img ? 8 : 0
       if (!img) { hline(p, L, y + 10, 60, t.boxEdge); y += 10 + 1 + 12 }
       // .chips: servings, minutes, times cooked, favourite.
@@ -335,112 +349,176 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
       }
       if (r.favorite) { heart(p, x, cb, 10); text(p, 'favorită', x + 14, cb, sans, 11.5, t.chips) }
       y += 14 + 12
-      hline(p, L, y, 440 - 2 * L, t.rule)
+      hline(p, L, y, VW - 2 * L, t.rule)
       y += 1 + 12
 
+      // Continuation pages: a small header (a long title wraps onto a second line, then is cut short).
       const continued = () => {
-        p = newPage()
-        kicker(p, `${label}  ·  continuare`, L, 44)
-        text(p, printable(rec.title), L, 70, serif, 20, t.ink)
-        hline(p, L, 82, 440 - 2 * L, t.rule)
-        return 96
+        const pg = newPage()
+        kicker(pg, `${label}  ·  continuare`, L, 44)
+        let lines = wrap(printable(rec.title), serif, 20, VW - 2 * L)
+        if (lines.length > 2) {
+          let last = lines[1]
+          while (last && width(`${last}…`, serif, 20) > VW - 2 * L) last = last.slice(0, -1).trimEnd()
+          lines = [lines[0], `${last}…`]
+        }
+        lines.forEach((l, i) => text(pg, l, L, 70 + i * 24, serif, 20, t.ink))
+        const rule = 82 + (lines.length - 1) * 24
+        hline(pg, L, rule, VW - 2 * L, t.rule)
+        return { pg, top: rule + 14 }
       }
 
-      type Block = { h: number; draw: (pg: PDFPage, top: number) => void }
-      const left: Block[] = [], right: Block[] = []
-      const heading = (s: string, x: number) => ({ h: 19, draw: (pg: PDFPage, top: number) => kicker(pg, s, x, top + 9, 10, 0.18) })
-      left.push(heading('Ingrediente', L))
+      // Everything below the chips is a list of items for two columns. An item becomes rows for the
+      // width it gets, and long items (steps, notes) can break between rows across pages.
+      type Row = { h: number; draw: (pg: PDFPage, x: number, top: number) => void }
+      type Item = { rows: (w: number) => Row[]; keepWithNext?: boolean }
+      const rowsOfLines = (lines: string[], gapAfter: number, line: (pg: PDFPage, x: number, base: number, s: string, i: number) => void, before = 0): Row[] =>
+        lines.map((l, i) => ({
+          h: (i === 0 ? before : 0) + LH + (i === lines.length - 1 ? gapAfter : 0),
+          draw: (pg, x, top) => line(pg, x, top + (i === 0 ? before : 0) + firstBase(LH, SIZE), l, i),
+        }))
+      const heading = (s: string): Item => ({ keepWithNext: true, rows: () => [{ h: 19, draw: (pg, x, top) => kicker(pg, s, x, top + 9, 10, 0.18) }] })
+
+      const left: Item[] = [heading('Ingrediente')]
       const bullet = '· '
       const bw = width(bullet, sansBold, SIZE)
       for (const raw of rec.ingredients) {
         const s = printable(raw)
         if (!s) continue
         if (isHeading(s)) {
-          const lines = wrap(s, sansBold, SIZE, LW)
-          left.push({ h: 6 + lines.length * LH + 3, draw: (pg, top) => lines.forEach((l, i) => text(pg, l, L, top + 6 + firstBase(LH, SIZE) + i * LH, sansBold, SIZE, t.text)) })
+          left.push({ keepWithNext: true, rows: (w) => rowsOfLines(wrap(s, sansBold, SIZE, w), 3, (pg, x, base, l) => text(pg, l, x, base, sansBold, SIZE, t.text), 6) })
           continue
         }
         const indent = dark ? bw : 16
-        const lines = wrap(s, sans, SIZE, LW - indent)
         left.push({
-          h: lines.length * LH + 3,
-          draw: (pg, top) => {
-            if (dark) text(pg, bullet, L, top + firstBase(LH, SIZE), sansBold, SIZE, t.gold)
-            else box(pg, L, top + 4, 9, 9, { border: t.check })
-            lines.forEach((l, i) => text(pg, l, L + indent, top + firstBase(LH, SIZE) + i * LH, sans, SIZE, t.text))
-          },
+          rows: (w) => rowsOfLines(wrap(s, sans, SIZE, w - indent), 3, (pg, x, base, l, i) => {
+            if (i === 0) {
+              if (dark) text(pg, bullet, x, base, sansBold, SIZE, t.gold)
+              else box(pg, x, base - firstBase(LH, SIZE) + 4, 9, 9, { border: t.check })
+            }
+            text(pg, l, x + indent, base, sans, SIZE, t.text)
+          }),
         })
       }
       const n = rec.nutrition
       if (n) {
         left.push({
-          h: 10 + 40,
-          draw: (pg, top) => {
-            const cells = [[String(Math.round(n.kcal)), 'kcal'], [String(Math.round(n.protein)), 'prot.'], [String(Math.round(n.carbs)), 'carb.']]
-            const by = top + 10, cw = LW / 3
-            pg.drawRectangle({ x: X(L), y: Y(by + 40), width: X(LW), height: X(40), borderColor: t.nutEdge, borderWidth: K })
-            cells.forEach(([v, k], i) => {
-              if (i) box(pg, L + cw * i, by, 1, 40, { color: t.nutEdge })
-              const cx = L + cw * i + cw / 2
-              text(pg, v, cx - width(v, sansBold, 13) / 2, by + 6 + 12, sansBold, 13, t.ink)
-              text(pg, k, cx - width(k, sans, 10) / 2, by + 6 + 15.6 + 10, sans, 10, t.chips)
+          rows: () => [{
+            h: 10 + 40,
+            draw: (pg, x, top) => {
+              const cells = [[String(Math.round(n.kcal)), 'kcal'], [String(Math.round(n.protein)), 'prot.'], [String(Math.round(n.carbs)), 'carb.']]
+              const by = top + 10, cw = LW / 3
+              pg.drawRectangle({ x: X(x), y: Y(by + 40), width: X(LW), height: X(40), borderColor: t.nutEdge, borderWidth: K })
+              cells.forEach(([v, k], i) => {
+                if (i) box(pg, x + cw * i, by, 1, 40, { color: t.nutEdge })
+                const cx = x + cw * i + cw / 2
+                text(pg, v, cx - width(v, sansBold, 13) / 2, by + 6 + 12, sansBold, 13, t.ink)
+                text(pg, k, cx - width(k, sans, 10) / 2, by + 6 + 15.6 + 10, sans, 10, t.chips)
+              })
+            },
+          }],
+        })
+      }
+
+      const right: Item[] = [heading('Mod de preparare')]
+      rec.steps.map(printable).filter(Boolean).forEach((s, i) => {
+        const num = dark ? `${i + 1}.` : String(i + 1)
+        const indent = dark ? 16 : 27
+        right.push({
+          rows: (w) => rowsOfLines(wrap(s, sans, SIZE, w - indent), 7, (pg, x, base, l, j) => {
+            if (j === 0) {
+              if (dark) text(pg, num, x + 12 - width(num, sansBlack, SIZE), base, sansBlack, SIZE, t.gold)
+              else {
+                const top = base - firstBase(LH, SIZE)
+                pg.drawCircle({ x: X(x + 9), y: Y(top + 1 + 9), size: X(9), color: t.stepDisc })
+                text(pg, num, x + 9 - width(num, sansBlack, 10) / 2, top + 1 + 9 + 3.6, sansBlack, 10, t.stepNum)
+              }
+            }
+            text(pg, l, x + indent, base, sans, SIZE, t.text)
+          }),
+        })
+      })
+      // The recipe's own note, then the latest notes written after cooking (.note). Each row paints
+      // its slice of the box, so a long note can continue on the next page.
+      const quotes: { text: string; by?: string }[] = []
+      if (rec.notes?.trim()) quotes.push({ text: printable(rec.notes) })
+      for (const c of r.notes.slice(-3).reverse()) quotes.push({ text: `„${printable(c.text)}”`, by: [c.by, romanianDate(c.day)].filter(Boolean).join(' · ') })
+      for (const q of quotes) {
+        right.push({
+          rows: (w) => {
+            const lines = wrap(q.text, serifItalic, 12, w - 26)
+            const parts: { h: number; pad: number; draw?: (pg: PDFPage, x: number, top: number) => void }[] = lines.map((l) => ({
+              h: 16.8, pad: 0, draw: (pg: PDFPage, x: number, top: number) => text(pg, l, x + 12, top + firstBase(16.8, 12), serifItalic, 12, t.noteText),
+            }))
+            if (q.by) { const by = q.by; parts.push({ h: 16, pad: 0, draw: (pg, x, top) => text(pg, by, x + 12, top + 4 + 9.5, sans, 10, t.muted) }) }
+            return parts.map((part, i) => {
+              const first = i === 0, last = i === parts.length - 1
+              const before = first ? 10 + 9 : 0, after = last ? 9 : 0
+              return {
+                h: before + part.h + after,
+                draw: (pg, x, top) => {
+                  const bt = top + (first ? 10 : 0), bh = (first ? 9 : 0) + part.h + after
+                  box(pg, x, bt, w, bh + 0.3, { color: t.box })
+                  box(pg, x, bt, 2, bh + 0.3, { color: t.boxEdge })
+                  part.draw?.(pg, x, top + before)
+                },
+              }
             })
           },
         })
       }
 
-      right.push(heading('Mod de preparare', R))
-      rec.steps.map(printable).filter(Boolean).forEach((s, i) => {
-        const num = dark ? `${i + 1}.` : String(i + 1)
-        const indent = dark ? 16 : 27
-        const lines = wrap(s, sans, SIZE, RW - indent)
-        right.push({
-          h: lines.length * LH + 7,
-          draw: (pg, top) => {
-            if (dark) text(pg, num, R + 12 - width(num, sansBlack, SIZE), top + firstBase(LH, SIZE), sansBlack, SIZE, t.gold)
-            else {
-              pg.drawCircle({ x: X(R + 9), y: Y(top + 1 + 9), size: X(9), color: t.stepDisc })
-              text(pg, num, R + 9 - width(num, sansBlack, 10) / 2, top + 1 + 9 + 3.6, sansBlack, 10, t.stepNum)
-            }
-            lines.forEach((l, j) => text(pg, l, R + indent, top + firstBase(LH, SIZE) + j * LH, sans, SIZE, t.text))
-          },
-        })
-      })
-      // The recipe's own note, then the latest notes written after cooking (.note).
-      const quotes: { text: string; by?: string; font: PDFFont }[] = []
-      if (rec.notes?.trim()) quotes.push({ text: printable(rec.notes), font: serifItalic })
-      for (const c of r.notes.slice(-3).reverse()) quotes.push({ text: `„${printable(c.text)}”`, by: [c.by, romanianDate(c.day)].filter(Boolean).join(' · '), font: serifItalic })
-      for (const q of quotes) {
-        const lines = wrap(q.text, q.font, 12, RW - 26)
-        const inner = lines.length * 16.8 + (q.by ? 4 + 12 : 0)
-        const h = 9 + inner + 9
-        right.push({
-          h: 10 + h,
-          draw: (pg, top) => {
-            const bt = top + 10
-            box(pg, R, bt, RW, h, { color: t.box })
-            box(pg, R, bt, 2, h, { color: t.boxEdge })
-            lines.forEach((l, j) => text(pg, l, R + 12, bt + 9 + firstBase(16.8, 12) + j * 16.8, q.font, 12, t.noteText))
-            if (q.by) text(pg, q.by, R + 12, bt + 9 + lines.length * 16.8 + 4 + 9.5, sans, 10, t.muted)
-          },
-        })
-      }
-
-      // Flow both columns; when one runs out of room both continue on a new page.
-      const top = y
-      let li = 0, ri = 0, ly = top, ry = top
+      // Flow. While both columns have something left, a page has two columns; once one is done,
+      // later pages give the other the full width. An item moves to the next page whole when it is
+      // short; a long one breaks, leaving at least two rows on each side.
+      type Col = { items: Item[]; i: number; rows?: Row[]; y: number }
+      const cols: Col[] = [{ items: left, i: 0, y }, { items: right, i: 0, y }]
+      const live = (c: Col) => c.i < c.items.length
+      const FULL = VW - 2 * L
+      let pg = p
+      let first = true
       for (;;) {
-        while (li < left.length && ly + left[li].h <= END) { left[li].draw(p, ly); ly += left[li].h; li++ }
-        while (ri < right.length && ry + right[ri].h <= END) { right[ri].draw(p, ry); ry += right[ri].h; ri++ }
-        if (li >= left.length && ri >= right.length) break
-        const fresh = continued()
-        if (ly === fresh && ry === fresh) break // a single block taller than a page: give up on it
-        folio(p, doc.getPageCount(), label)
-        ly = ry = fresh
+        const both = live(cols[0]) && live(cols[1])
+        const twoCols = first || both
+        for (const [k, c] of cols.entries()) {
+          if (!live(c)) continue
+          if (!twoCols && !both && k === 1 && live(cols[0])) continue
+          const x = twoCols ? (k === 0 ? L : R) : L
+          const w = twoCols ? (k === 0 ? LW : RW) : FULL
+          const fresh = c.y
+          for (; live(c);) {
+            const item = c.items[c.i]
+            const rows = c.rows ?? item.rows(w)
+            const total = rows.reduce((a, r) => a + r.h, 0)
+            let take = 0
+            if (c.y + total <= END) take = rows.length
+            else if (!c.rows && rows.length < 4) take = 0
+            else {
+              let h = 0
+              while (take < rows.length && c.y + h + rows[take].h <= END) h += rows[take++].h
+              if (take > rows.length - 2) take = rows.length - 2
+              if (!c.rows && take < 2) take = 0
+            }
+            // A heading stays with what follows it.
+            if (take === rows.length && item.keepWithNext && c.i + 1 < c.items.length) {
+              const next = c.items[c.i + 1].rows(w)
+              const nextNeed = next.length < 4 ? next.reduce((a, r) => a + r.h, 0) : next[0].h + next[1].h
+              if (c.y + total + nextNeed > END) take = 0
+            }
+            if (take <= 0 && c.y === fresh && !first) take = 1 // never loop on a page with nothing drawn
+            if (take <= 0) break
+            for (const row of rows.slice(0, take)) { row.draw(pg, x, c.y); c.y += row.h }
+            if (take === rows.length) { c.i++; c.rows = undefined } else { c.rows = rows.slice(take); break }
+          }
+        }
+        if (!cols.some(live)) break
+        folio(pg, doc.getPageCount(), label)
+        const next = continued()
+        pg = next.pg
+        for (const c of cols) c.y = next.top
+        first = false
       }
-      folio(p, doc.getPageCount(), label)
-      const first = firstPage.get(r)!
-      if (p !== first) folio(first, pageNo.get(r)!, label)
+      folio(pg, doc.getPageCount(), label)
       done++
     }
   }
@@ -449,7 +527,7 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
   // ---- contents ----
   tocPlan.forEach((lines, i) => {
     const p = tocPages[i]
-    const x0 = 44, x1 = 440 - 44
+    const x0 = 44, x1 = VW - 44
     let y: number
     if (i === 0) {
       text(p, 'Cuprins', x0, 48 + firstBase(38, 32), serif, 32, t.ink)

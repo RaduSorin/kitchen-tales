@@ -12,6 +12,9 @@ import { parseQuantity } from '../lib/scale'
 import { formatMinutes } from '../lib/format'
 import PlatePlaceholder from '../components/PlatePlaceholder'
 import MicButton from '../components/MicButton'
+import { videoSite } from '../lib/videoSite'
+import { track } from '../lib/badges/store'
+import type { RecipeWay as BadgeWay } from '../lib/badges/engine'
 import { spokenIngredientLines } from '../lib/spokenIngredients'
 import { dietSummary, dietText, hasDiet, parseAllergens, parseNutrition } from '../lib/diet'
 import { useSettings } from '../lib/settings'
@@ -35,8 +38,6 @@ const WAY_MODE: Record<RecipeWay, Mode> = { link: 'paste', text: 'paste', poza: 
 
 /** The pasted text is one web address (and nothing else). */
 const asLink = (s: string) => { const t = s.trim(); return /^https?:\/\/\S+$/i.test(t) ? t : /^(www\.)?[\w-]+(\.[\w-]+)+\/\S*$/i.test(t) && !/\s/.test(t) ? `https://${t}` : undefined }
-const VIDEO_SITE: [RegExp, string][] = [[/(^|\.)(youtube\.com|youtu\.be)$/i, 'YouTube'], [/(^|\.)tiktok\.com$/i, 'TikTok'], [/(^|\.)(instagram\.com|instagr\.am)$/i, 'Instagram']]
-const videoSite = (link: string) => { try { const h = new URL(link).hostname; return VIDEO_SITE.find(([re]) => re.test(h))?.[1] } catch { return undefined } }
 
 /** Photos of one recipe read together: a book's two pages, both sides of a note. */
 const MAX_PAGES = 4
@@ -178,6 +179,8 @@ export default function RecipeEdit() {
   // The step that "Dictează un pas" is writing into.
   const dictStep = useRef<string>(undefined)
   const [importing, setImporting] = useState('')
+  // How this new recipe came in (for its stamp): written by hand unless an import filled it.
+  const way = useRef<BadgeWay>('written')
   const [found, setFound] = useState<string>()
   const [saving, setSaving] = useState(false)
   // What the recipe looked like when the editor opened (blank for a new one).
@@ -311,11 +314,12 @@ export default function RecipeEdit() {
     aiJob.current = job
   }
 
-  const doImport = async (label: string, run: () => Promise<ImportedRecipe>) => {
+  const doImport = async (label: string, how: BadgeWay, run: () => Promise<ImportedRecipe>) => {
     setImporting(label); setError('')
     try {
       const x = await run()
       applyImport(x)
+      way.current = how
       // No photo from the source (generated or text-only recipes): draw one with AI in the background.
       if (!x.photoKey && !r.photoKey && !photo) makeAiPhoto(x.title, x.ingredients.filter((v): v is string => !!v))
     } catch (err) { setError(`Importul nu a reușit: ${errorText(err)}`) }
@@ -323,7 +327,7 @@ export default function RecipeEdit() {
   }
   const importLink = (link: string) => {
     const site = videoSite(link)
-    doImport(site ? `Citesc rețeta din videoclipul de pe ${site}…` : 'Citesc rețeta de pe site…', () => importRecipeFromUrl(link))
+    doImport(site ? `Citesc rețeta din videoclipul de pe ${site}…` : 'Citesc rețeta de pe site…', site ? 'video' : 'link', () => importRecipeFromUrl(link))
   }
   const addPages = (files: FileList | null) => {
     const xs = [...(files ?? [])].filter((f) => f.type.startsWith('image/') || !f.type)
@@ -333,12 +337,12 @@ export default function RecipeEdit() {
   }
   const importPhotos = () => {
     if (!pages.length) return
-    doImport(pages.length > 1 ? `Citesc rețeta din ${pages.length} poze…` : 'Citesc rețeta din poză…',
+    doImport(pages.length > 1 ? `Citesc rețeta din ${pages.length} poze…` : 'Citesc rețeta din poză…', 'photo',
       async () => importRecipeFromPhotos(await Promise.all(pages.map((f) => resizeImage(f, 2000, 0.85)))))
   }
   const useTools = kitchenTools.filter((t) => !skipTools.includes(t))
   const runGenerate = () => {
-    if (idea.trim()) doImport('Scriu rețeta…', () => generateRecipe(idea.trim(), useTools, genServings, dietStr))
+    if (idea.trim()) doImport('Scriu rețeta…', 'ai', () => generateRecipe(idea.trim(), useTools, genServings, dietStr))
   }
   const runSuggest = async () => {
     if (!fridge.trim()) return
@@ -354,7 +358,7 @@ export default function RecipeEdit() {
     const brief = `${x.title}${x.description ? ` (${x.description})` : ''}. ` +
       `Folosește ce am în frigider: ${fridge.trim()}. Pe lângă asta am doar sare, piper, ulei, apă, zahăr și făină` +
       (x.missing?.length ? `, iar pot cumpăra: ${x.missing.join(', ')}.` : '.')
-    doImport(`Scriu rețeta „${x.title}”…`, () => generateRecipe(brief, useTools, genServings, dietStr))
+    doImport(`Scriu rețeta „${x.title}”…`, 'fridge', () => generateRecipe(brief, useTools, genServings, dietStr))
   }
 
   // What the family doesn't eat, always in sight where recipes are written (Profile › Ce mâncăm).
@@ -403,8 +407,8 @@ export default function RecipeEdit() {
     if (link) { importLink(link); return }
     const p = parseRecipeText(text)
     // Clear "Ingrediente / Mod de preparare" text is split on the phone; anything looser is read by the AI.
-    if (!dictated && p.ingredients.length && p.steps.length) fill(p.title, p.ingredients, p.steps)
-    else doImport('Citesc rețeta…', () => importRecipeFromText(text))
+    if (!dictated && p.ingredients.length && p.steps.length) { fill(p.title, p.ingredients, p.steps); way.current = 'text' }
+    else doImport('Citesc rețeta…', dictated ? 'dictation' : 'text', () => importRecipeFromText(text))
   }
 
   const updateStep = (k: number, s: Step) => setSteps((xs) => xs.map((x, j) => (j === k ? s : x)))
@@ -494,6 +498,7 @@ export default function RecipeEdit() {
       const was = factsFor.current ?? (original ? `${original.ingredients.join('\n')}|${original.servings ?? ''}` : undefined)
       const facts = now === was ? { nutrition: r.nutrition, allergens: r.allergens } : { nutrition: undefined, allergens: undefined }
       await saveRecipe({ ...r, ...facts, photoKey, title: r.title.trim(), ingredients, steps: kept.map((s) => s.text.trim()), stepPhotoKeys }, !id)
+      if (!id) track({ t: 'recipe-added', way: way.current, category: r.category, photo: !!photoKey })
       // Clean up photos that were replaced or removed.
       if (original?.photoKey && original.photoKey !== photoKey) await removeFile(original.photoKey)
       for (const k of made.current) if (k !== photoKey) await removeFile(k)

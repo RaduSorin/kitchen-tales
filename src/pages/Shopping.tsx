@@ -3,6 +3,7 @@ import PopMenu, { MENU_ICON, MenuRow } from '../components/PopMenu'
 import { Link } from 'react-router-dom'
 import { useSyncedList } from '../lib/synced'
 import { addShoppingText, shoppingStore } from '../lib/plan'
+import { track } from '../lib/badges/store'
 import { mergeShopping, type ShoppingRow } from '../lib/merge'
 import type { ShoppingItem } from '../lib/types'
 import { showToast } from '../lib/toast'
@@ -72,7 +73,11 @@ function Item({ row, showSources }: { row: ShoppingRow; showSources?: boolean })
       onClickCapture={(e) => { if (swiped.current) { e.preventDefault(); e.stopPropagation(); swiped.current = false } }}>
       <span className="shop-swipe-bg" aria-hidden="true">Șterge</span>
       <label className={checked ? 'done' : ''} style={dx ? { transform: `translateX(${dx}px)` } : undefined} data-sliding={sliding ? '' : undefined}>
-        <input type="checkbox" checked={checked} onChange={() => row.items.forEach((s) => shoppingStore.update({ ...s, checked: !checked }))} />
+        <input type="checkbox" checked={checked} onChange={() => {
+          row.items.forEach((s) => shoppingStore.update({ ...s, checked: !checked }))
+          // The last line ticked: the whole list is in the basket.
+          if (!checked && shoppingStore.get().every((s) => s.checked)) track({ t: 'shopping-done' })
+        }} />
         <span className="shop-text">{row.text}</span>
         {row.sources.length > (showSources ? 0 : 1) && <small className="shop-sources">{row.sources.join(' · ')}</small>}
       </label>

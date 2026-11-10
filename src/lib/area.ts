@@ -20,4 +20,4 @@ export function useArea() {
 }
 
 /** The story player fills the screen like the cooking mode: no top bar or tab bar, so a child can't wander off. */
-export const isPlayerPage = (path: string) => /^\/povesti\/[^/]+$/.test(path) && path !== '/povesti/adauga' && path !== '/povesti/acasa'
+export const isPlayerPage = (path: string) => /^\/povesti\/[^/]+$/.test(path) && path !== '/povesti/adauga' && path !== '/povesti/acasa' && path !== '/povesti/album'

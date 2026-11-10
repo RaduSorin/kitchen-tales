@@ -10,6 +10,7 @@ import { canGoBack } from '../lib/back'
 import { isHeading } from '../lib/scale'
 import { alarmId, cancelAlarm, pushProblem, scheduleAlarm } from '../lib/timerPush'
 import { addCookNote, cookedLabel, markCooked, useRecipeLog } from '../lib/recipeLog'
+import { track } from '../lib/badges/store'
 import { useMyName } from '../lib/me'
 import { canSpeak, speak, spokenDuration, stopSpeaking, useHandsFree, type Command } from '../lib/handsFree'
 
@@ -102,6 +103,8 @@ export default function CookMode() {
     say(finished ? `Poftă bună! Ai terminat ${r.title}.` : stepSpeech(r, i))
   }, [handsFree, r, i, finished, say, stepSpeech])
   useEffect(() => { if (!handsFree) stopSpeaking() }, [handsFree])
+  // Late-night cooking is one of the surprise stamps.
+  useEffect(() => { track({ t: 'cook-opened' }) }, [])
   useEffect(() => () => stopSpeaking(), [])
   const toggleHandsFree = () => {
     if (!r) return
@@ -132,7 +135,7 @@ export default function CookMode() {
     if (finished) { if (d < 0) setFinished(false); return }
     const n = i + d
     if (n < 0) return
-    if (n >= count) { setFinished(true); setProgress(r.id, undefined); markCooked(r.id); return }
+    if (n >= count) { setFinished(true); setProgress(r.id, undefined); markCooked(r.id); track({ t: 'cook-finished' }); return }
     setI(n); setProgress(r.id, n)
   }, [r, i, count, finished])
 
@@ -208,6 +211,7 @@ export default function CookMode() {
       return
     }
     const endsAt = Date.now() + timerLeft * 1000
+    track({ t: 'timers', running: Object.entries(timers).filter(([k, t]) => +k !== i && t.endsAt).length + 1 })
     setTimers({ ...timers, [i]: { total: timer.total, left: timerLeft, endsAt, title: r.title } })
     // Straight from the tap, so iOS may ask for notification permission.
     scheduleAlarm(key, endsAt, r.title, `Pasul ${i + 1} e gata (${formatClock(timer.total)}).`, `/retete/${r.id}/gateste`)
@@ -221,7 +225,7 @@ export default function CookMode() {
   const forStep = ingredientsForStep(step, r.ingredients)
 
   onCommand.current = (c: Command) => {
-    if (c.kind === 'next') go(1)
+    if (c.kind === 'next') { go(1); track({ t: 'hands-free' }) }
     else if (c.kind === 'prev') go(-1)
     else if (c.kind === 'repeat') say(finished ? 'Poftă bună!' : stepSpeech(r, i))
     else if (c.kind === 'ingredients') {

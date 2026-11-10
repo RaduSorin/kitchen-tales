@@ -16,6 +16,7 @@ import { useSkyPhase } from '../lib/sky'
 import { useKid } from '../lib/kidMode'
 import { KidCorner } from '../components/KidMode'
 import HomeHead from '../components/HomeHead'
+import { AlbumButton } from '../components/Badges'
 import Vitrine, { type VitrineSlide } from '../components/Vitrine'
 import HomeTabs from '../components/HomeTabs'
 import { newLabel, seenStories } from '../lib/shelf'
@@ -177,7 +178,8 @@ export default function StoriesHome() {
   const recent = available.slice(0, 10) // the list comes newest first
   const todayKey = dayKey(today())
   const cooking = plan.filter((e) => e.day === todayKey && !e.leftovers).map((e) => recipes.find((r) => r.id === e.recipeId)).filter((r): r is Recipe => !!r)
-  const head = kid ? <div className="home-head kid-head"><KidCorner /></div> : <HomeHead search="/povesti?cauta=1" label="Caută o poveste" field="story-search" />
+  const head = kid ? <div className="home-head kid-head"><AlbumButton /><KidCorner /></div>
+    : <HomeHead search="/povesti?cauta=1" label="Caută o poveste" field="story-search" extra={<AlbumButton />} />
   const hello = `${evening && hour >= 12 ? 'Bună seara' : greeting()}${child.name ? `, ${child.name}` : ''}`
 
   const kitchen = !kid && (

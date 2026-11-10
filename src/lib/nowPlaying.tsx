@@ -6,6 +6,7 @@ import { useOfflineIds, useOnline } from './useOffline'
 import { useCoverUrl } from './useCoverUrl'
 import { storyArtwork } from './artwork'
 import { isKidLocked } from './kidMode'
+import { track } from './badges/store'
 
 /** How many stories to play in a row before stopping. */
 export type Sleep = 1 | 2 | 3 | 5
@@ -109,10 +110,13 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const [from, setFrom] = useState<QueueFrom>('folder')
   const folderName = story ? folderOf(story) : undefined
   const isFav = !!story?.favorite
+  // Every folder on the shelf (the rocket sticker: a story heard from each).
+  const shelfFolders = useRef<string[]>([])
   // From this device's copy at once (the next story is known even on a weak signal), then the server's.
   useEffect(() => {
     if (!folderName) return
     return watchStories((all) => {
+      shelfFolders.current = [...new Set(all.map(folderOf))]
       // Started from Favorite: shuffle and "stop after N" stay within the favourites (sorted like that page).
       setFolder(from === 'favorites'
         ? all.filter((x) => x.favorite).sort((a, b) => a.title.localeCompare(b.title, 'ro'))
@@ -311,9 +315,15 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     setPlaying(false)
     if (storyRef.current) setPosition(storyRef.current.id, undefined)
     played.current += 1
+    const done = storyRef.current
+    if (done) track({ t: 'story-finished', storyId: done.id, folder: folderOf(done), folders: shelfFolders.current })
     const following = nextRef.current
     if (following && played.current < sleepRef.current && !isKidLocked()) load(following, { autoplay: true, continued: true })
-    else { played.current = 0; setEnded(true) }
+    else {
+      // Several stories in a row, then the player stopped by itself: the little cloud.
+      if (sleepRef.current > 1 && played.current >= sleepRef.current) track({ t: 'sleep-stop' })
+      played.current = 0; setEnded(true)
+    }
   }
 
   // Only errors of the current source count; a previous story's revoked link may still report one.

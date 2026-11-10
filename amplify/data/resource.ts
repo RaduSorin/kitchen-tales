@@ -167,6 +167,15 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.groupsDefinedIn('spaceGroups')]),
 
+  // One person's stamps and stickers (src/lib/badges): counters of what they did and the badges
+  // earned, as JSON (BadgeState in src/lib/badges/engine.ts). One row per account, id = its user id;
+  // only that account can read or change it.
+  BadgeBook: a
+    .model({
+      state: a.string().required(),
+    })
+    .authorization((allow) => [allow.owner()]),
+
   ImportedRecipe: a.customType({
     title: a.string().required(),
     category: a.string(),

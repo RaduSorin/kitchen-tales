@@ -4,6 +4,7 @@ import { isHeading, scaleIngredient } from './scale'
 import { norm } from './format'
 import { createSyncedList } from './synced'
 import type { PlanEntry, Recipe, ShoppingItem } from './types'
+import { track } from './badges/store'
 
 export const planStore = createSyncedList<PlanEntry>('plan', planApi, 'săptămâna ta')
 export const shoppingStore = createSyncedList<ShoppingItem>('shopping', shoppingApi, 'lista de cumpărături')
@@ -35,6 +36,10 @@ export function weekLabel(monday: Date) {
 
 export function planRecipe(recipe: Recipe, day: string, servings?: number, leftovers?: boolean) {
   planStore.create({ id: newId(), day, recipeId: recipe.id, servings: servings && servings !== recipe.servings ? servings : undefined, ...(leftovers ? { leftovers } : {}) })
+  // Every day of that week now has something planned: a stamp.
+  const week = new Set(weekDays(mondayOf(fromKey(day))).map(dayKey))
+  const planned = new Set(planStore.get().map((e) => e.day).filter((d) => week.has(d)))
+  if (planned.size === 7) track({ t: 'week-full' })
 }
 
 /**

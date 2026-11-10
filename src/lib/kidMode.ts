@@ -61,6 +61,8 @@ export function useKid() {
 /** Turns kid mode on for `minutes` (0 = no limit). */
 export function startKid(minutes: number) {
   set({ active: true, locked: false, endsAt: minutes > 0 ? Date.now() + minutes * 60_000 : null, total: minutes * 60_000 })
+  // Loaded here, not at the top: the badge store reads kid mode too.
+  void import('./badges/store').then((m) => m.track({ t: 'kid-mode' }))
 }
 
 /** More time: counted from now when the time already ran out, otherwise added to what is left. */

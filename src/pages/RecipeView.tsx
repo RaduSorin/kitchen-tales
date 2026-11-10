@@ -19,6 +19,7 @@ import { useBack } from '../lib/back'
 import { useOnline } from '../lib/useOffline'
 import { addCookNote, cookedLabel, forgetRecipeLog, removeCookNote, setRecipeFavorite, sinceLabel, useRecipeLog } from '../lib/recipeLog'
 import { useMyName } from '../lib/me'
+import { track } from '../lib/badges/store'
 
 const HEART = 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z'
 
@@ -226,8 +227,8 @@ function RecipePage() {
             {r.servings && servings ? (
               <span className="rv-servings" role="group" aria-label="Porții">
                 <output>{servings} {servings === 1 ? 'porție' : 'porții'}</output>
-                <button type="button" aria-label="Mai puține porții" disabled={servings <= 1} onClick={() => setServings(servings - 1)}>−</button>
-                <button type="button" aria-label="Mai multe porții" onClick={() => setServings(servings + 1)}>+</button>
+                <button type="button" aria-label="Mai puține porții" disabled={servings <= 1} onClick={() => { setServings(servings - 1); track({ t: 'servings' }) }}>−</button>
+                <button type="button" aria-label="Mai multe porții" onClick={() => { setServings(servings + 1); track({ t: 'servings' }) }}>+</button>
               </span>
             ) : null}
             {r.steps.length > 0 && <span>{r.steps.length} {r.steps.length === 1 ? 'pas' : 'pași'}</span>}

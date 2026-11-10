@@ -3,6 +3,7 @@ import Sheet from './Sheet'
 import { listRecipes } from '../lib/db'
 import { useRecipeLogs } from '../lib/recipeLog'
 import { reportError } from '../lib/errorReport'
+import { track } from '../lib/badges/store'
 import type { Recipe } from '../lib/types'
 import type { CookbookSize, CookbookStyle } from '../lib/cookbook'
 
@@ -77,6 +78,7 @@ export default function CookbookSheet({ authors, onClose }: { authors?: string; 
         onProgress: (done, total, title) => setPhase({ at: 'making', done, total, title }),
       })
       setPhase({ at: 'ready', file, pages })
+      track({ t: 'cookbook', size: size === 'a4' ? 'a4' : 'a5', recipes: chosen.length })
     } catch (e) {
       reportError(e, 'cookbook')
       setPhase({ at: 'error', text: 'Nu am reușit să fac PDF-ul. Încearcă din nou, eventual fără poze.' })

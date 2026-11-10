@@ -160,7 +160,6 @@ export default function Home() {
   const shown = slides[Math.min(active, slides.length - 1)]
   // The page glows in the colours of the dish on screen.
   useGlow(shown && { id: shown.r.id, title: shown.r.title, photoKey: shown.r.photoKey })
-  const shownArt = useFileUrl(shown?.r.photoKey)
 
   const onTop = new Set(slides.map((s) => s.r.id))
   const restOfMenu = menu.filter((r) => !onTop.has(r.id))
@@ -216,7 +215,7 @@ export default function Home() {
           action: x.action, actionTo: x.to, actionIcon: <ChefHat />, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
         }))} />
 
-      <HomeTabs memory="kt-home-tab" label="Acasă" art={shownArt} tabs={[
+      <HomeTabs memory="kt-home-tab" label="Acasă" tabs={[
         { key: 'azi', label: 'Azi', body: <>
           {restOfMenu.length > 0 ? (
             <ul className="home-rows">

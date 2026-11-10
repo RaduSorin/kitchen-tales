@@ -7,12 +7,16 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
  * recipe or a story lands on the same tab.
  *
  * Tapping a tab whose lists are longer than the screen slides the page up until the tabs sit
- * under the clock, where they stay while scrolling (the concept's "same page, after Caiet"). A
+ * under a dimmed strip of the picture, where they stay while scrolling (the concept's "same page, after Caiet"). A
  * short tab leaves the picture where it is, so it never ends in an empty screen.
  */
 export type HomeTab = { key: string; label: string; body: ReactNode }
 
-export default function HomeTabs({ tabs, memory, label }: { tabs: HomeTab[]; memory: string; label: string }) {
+export default function HomeTabs({ tabs, memory, label, art }: {
+  tabs: HomeTab[]; memory: string; label: string
+  /** The picture on top: once the tabs are up, a dimmed strip of it stays above them. */
+  art?: string
+}) {
   const [open, setOpen] = useState(() => {
     try { return sessionStorage.getItem(memory) ?? tabs[0].key } catch { return tabs[0].key }
   })
@@ -55,7 +59,7 @@ export default function HomeTabs({ tabs, memory, label }: { tabs: HomeTab[]; mem
     return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll) }
   }, [])
   return (
-    <div className={'home-tabs' + (stuck ? ' stuck' : '')} ref={box}>
+    <div className={'home-tabs' + (stuck ? ' stuck' : '')} ref={box} style={art ? { ['--tabs-art' as string]: `url("${art}")` } : undefined}>
       <div className="seg-tabs" role="tablist" aria-label={label}>
         {tabs.map((t) => (
           <button key={t.key} type="button" role="tab" id={`${memory}-${t.key}`} aria-controls={`${memory}-${t.key}-panel`}

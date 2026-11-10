@@ -16,6 +16,7 @@ import HomeHead from '../components/HomeHead'
 import Vitrine, { type VitrineSlide } from '../components/Vitrine'
 import MonthCard from '../components/MonthCard'
 import HomeTabs from '../components/HomeTabs'
+import WeekDayPanel from '../components/WeekDayPanel'
 import { useSyncedList } from '../lib/synced'
 import { dayKey, mondayOf, planRecipe, planStore, today, weekDays } from '../lib/plan'
 import { useRecipeLogs } from '../lib/recipeLog'
@@ -37,7 +38,6 @@ function Thumb({ r }: { r: Recipe }) {
 }
 
 const meta = (r: Recipe) => [r.minutes && formatMinutes(r.minutes), r.category].filter(Boolean).join(' · ')
-const WEEK_DAYS = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D']
 const NEW_DAYS = 7
 const isNew = (r: Recipe) => !!r.createdAt && Date.now() - Date.parse(r.createdAt) < NEW_DAYS * 86400000
 
@@ -160,6 +160,7 @@ export default function Home() {
   const shown = slides[Math.min(active, slides.length - 1)]
   // The page glows in the colours of the dish on screen.
   useGlow(shown && { id: shown.r.id, title: shown.r.title, photoKey: shown.r.photoKey })
+  const shownArt = useFileUrl(shown?.r.photoKey)
 
   const onTop = new Set(slides.map((s) => s.r.id))
   const restOfMenu = menu.filter((r) => !onTop.has(r.id))
@@ -172,12 +173,14 @@ export default function Home() {
   // Nothing planned today: three dishes from the notebook, those not cooked for the longest
   // time first (never cooked counts as longest), each one tap away from today's menu.
   const logs = useRecipeLogs()
-  const planned = new Set(week.filter((w) => w.r).map((w) => w.r!.id))
-  const ideas = menu.length ? [] : (recipes ?? [])
+  const weekKeys = new Set(week.map((w) => w.key))
+  const planned = new Set(plan.filter((e) => weekKeys.has(e.day)).map((e) => e.recipeId))
+  const suggest = () => (recipes ?? [])
     .filter((r) => r.mine !== false && !planned.has(r.id))
     .map((r) => ({ r, last: logs.get(r.id)?.cooked.at(-1) ?? '' }))
     .sort((a, b) => a.last.localeCompare(b.last) || a.r.title.localeCompare(b.r.title, 'ro'))
     .slice(0, 3)
+  const ideas = menu.length ? [] : suggest()
   const categories = useMemo(() => {
     const m = new Map<string, Recipe[]>()
     for (const r of recipes ?? []) if (r.category) m.set(r.category, [...(m.get(r.category) ?? []), r])
@@ -213,7 +216,7 @@ export default function Home() {
           action: x.action, actionTo: x.to, actionIcon: <ChefHat />, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
         }))} />
 
-      <HomeTabs memory="kt-home-tab" label="Acasă" tabs={[
+      <HomeTabs memory="kt-home-tab" label="Acasă" art={shownArt} tabs={[
         { key: 'azi', label: 'Azi', body: <>
           {restOfMenu.length > 0 ? (
             <ul className="home-rows">
@@ -250,20 +253,7 @@ export default function Home() {
           <MonthCard />
         </> },
         { key: 'saptamana', label: 'Săptămâna', body: <>
-          <div className="vt-week">
-            {week.map(({ key, d, r }, i) => {
-              const isToday = key === todayKey
-              const name = d.toLocaleDateString('ro-RO', { weekday: 'long' })
-              return (
-                <Link key={key} to={`/saptamana?zi=${key}`} className={isToday ? 'vt-day today' : 'vt-day'}
-                  aria-label={r ? `${name}: ${r.title}` : `${name}: nimic planificat`}>
-                  <span className={r ? 'vt-plate' : 'vt-plate free'}>{r ? <Thumb r={r} /> : '+'}</span>
-                  <small>{isToday ? 'Azi' : WEEK_DAYS[i]}</small>
-                </Link>
-              )
-            })}
-          </div>
-          <div className="home-links"><Link to="/saptamana">Toată săptămâna</Link><Link to="/saptamana/planifica">Planifică</Link></div>
+          <WeekDayPanel week={week} todayKey={todayKey} plan={plan} byId={byId} ideas={suggest} thumb={(r) => <Thumb r={r} />} />
         </> },
         { key: 'caiet', label: 'Caiet', body: <>
           {recent.length > 0 && (

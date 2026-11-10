@@ -12,6 +12,7 @@ import { kidAllowsFolder, kidFolderRenamed, kidFolderRows, kidStories } from './
 import { folderOf, receivedFolderName, type Folder } from './stories'
 import { isMine, isShared, mySpaceGroup, mySpaceName, readerGroupsFor, rememberSpaceName, setMySpaceName, spaceReady } from './space'
 import { getSettings } from './settings'
+import { track } from './badges/store'
 import { jobPath, type JobOutcome } from '../../amplify/shared/jobs'
 import { fileSpace } from '../../amplify/shared/files'
 
@@ -337,6 +338,7 @@ export { removeFile }
 export async function setRecipeShared(r: Recipe, shared: boolean) {
   errorsOf(await client.models.Recipe.update({ id: r.id, readerGroups: readerGroupsFor(shared), spaceName: mySpaceName() }))
   await recipesFeed.changed((list) => list.map((x) => (x.id === r.id ? { ...x, shared } : x)), false)
+  if (shared) track({ t: 'shared' })
 }
 
 // ---- stories ----
@@ -385,6 +387,7 @@ export async function downloadStory(s: Story) {
   const res = await fetch(await fileUrl(s.audioKey))
   if (!res.ok) throw new Error('Descărcarea a eșuat')
   await saveAudio(s.id, await res.blob())
+  track({ t: 'offline-saved' })
 }
 
 export { getAudio as getOfflineAudio, removeAudio as removeOfflineAudio }
@@ -398,6 +401,8 @@ export async function createStory(story: Omit<Story, 'id' | 'createdAt'>) {
   })
   if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') || 'Eroare la salvare')
   await storiesFeed.changed(upsert(toStory(res.data)))
+  track({ t: 'story-added', source: story.source })
+  if (story.coverKey) track({ t: 'story-cover' })
   return res.data.id
 }
 
@@ -490,6 +495,7 @@ export async function createFolder(name: string, icon?: string, shared = true) {
   errorsOf(res)
   if (!res.data) throw new Error('Nu am putut crea folderul.')
   cacheFolders([...cachedFolders(), { id: res.data.id, name, icon, mine: true, shared }])
+  track({ t: 'folder-made' })
   return res.data.id
 }
 
@@ -726,6 +732,7 @@ export async function setStoryCover(s: Story, coverKey: string) {
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   fileOwner(`Story:${s.id}`, coverKey)
   if (old) await removeFile(old)
+  track({ t: 'story-cover' })
 }
 
 /**
@@ -739,6 +746,7 @@ export async function setStoryDrawing(s: Story, emoji: string, scene: number, dr
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (old) await removeFile(old).catch(() => {})
   await storiesFeed.changed((list) => list.map((x) => (x.id === s.id ? { ...x, emoji, scene, ...(dropPicture ? { coverKey: undefined } : {}) } : x)), false)
+  track({ t: 'story-cover' })
 }
 
 // ---- family accounts ----
@@ -760,6 +768,7 @@ export async function inviteFamilyMember(email: string, resend = false, separate
   const res = await client.mutations.inviteFamilyMember({ email, resend, separate })
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (!res.data) throw new Error('Nu am putut trimite invitația.')
+  if (!resend) track({ t: 'invited' })
   return res.data
 }
 
@@ -927,4 +936,18 @@ export async function scheduleTimerAlarm(args: { id: string; endsAt: string; tit
 export async function cancelTimerAlarm(id: string) {
   const res = await client.mutations.cancelTimerAlarm({ id })
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+}
+
+// ---- one person's stamps and stickers (src/lib/badges/store.ts) ----
+
+export const badgeBookApi = {
+  /** The saved progress (JSON), or undefined when this account has none yet. */
+  async get(id: string) {
+    const res = await client.models.BadgeBook.get({ id })
+    errorsOf(res)
+    return res.data ? { state: res.data.state } : undefined
+  },
+  async put(id: string, state: string, exists: boolean) {
+    errorsOf(exists ? await client.models.BadgeBook.update({ id, state }) : await client.models.BadgeBook.create({ id, state }))
+  },
 }

@@ -6,6 +6,7 @@ import { newId, recipeLogApi } from './db'
 import { dayKey, fromKey, today } from './plan'
 import { createSyncedList, useSyncedList } from './synced'
 import type { CookNote, RecipeLog } from './types'
+import { track } from './badges/store'
 
 export const recipeLogStore = createSyncedList<RecipeLog>('recipe-log', recipeLogApi, 'favoritele și notele rețetelor')
 
@@ -56,6 +57,7 @@ export function setRecipeFavorite(recipeId: string, favorite: boolean) {
 export function markCooked(recipeId: string, day = dayKey(today())) {
   if (logOf(recipeLogStore.get(), recipeId).cooked.includes(day)) return
   change(recipeId, (l) => ({ ...l, cooked: [...l.cooked, day].sort() }))
+  track({ t: 'cooked', recipeId })
 }
 
 export function addCookNote(recipeId: string, text: string, by?: string) {
@@ -63,6 +65,7 @@ export function addCookNote(recipeId: string, text: string, by?: string) {
   if (!t) return
   const note: CookNote = { day: dayKey(today()), text: t, ...(by ? { by } : {}) }
   change(recipeId, (l) => ({ ...l, notes: [...l.notes, note] }))
+  track({ t: 'cook-note' })
 }
 
 export function removeCookNote(recipeId: string, note: CookNote) {

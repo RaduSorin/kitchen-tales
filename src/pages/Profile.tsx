@@ -23,6 +23,7 @@ import type { Recipe } from '../lib/types'
 import type { Folder } from '../lib/stories'
 import type { ComponentType, FormEvent } from 'react'
 import { loadVault, useVault } from '../lib/mind/vault'
+import { BadgeCards, Clasor } from '../components/Badges'
 
 // Răgaz's settings load with the page (they bring the backup and passkey code).
 const RagazSettings = lazy(() => import('./ragaz/Settings'))
@@ -551,6 +552,8 @@ function ProfileHome() {
         <small>{[email, space].filter(Boolean).join(' · ')}</small>
       </button>
 
+      <BadgeCards />
+
       <div className="prof-big">
         <GroupRow to="/profil/copil" label={child.name || 'Adaugă copilul'}
           sub={[kid.pinHash ? `modul copil: ${kid.minutes ? `${kid.minutes} min` : 'fără limită'}` : 'modul copil oprit', age ? `${age} ${age === 1 ? 'an' : 'ani'}` : ''].filter(Boolean).join(' · ')} />
@@ -646,6 +649,7 @@ const PAGES: Record<string, [string, ComponentType]> = {
   offline: ['Povești fără internet', OfflineStorage],
   raft: ['Raftul cu povești', ShelfSettings],
   ragaz: ['Răgaz', RagazSettings],
+  clasor: ['Clasorul meu', Clasor],
 }
 
 /** The Profile page's title, shown in the top bar instead of the Rețete / Povești switch. */

@@ -60,6 +60,7 @@ const RagazGate = page(() => import('./pages/ragaz/Unlock').then((m) => ({ defau
 import { KidGate, KidLockButton } from './components/KidMode'
 import { applyPinReset, useKid } from './lib/kidMode'
 import { useCookAlarms } from './lib/cookAlarms'
+import { Album, BadgeCelebration } from './components/Badges'
 
 /** The stories background (also the iPhone status bar colour there). */
 const NIGHT_BG = '#0f0e13'
@@ -206,6 +207,7 @@ function Shell() {
           <Route path="/povesti" element={<StoryList />} />
           <Route path="/povesti/adauga" element={<StoryAdd />} />
           <Route path="/povesti/acasa" element={<StoriesHome />} />
+          <Route path="/povesti/album" element={<Album />} />
           <Route path="/povesti/:id" element={<StoryPlayer />} />
           <Route path="/cauta" element={<Search />} />
           <Route path="/saptamana" element={<Week />} />
@@ -234,6 +236,7 @@ function Shell() {
         </Suspense>
       </main>
       <KidGate />
+      <BadgeCelebration />
       <MiniPlayer />
       <TabBar />
       <ToastHost />

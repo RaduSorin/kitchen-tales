@@ -1354,3 +1354,88 @@
 /* Stories: a slightly shorter cover so the tabs show on the first screen, like the concept. */
 @media (max-width: 759px) { .stories-home.vitrina .vt-cover { height: calc(min(100vw, 640px) + 118px); } }
 .vt-cover .sa-kicker { text-shadow: 0 1px 8px rgb(0 0 0 / .85), 0 0 2px rgb(0 0 0 / .6); }
+
+/* ---------- Recipe editor, calm concept 3: the title on the photo, the recipe page's tabs
+   (Detalii · Ingrediente · Pași · Note), steps as plain lines with their tools under the open
+   one, and one gold "Salvează rețeta" fixed at the bottom. ---------- */
+.ed { gap: 14px; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+:root:has(.mini-player) .ed { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
+.ed-photo-anchor { position: relative; justify-self: end; }
+.ed-photo-btn { min-height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 999px; cursor: pointer;
+  font: inherit; font-weight: 700; font-size: var(--fs-sm); color: var(--text); border: 1px solid rgb(255 255 255 / .14);
+  background: rgb(20 16 14 / .45); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
+.ed-photo-btn:active { transform: scale(.96); }
+/* Once the photo is gone under the bar, "Poza" goes too (the concept's scrolled bar has only ‹ and the name). */
+.editor-bar.stuck .ed-photo-anchor { visibility: hidden; }
+.ed-head { position: relative; z-index: 1; display: grid; gap: 6px; }
+.ed .editor-title { border-bottom-color: rgb(255 255 255 / .14); }
+@media (max-width: 759px) {
+  .ed-head { margin-top: -92px; }
+  :root .ed .editor-kicker { margin: 0; text-shadow: 0 1px 10px rgb(0 0 0 / .6); }
+  .ed .editor-title { text-shadow: 0 2px 16px rgb(0 0 0 / .5); }
+  .ed .editor-photo { height: calc(240px + var(--status-h)); }
+  .ed .editor-photo::after { height: 170px; }
+  .ed .editor-ai-busy { bottom: auto; top: calc(64px + var(--status-h)); left: 16px; }
+}
+.ed-tabs { margin-top: 4px; }
+.ed-panel { display: grid; gap: 12px; align-content: start; min-height: 40svh; }
+
+/* Detalii: one grouped list. */
+.ed-form { border-radius: 20px; background: rgb(255 255 255 / .06); padding: 2px 16px; }
+.ed .ed-row { display: flex; align-items: center; gap: 10px; min-height: 54px; border-bottom: 1px solid rgb(255 255 255 / .07); color: var(--text); font-size: var(--fs-base); cursor: pointer; }
+.ed-row:last-child { border-bottom: 0; }
+.ed-row > span:first-child { flex: 1; color: var(--muted); white-space: nowrap; }
+.ed-row > svg { flex: none; color: var(--muted); }
+.ed .ed-row input { flex: 1 1 auto; min-width: 0; width: 100%; min-height: 0; text-align: right; border: 0; border-radius: 0; background: none; padding: 8px 0; color: var(--text); font: inherit; font-weight: 700; box-shadow: none; }
+.ed-row input::placeholder { color: var(--muted); font-weight: 400; }
+.ed-row input:focus { outline: none; }
+.ed-row b { font-weight: 700; }
+.ed-min { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+.ed .ed-min input { width: 4ch; flex: none; }
+.ed-min input::-webkit-inner-spin-button, .ed-min input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.ed-min input { -moz-appearance: textfield; appearance: textfield; }
+.ed-steppers { display: inline-flex; gap: 2px; margin-left: 4px; }
+.ed-steppers button { width: 36px; height: 40px; border: 0; background: none; color: var(--accent); font: inherit; font-size: 22px; font-weight: 800; cursor: pointer; padding: 0; }
+.ed-steppers button:disabled { opacity: .35; cursor: default; }
+
+/* Ingrediente and Note: the tab is the text box. */
+.ed .ed-big { min-height: 46svh; line-height: 1.55; border-radius: 18px; background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .07); }
+.ed-tip { color: var(--muted); font-size: var(--fs-sm); }
+.ed-tip summary { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; min-height: 32px; }
+.ed-tip summary::-webkit-details-marker { display: none; }
+.ed-tip p { margin: 6px 0 0 24px; line-height: 1.5; }
+
+/* Pași: plain lines. */
+.ed-steps { list-style: none; margin: 0; padding: 0; display: grid; }
+.ed-step { display: grid; grid-template-columns: 28px 18px minmax(0, 1fr) auto; column-gap: 10px; align-items: start; padding: 10px 0;
+  border-bottom: 1px solid rgb(255 255 255 / .07); border-radius: 0; }
+.ed-step.on { margin: 4px -12px; padding: 10px 12px 12px; border-radius: 16px; border: 1px solid rgb(242 200 121 / .35); background: color-mix(in srgb, var(--bg) 100%, #fff 6%); }
+.ed-step .step-grip { width: 28px; height: 32px; margin-top: -4px; color: rgb(244 239 230 / .45); }
+.ed-no { font-weight: 800; color: var(--accent); line-height: 24px; font-size: var(--fs-base); }
+.ed-step-text { display: grid; gap: 4px; min-width: 0; }
+.ed .ed-step-text textarea { border: 0; background: none; padding: 0; min-height: 24px; resize: none; overflow: hidden; line-height: 1.45; font-size: var(--fs-base); color: var(--text); box-shadow: none; border-radius: 0; }
+.ed .ed-step-text textarea:focus { outline: none; }
+.ed-timer { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-weight: 700; font-size: var(--fs-xs); }
+.ed-thumb { position: relative; width: 46px; height: 46px; border-radius: 10px; overflow: visible; }
+.ed-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; }
+.ed-thumb button { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; border: 0; padding: 0; background: rgb(10 9 8 / .8); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; }
+.ed-tools { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 12px; }
+.ed-tools .mic-tool { display: contents; }
+.ed-tools .mic-hint { grid-column: 1 / -1; margin: 4px 0 0; }
+.ed .ed-tool { display: grid; justify-items: center; gap: 4px; min-height: 48px; align-content: center; border: 0; background: none; padding: 4px 0; border-radius: 12px; cursor: pointer;
+  font: inherit; font-size: var(--fs-2xs); font-weight: 700; color: rgb(244 239 230 / .8); }
+.ed-tool:active { background: rgb(255 255 255 / .06); }
+.ed-tool.danger { color: #ff8f7a; }
+.ed-tool.on { color: var(--accent); }
+.ed-tool:disabled { opacity: .45; }
+.ed-step.shifting { transition: transform .2s cubic-bezier(.2, .8, .3, 1); }
+.ed-step.lifted { position: relative; z-index: 5; background: var(--surface); border-radius: 16px; box-shadow: 0 0 0 1.5px var(--gold), 0 18px 40px rgb(0 0 0 / .5); scale: 1.02; transition: scale .15s, box-shadow .15s; }
+.ed-step.lifted .step-grip { color: var(--gold); cursor: grabbing; }
+.ed-steps.dragging { user-select: none; -webkit-user-select: none; }
+.ed-add { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ed-add .mic-inline { display: contents; }
+.ed-add .mic-hint { flex-basis: 100%; margin: 0; }
+.ed-add-btn { flex: 1; display: inline-flex; align-items: center; gap: 12px; min-height: 48px; border: 0; background: none; padding: 0 0 0 4px; color: var(--accent); font: inherit; font-weight: 700; font-size: var(--fs-base); cursor: pointer; text-align: left; }
+.ed-add .mic-btn { background: none; }
+.ed-foot .rv-cook { border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: var(--fs-lg); }
+.ed-foot .rv-cook:disabled { opacity: .7; }

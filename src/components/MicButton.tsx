@@ -29,7 +29,7 @@ function why(err: unknown): { text: string; detail?: string } {
  * Round dictation button for a text box: tap to talk, tap again to stop.
  * Words are appended to `value` live, so they can be corrected by hand afterwards.
  */
-export default function MicButton({ value, onChange, onDictated, onStart, asLines, label = 'Dictează', hint, children }: {
+export default function MicButton({ value, onChange, onDictated, onStart, asLines, label = 'Dictează', hint, tool, children }: {
   value: string
   onChange: (v: string) => void
   /** Called when some text came from the microphone. */
@@ -42,6 +42,8 @@ export default function MicButton({ value, onChange, onDictated, onStart, asLine
   label?: string
   /** Shown under the box while listening. */
   hint?: string
+  /** Drawn as one of a row of small tools (icon over a word, e.g. under a recipe step) with this word. */
+  tool?: string
   /** The text box the mic belongs to; without it the button stands on its own. */
   children?: React.ReactNode
 }) {
@@ -120,6 +122,20 @@ export default function MicButton({ value, onChange, onDictated, onStart, asLine
   const below = (state === 'on' && hint) || error
     ? <p className={`set-hint mic-hint${error ? ' error' : ''}`}>{error || hint}{error && detail && <small className="mic-detail">{detail}</small>}</p> : null
 
+  if (tool) return (
+    <span className="mic-inline mic-tool">
+      <button type="button" className={`ed-tool${busy ? ' on' : ''}`} disabled={(!online && !busy) || state === 'starting' || state === 'finishing'}
+        onClick={busy ? stop : start} aria-pressed={busy} aria-label={busy ? 'Oprește dictarea' : !online ? 'Dictarea merge doar cu internet' : label}>
+        {state === 'on'
+          ? <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3.5" fill="currentColor" /></svg>
+          : state === 'idle'
+            ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" /></svg>
+            : <span className="mic-spin" aria-hidden="true" />}
+        <span>{state === 'on' ? fmt(sec) : tool}</span>
+      </button>
+      {below}
+    </span>
+  )
   // With a text box inside: the mic sits in its bottom-right corner, like the iPhone keyboard's.
   if (children) return <><div className="mic-field">{children}{mic}</div>{below}</>
   return <span className="mic-inline">{mic}{below}</span>

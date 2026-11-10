@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { listRecipes, listStories } from '../lib/db'
+import { listRecipes, listStories, watchRecipes, watchStories } from '../lib/db'
 import type { Recipe, Story } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
@@ -108,7 +108,12 @@ export default function Home() {
     // Without stories (no internet, nothing saved) the story card simply stays away.
     listStories().then(setStories).catch(() => {})
   }
-  useEffect(load, [])
+  // This device's lists at once, then the server's when it answers (a weak signal doesn't hold the page).
+  useEffect(() => {
+    const stopRecipes = watchRecipes(setRecipes, () => setFailed(true))
+    const stopStories = watchStories(setStories)
+    return () => { stopRecipes(); stopStories() }
+  }, [])
 
   // Evening as soon as the sun starts going down, like the stories side.
   const evening = useSkyPhase() !== 'day'

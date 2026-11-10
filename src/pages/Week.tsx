@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
-import { listRecipes } from '../lib/db'
+import { watchRecipes } from '../lib/db'
 import type { PlanEntry, Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import { matchesQuery } from '../lib/format'
@@ -197,7 +197,7 @@ export default function Week() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loaded, setLoaded] = useState(false)
   const plan = useSyncedList(planStore)
-  useEffect(() => { listRecipes().then((xs) => { setRecipes(xs); setLoaded(true) }).catch(() => {}) }, [])
+  useEffect(() => watchRecipes((xs) => { setRecipes(xs); setLoaded(true) }), [])
   const byId = useMemo(() => new Map(recipes.map((r) => [r.id, r])), [recipes])
 
   const t = today()

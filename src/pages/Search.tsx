@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { listRecipes, listStories } from '../lib/db'
+import { watchRecipes, watchStories } from '../lib/db'
 import type { Recipe, Story } from '../lib/types'
 import { matchesQuery, norm } from '../lib/format'
 import StoryCover from '../components/StoryCover'
@@ -18,8 +18,9 @@ export default function Search() {
   // Cursor in the box with the keyboard open (the tab tap primed it, see lib/keyboard).
   useEffect(() => { focusField(document.getElementById('search-input')) }, [])
   useEffect(() => {
-    listRecipes().then(setRecipes).catch(() => { setRecipes([]); setFailed(true) })
-    listStories().then(setStories).catch(() => {})
+    const stopRecipes = watchRecipes(setRecipes, () => { setRecipes([]); setFailed(true) })
+    const stopStories = watchStories(setStories)
+    return () => { stopRecipes(); stopStories() }
   }, [])
 
   const cats = useMemo(() => [...new Set((recipes ?? []).map((r) => r.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ro')), [recipes])

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { listRecipes } from '../lib/db'
+import { listRecipes, watchRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
 import { useFileUrl } from '../lib/useFileUrl'
 import PlatePlaceholder from '../components/PlatePlaceholder'
@@ -144,7 +144,7 @@ export default function RecipeList() {
   const load = () => {
     listRecipes().then(setRecipes).catch(() => setFailed(true)).finally(() => setLoading(false))
   }
-  useEffect(load, [])
+  useEffect(() => watchRecipes((list) => { setRecipes(list); setLoading(false) }, () => { setFailed(true); setLoading(false) }), [])
 
   const cats = useMemo(() => [...new Set(recipes.map((r) => r.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ro')), [recipes])
   // How often each recipe was cooked (finished in cooking mode); else how often it was planned.

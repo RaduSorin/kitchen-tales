@@ -1238,6 +1238,35 @@
 .stories-home .sh-sec-head h2 { text-shadow: 0 1px 6px rgb(0 0 0 / .35); }
 .stories-home .sh-card .cover-meta { color: rgb(255 255 255 / .82); text-shadow: 0 1px 3px rgb(0 0 0 / .6); }
 
+/* Profile › Caietul de rețete (src/components/CookbookSheet.tsx) */
+.prof-new { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 10px; font-weight: 800; letter-spacing: .04em; vertical-align: 2px; }
+.cb { display: grid; gap: 10px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+.cb-intro { margin: -4px 0 4px; color: var(--muted, #aaa3b2); font-size: var(--fs-sm, 14px); }
+.cb-label { margin: 8px 0 0; font: 800 11px/1 Figtree, system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--muted, #aaa3b2); }
+.cb-seg { background: rgb(0 0 0 / .28); }
+.cb-seg button { display: grid; gap: 1px; justify-items: center; font-weight: 600; min-height: 46px; }
+.cb-seg button small { font-size: 11px; font-weight: 500; opacity: .7; }
+.cb-seg button[aria-pressed=true] { background: var(--accent); color: var(--on-accent); box-shadow: none; font-weight: 800; }
+.cb-seg button:disabled { opacity: .4; }
+.cb-cats { margin-top: 2px; }
+.cb-styles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cb-style { display: grid; gap: 7px; padding: 7px 7px 9px; border-radius: 14px; border: 1.5px solid rgb(255 255 255 / .1); background: rgb(0 0 0 / .22); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
+.cb-style[aria-pressed=true] { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(242 200 121 / .14); }
+.cb-art { width: 100%; height: auto; display: block; border-radius: 6px; }
+.cb-go { width: 100%; min-height: 50px; border-radius: 999px; margin-top: 8px; font-size: 16px; }
+.cb-go + .cb-go { margin-top: 0; }
+.cb-est { margin: 0; text-align: center; color: var(--muted, #aaa3b2); font-size: 13px; min-height: 1.3em; }
+.cb-hint { margin: 2px 0 0; text-align: center; color: rgb(255 255 255 / .42); font-size: 12.5px; }
+.cb-making { justify-items: center; padding-top: 8px; }
+.cb-making h3 { margin: 6px 0 2px; font-family: Fraunces, serif; font-weight: 600; font-size: 24px; }
+.cb-making .cb-go { justify-self: stretch; }
+.cb-book { width: 112px; aspect-ratio: 595 / 842; border-radius: 4px; background: #fbf7ef; box-shadow: 0 12px 34px rgb(0 0 0 / .45); display: grid; grid-template-rows: auto 1fr; padding: 12px 9px; gap: 8px; text-align: center; }
+.cb-book b { font: 600 11px/1.15 Fraunces, serif; color: #2a231d; }
+.cb-book span { border-radius: 2px; background: linear-gradient(135deg, #b8743a, #d9a54d 55%, #6f8a4a); margin-bottom: 30%; }
+.cb-book.dark { background: #14110f; outline: 1px solid rgb(255 255 255 / .08); }
+.cb-book.dark b { color: #f4efe6; }
+.cb-bar { width: 72%; height: 6px; border-radius: 999px; background: rgb(255 255 255 / .1); overflow: hidden; margin-top: 4px; }
+.cb-bar span { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .25s ease-out; }
 /* ---------- Recipe page (redesign concept 1): photo melts into the page, title, one meta line,
    Ingrediente / Pași / Note on a segmented control, and the main action fixed at the bottom. ---------- */
 .rv .recipe-hero::after { content: ""; position: absolute; inset: auto 0 0; height: 55%; background: linear-gradient(transparent, var(--bg)); pointer-events: none; }

@@ -55,3 +55,14 @@ export async function keepPhotos(paths: (string | undefined)[]) {
     await photoUrl(p).catch(() => {})
   }
 }
+
+/** A stored photo's bytes: from this device when it has them, otherwise downloaded (and kept). */
+export async function photoBlob(path: string): Promise<Blob> {
+  const cached = await getPhoto(path).catch(() => undefined)
+  if (cached) return cached
+  const res = await fetch(await fileUrl(path))
+  if (!res.ok) throw new Error(`photo ${res.status}`)
+  const blob = await res.blob()
+  savePhoto(path, blob).catch(() => {})
+  return blob
+}

@@ -11,6 +11,7 @@ import { groupFolders } from '../lib/stories'
 import { startKid } from '../lib/kidMode'
 import { CheckPinSheet, NewPinSheet } from '../components/KidMode'
 import Sheet from '../components/Sheet'
+import CookbookSheet from '../components/CookbookSheet'
 import Avatar from '../components/Avatar'
 import { Members, InviteForm, useFamily } from './FamilySection'
 import { listRecipes, renameSpace, setFolderShared, setRecipeShared } from '../lib/db'
@@ -443,6 +444,7 @@ const P = {
   leaf: 'M5 19c0-8 5-14 15-14 0 10-6 15-14 15M5 19l7-7',
   voice: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3',
   moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+  book: 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5',
 }
 
 // Whether the account has a Răgaz backup in the cloud: asked once per app start, and only when
@@ -481,6 +483,12 @@ const nameFromEmail = (email: string) => {
 }
 
 
+/** "Sorin și Loredana", "Ana, Ion și Maria": who gathered the recipes, for the cookbook's cover. */
+const authors = (me: string, others: string[]) => {
+  const all = [me, ...others].filter(Boolean)
+  return all.length > 1 ? `${all.slice(0, -1).join(', ')} și ${all[all.length - 1]}` : all[0] || undefined
+}
+
 /** The Profile tab: who you are, the child, people and sharing, preferences, this phone, sign out. */
 function ProfileHome() {
   const { child, kid, kitchenTools, shelfClick, diet, narrator } = useSettings()
@@ -491,6 +499,7 @@ function ProfileHome() {
   const [counts, setCounts] = useState<{ stories: number; recipes: number }>()
   const [saved, setSaved] = useState<{ count: number; bytes: number }>()
   const [editName, setEditName] = useState(false)
+  const [cookbook, setCookbook] = useState(false)
   const nav = useNavigate()
   useEffect(() => {
     Promise.all([listStories(), listRecipes()]).then(([s, r]) => setCounts({
@@ -547,6 +556,13 @@ function ProfileHome() {
         <div className="set-box">
           <Row to="/profil/bucatarie" icon="oven" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
           <Row to="/profil/mancare" icon="leaf" label="Ce mâncăm" value={diet.avoid.length ? `fără ${diet.avoid.map((r) => DIET_ITEMS.find((d) => d.key === r.key)?.short ?? r.key).join(', ')}` : 'orice'} />
+          <button type="button" className="set-row set-link prof-row" onClick={() => setCookbook(true)}>
+            <span className="prof-ic">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P.book} /></svg>
+            </span>
+            <span className="prof-l">Caietul de rețete <span className="prof-new">NOU</span><small className="set-sub">toate rețetele într-un PDF</small></span>
+            <span className="set-value"><Chevron /></span>
+          </button>
           <Row to="/profil/voce" icon="voice" label="Vocea poveștilor" value={narrator.id ? narrator.name : 'Carmen'} />
         </div>
       </div>
@@ -568,6 +584,7 @@ function ProfileHome() {
 
       <button type="button" className="prof-out" onClick={signOut}>Ieși din cont</button>
       {editName && <NameSheet onClose={() => setEditName(false)} />}
+      {cookbook && <CookbookSheet authors={authors(name || (email ? nameFromEmail(email) : ''), others)} onClose={() => setCookbook(false)} />}
     </section>
   )
 }

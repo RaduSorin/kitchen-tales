@@ -78,6 +78,13 @@ function StoryCard({ stories, evening }: { stories: Story[]; evening: boolean })
   )
 }
 
+/** The chef's hat on "Gătește", like the recipe page's cook button (from the redesign concepts). */
+const ChefHat = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M7 14.5a4 4 0 0 1-.5-7.9 5.5 5.5 0 0 1 11 0 4 4 0 0 1-.5 7.9V19H7z" /><path d="M7 16.5h10" />
+  </svg>
+)
+
 const Chevron = () => (
   <svg className="home-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
 )
@@ -203,7 +210,7 @@ export default function Home() {
         slides={slides.map((x): VitrineSlide => ({
           id: x.r.id, art: <Thumb r={x.r} />, kicker: x.kicker, title: x.r.title, href: `/retete/${x.r.id}`,
           meta: [x.r.category, x.r.servings && `${x.r.servings} porții`].filter(Boolean).join(' · ') || undefined,
-          action: x.action, actionTo: x.to, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
+          action: x.action, actionTo: x.to, actionIcon: <ChefHat />, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
         }))} />
 
       <HomeTabs memory="kt-home-tab" label="Acasă" tabs={[

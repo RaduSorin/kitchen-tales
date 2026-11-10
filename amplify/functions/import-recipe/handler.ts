@@ -6,6 +6,7 @@ import { fileSpace, newFilePath } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
 import { VIDEO_RULES, videoSource, videoText } from './video'
 import { runJob } from '../../shared/jobResult'
+import { countAi } from '../../shared/aiUsage'
 
 const bedrock = new BedrockRuntimeClient({})
 const s3 = new S3Client({})
@@ -611,6 +612,7 @@ type JobEvent = { fieldName?: string; arguments: Record<string, unknown> & { job
 async function background(field: string, e: JobEvent) {
   const args = e.arguments
   await runJob(s3, BUCKET, e, async () => {
+    await countAi(s3, BUCKET, callerSpace, 'recipe')
     if (field === 'startImportRecipe') {
       const r = await importFrom(args as unknown as ImportArgs)
       if (!r.title) throw new Error('Nu am găsit o rețetă aici.')
@@ -631,6 +633,8 @@ export const handler = async (event: { arguments: ImportArgs } | SuggestEvent) =
   callerSpace = spaceOf((event as { identity?: { groups?: string[] | null } }).identity?.groups)
   const field = e.fieldName ?? e.info?.fieldName
   if (field && JOBS.has(field)) return background(field, event as unknown as JobEvent)
+  // Everything below calls Claude or draws a photo: counted against the space's monthly limit.
+  await countAi(s3, BUCKET, callerSpace, field === 'generateRecipePhoto' ? 'photo' : 'recipe')
   if (field === 'generateRecipePhoto') {
     const { title, ingredients } = (event as unknown as PhotoEvent).arguments
     return generatePhoto(title ?? '', (ingredients ?? []).filter((x): x is string => !!x?.trim()))

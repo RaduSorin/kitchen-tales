@@ -17,6 +17,7 @@ import { useKid } from '../lib/kidMode'
 import { KidCorner } from '../components/KidMode'
 import HomeHead from '../components/HomeHead'
 import Vitrine, { type VitrineSlide } from '../components/Vitrine'
+import HomeTabs from '../components/HomeTabs'
 import { newLabel, seenStories } from '../lib/shelf'
 import { showToast } from '../lib/toast'
 
@@ -96,9 +97,10 @@ function RecipePeek({ r, label }: { r: Recipe; label: string }) {
 }
 
 /**
- * "Acasă" in the stories area, design "Vitrina de seară": the cover fills the top of the screen
- * (swipe between the story to continue, tonight's story and the newest), then tonight's stories,
- * the folders as collection cards, favourites, the newest and a peek at the kitchen.
+ * "Acasă" in the stories area, design A1 "Topit în poză": the cover fills the top of the screen
+ * (swipe between the story to continue, tonight's story and the newest) and its colours flood the
+ * page, where three tabs hold the rest: Diseară (tonight's stories, the newest, a peek at the
+ * kitchen), Colecții (the folders as collection cards) and Favorite.
  */
 export default function StoriesHome() {
   const { child } = useSettings()
@@ -221,20 +223,25 @@ export default function StoriesHome() {
           ),
         }))} />
 
-      <Row title={evening ? 'Pentru diseară' : 'Pentru azi'} to="/povesti" stories={tonightRow} />
-
-      {folders.length > 0 && (
-        <section className="sh-sec">
-          <div className="sh-sec-head"><h2>Colecții</h2><Link to="/povesti">Bibliotecă</Link></div>
-          <div className="collections">
-            {folders.map((f) => <Collection key={f.name} name={f.name} icon={f.icon} items={f.items} fresh={unseen(f.items)} />)}
-          </div>
-        </section>
-      )}
-
-      <Row title="Favorite" to="/povesti?favorite=1" stories={favorites} from="favorites" />
-      <Row title="Adăugate recent" to="/povesti" stories={recent.filter((s) => !onTop.has(s.id))} />
-      {kitchen}
+      <HomeTabs memory="kt-shome-tab" label="Povești" tabs={[
+        { key: 'diseara', label: evening ? 'Diseară' : 'Azi', body: <>
+          <Row title={evening ? 'Pentru diseară' : 'Pentru azi'} to="/povesti" stories={tonightRow} />
+          <Row title="Adăugate recent" to="/povesti" stories={recent.filter((s) => !onTop.has(s.id))} />
+          {!tonightRow.length && recent.every((s) => onTop.has(s.id)) && <Link to="/povesti" className="home-note">Toate poveștile <b>Bibliotecă</b></Link>}
+          {kitchen}
+        </> },
+        { key: 'colectii', label: 'Colecții', body: folders.length > 0 ? (
+          <section className="sh-sec">
+            <div className="collections">
+              {folders.map((f) => <Collection key={f.name} name={f.name} icon={f.icon} items={f.items} fresh={unseen(f.items)} />)}
+            </div>
+            <Link to="/povesti" className="home-note">Toată biblioteca <b>Bibliotecă</b></Link>
+          </section>
+        ) : <Link to="/povesti" className="home-note">Nicio colecție încă. <b>Bibliotecă</b></Link> },
+        { key: 'favorite', label: 'Favorite', body: favorites.length > 0
+          ? <Row title="Favorite" to="/povesti?favorite=1" stories={favorites} from="favorites" />
+          : <p className="home-note">Apasă inima de la o poveste ca să apară aici.</p> },
+      ]} />
     </section>
   )
 }

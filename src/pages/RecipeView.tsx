@@ -96,7 +96,13 @@ export function DayPicker({ r, servings, onDone, onClose }: { r: Recipe; serving
   )
 }
 
+/** Another recipe opened on the same page starts fresh (nothing ticked, first tab). */
 export default function RecipeView() {
+  const { id } = useParams()
+  return <RecipePage key={id} />
+}
+
+function RecipePage() {
   const { id } = useParams()
   const [r, setR] = useState<Recipe | null>()
   const [have, setHave] = useState<Set<number>>(new Set())
@@ -141,8 +147,6 @@ export default function RecipeView() {
   const load = () => {
     getRecipe(id!).then((x) => { setR(x ?? null); setServings(x?.servings) }).catch(() => setFailed(true))
   }
-  // Another recipe opened on the same page: start it fresh (nothing ticked, first tab).
-  useEffect(() => { setHave(new Set()); setDone(new Set()); setTab('ingrediente'); setMenu(false); setPlanning(false) }, [id])
   useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   const img = useFileUrl(r?.photoKey)
   // Step photos too, so cooking mode shows them without internet later.

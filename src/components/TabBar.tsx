@@ -62,13 +62,16 @@ const SOLID: Record<string, ReactNode> = {
 }
 
 /**
- * Hidden in full-screen cooking, on the story player (it has its own big controls) and while
+ * Hidden in full-screen cooking, on a recipe, on the story player (it has its own big controls) and while
  * adding or editing something: there the page's own button takes the bottom of the screen, and
  * the tabs would only invite leaving halfway. The "Poveste nouă" choice itself is a tab, so the
  * bar goes only once a way to add is picked (?mod=).
  */
+/** A recipe is a full-screen page: its own "Începe să gătești" bar takes the bottom of the screen. */
+const isRecipePage = (path: string) => /^\/retete\/[^/]+$/.test(path) && path !== '/retete/noua'
+
 const hidesTabBar = (path: string, search: string) =>
-  path.endsWith('/gateste') || isPlayerPage(path)
+  path.endsWith('/gateste') || isPlayerPage(path) || isRecipePage(path)
   || path === '/retete/noua' || path.endsWith('/editeaza') || path === '/saptamana/planifica' || path === '/ragaz/incepe' || path === '/ragaz/planifica' || path === '/ragaz/griji'
   || (path === '/povesti/adauga' && new URLSearchParams(search).has('mod'))
 

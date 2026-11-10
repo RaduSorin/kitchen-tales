@@ -23,8 +23,8 @@ describe('cookbook', () => {
     expect([1, 5, 19, 20, 24, 101, 120].map((n) => count(n, 'rețetă', 'rețete'))).toEqual(['1 rețetă', '5 rețete', '19 rețete', '20 de rețete', '24 de rețete', '101 rețete', '120 de rețete'])
   })
 
-  for (const style of ['classic', 'evening'] as const) {
-    it(`makes a ${style} book: cover, contents with links, a page per recipe, long ones continue`, async () => {
+  for (const [style, size, longPages] of [['classic', 'a5', 4], ['evening', 'a5', 4], ['classic', 'a4', 3], ['evening', 'a4', 3]] as const) {
+    it(`makes a ${style} ${size} book: cover, contents with links, a page per recipe, long ones continue`, async () => {
       const long = recipe('3', 'Tocăniță 🍲', 'Feluri principale', {
         ingredients: Array.from({ length: 40 }, (_, i) => `${i + 1} ingredient de test destul de lung`),
         steps: Array.from({ length: 16 }, () => 'Un pas lung care ocupă mai multe rânduri ca să treacă rețeta pe pagina următoare.'),
@@ -32,11 +32,12 @@ describe('cookbook', () => {
       })
       const { bytes, pages } = await buildCookbook({
         recipes: [recipe('1', 'Ciorbă', 'Ciorbe și supe'), { ...recipe('2', 'Clătite', 'Deserturi'), favorite: true, cooked: 4, notes: [{ day: '2026-10-12', text: 'Mai multă dulceață', by: 'Loredana' }] }, long],
-        style, fonts, authors: 'Sorin și Loredana', date: new Date('2026-11-10'),
+        style, size, fonts, authors: 'Sorin și Loredana', date: new Date('2026-11-10'),
       })
-      expect(pages).toBe(1 + 1 + 1 + 1 + 3) // cover, contents, two short recipes, the long one on three pages
+      expect(pages).toBe(1 + 1 + 1 + 1 + longPages) // cover, contents, two short recipes, then the long one
       const doc = await PDFDocument.load(bytes)
       expect(doc.getTitle()).toBe('Rețetele noastre')
+      expect(Math.round(doc.getPage(0).getWidth())).toBe(size === 'a5' ? 420 : 595)
       const links = doc.getPage(1).node.lookup(PDFName.of('Annots'), PDFArray)
       expect(links.size()).toBe(3)
     })

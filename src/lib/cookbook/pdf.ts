@@ -11,6 +11,7 @@ import { isHeading } from '../scale'
 import type { CookNote, Recipe } from '../types'
 
 export type CookbookStyle = 'classic' | 'evening'
+export type CookbookSize = 'a5' | 'a4'
 
 export type FontName = 'serif' | 'serifItalic' | 'sans' | 'sansBold' | 'sansBlack'
 /** TTF bytes for each face (public/fonts/pdf/). */
@@ -32,6 +33,8 @@ export interface CookbookRecipe {
 export interface CookbookInput {
   recipes: CookbookRecipe[]
   style: CookbookStyle
+  /** A5 (default) reads best on a phone; A4 prints straight onto a sheet. */
+  size?: CookbookSize
   fonts: CookbookFonts
   /** "Sorin și Loredana", under the title on the cover. */
   authors?: string
@@ -40,14 +43,15 @@ export interface CookbookInput {
   onProgress?: (done: number, total: number, title: string) => void
 }
 
-// A4 in points. The layout is written in the concept's pixels (design-polish/cookbook/board.html,
-// pages 440 px wide) and scaled to the page. The cover keeps the concept's 440 px; the contents and
-// recipe pages are laid out 540 px wide, so their type is a little smaller than the concept's on
-// the page (fuller pages, still easy to read: 11.5 px body text is 12.7 pt).
-const W = 595.28
-const H = 841.89
+// The layout is written in the concept's pixels (design-polish/cookbook/board.html, pages 440 px
+// wide) and scaled to the page. A5 is the concept exactly. On A4 the cover keeps the concept's
+// 440 px, while the contents and recipe pages are laid out 540 px wide: fuller pages, with the
+// 11.5 px body text at 12.7 pt.
+const SIZES: Record<CookbookSize, { W: number; H: number; pageVw: number }> = {
+  a5: { W: 419.53, H: 595.28, pageVw: 440 },
+  a4: { W: 595.28, H: 841.89, pageVw: 540 },
+}
 const COVER_VW = 440
-const PAGE_VW = 540
 
 const hex = (h: string) => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255)
 
@@ -125,6 +129,8 @@ const romanianDate = (day: string) => {
 
 export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint8Array; pages: number }> {
   const t = THEMES[input.style]
+  const { W, H, pageVw: PAGE_VW } = SIZES[input.size ?? 'a5']
+  const f = PAGE_VW / COVER_VW // how much wider recipe pages are than the concept's
   const dark = input.style === 'evening'
   const doc = await PDFDocument.create()
   doc.registerFontkit(fontkit)
@@ -294,7 +300,7 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
   const firstPage = new Map<CookbookRecipe, PDFPage>()
   const pageNo = new Map<CookbookRecipe, number>()
   // The concept's columns (.cols 150px 1fr, gap 20, padding 30 on 440 px), in proportion to the page.
-  const L = 36, LW = 180, R = L + LW + 24, RW = PAGE_VW - L - R
+  const L = Math.round(30 * f), LW = Math.round(150 * f), R = L + LW + Math.round(20 * f), RW = PAGE_VW - L - R
   const SIZE = 11.5, LH = 17.25 // font-size 11.5px, line-height 1.5
   const END = PH - 46 // content stops above the folio
   const firstBase = (lh: number, size: number) => (lh - size) / 2 + size * 0.78
@@ -314,7 +320,7 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
         const hh = ((dark ? 230 : 176) * PAGE_VW) / COVER_VW
         cover(p, img, 0, 0, VW, hh)
         if (heroFade) stretch(p, heroFade, 0, 0, VW, hh + 0.5)
-        y = dark ? hh - 34 : hh + 24
+        y = dark ? hh - 30 * f : hh + 20 * f
       } else {
         y = 44
       }

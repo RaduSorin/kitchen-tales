@@ -4,9 +4,9 @@
 
 import { photoBlob } from '../useFileUrl'
 import type { Recipe, RecipeLog } from '../types'
-import { buildCookbook, type CookbookFonts, type CookbookPhoto, type CookbookRecipe, type CookbookStyle } from './pdf'
+import { buildCookbook, type CookbookFonts, type CookbookPhoto, type CookbookRecipe, type CookbookSize, type CookbookStyle } from './pdf'
 
-export type { CookbookStyle }
+export type { CookbookSize, CookbookStyle }
 
 const FONT_FILES: Record<keyof CookbookFonts, string> = {
   serif: 'fraunces-600', serifItalic: 'fraunces-600-italic', sans: 'figtree-400', sansBold: 'figtree-700', sansBlack: 'figtree-800',
@@ -41,6 +41,7 @@ export interface CookbookOptions {
   recipes: Recipe[]
   logs: Map<string, RecipeLog>
   style: CookbookStyle
+  size: CookbookSize
   photos: boolean
   authors?: string
   onProgress?: (done: number, total: number, title: string) => void
@@ -59,7 +60,7 @@ export async function makeCookbook(o: CookbookOptions): Promise<{ file: File; pa
     items.push({ recipe, favorite: !!log?.favorite, cooked: log?.cooked.length ?? 0, notes: log?.notes ?? [], photo })
   }
   const { bytes, pages } = await buildCookbook({
-    recipes: items, style: o.style, fonts: await font, authors: o.authors, date: new Date(),
+    recipes: items, style: o.style, size: o.size, fonts: await font, authors: o.authors, date: new Date(),
     onProgress: (done, n, title) => o.onProgress?.(total + Math.round((done / Math.max(1, n)) * total), total * 2, title),
   })
   const file = new File([bytes as BlobPart], 'Rețetele noastre.pdf', { type: 'application/pdf' })
@@ -67,10 +68,11 @@ export async function makeCookbook(o: CookbookOptions): Promise<{ file: File; pa
 }
 
 /** A rough page count and size for the sheet, before anything is made. */
-export function estimate(recipes: Recipe[], photos: boolean) {
+export function estimate(recipes: Recipe[], photos: boolean, size: CookbookSize = 'a5') {
   const withPhoto = photos ? recipes.filter((r) => r.photoKey).length : 0
-  const long = recipes.filter((r) => r.ingredients.length > 14 || r.steps.join(' ').length > 700).length
-  const pages = 1 + Math.max(1, Math.ceil((recipes.length + 8) / 28)) + recipes.length + long
+  const a5 = size === 'a5'
+  const long = recipes.filter((r) => r.ingredients.length > (a5 ? 10 : 14) || r.steps.join(' ').length > (a5 ? 450 : 700)).length
+  const pages = 1 + Math.max(1, Math.ceil((recipes.length + 8) / (a5 ? 20 : 28))) + recipes.length + long
   const mb = 0.25 + withPhoto * 0.2
   return { pages, mb: mb < 1 ? Math.round(mb * 10) / 10 : Math.round(mb) }
 }

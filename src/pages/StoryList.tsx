@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { cachedFolders, createFolder, deleteFolder, downloadStory, listFolders, listStories, saveFolder, setFolderShared } from '../lib/db'
+import { cachedFolders, createFolder, deleteFolder, downloadStory, listFolders, listStories, saveFolder, watchStories, setFolderShared } from '../lib/db'
 import type { Story, StoryFolder } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
@@ -76,8 +76,9 @@ export default function StoryList() {
   const closeMenu = useCallback(() => setMenu(false), [])
   const reload = () => Promise.all([listStories().then(setStories), listFolders().then(setRows)])
   useEffect(() => {
-    listStories().then(setStories).catch(() => setError('Nu pot încărca poveștile fără internet.')).finally(() => setLoading(false))
-    listFolders().then(setRows)
+    const stop = watchStories((list) => { setStories(list); setLoading(false) }, () => { setError('Nu pot încărca poveștile fără internet.'); setLoading(false) })
+    listFolders().then(setRows).catch(() => {})
+    return stop
   }, [])
 
   const available = online ? stories : stories.filter((s) => offline.has(s.id))

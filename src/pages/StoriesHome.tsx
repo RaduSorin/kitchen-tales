@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { cachedFolders, listFolders, listRecipes, listStories, setStoryFavorite } from '../lib/db'
+import { cachedFolders, listFolders, listRecipes, listStories, setStoryFavorite, watchRecipes, watchStories } from '../lib/db'
 import type { Recipe, Story, StoryFolder } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
 import { useSettings } from '../lib/settings'
@@ -119,7 +119,12 @@ export default function StoriesHome() {
     listFolders().then(setRows).catch(() => {})
     listRecipes().then(setRecipes).catch(() => {})
   }
-  useEffect(load, [])
+  useEffect(() => {
+    const stopStories = watchStories(setStories, () => setFailed(true))
+    const stopRecipes = watchRecipes(setRecipes)
+    listFolders().then(setRows).catch(() => {})
+    return () => { stopStories(); stopRecipes() }
+  }, [])
 
   const available = (stories ?? []).filter((s) => online || offline.has(s.id))
   const last = available.find((s) => s.id === getLastStoryId())

@@ -85,6 +85,61 @@ async function listAll<T>(fetchPage: (nextToken?: string | null) => Promise<Page
 
 export const newId = () => crypto.randomUUID()
 
+// ---- lists: this device's copy first, the server's when it answers ----
+
+/** How long a list waits for the server before it settles for this device's copy. */
+const SLOW_MS = 5000
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+
+/**
+ * One list kept on the server and copied on this device (recipes, stories). A weak signal must
+ * not leave a page on "loading" while the copy is right here: the copy shows first, and the
+ * server's list replaces it when (and if) it comes.
+ */
+function feed<T>(name: 'recipes' | 'stories', fetchFresh: () => Promise<T[]>) {
+  const cached = () => cachedList(name as 'recipes').catch(() => undefined) as Promise<T[] | undefined>
+  const watchers = new Set<(list: T[]) => void>()
+  let running: Promise<T[]> | undefined
+  // One request at a time; every page watching gets its answer.
+  const fresh = () => (running ??= fetchFresh()
+    .then((list) => { watchers.forEach((w) => w(list)); return list })
+    .finally(() => { running = undefined }))
+  // A fresh sign-in reads its space at once (and drops another account's copy); only a token
+  // renewal waits on the network, and then the copy here is this account's own.
+  const deviceCopy = async () => { await Promise.race([spaceReady(), sleep(1500)]); return cached() }
+
+  async function list(): Promise<T[]> {
+    const req = fresh()
+    const slow = await Promise.race([req.then(() => false, () => false), sleep(SLOW_MS).then(() => true)])
+    if (!slow) {
+      try { return await req } catch (err) { const c = await cached(); if (c) return c; throw err }
+    }
+    // Still waiting: the copy here now; the request goes on and updates it (and any page watching).
+    req.catch(() => {})
+    return (await cached()) ?? req
+  }
+
+  function watch(onList: (list: T[]) => void, onError?: (err: unknown) => void) {
+    let live = true
+    let gotFresh = false
+    const w = (l: T[]) => { if (live) { gotFresh = true; onList(l) } }
+    watchers.add(w)
+    deviceCopy().then((c) => { if (live && !gotFresh && c) onList(c) })
+    const ask = () => fresh().catch(async (err) => {
+      if (!live || gotFresh) return
+      if (!(await cached())) onError?.(err)
+    })
+    ask()
+    // The signal came back: ask again, so a list from the copy turns into the server's.
+    const online = () => { if (!gotFresh) ask() }
+    window.addEventListener('online', online)
+    return () => { live = false; watchers.delete(w); window.removeEventListener('online', online) }
+  }
+
+  return { list, watch }
+}
+
+
 // ---- files ----
 
 const extFor = (blob: Blob, fallback: string) => {
@@ -164,18 +219,27 @@ async function removeFile(path?: string) {
 
 // ---- recipes ----
 
-export async function listRecipes() {
-  try {
-    const rows = await listAll((nextToken) => client.models.Recipe.list({ nextToken, limit: 200 }))
-    const list = rows.map(toRecipe).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
-    cacheList('recipes', list).catch(() => {})
-    return list
-  } catch (err) {
-    const cached = await cachedList('recipes')
-    if (cached) return cached
-    throw err
-  }
+/** The recipes from the server, newest change first; the device's copy is updated with them. */
+async function fetchRecipes() {
+  const rows = await listAll((nextToken) => client.models.Recipe.list({ nextToken, limit: 200 }))
+  const list = rows.map(toRecipe).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
+  cacheList('recipes', list).catch(() => {})
+  return list
 }
+const recipesFeed = feed('recipes', fetchRecipes)
+
+/**
+ * Every recipe: the server's list, or this device's copy when the server does not answer
+ * (no internet, or a weak signal that has not answered in a few seconds).
+ */
+export const listRecipes = () => recipesFeed.list()
+
+/**
+ * Shows the recipes right away from this device's copy, then the server's list once it answers
+ * (and again whenever a newer list arrives). `onError` only when neither is there. Returns the
+ * function that stops watching.
+ */
+export const watchRecipes = (onList: (list: Recipe[]) => void, onError?: (err: unknown) => void) => recipesFeed.watch(onList, onError)
 
 export async function getRecipe(id: string) {
   try {
@@ -244,31 +308,32 @@ export async function setRecipeShared(r: Recipe, shared: boolean) {
 
 // ---- stories ----
 
-/** Every story, newest first (in kid mode only the folders the child may see). */
-export async function listStories() {
-  return kidStories(await listAllStories())
+/** Every story from the server, newest first; the device's copy is updated with them. */
+async function fetchStories() {
+  const listedAt = Date.now()
+  const [rows, favs] = await Promise.all([
+    listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 })),
+    listAll((nextToken) => client.models.StoryFavorite.list({ nextToken, limit: 500 })),
+  ])
+  // Stories another space shared: our favourites of them are kept in our own space.
+  const favIds = new Set(favs.map((f) => f.storyId))
+  const list = rows.map(toStory).map((s) => (s.mine ? s : { ...s, favorite: favIds.has(s.id) })).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+  cacheList('stories', list).catch(() => {})
+  // Free the space of stories deleted elsewhere; their audio would otherwise stay here forever.
+  pruneAudio(new Set(list.map((s) => s.id)), listedAt).catch(() => {})
+  return list
 }
+const storiesFeed = feed('stories', fetchStories)
 
-async function listAllStories() {
-  try {
-    const listedAt = Date.now()
-    const [rows, favs] = await Promise.all([
-      listAll((nextToken) => client.models.Story.list({ nextToken, limit: 200 })),
-      listAll((nextToken) => client.models.StoryFavorite.list({ nextToken, limit: 500 })),
-    ])
-    // Stories another space shared: our favourites of them are kept in our own space.
-    const favIds = new Set(favs.map((f) => f.storyId))
-    const list = rows.map(toStory).map((s) => (s.mine ? s : { ...s, favorite: favIds.has(s.id) })).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
-    cacheList('stories', list).catch(() => {})
-    // Free the space of stories deleted elsewhere; their audio would otherwise stay here forever.
-    pruneAudio(new Set(list.map((s) => s.id)), listedAt).catch(() => {})
-    return list
-  } catch (err) {
-    const cached = await cachedList('stories')
-    if (cached) return cached
-    throw err
-  }
-}
+/**
+ * Every story, newest first (in kid mode only the folders the child may see): the server's list,
+ * or this device's copy when the server does not answer in a few seconds.
+ */
+export const listStories = async () => kidStories(await storiesFeed.list())
+
+/** Like watchRecipes: this device's stories right away, then the server's (kid mode applied to both). */
+export const watchStories = (onList: (list: Story[]) => void, onError?: (err: unknown) => void) =>
+  storiesFeed.watch((list) => onList(kidStories(list)), onError)
 
 export async function getStory(id: string) {
   try {
@@ -422,8 +487,6 @@ export async function deleteFolder(name: string, row: StoryFolder | undefined, s
 }
 
 // ---- long AI work (runs in the background, see amplify/shared/jobs.ts) ----
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /**
  * Starts AI work that can take longer than the 30 s a request may last, and waits for its outcome:

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { Story } from './types'
-import { fileUrl, getOfflineAudio, listStories } from './db'
+import { fileUrl, getOfflineAudio, watchStories } from './db'
 import { folderOf, getPosition, markPlayed, setPosition } from './stories'
 import { useOfflineIds, useOnline } from './useOffline'
 import { useCoverUrl } from './useCoverUrl'
@@ -109,17 +109,15 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const [from, setFrom] = useState<QueueFrom>('folder')
   const folderName = story ? folderOf(story) : undefined
   const isFav = !!story?.favorite
+  // From this device's copy at once (the next story is known even on a weak signal), then the server's.
   useEffect(() => {
     if (!folderName) return
-    let live = true
-    listStories().then((all) => {
-      if (!live) return
+    return watchStories((all) => {
       // Started from Favorite: shuffle and "stop after N" stay within the favourites (sorted like that page).
       setFolder(from === 'favorites'
         ? all.filter((x) => x.favorite).sort((a, b) => a.title.localeCompare(b.title, 'ro'))
         : all.filter((x) => folderOf(x) === folderName))
-    }).catch(() => {})
-    return () => { live = false }
+    })
   }, [folderName, from, isFav])
   const queue = online ? folder : folder.filter((x) => offlineIds.has(x.id))
   const idx = story ? queue.findIndex((x) => x.id === story.id) : -1

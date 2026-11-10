@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorText } from '../lib/errors'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { generateRecipe, generateRecipePhoto, getRecipe, suggestRecipes, type RecipeIdea, importRecipeFromPhotos, importRecipeFromText, importRecipeFromUrl, newId, removeFile, saveRecipe, uploadFile, type ImportedRecipe } from '../lib/db'
@@ -19,6 +19,7 @@ import { canGoBack, useBack } from '../lib/back'
 import { guardedWorkDone, useLeaveGuard } from '../lib/leaveGuard'
 import { LoadError, Loading } from '../components/LoadState'
 import AddArt from '../components/AddArt'
+import PopMenu, { MENU_ICON, MenuRow } from '../components/PopMenu'
 import { clearPickedRecipePages, pickedRecipePages, type RecipeWay } from '../components/NewRecipeFab'
 
 const CATEGORIES = ['Ciorbe și supe', 'Feluri principale', 'Garnituri', 'Salate', 'Deserturi', 'Mic dejun', 'Pentru copii']
@@ -28,6 +29,8 @@ type Step = { uid: string; text: string; photoKey?: string; photoBlob?: Blob }
 // fridge) and writing it yourself. The older ?din= values still open the right one.
 type Mode = 'choose' | 'paste' | 'photo' | 'ai' | 'edit'
 type AiKind = 'craving' | 'fridge'
+type EdTab = 'detalii' | 'ingrediente' | 'pasi' | 'note'
+const ED_TABS: [EdTab, string][] = [['detalii', 'Detalii'], ['ingrediente', 'Ingrediente'], ['pasi', 'Pași'], ['note', 'Note']]
 const WAY_MODE: Record<RecipeWay, Mode> = { link: 'paste', text: 'paste', poza: 'photo', scriu: 'edit', ai: 'ai', frigider: 'ai', genereaza: 'ai' }
 
 /** The pasted text is one web address (and nothing else). */
@@ -74,9 +77,28 @@ const LEAVE_EDITS = {
   leave: 'Renunță la modificări',
 }
 
-function StepItem({ n, step, total, drag, onChange, onMove, onRemove, onGrab }: {
-  n: number; step: Step; total: number; drag?: { dy: number; lifted: boolean }
-  onChange: (s: Step) => void; onMove: (d: number) => void; onRemove: () => void
+/** A line icon like the ones in the redesign concepts (24px grid, thin rounded outline). */
+const Ic = ({ d, size = 17 }: { d: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
+)
+const IC = {
+  cam: 'M4 8h3.5l1.5-2.5h6L16.5 8H20v11H4zM12 10a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6z',
+  plus: 'M12 5v14M5 12h14',
+  trash: 'M5 7h14M9.5 7V4.5h5V7M7 7l1 13h8l1-13',
+  timer: 'M12 6a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15zM12 9.5v4l2.5 1.5M9.5 3h5',
+  chev: 'm9.5 5.5 6.5 6.5-6.5 6.5',
+  info: 'M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM12 11v5.5M12 7.6v.2',
+  sparkle: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z',
+}
+
+/**
+ * One step on the "Pași" tab (calm concept 3): a plain line with the grip, the number, the text,
+ * the timer it found and the step's photo. Its tools (poză, dictează, pas după, șterge) show only
+ * under the open step, the one being edited.
+ */
+function StepItem({ n, step, total, drag, open, onOpen, onChange, onMove, onRemove, onAddAfter, onGrab }: {
+  n: number; step: Step; total: number; drag?: { dy: number; lifted: boolean }; open: boolean; onOpen: () => void
+  onChange: (s: Step) => void; onMove: (d: number) => void; onRemove: () => void; onAddAfter: () => void
   onGrab: (e: React.PointerEvent<HTMLButtonElement>) => void
 }) {
   const blobUrl = useBlobUrl(step.photoBlob)
@@ -84,56 +106,47 @@ function StepItem({ n, step, total, drag, onChange, onMove, onRemove, onGrab }: 
   const url = blobUrl ?? savedUrl
   const secs = detectDuration(step.text)
   return (
-    <li className={'edit-step' + (drag?.lifted ? ' lifted' : '') + (drag && !drag.lifted ? ' shifting' : '')} data-uid={step.uid}
-      style={drag?.dy ? { transform: `translateY(${drag.dy}px)` } : undefined}>
-      <div className="edit-step-side">
-        <span className="step-no">{n}</span>
-        {/* Drag the grip to reorder; on a keyboard, ↑/↓ on the grip moves the step. */}
-        <button type="button" className="step-grip" aria-label={`Mută pasul ${n} (trage, sau săgeți sus/jos)`}
-          onPointerDown={onGrab} onContextMenu={(e) => e.preventDefault()}
-          onKeyDown={(e) => {
-            const d = e.key === 'ArrowUp' && n > 1 ? -1 : e.key === 'ArrowDown' && n < total ? 1 : 0
-            if (!d) return
-            e.preventDefault()
-            onMove(d)
-            // The step moved in the list (and lost the focus): keep it on its grip, for the next press.
-            requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-uid="${step.uid}"] .step-grip`)?.focus())
-          }}>
-          <svg viewBox="0 0 12 20" width="12" height="20" aria-hidden="true">
-            {[3, 10, 17].flatMap((y) => [<circle key={'a' + y} cx="3" cy={y} r="1.6" />, <circle key={'b' + y} cx="9" cy={y} r="1.6" />])}
-          </svg>
-        </button>
+    <li className={'ed-step' + (open ? ' on' : '') + (drag?.lifted ? ' lifted' : '') + (drag && !drag.lifted ? ' shifting' : '')} data-uid={step.uid}
+      style={drag?.dy ? { transform: `translateY(${drag.dy}px)` } : undefined} onClick={open ? undefined : onOpen}>
+      {/* Drag the grip to reorder; on a keyboard, ↑/↓ on the grip moves the step. */}
+      <button type="button" className="step-grip" aria-label={`Mută pasul ${n} (trage, sau săgeți sus/jos)`}
+        onPointerDown={onGrab} onContextMenu={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          const d = e.key === 'ArrowUp' && n > 1 ? -1 : e.key === 'ArrowDown' && n < total ? 1 : 0
+          if (!d) return
+          e.preventDefault()
+          onMove(d)
+          // The step moved in the list (and lost the focus): keep it on its grip, for the next press.
+          requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-uid="${step.uid}"] .step-grip`)?.focus())
+        }}>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          {[6, 12, 18].flatMap((y) => [<circle key={'a' + y} cx="9" cy={y} r="1.3" />, <circle key={'b' + y} cx="15" cy={y} r="1.3" />])}
+        </svg>
+      </button>
+      <span className="ed-no">{n}</span>
+      <div className="ed-step-text">
+        <textarea id={`step-${step.uid}`} aria-label={`Pasul ${n}`} rows={1} value={step.text} placeholder="Ce faci la acest pas?"
+          ref={fitHeight} onFocus={onOpen} onChange={(e) => onChange({ ...step, text: e.target.value })} />
+        {secs > 0 && <small className="ed-timer"><Ic d={IC.timer} size={13} /> {formatMinutes(Math.max(1, Math.round(secs / 60)))}</small>}
       </div>
-      <div className="edit-step-main">
-        <textarea id={`step-${step.uid}`} aria-label={`Pasul ${n}`} rows={Math.max(2, Math.ceil(step.text.length / 32))} value={step.text} placeholder="Ce faci la acest pas?"
-          onChange={(e) => onChange({ ...step, text: e.target.value })} />
-        {secs > 0 && (
-          <div className="edit-step-meta">
-            <span className="timer-chip">Cronometru {formatMinutes(Math.max(1, Math.round(secs / 60)))}</span>
-          </div>
-        )}
-      </div>
-      {/* The step's photo and, under it, a quiet bin: a red "Șterge pasul" under every step was loud. */}
-      <div className="edit-step-aside">
-        {url ? (
-          <span className="step-photo-thumb">
-            <img src={url} alt="" />
-            <button type="button" aria-label={`Scoate poza de la pasul ${n}`} onClick={() => onChange({ ...step, photoKey: undefined, photoBlob: undefined })}>×</button>
-          </span>
-        ) : (
-          <label className="step-photo-add" aria-label={`Adaugă o poză la pasul ${n}`} title="Adaugă o poză">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4 8h3l2-2.5h6L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.2" />
-            </svg>
+      {url && (
+        <span className="ed-thumb">
+          <img src={url} alt="" />
+          {open && <button type="button" aria-label={`Scoate poza de la pasul ${n}`} onClick={() => onChange({ ...step, photoKey: undefined, photoBlob: undefined })}>×</button>}
+        </span>
+      )}
+      {open && (
+        <div className="ed-tools">
+          <label className="ed-tool">
+            <Ic d={IC.cam} /><span>{url ? 'Altă poză' : 'Poză'}</span>
             <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange({ ...step, photoBlob: f }) }} />
           </label>
-        )}
-        <button type="button" className="step-remove" aria-label={`Șterge pasul ${n}`} title="Șterge pasul" onClick={onRemove}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" />
-          </svg>
-        </button>
-      </div>
+          <MicButton tool="Dictează" label={`Dictează pasul ${n}`} value={step.text} hint="Spune pasul, apoi atinge din nou ca să oprești."
+            onChange={(t) => onChange({ ...step, text: t.charAt(0).toUpperCase() + t.slice(1) })} />
+          <button type="button" className="ed-tool" onClick={onAddAfter}><Ic d={IC.plus} /><span>Pas după</span></button>
+          <button type="button" className="ed-tool danger" onClick={onRemove}><Ic d={IC.trash} /><span>Șterge</span></button>
+        </div>
+      )}
     </li>
   )
 }
@@ -149,6 +162,12 @@ export default function RecipeEdit() {
   const [ing, setIng] = useState('')
   const [steps, setSteps] = useState<Step[]>([])
   const [drag, setDrag] = useState<Drag>()
+  const [tab, setTab] = useState<EdTab>('detalii')
+  /** The step being edited: only it shows its tools. */
+  const [openStep, setOpenStep] = useState<string>()
+  const [photoMenu, setPhotoMenu] = useState(false)
+  const closePhotoMenu = useCallback(() => setPhotoMenu(false), [])
+  const photoInput = useRef<HTMLInputElement>(null)
   const [photo, setPhoto] = useState<Blob>()
   // /retete/noua?din=… opens straight on one way (the + sheet on the recipes page; Search links the fridge).
   const [mode, setMode] = useState<Mode>(() => id ? 'edit' : WAY_MODE[new URLSearchParams(window.location.search).get('din') as RecipeWay] ?? 'choose')
@@ -396,6 +415,7 @@ export default function RecipeEdit() {
   /** Adds an empty step at position `at` (the end by default) and puts the cursor in it. */
   const addStep = (at?: number) => {
     const s = { uid: newId(), text: '' }
+    setOpenStep(s.uid)
     setSteps((xs) => { const n = [...xs]; n.splice(at ?? n.length, 0, s); return n })
     requestAnimationFrame(() => {
       const el = document.getElementById(`step-${s.uid}`)
@@ -407,7 +427,7 @@ export default function RecipeEdit() {
   const grab = (k: number) => (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0) return
     const list = e.currentTarget.closest('ol')
-    const items = list ? [...list.querySelectorAll<HTMLElement>(':scope > li.edit-step')] : []
+    const items = list ? [...list.querySelectorAll<HTMLElement>(':scope > li.ed-step')] : []
     const me = items[k]
     if (!me) return
     e.preventDefault()
@@ -623,8 +643,11 @@ export default function RecipeEdit() {
     )
   }
 
+  const photoLabel = img ? 'Schimbă poza' : 'Adaugă o poză'
   return (
-    <form className="editor" onSubmit={save}>
+    // Calm concept 3: the same tabs as the recipe page, so editing looks like reading, and one
+    // gold "Salvează rețeta" always at the bottom.
+    <form className="editor ed" onSubmit={save}>
       <div className="editor-bar" ref={bar}>
         <button type="button" className="editor-back" data-leaves onClick={back} aria-label="Renunță">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
@@ -634,90 +657,125 @@ export default function RecipeEdit() {
           <span className="editor-bar-label">{id ? 'Editează' : 'Rețetă nouă'}</span>
           <span className="editor-bar-name">{r.title.trim() || (id ? 'Editează' : 'Rețetă nouă')}</span>
         </span>
-        <button type="submit" className="btn primary small" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează'}</button>
+        {/* One "Poza" button for the photo: a new one from the phone, or one drawn by AI. */}
+        <span className="menu-anchor ed-photo-anchor">
+          <button type="button" className="ed-photo-btn" aria-haspopup="menu" aria-expanded={photoMenu} onClick={() => setPhotoMenu((o) => !o)}>
+            <Ic d={IC.cam} size={19} /><span>Poza</span>
+          </button>
+          <input ref={photoInput} type="file" accept="image/*" hidden onChange={(e) => pickPhoto(e.target.files?.[0])} />
+          {photoMenu && (
+            <PopMenu label="Poza rețetei" onClose={closePhotoMenu}>
+              <MenuRow icon={MENU_ICON.image} onClick={() => { closePhotoMenu(); photoInput.current?.click() }}>{photoLabel}</MenuRow>
+              {r.title.trim()
+                ? <MenuRow icon={IC.sparkle} disabled={aiBusy} onClick={() => { closePhotoMenu(); makeAiPhoto(r.title, lines(ing)) }}>{img ? 'Altă poză AI' : 'Poză AI'}</MenuRow>
+                : <p className="menu-note">Scrie numele rețetei și îți putem desena și o poză cu AI.</p>}
+            </PopMenu>
+          )}
+        </span>
       </div>
 
       <div className="editor-photo-wrap" ref={cover}>
-        <label className="editor-photo">
+        <label className="editor-photo" aria-label={photoLabel}>
           {img ? <img src={img} alt="" /> : <PlatePlaceholder seed={r.title || 'rețetă'} />}
-          <span className="editor-photo-btn">{img ? 'Schimbă poza' : 'Adaugă o poză'}</span>
           <input type="file" accept="image/*" hidden onChange={(e) => pickPhoto(e.target.files?.[0])} />
         </label>
-        {aiBusy
-          ? <span className="editor-ai-busy"><span className="spinner" /> Generez o poză…</span>
-          : r.title.trim() && <button type="button" className="editor-ai-btn" onClick={() => makeAiPhoto(r.title, lines(ing))}>✨ {img ? 'Altă poză AI' : 'Poză AI'}</button>}
+        {aiBusy && <span className="editor-ai-busy"><span className="spinner" /> Generez o poză…</span>}
+      </div>
+
+      <div className="ed-head">
+        <h1 className="editor-kicker">{id ? 'Editează' : 'Rețetă nouă'}</h1>
+        {/* Grows to fit a long name instead of cutting it off; Enter does not add a new line. */}
+        <textarea className="editor-title" aria-label="Titlu" required rows={1} value={r.title} placeholder="Numele rețetei" ref={(el) => { nameRef.current = el; fitHeight(el) }}
+          onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
+          onChange={(e) => set('title', e.target.value.replace(/\s*\n\s*/g, ' '))} />
       </div>
 
       {found && <p className="found">{found}</p>}
 
-      <h1 className="editor-kicker">{id ? 'Editează' : 'Rețetă nouă'}</h1>
-      {/* Grows to fit a long name instead of cutting it off; Enter does not add a new line. */}
-      <textarea className="editor-title" aria-label="Titlu" required rows={1} value={r.title} placeholder="Numele rețetei" ref={(el) => { nameRef.current = el; fitHeight(el) }}
-        onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
-        onChange={(e) => set('title', e.target.value.replace(/\s*\n\s*/g, ' '))} />
-
-      <div className="editor-fields">
-        <label>Categorie
-          <input list="cats" value={r.category} onChange={(e) => set('category', e.target.value)} />
-          <datalist id="cats">{CATEGORIES.map((c) => <option key={c} value={c} />)}</datalist>
-        </label>
-        <label>Porții<input type="number" inputMode="numeric" min={1} value={r.servings ?? ''} onChange={(e) => set('servings', e.target.value ? +e.target.value : undefined)} /></label>
-        <label>Minute<input type="number" inputMode="numeric" min={1} value={r.minutes ?? ''} onChange={(e) => set('minutes', e.target.value ? +e.target.value : undefined)} /></label>
+      <div className="seg-tabs ed-tabs" role="tablist" aria-label="Părțile rețetei">
+        {ED_TABS.map(([k, label]) => (
+          <button key={k} type="button" role="tab" id={`ed-${k}`} aria-controls="ed-panel" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>
+        ))}
       </div>
 
-      <section className="editor-section">
-        <h2>Ingrediente</h2>
-        <p className="set-hint">Câte unul pe rând, cu cantitatea la început (de exemplu „500 g carne tocată”), ca să se poată recalcula porțiile.</p>
-        <MicButton value={ing} onChange={setIng} asLines={spokenIngredientLines}
-          hint="Spune câte un ingredient, cu o mică pauză între ele.">
-          <textarea aria-label="Ingrediente" rows={Math.max(5, lines(ing).length + 1)} value={ing} onChange={(e) => setIng(e.target.value)} />
-        </MicButton>
-      </section>
+      <div className="ed-panel" id="ed-panel" role="tabpanel" aria-labelledby={`ed-${tab}`}>
+        {tab === 'detalii' && (
+          <div className="ed-form">
+            <label className="ed-row"><span>Categorie</span>
+              <input list="cats" value={r.category} placeholder="alege" onChange={(e) => set('category', e.target.value)} />
+              <datalist id="cats">{CATEGORIES.map((c) => <option key={c} value={c} />)}</datalist>
+              <Ic d={IC.chev} size={18} />
+            </label>
+            <div className="ed-row"><span id="ed-servings">Porții</span>
+              <b aria-labelledby="ed-servings">{r.servings ?? '–'}</b>
+              <span className="ed-steppers">
+                <button type="button" aria-label="Mai puține porții" disabled={!r.servings || r.servings <= 1} onClick={() => set('servings', Math.max(1, (r.servings ?? 1) - 1))}>−</button>
+                <button type="button" aria-label="Mai multe porții" onClick={() => set('servings', (r.servings ?? 0) + 1)}>+</button>
+              </span>
+            </div>
+            <label className="ed-row"><span>Timp</span>
+              <span className="ed-min"><input type="number" inputMode="numeric" min={1} placeholder="–" value={r.minutes ?? ''} onChange={(e) => set('minutes', e.target.value ? +e.target.value : undefined)} /> min</span>
+              <Ic d={IC.chev} size={18} />
+            </label>
+            <label className="ed-row"><span>Link sursă</span>
+              <input type="url" placeholder="adaugă" value={r.sourceUrl ?? ''} onChange={(e) => set('sourceUrl', e.target.value || undefined)} />
+              <Ic d={IC.chev} size={18} />
+            </label>
+          </div>
+        )}
 
-      <section className="editor-section">
-        <h2>Pași</h2>
-        <p className="set-hint">Dacă scrii un timp („10 minute”), apare un cronometru când gătești. Poza unui pas apare pe tot ecranul.{steps.length > 1 && ' Trage de ⠿ ca să muți un pas, sau atinge + ca să adaugi unul între doi pași.'}</p>
-        <ol className={'edit-steps' + (drag ? ' dragging' : '')}>
-          {steps.map((s, k) => [
-            <StepItem key={s.uid} n={k + 1} step={s} total={steps.length} drag={dragOf(k)}
-              onChange={(x) => updateStep(k, x)} onMove={(d) => moveStep(k, d)} onRemove={() => removeStep(k)} onGrab={grab(k)} />,
-            k < steps.length - 1 && (
-              <li key={s.uid + '+'} className="step-insert" aria-hidden={drag ? true : undefined}>
-                <button type="button" aria-label={`Adaugă un pas după pasul ${k + 1}`} onClick={() => addStep(k + 1)}>
-                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-                </button>
-              </li>
-            ),
-          ])}
-        </ol>
-        <div className="steps-add">
-          <button type="button" className="btn ghost" onClick={() => addStep()}>+ Adaugă un pas</button>
-          <MicButton value="" label="Dictează un pas" hint="Spune pasul, apoi atinge pătratul ca să oprești."
-            onStart={() => {
-              // Fill the last step if it is still empty, otherwise start a new one.
-              const last = steps[steps.length - 1]
-              if (last && !last.text.trim() && !last.photoKey && !last.photoBlob) { dictStep.current = last.uid; return }
-              const s: Step = { uid: newId(), text: '' }
-              dictStep.current = s.uid
-              setSteps((xs) => [...xs, s])
-            }}
-            onChange={(t) => {
-              const text = t.charAt(0).toUpperCase() + t.slice(1)
-              setSteps((xs) => xs.map((x) => (x.uid === dictStep.current ? { ...x, text } : x)))
-            }} />
-        </div>
-      </section>
+        {tab === 'ingrediente' && <>
+          <MicButton value={ing} onChange={setIng} asLines={spokenIngredientLines}
+            hint="Spune câte un ingredient, cu o mică pauză între ele.">
+            <textarea className="ed-big" aria-label="Ingrediente" rows={Math.max(10, lines(ing).length + 2)} value={ing} placeholder="500 g carne tocată" onChange={(e) => setIng(e.target.value)} />
+          </MicButton>
+          <details className="ed-tip">
+            <summary><Ic d={IC.info} size={16} />Cum scriu ingredientele?</summary>
+            <p>Câte unul pe rând, cu cantitatea la început (de exemplu „500 g carne tocată”), ca să se poată recalcula porțiile.</p>
+          </details>
+        </>}
 
-      <section className="editor-section">
-        <h2>Note</h2>
-        <MicButton value={r.notes ?? ''} onChange={(t) => setR((cur) => (cur ? { ...cur, notes: t } : cur))}>
-          <textarea aria-label="Note" rows={3} value={r.notes ?? ''} onChange={(e) => set('notes', e.target.value)} />
-        </MicButton>
-        <label>Link sursă<input type="url" value={r.sourceUrl ?? ''} onChange={(e) => set('sourceUrl', e.target.value || undefined)} /></label>
-      </section>
+        {tab === 'pasi' && <>
+          <ol className={'ed-steps' + (drag ? ' dragging' : '')}>
+            {steps.map((s, k) => (
+              <StepItem key={s.uid} n={k + 1} step={s} total={steps.length} drag={dragOf(k)} open={openStep === s.uid} onOpen={() => setOpenStep(s.uid)}
+                onChange={(x) => updateStep(k, x)} onMove={(d) => moveStep(k, d)} onRemove={() => removeStep(k)} onAddAfter={() => addStep(k + 1)} onGrab={grab(k)} />
+            ))}
+          </ol>
+          <div className="ed-add">
+            <button type="button" className="ed-add-btn" onClick={() => addStep()}><Ic d={IC.plus} size={18} />Adaugă un pas</button>
+            <MicButton value="" label="Dictează un pas" hint="Spune pasul, apoi atinge pătratul ca să oprești."
+              onStart={() => {
+                // Fill the last step if it is still empty, otherwise start a new one.
+                const last = steps[steps.length - 1]
+                if (last && !last.text.trim() && !last.photoKey && !last.photoBlob) { dictStep.current = last.uid; setOpenStep(last.uid); return }
+                const s: Step = { uid: newId(), text: '' }
+                dictStep.current = s.uid
+                setOpenStep(s.uid)
+                setSteps((xs) => [...xs, s])
+              }}
+              onChange={(t) => {
+                const text = t.charAt(0).toUpperCase() + t.slice(1)
+                setSteps((xs) => xs.map((x) => (x.uid === dictStep.current ? { ...x, text } : x)))
+              }} />
+          </div>
+          <details className="ed-tip">
+            <summary><Ic d={IC.info} size={16} />Cum merg cronometrul și pozele?</summary>
+            <p>Dacă scrii un timp („10 minute”), apare un cronometru când gătești. Poza unui pas apare pe tot ecranul. Atinge un pas ca să-i vezi uneltele: poză, dictează, pas după și șterge. Trage de ⠿ ca să muți un pas.</p>
+          </details>
+        </>}
+
+        {tab === 'note' && (
+          <MicButton value={r.notes ?? ''} onChange={(t) => setR((cur) => (cur ? { ...cur, notes: t } : cur))}>
+            <textarea className="ed-big" aria-label="Note" rows={8} value={r.notes ?? ''} placeholder="Ce vrei să ții minte despre rețetă" onChange={(e) => set('notes', e.target.value)} />
+          </MicButton>
+        )}
+      </div>
 
       {error && <p className="error">{error}</p>}
-      <button className="btn primary big" type="submit" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează rețeta'}</button>
+      <div className="rv-foot ed-foot">
+        <button className="rv-cook" type="submit" disabled={saving}>{saving ? 'Se salvează…' : 'Salvează rețeta'}</button>
+      </div>
     </form>
   )
 }

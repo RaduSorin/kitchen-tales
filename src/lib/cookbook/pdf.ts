@@ -201,7 +201,9 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
     const name = p.node.newXObject('G', ref)
     p.pushOperators(pushGraphicsState(), concatTransformationMatrix(X(w), 0, 0, X(h), X(x), Y(top + h)), drawObject(name), popGraphicsState())
   }
-  const heroFade = dark ? gradient([[0, 0], [0.6, 0], [1, 1]]) : undefined // mask-image: #000 60%, transparent
+  // The photo melts into the page: the concept's mask (#000 60%, transparent) on the evening pages,
+  // a shorter, softer one on paper, where a long fade would look washed out.
+  const heroFade = gradient(dark ? [[0, 0], [0.6, 0], [1, 1]] : [[0, 0], [0.62, 0], [0.84, 0.5], [1, 1]])
   const coverShade = dark ? gradient([[0, 0.15], [0.4, 0.2], [0.78, 1], [1, 1]]) : undefined
 
   const newPage = () => {

@@ -5,6 +5,7 @@ import type { Schema } from '../../data/resource'
 import { newFilePath } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
 import { runJob } from '../../shared/jobResult'
+import { countAi } from '../../shared/aiUsage'
 import { apiKey, DEFAULT_MODEL, ElevenLabsError, listVoices, narrate, preview } from './elevenlabs'
 
 const bedrock = new BedrockRuntimeClient({})
@@ -130,16 +131,23 @@ export const handler = async (event: Parameters<Schema['generateStory']['functio
   const e = event as unknown as FieldEvent
   const field = e.fieldName ?? e.info?.fieldName
   if (field === 'startGenerateStory') {
-    await runJob(s3, BUCKET, e, () => generate(e.arguments as unknown as StoryArgs, spaceOf(e.identity?.groups)))
+    const space = spaceOf(e.identity?.groups)
+    await runJob(s3, BUCKET, e, async () => {
+      await countAi(s3, BUCKET, space, 'story')
+      return generate(e.arguments as unknown as StoryArgs, space)
+    })
     return { success: true }
   }
   if (field === 'narratorVoices') return listVoices(needKey())
   if (field === 'previewVoice') {
     const voice = String(e.arguments.voice ?? '')
     if (!voice) throw new Error('Alege o voce.')
+    await countAi(s3, BUCKET, spaceOf(e.identity?.groups), 'voice')
     return (await preview(needKey(), voice, ELEVEN_MODEL)).toString('base64')
   }
-  return generate(event.arguments, spaceOf(e.identity?.groups))
+  const space = spaceOf(e.identity?.groups)
+  await countAi(s3, BUCKET, space, 'story')
+  return generate(event.arguments, space)
 }
 
 async function generate(args: StoryArgs, space: string | undefined) {

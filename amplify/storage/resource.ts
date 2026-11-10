@@ -15,5 +15,7 @@ export const storage = defineStorage({
     'story-covers/*': [allow.resource(findCover).to(['write'])],
     // The outcome of long AI work, written in the background (see amplify/shared/jobs.ts).
     'ai-jobs/*': [allow.resource(importRecipe).to(['write']), allow.resource(generateStory).to(['write'])],
+    // Each space's monthly count of paid AI work (see amplify/shared/aiUsage.ts).
+    'ai-usage/*': [allow.resource(importRecipe).to(['read', 'write']), allow.resource(generateStory).to(['read', 'write'])],
   }),
 })

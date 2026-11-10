@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listRecipes, watchRecipes } from '../lib/db'
 import type { Recipe } from '../lib/types'
@@ -43,6 +43,56 @@ const SORTS: { s: Sort; label: string }[] = [
   { s: 'az', label: 'Alfabetic' }, { s: 'new', label: 'Cele mai noi' }, { s: 'fast', label: 'Cele mai rapide' }, { s: 'cooked', label: 'Gătite des' },
 ]
 const VIEW_KEY = 'kt-recipes-view'
+
+const SORT_ICON = 'M8 4v16M4.5 7.5 8 4l3.5 3.5M16 20V4M12.5 16.5 16 20l3.5-3.5'
+const OPEN_MS = 3000
+
+/** The round view button beside the search box: a tap opens the views (and the order button) to the left. */
+function RecipeViewSwitch({ view, onView, sortOpen, onSort }: { view: View; onView: (v: View) => void; sortOpen: boolean; onSort: () => void }) {
+  const [open, setOpen] = useState(false)
+  const wrap = useRef<HTMLDivElement>(null)
+  const toggle = useRef<HTMLButtonElement>(null)
+  const timer = useRef(0)
+  const closeLater = () => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setOpen(false), OPEN_MS) }
+  useEffect(() => {
+    if (!open) return
+    const outside = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false) }
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); toggle.current?.focus() } }
+    const scroll = () => setOpen(false)
+    document.addEventListener('pointerdown', outside)
+    document.addEventListener('keydown', key)
+    window.addEventListener('scroll', scroll, { passive: true })
+    return () => {
+      clearTimeout(timer.current)
+      document.removeEventListener('pointerdown', outside)
+      document.removeEventListener('keydown', key)
+      window.removeEventListener('scroll', scroll)
+    }
+  }, [open])
+  const current = VIEWS.find((x) => x.v === view)!
+  return (
+    <div className={`view-switch-wrap recipes-switch${open ? ' open' : ''}`} ref={wrap}>
+      <button type="button" ref={toggle} className="view-toggle" aria-expanded={open} tabIndex={open ? -1 : 0}
+        aria-label={`Vizualizare: ${current.label}. Schimbă vizualizarea sau ordinea`} title="Vizualizare și ordine"
+        onClick={() => { setOpen(true); closeLater() }}>
+        <Icon d={current.icon} />
+      </button>
+      <div className="view-switch" role="group" aria-label="Vizualizare și ordine" inert={!open}>
+        {VIEWS.map((x) => (
+          <button key={x.v} type="button" aria-pressed={x.v === view} aria-label={x.label} title={x.label}
+            onClick={() => { onView(x.v); closeLater() }}>
+            <Icon d={x.icon} />
+          </button>
+        ))}
+        <button type="button" className="recipes-sort-btn" aria-haspopup="menu" aria-expanded={sortOpen} aria-label="Ordine" title="Ordine"
+          onClick={() => { setOpen(false); onSort() }}>
+          <Icon d={SORT_ICON} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const SORT_KEY = 'kt-recipes-sort'
 const readKey = <T extends string>(k: string, ok: readonly T[], fallback: T): T => {
   try { const v = localStorage.getItem(k) as T | null; return v && ok.includes(v) ? v : fallback } catch { return fallback }
@@ -172,45 +222,36 @@ export default function RecipeList() {
       .map((e) => ({ r: byId.get(e.recipeId)!, note: e.day === from ? 'azi' : dayName(fromKey(e.day)).toLowerCase(), key: e.id }))
   }, [plan, byId])
   const rowsMode = view === 'rows' && !q && !cat
-  const current = VIEWS.find((x) => x.v === view)!
 
   return (
     <section className={`recipes recipes-${view}`}>
       <div className="recipes-head">
         <h1>Rețetele mele</h1>
         <div className="recipes-head-btns">
-          <span className="menu-anchor">
-            <button type="button" className="recipes-view-btn" aria-haspopup="menu" aria-expanded={menu} aria-label={`Vizualizare: ${current.label}. Schimbă vizualizarea sau ordinea`}
-              onClick={() => setMenu((m) => !m)}>
-              <Icon d={current.icon} />
-            </button>
-            {menu && (
-              <PopMenu label="Vizualizare și ordine" onClose={closeMenu}>
-                <small className="folder-menu-label">Vizualizare</small>
-                <div className="folder-menu-views">
-                  {VIEWS.map((x) => (
-                    <button type="button" key={x.v} role="menuitemradio" aria-checked={x.v === view} className={x.v === view ? 'on' : undefined}
-                      onClick={() => { setView(x.v); closeMenu() }}>
-                      <Icon d={x.icon} /><span>{x.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <small className="folder-menu-label">Ordine</small>
-                {SORTS.map((x) => (
-                  <MenuRow key={x.s} icon={x.s === sort ? MENU_ICON.check : undefined} onClick={() => { setSort(x.s); closeMenu() }}>{x.label}</MenuRow>
-                ))}
-              </PopMenu>
-            )}
-          </span>
           <Link to="/retete/noua" className="btn primary new-recipe" aria-label="Rețetă nouă" title="Rețetă nouă">{PLUS}<span className="new-recipe-text" aria-hidden="true">Rețetă nouă</span></Link>
           {/* Phones: a round "+" in its place, which opens the ways to add a recipe from the bottom. */}
           <NewRecipeFab />
         </div>
       </div>
-      <label className="search-box">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-        <input type="search" id="recipe-search" aria-label="Caută rețete" placeholder="Caută după nume sau ingredient" value={q} onChange={(e) => setQ(e.target.value)} />
-      </label>
+      {/* Like the stories library: one round button next to the search box; a tap widens it to the left
+          (the search box narrows) and shows the four views plus the order button. */}
+      <div className="search-row recipes-search-row">
+        <label className="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+          <input type="search" id="recipe-search" aria-label="Caută rețete" placeholder="Caută după nume sau ingredient" value={q} onChange={(e) => setQ(e.target.value)} />
+        </label>
+        <span className="menu-anchor">
+          <RecipeViewSwitch view={view} onView={setView} sortOpen={menu} onSort={() => setMenu(true)} />
+          {menu && (
+            <PopMenu label="Ordine" onClose={closeMenu}>
+              <small className="folder-menu-label">Ordine</small>
+              {SORTS.map((x) => (
+                <MenuRow key={x.s} icon={x.s === sort ? MENU_ICON.check : undefined} onClick={() => { setSort(x.s); closeMenu() }}>{x.label}</MenuRow>
+              ))}
+            </PopMenu>
+          )}
+        </span>
+      </div>
       {(cats.length > 0 || anyFav) && view !== 'rows' && (
         <div className="cat-tabs" role="group" aria-label="Categorii">
           <button type="button" aria-pressed={!cat} onClick={() => setCat('')}>Toate</button>

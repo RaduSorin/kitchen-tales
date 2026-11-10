@@ -915,6 +915,13 @@
   border: 1px solid rgb(255 255 255 / .08); background: rgb(0 0 0 / .28); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .recipes-view-btn[aria-expanded=true] { background: rgb(255 255 255 / .14); }
 .recipes-head-btns .pop-menu .menu-row svg { color: var(--accent); }
+.recipes-search-row { margin-bottom: 10px; }
+.recipes-search-row .menu-anchor { position: relative; flex: none; display: flex; }
+.recipes-search-row .pop-menu .menu-row svg { color: var(--accent); }
+.recipes-switch { --open-w: 206px; border: 1px solid rgb(255 255 255 / .06); box-sizing: border-box; }
+.recipes-switch .view-toggle, .recipes-switch .view-switch { height: 44px; }
+.recipes-switch .view-switch { padding: 0 2px; box-sizing: border-box; }
+.recipes-sort-btn { color: var(--text) !important; }
 
 /* Grid: two columns of photo cards, the title on a shade at the bottom. */
 .rgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
@@ -1439,3 +1446,48 @@
 .ed-add .mic-btn { background: none; }
 .ed-foot .rv-cook { border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: var(--fs-lg); }
 .ed-foot .rv-cook:disabled { opacity: .7; }
+
+/* ---------- Shopping, calm concept 4: a clean checklist, aisles as small gold labels, round
+   ticks, swipe left to delete, "În coș" folded, adding at the bottom and housekeeping in ⋯. ---------- */
+.shop-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 14px; }
+.shop-top h1 { font-size: 2.4rem; margin: 0; line-height: 1.1; }
+.shop-calm .shop-count { display: block; margin-top: 2px; font-size: var(--fs-sm); font-weight: 700; color: var(--muted); }
+.shop-more-anchor { position: relative; flex: none; }
+.shop-more { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--text); border: 1px solid rgb(255 255 255 / .12);
+  background: rgb(255 255 255 / .08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.shop-calm .shop-view { margin: 0 0 8px; }
+.shop-calm .shop-aisle h2 { margin: 22px 0 4px; display: block; font-family: var(--f-body); font-size: var(--fs-xs); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.shop-calm .checklist { margin: 0; padding: 0; }
+.shop-calm .shop-item { position: relative; display: block; overflow: hidden; touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.shop-calm .shop-item label { position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; padding: 11px 2px; transition: transform .2s ease; }
+.shop-calm .shop-item.moving label { background: var(--bg); }
+.shop-calm .shop-item label[data-sliding] { transition: none; }
+.shop-calm .shop-item input { flex: none; width: 24px; height: 24px; margin: 0; border-radius: 50%; border: 2px solid rgb(255 255 255 / .35); }
+.shop-calm .shop-item input:checked { background: var(--accent); border-color: var(--accent); }
+.shop-calm .shop-text { flex: 1; min-width: 0; font-size: var(--fs-base); }
+.shop-calm .shop-sources { flex: none; max-width: 45%; margin: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-sm); }
+.shop-calm .done .shop-text { text-decoration: line-through; color: var(--muted); }
+.shop-swipe-bg { position: absolute; inset: 0; display: none; align-items: center; justify-content: flex-end; padding-right: 20px; background: #b8432f; color: #fff; font-weight: 700; border-radius: 12px; }
+.shop-item.moving .shop-swipe-bg { display: flex; }
+.shop-item.armed .shop-swipe-bg { background: #d6503a; }
+.shop-fold { display: flex; width: 100%; align-items: center; justify-content: space-between; border: 0; background: none; padding: 6px 0; cursor: pointer;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; }
+.shop-fold svg { transition: transform .2s; color: var(--muted); }
+.shop-done.open .shop-fold svg { transform: rotate(180deg); }
+.shop-empty-basket { margin: 10px 0 0; border: 0; background: none; padding: 8px 0; color: var(--accent); font: inherit; font-weight: 700; cursor: pointer; }
+.shop-addbar { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 6px 0 18px; margin-top: 18px; border-radius: 28px; color: var(--muted);
+  background: rgb(36 32 38 / .95); border: 1px solid rgb(255 255 255 / .1); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%); }
+.shop-calm .shop-addbar input { flex: 1; min-width: 0; border: 0; background: none; padding: 12px 0; color: var(--text); font: inherit; box-shadow: none; }
+.shop-calm .shop-addbar input:focus { outline: none; }
+.shop-addbar-go { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+@media (max-width: 759px) {
+  .shop-calm { padding-bottom: 76px; }
+  .shop-addbar { position: fixed; z-index: 18; left: 16px; right: 16px; margin: 0; bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 82px); box-shadow: 0 10px 30px rgb(0 0 0 / .45); }
+  /* With a story playing, the add bar sits above the mini-player; with the keyboard up, right above it. */
+  :root:has(.mini-player) .shop-addbar { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 146px); }
+  :root:has(.mini-player) .shop-calm { padding-bottom: 140px; }
+  :root[data-typing] .shop-addbar { bottom: 8px; }
+  /* The undo note shows above the add bar, not over it. */
+  :root[data-tabbar]:has(.shop-addbar) .toast { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 148px); }
+  :root[data-tabbar]:has(.shop-addbar):has(.mini-player) .toast { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 212px); }
+}

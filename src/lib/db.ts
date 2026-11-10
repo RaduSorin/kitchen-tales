@@ -96,14 +96,26 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
  * not leave a page on "loading" while the copy is right here: the copy shows first, and the
  * server's list replaces it when (and if) it comes.
  */
-function feed<T>(name: 'recipes' | 'stories', fetchFresh: () => Promise<T[]>) {
+function feed<T extends { id: string }>(name: 'recipes' | 'stories', fetchFresh: () => Promise<T[]>) {
   const cached = () => cachedList(name as 'recipes').catch(() => undefined) as Promise<T[] | undefined>
-  const watchers = new Set<(list: T[]) => void>()
+  // Each page watching: `fresh` for the server's list, `copy` for this device's.
+  const watchers = new Set<{ fresh: (list: T[]) => void; copy: (list: T[]) => void }>()
   let running: Promise<T[]> | undefined
+  // Bumped by every change made on this device: a request that started before the change may
+  // answer with the list as it was, so its answer is not shown or kept.
+  let generation = 0
   // One request at a time; every page watching gets its answer.
-  const fresh = () => (running ??= fetchFresh()
-    .then((list) => { watchers.forEach((w) => w(list)); return list })
-    .finally(() => { running = undefined }))
+  const fresh = (): Promise<T[]> => {
+    if (running) return running
+    const asked = generation
+    const req: Promise<T[]> = fetchFresh().then(async (list) => {
+      if (asked !== generation) return (await cached()) ?? list
+      cacheList(name as 'recipes', list as never).catch(() => {})
+      watchers.forEach((w) => w.fresh(list))
+      return list
+    }).finally(() => { if (running === req) running = undefined })
+    return (running = req)
+  }
   // A fresh sign-in reads its space at once (and drops another account's copy); only a token
   // renewal waits on the network, and then the copy here is this account's own.
   const deviceCopy = async () => { await Promise.race([spaceReady(), sleep(1500)]); return cached() }
@@ -122,7 +134,7 @@ function feed<T>(name: 'recipes' | 'stories', fetchFresh: () => Promise<T[]>) {
   function watch(onList: (list: T[]) => void, onError?: (err: unknown) => void) {
     let live = true
     let gotFresh = false
-    const w = (l: T[]) => { if (live) { gotFresh = true; onList(l) } }
+    const w = { fresh: (l: T[]) => { if (live) { gotFresh = true; onList(l) } }, copy: (l: T[]) => { if (live) onList(l) } }
     watchers.add(w)
     deviceCopy().then((c) => { if (live && !gotFresh && c) onList(c) })
     const ask = () => fresh().catch(async (err) => {
@@ -136,8 +148,31 @@ function feed<T>(name: 'recipes' | 'stories', fetchFresh: () => Promise<T[]>) {
     return () => { live = false; watchers.delete(w); window.removeEventListener('online', online) }
   }
 
-  return { list, watch }
+  /**
+   * A change saved on this device (a new, edited or deleted item): the copy here takes it at
+   * once, so the next page shows it before the server answers. The list is asked again when a
+   * request was already on its way (its answer no longer counts), or always with `ask`.
+   */
+  async function changed(apply: (list: T[]) => T[], ask = true) {
+    const wasRunning = !!running
+    generation++
+    running = undefined
+    const c = await cached()
+    if (c) {
+      const next = apply(c)
+      await cacheList(name as 'recipes', next as never).catch(() => {})
+      watchers.forEach((w) => w.copy(next))
+    }
+    if (watchers.size && (ask || wasRunning)) fresh().catch(() => {})
+  }
+
+  return { list, watch, changed }
 }
+
+/** `item` in place of the one with its id, or first in the list when it is new. */
+const upsert = <T extends { id: string }>(item: T) => (list: T[]) =>
+  list.some((x) => x.id === item.id) ? list.map((x) => (x.id === item.id ? item : x)) : [item, ...list]
+const without = (id: string) => <T extends { id: string }>(list: T[]) => list.filter((x) => x.id !== id)
 
 
 // ---- files ----
@@ -222,9 +257,7 @@ async function removeFile(path?: string) {
 /** The recipes from the server, newest change first; the device's copy is updated with them. */
 async function fetchRecipes() {
   const rows = await listAll((nextToken) => client.models.Recipe.list({ nextToken, limit: 200 }))
-  const list = rows.map(toRecipe).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
-  cacheList('recipes', list).catch(() => {})
-  return list
+  return rows.map(toRecipe).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
 }
 const recipesFeed = feed('recipes', fetchRecipes)
 
@@ -263,6 +296,7 @@ export async function saveRecipe(r: Recipe, isNew: boolean) {
     ? await client.models.Recipe.create({ ...input, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(!!shared), spaceName: mySpaceName() })
     : await client.models.Recipe.update(input)
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
+  if (res.data) await recipesFeed.changed(upsert(toRecipe(res.data)))
 }
 
 /** Estimates a recipe's values per serving and allergens (AI), from its ingredients. */
@@ -277,8 +311,7 @@ export async function analyzeRecipe(r: Pick<Recipe, 'title' | 'servings' | 'ingr
 /** Keeps the worked-out values and allergens on our own recipe (and its cached copy). */
 export async function setRecipeFacts(r: Recipe, facts: Pick<Recipe, 'nutrition' | 'allergens'>) {
   errorsOf(await client.models.Recipe.update({ id: r.id, nutrition: JSON.stringify(facts.nutrition), allergens: JSON.stringify(facts.allergens ?? []) }))
-  const cached = await cachedList('recipes').catch(() => undefined)
-  if (cached) await cacheList('recipes', cached.map((x) => (x.id === r.id ? { ...x, ...facts } : x))).catch(() => {})
+  await recipesFeed.changed((list) => list.map((x) => (x.id === r.id ? { ...x, ...facts } : x)), false)
 }
 
 /**
@@ -295,6 +328,7 @@ async function deleteWithFiles(files: (string | undefined)[], deleteRow: () => P
 
 export async function deleteRecipe(r: Recipe) {
   await deleteWithFiles([r.photoKey, ...(r.stepPhotoKeys ?? [])], () => client.models.Recipe.delete({ id: r.id }))
+  await recipesFeed.changed(without(r.id))
 }
 
 export { removeFile }
@@ -302,8 +336,7 @@ export { removeFile }
 /** Shares a recipe with every account, or makes it private to our space again. */
 export async function setRecipeShared(r: Recipe, shared: boolean) {
   errorsOf(await client.models.Recipe.update({ id: r.id, readerGroups: readerGroupsFor(shared), spaceName: mySpaceName() }))
-  const cached = await cachedList('recipes').catch(() => undefined)
-  if (cached) await cacheList('recipes', cached.map((x) => (x.id === r.id ? { ...x, shared } : x))).catch(() => {})
+  await recipesFeed.changed((list) => list.map((x) => (x.id === r.id ? { ...x, shared } : x)), false)
 }
 
 // ---- stories ----
@@ -318,7 +351,6 @@ async function fetchStories() {
   // Stories another space shared: our favourites of them are kept in our own space.
   const favIds = new Set(favs.map((f) => f.storyId))
   const list = rows.map(toStory).map((s) => (s.mine ? s : { ...s, favorite: favIds.has(s.id) })).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
-  cacheList('stories', list).catch(() => {})
   // Free the space of stories deleted elsewhere; their audio would otherwise stay here forever.
   pruneAudio(new Set(list.map((s) => s.id)), listedAt).catch(() => {})
   return list
@@ -365,12 +397,14 @@ export async function createStory(story: Omit<Story, 'id' | 'createdAt'>) {
     ...s, spaceGroups: [await mySpaceGroup()], readerGroups: readerGroupsFor(share), sharedDirect: share, spaceName: mySpaceName(),
   })
   if (res.errors?.length || !res.data) throw new Error(res.errors?.map((e) => e.message).join('; ') || 'Eroare la salvare')
+  await storiesFeed.changed(upsert(toStory(res.data)))
   return res.data.id
 }
 
 export async function deleteStory(s: Story) {
   await deleteWithFiles([s.audioKey, s.coverKey], () => client.models.Story.delete({ id: s.id }))
   await removeAudio(s.id).catch(() => {})
+  await storiesFeed.changed(without(s.id))
 }
 
 // ---- story folders ----
@@ -407,8 +441,7 @@ export async function listFolders(): Promise<StoryFolder[]> {
 
 /** Updates stories in the offline copy of the list, so the shelf is right without internet too. */
 async function patchCachedStories(change: (s: Story) => Story) {
-  const cached = await cachedList('stories').catch(() => undefined)
-  if (cached) await cacheList('stories', cached.map(change)).catch(() => {})
+  await storiesFeed.changed((list) => list.map(change), false)
 }
 
 /**
@@ -627,8 +660,7 @@ export async function renarrateStory(s: Story, voice: string): Promise<{ story: 
   await removeAudio(s.id).catch(() => {})
   if (old !== g.audioKey) await removeFile(old).catch(() => {})
   const story = { ...s, audioKey: g.audioKey, durationSec: durationSec ?? undefined }
-  const cached = await cachedList('stories').catch(() => undefined)
-  if (cached) await cacheList('stories', cached.map((x) => (x.id === s.id ? story : x))).catch(() => {})
+  await storiesFeed.changed((list) => list.map((x) => (x.id === s.id ? story : x)), false)
   return { story, note: g.note }
 }
 
@@ -684,8 +716,7 @@ export async function setStoryFavorite(s: Story, favorite: boolean) {
     const res = await client.models.Story.update({ id: s.id, favorite })
     if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   }
-  const cached = await cachedList('stories').catch(() => undefined)
-  if (cached) await cacheList('stories', cached.map((x) => (x.id === s.id ? { ...x, favorite } : x))).catch(() => {})
+  await storiesFeed.changed((list) => list.map((x) => (x.id === s.id ? { ...x, favorite } : x)), false)
 }
 
 export async function setStoryCover(s: Story, coverKey: string) {
@@ -707,8 +738,7 @@ export async function setStoryDrawing(s: Story, emoji: string, scene: number, dr
   const res = await client.models.Story.update({ id: s.id, emoji, scene, ...(dropPicture ? { coverKey: null } : {}) })
   if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   if (old) await removeFile(old).catch(() => {})
-  const cached = await cachedList('stories').catch(() => undefined)
-  if (cached) await cacheList('stories', cached.map((x) => (x.id === s.id ? { ...x, emoji, scene, ...(dropPicture ? { coverKey: undefined } : {}) } : x))).catch(() => {})
+  await storiesFeed.changed((list) => list.map((x) => (x.id === s.id ? { ...x, emoji, scene, ...(dropPicture ? { coverKey: undefined } : {}) } : x)), false)
 }
 
 // ---- family accounts ----

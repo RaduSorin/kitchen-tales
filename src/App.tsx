@@ -82,10 +82,21 @@ function NightArea() {
   return <CoverGlow key={night ? 'night' : 'day'} recipes={!night} />
 }
 
+/** The Profile group a settings page sits in (calm concept 5), for its back arrow. */
+const PROFILE_PARENT: Record<string, string> = {
+  persoane: 'familie', invita: 'familie', spatiu: 'familie', partajare: 'familie',
+  bucatarie: 'preferinte', mancare: 'preferinte', voce: 'preferinte',
+  offline: 'telefon', raft: 'telefon',
+}
+const profileParent = (pathname: string) => {
+  const up = PROFILE_PARENT[pathname.split('/')[2] ?? '']
+  return up ? `/profil/${up}` : '/profil'
+}
+
 /** Where the top bar's back arrow leads on pages that are not one of the main tabs (undefined: no arrow). */
 function backFallback(pathname: string) {
   if (/^\/retete\/[^/]+$/.test(pathname) && pathname !== '/retete/noua') return '/retete'
-  if (pathname.startsWith('/profil/')) return '/profil'
+  if (pathname.startsWith('/profil/')) return profileParent(pathname)
   if (pathname === '/ragaz') return '/'
   if (pathname.startsWith('/ragaz/') && pathname !== '/ragaz/incepe' && pathname !== '/ragaz/planifica' && pathname !== '/ragaz/griji') return '/ragaz'
   return undefined

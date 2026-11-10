@@ -1491,3 +1491,26 @@
   :root[data-tabbar]:has(.shop-addbar) .toast { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 148px); }
   :root[data-tabbar]:has(.shop-addbar):has(.mini-player) .toast { bottom: calc(max(10px, calc(env(safe-area-inset-bottom) - 6px)) + 212px); }
 }
+
+/* ---------- Profile, calm concept 5: you as the hero, five rows with a one-line summary, and
+   "Ieși din cont" as a text button. ---------- */
+.prof-hero { display: grid; justify-items: center; gap: 4px; width: 100%; margin: 10px 0 0; padding: 6px 0; border: 0; background: none; color: var(--text); font: inherit; cursor: pointer; text-align: center; }
+.prof-hero .avatar { box-shadow: 0 0 50px rgb(242 160 90 / .35); margin-bottom: 8px; }
+.prof-hero b { font-family: var(--f-title, Fraunces, serif); font-weight: 600; font-size: var(--fs-3xl); line-height: 1.15; }
+.prof-hero small { color: var(--muted); font-size: var(--fs-sm); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prof-hero:active b { opacity: .8; }
+.prof-big { display: grid; }
+.prof-big-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; min-height: 64px; border-bottom: 1px solid rgb(255 255 255 / .08); color: var(--text); text-decoration: none; }
+.prof-big-row:hover { text-decoration: none; color: var(--text); }
+.prof-big-row:active { background: rgb(255 255 255 / .04); }
+.prof-big-row > span { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.prof-big-row b { font-size: var(--fs-lg); font-weight: 600; }
+.prof-big-row small { color: var(--muted); font-size: var(--fs-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prof-big-row > svg { flex: none; color: var(--muted); }
+.prof-big .kid-start { margin: 4px 0 12px; }
+.prof-calm .prof-out-text { margin-top: 22px; background: none; border: 0; min-height: 48px; color: #ff8f7a; font-weight: 700; font-size: var(--fs-base); }
+/* The concept starts with you, not a title: the page name stays for screen readers. */
+@media (max-width: 759px) {
+  .prof-calm .profile-h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
+  .prof-calm .prof-hero { margin-top: 18px; }
+}

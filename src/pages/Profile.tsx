@@ -489,18 +489,23 @@ const authors = (me: string, others: string[]) => {
   return all.length > 1 ? `${all.slice(0, -1).join(', ')} și ${all[all.length - 1]}` : all[0] || undefined
 }
 
-/** The Profile tab: who you are, the child, people and sharing, preferences, this phone, sign out. */
-function ProfileHome() {
-  const { child, kid, kitchenTools, shelfClick, diet, narrator } = useSettings()
-  const { user, signOut } = useAuthenticator((c) => [c.user])
-  const email = user?.signInDetails?.loginId ?? myEmail()
-  const name = useMyName()
-  const { members, admin } = useFamily()
+/** The summary under a row on the first Profile page: what is inside, in one line. */
+function GroupRow({ to, label, sub }: { to: string; label: string; sub?: string }) {
+  return (
+    <Link to={to} className="prof-big-row">
+      <span><b>{label}</b>{sub && <small>{sub}</small>}</span>
+      <Chevron />
+    </Link>
+  )
+}
+
+/** What the family group is called: everything for the admin, only sharing for the others. */
+const familyLabel = (admin: boolean) => (admin ? 'Familie și partajare' : 'Partajare')
+
+/** Shared numbers for the Profile pages: people, shared things, offline stories, Răgaz. */
+function useProfileFacts() {
   const [counts, setCounts] = useState<{ stories: number; recipes: number }>()
   const [saved, setSaved] = useState<{ count: number; bytes: number }>()
-  const [editName, setEditName] = useState(false)
-  const [cookbook, setCookbook] = useState(false)
-  const nav = useNavigate()
   useEffect(() => {
     Promise.all([listStories(), listRecipes()]).then(([s, r]) => setCounts({
       stories: s.filter((x) => x.mine !== false && x.shared).length,
@@ -510,86 +515,126 @@ function ProfileHome() {
     load()
     return onOfflineChange(load)
   }, [])
+  const sharedCount = counts ? counts.stories + counts.recipes : undefined
+  return { sharedCount, saved }
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+const dietValue = (avoid: { key: string }[]) => (avoid.length ? `fără ${avoid.map((r) => DIET_ITEMS.find((d) => d.key === r.key)?.short ?? r.key).join(', ')}` : 'orice')
+
+/**
+ * The Profile tab (calm concept 5): you as the hero (tap to change your name), then five rows
+ * that each say in one line what is inside, and "Ieși din cont". The settings themselves stay on
+ * their own pages, one tap further in.
+ */
+function ProfileHome() {
+  const { child, kid, kitchenTools, shelfClick, diet, narrator } = useSettings()
+  const { user, signOut } = useAuthenticator((c) => [c.user])
+  const email = user?.signInDetails?.loginId ?? myEmail()
+  const name = useMyName()
+  const { members, admin } = useFamily()
+  const { sharedCount, saved } = useProfileFacts()
+  const [editName, setEditName] = useState(false)
+  const nav = useNavigate()
   const age = childAge(child)
   const others = members?.filter((m) => m.sameSpace && m.email !== email?.toLowerCase()).map((m) => nameFromEmail(m.email)) ?? []
-  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
   const ragaz = useRagazState()
+  const space = admin && others.length ? `spațiu comun cu ${others.join(', ')}` : `spațiul ${mySpaceName()}`
+  const shared = sharedCount === undefined ? '' : sharedCount ? `${plural(sharedCount, 'lucru partajat', 'lucruri partajate')}` : 'nimic partajat'
   return (
-    <section className="settings profile">
+    <section className="settings profile prof-calm">
       {/* Wide screens show the title in the top bar (App.tsx); phones have none, so it shows here. */}
       <h1 className="profile-h1">Profil</h1>
-      <button type="button" className="prof-me" onClick={() => setEditName(true)}>
-        <Avatar size={58} />
-        <span className="prof-me-text">
-          <b>{name || 'Adaugă numele tău'}</b>
-          <small>{email}</small>
-          <span className="prof-chip">{admin && others.length ? `Spațiul tău · cu ${others.join(', ')}` : `Spațiul ${mySpaceName()}`}</span>
-        </span>
-        <Chevron />
+      <button type="button" className="prof-hero" onClick={() => setEditName(true)} aria-label="Schimbă-ți numele">
+        <Avatar size={84} />
+        <b>{name || 'Adaugă numele tău'}</b>
+        <small>{[email, space].filter(Boolean).join(' · ')}</small>
       </button>
 
-      <div className="set-group">
-        <h2 className="set-label">Copilul</h2>
-        <div className="set-box">
-          <Row to="/profil/copil" icon="child" label={child.name || 'Adaugă copilul'}
-            sub={[age ? `${age} ${age === 1 ? 'an' : 'ani'}` : '', kid.pinHash ? `modul copil: ${kid.minutes ? `${kid.minutes} min` : 'fără limită'}` : 'modul copil: oprit'].filter(Boolean).join(' · ')} />
-        </div>
+      <div className="prof-big">
+        <GroupRow to="/profil/copil" label={child.name || 'Adaugă copilul'}
+          sub={[kid.pinHash ? `modul copil: ${kid.minutes ? `${kid.minutes} min` : 'fără limită'}` : 'modul copil oprit', age ? `${age} ${age === 1 ? 'an' : 'ani'}` : ''].filter(Boolean).join(' · ')} />
         {kid.pinHash && <button type="button" className="btn primary kid-start" onClick={() => { startKid(kid.minutes); nav('/povesti/acasa') }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P.lock} /></svg>
           Dă-i telefonul copilului
         </button>}
+        <GroupRow to="/profil/familie" label={familyLabel(admin)}
+          sub={[admin && members ? plural(members.length, 'persoană', 'persoane') : !admin ? `spațiul ${mySpaceName()}` : '', shared].filter(Boolean).join(' · ')} />
+        <GroupRow to="/profil/preferinte" label="Bucătărie și povești"
+          sub={[plural(kitchenTools.length, 'aparat', 'aparate'), `mâncăm ${dietValue(diet.avoid)}`, `vocea ${narrator.id ? narrator.name : 'Carmen'}`].join(' · ')} />
+        <GroupRow to="/profil/telefon" label="Pe acest telefon"
+          sub={[saved ? (saved.count ? `${plural(saved.count, 'poveste descărcată', 'povești descărcate')}` : 'nicio poveste descărcată') : '', `clic pe raft ${shelfClick ? 'pornit' : 'oprit'}`].filter(Boolean).join(' · ')} />
+        <GroupRow to="/profil/ragaz" label="Răgaz" sub={['intenția lunii, exerciții, jurnal', ragaz.toLowerCase()].filter(Boolean).join(' · ')} />
       </div>
 
-      <div className="set-group">
-        <h2 className="set-label">{admin ? 'Familie și partajare' : 'Partajare'}</h2>
-        <div className="set-box">
-          {admin && <Row to="/profil/persoane" icon="users" label="Persoane" value={members ? String(members.length) : ''} />}
-          {admin && <Row to="/profil/invita" icon="mail" label="Invită pe cineva" />}
-          <Row to="/profil/spatiu" icon="users" label="Numele spațiului" value={mySpaceName()} />
-          <Row to="/profil/partajare" icon="share" label="Ce partajez"
-            value={counts ? (counts.stories + counts.recipes ? String(counts.stories + counts.recipes) : 'nimic') : ''} />
-        </div>
-      </div>
-
-      <div className="set-group">
-        <h2 className="set-label">Preferințe</h2>
-        <div className="set-box">
-          <Row to="/profil/bucatarie" icon="oven" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
-          <Row to="/profil/mancare" icon="leaf" label="Ce mâncăm" value={diet.avoid.length ? `fără ${diet.avoid.map((r) => DIET_ITEMS.find((d) => d.key === r.key)?.short ?? r.key).join(', ')}` : 'orice'} />
-          <button type="button" className="set-row set-link prof-row" onClick={() => setCookbook(true)}>
-            <span className="prof-ic">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P.book} /></svg>
-            </span>
-            <span className="prof-l">Caietul de rețete <span className="prof-new">NOU</span><small className="set-sub">toate rețetele într-un PDF</small></span>
-            <span className="set-value"><Chevron /></span>
-          </button>
-          <Row to="/profil/voce" icon="voice" label="Vocea poveștilor" value={narrator.id ? narrator.name : 'Carmen'} />
-        </div>
-      </div>
-
-      <div className="set-group">
-        <h2 className="set-label">Pentru mine</h2>
-        <div className="set-box">
-          <Row to="/profil/ragaz" icon="moon" label="Răgaz" sub="intenția lunii, exerciții, jurnal" value={ragaz} />
-        </div>
-      </div>
-
-      <div className="set-group">
-        <h2 className="set-label">Pe acest telefon</h2>
-        <div className="set-box">
-          <Row to="/profil/offline" icon="down" label="Povești fără internet" value={saved ? (saved.count ? `${saved.count} · ${fmtSize(saved.bytes)}` : 'niciuna') : ''} />
-          <Row to="/profil/raft" icon="books" label="Clic pe raft" value={shelfClick ? 'Pornit' : 'Oprit'} />
-        </div>
-      </div>
-
-      <button type="button" className="prof-out" onClick={signOut}>Ieși din cont</button>
+      <button type="button" className="prof-out prof-out-text" onClick={signOut}>Ieși din cont</button>
       {editName && <NameSheet onClose={() => setEditName(false)} />}
-      {cookbook && <CookbookSheet authors={authors(name || (email ? nameFromEmail(email) : ''), others)} onClose={() => setCookbook(false)} />}
     </section>
   )
 }
 
+/** "Familie și partajare": people, invitations, the space's name and what is shared. */
+function FamilyGroup() {
+  const { members, admin } = useFamily()
+  const { sharedCount } = useProfileFacts()
+  return (
+    <div className="set-group">
+      <div className="set-box">
+        {admin && <Row to="/profil/persoane" icon="users" label="Persoane" value={members ? String(members.length) : ''} />}
+        {admin && <Row to="/profil/invita" icon="mail" label="Invită pe cineva" />}
+        <Row to="/profil/spatiu" icon="users" label="Numele spațiului" value={mySpaceName()} />
+        <Row to="/profil/partajare" icon="share" label="Ce partajez" value={sharedCount === undefined ? '' : sharedCount ? String(sharedCount) : 'nimic'} />
+      </div>
+    </div>
+  )
+}
+
+/** "Bucătărie și povești": the kitchen's appliances, what we eat, the cookbook PDF and the stories' voice. */
+function PrefsGroup() {
+  const { kitchenTools, diet, narrator } = useSettings()
+  const { user } = useAuthenticator((c) => [c.user])
+  const email = user?.signInDetails?.loginId ?? myEmail()
+  const name = useMyName()
+  const { members } = useFamily()
+  const others = members?.filter((m) => m.sameSpace && m.email !== email?.toLowerCase()).map((m) => nameFromEmail(m.email)) ?? []
+  const [cookbook, setCookbook] = useState(false)
+  return (
+    <div className="set-group">
+      <div className="set-box">
+        <Row to="/profil/bucatarie" icon="oven" label="Bucătăria mea" value={plural(kitchenTools.length, 'aparat', 'aparate')} />
+        <Row to="/profil/mancare" icon="leaf" label="Ce mâncăm" value={dietValue(diet.avoid)} />
+        <button type="button" className="set-row set-link prof-row" onClick={() => setCookbook(true)}>
+          <span className="prof-ic">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P.book} /></svg>
+          </span>
+          <span className="prof-l">Caietul de rețete <span className="prof-new">NOU</span><small className="set-sub">toate rețetele într-un PDF</small></span>
+          <span className="set-value"><Chevron /></span>
+        </button>
+        <Row to="/profil/voce" icon="voice" label="Vocea poveștilor" value={narrator.id ? narrator.name : 'Carmen'} />
+      </div>
+      {cookbook && <CookbookSheet authors={authors(name || (email ? nameFromEmail(email) : ''), others)} onClose={() => setCookbook(false)} />}
+    </div>
+  )
+}
+
+/** "Pe acest telefon": stories saved for offline and the shelf's click. */
+function PhoneGroup() {
+  const { shelfClick } = useSettings()
+  const { saved } = useProfileFacts()
+  return (
+    <div className="set-group">
+      <div className="set-box">
+        <Row to="/profil/offline" icon="down" label="Povești fără internet" value={saved ? (saved.count ? `${saved.count} · ${fmtSize(saved.bytes)}` : 'niciuna') : ''} />
+        <Row to="/profil/raft" icon="books" label="Clic pe raft" value={shelfClick ? 'Pornit' : 'Oprit'} />
+      </div>
+    </div>
+  )
+}
+
 const PAGES: Record<string, [string, ComponentType]> = {
+  familie: ['Familie și partajare', FamilyGroup],
+  preferinte: ['Bucătărie și povești', PrefsGroup],
+  telefon: ['Pe acest telefon', PhoneGroup],
   copil: ['Copilul', ChildSettings],
   persoane: ['Persoane', () => <Members me={myEmail()?.toLowerCase()} />],
   invita: ['Invită pe cineva', InviteForm],

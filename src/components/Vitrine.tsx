@@ -23,6 +23,8 @@ export type VitrineSlide = {
   action: string
   actionTo: string
   actionState?: unknown
+  /** The gold button's icon (▶ by default, for stories). */
+  actionIcon?: ReactNode
   /** The second button, next to the gold one. */
   side?: ReactNode
 }
@@ -60,7 +62,7 @@ export default function Vitrine({ slides, active, onActive, head, label, cover }
               {s.meta && <small className="vt-meta">{s.meta}</small>}
               {s.progress !== undefined && <span className="vt-progress"><i style={{ width: `${Math.round(s.progress * 100)}%` }} /></span>}
               <div className="vt-btns">
-                <Link to={s.actionTo} state={s.actionState} className="vt-btn"><Play /> {s.action}</Link>
+                <Link to={s.actionTo} state={s.actionState} className="vt-btn">{s.actionIcon ?? <Play />} {s.action}</Link>
                 {s.side}
               </div>
             </div>

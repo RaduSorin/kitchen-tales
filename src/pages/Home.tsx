@@ -16,8 +16,11 @@ import HomeHead from '../components/HomeHead'
 import Vitrine, { type VitrineSlide } from '../components/Vitrine'
 import MonthCard from '../components/MonthCard'
 import HomeTabs from '../components/HomeTabs'
+import WeekDayPanel from '../components/WeekDayPanel'
 import { useSyncedList } from '../lib/synced'
-import { dayKey, mondayOf, planStore, today, weekDays } from '../lib/plan'
+import { dayKey, mondayOf, planRecipe, planStore, today, weekDays } from '../lib/plan'
+import { useRecipeLogs } from '../lib/recipeLog'
+import { showToast } from '../lib/toast'
 import { LoadError, Loading } from '../components/LoadState'
 
 // The recipes Acasă, design A1 "Topit în poză": the dish photo fills most of the screen (swipe
@@ -35,7 +38,6 @@ function Thumb({ r }: { r: Recipe }) {
 }
 
 const meta = (r: Recipe) => [r.minutes && formatMinutes(r.minutes), r.category].filter(Boolean).join(' · ')
-const WEEK_DAYS = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D']
 const NEW_DAYS = 7
 const isNew = (r: Recipe) => !!r.createdAt && Date.now() - Date.parse(r.createdAt) < NEW_DAYS * 86400000
 
@@ -75,6 +77,13 @@ function StoryCard({ stories, evening }: { stories: Story[]; evening: boolean })
     </Link>
   )
 }
+
+/** The chef's hat on "Gătește", like the recipe page's cook button (from the redesign concepts). */
+const ChefHat = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M7 14.5a4 4 0 0 1-.5-7.9 5.5 5.5 0 0 1 11 0 4 4 0 0 1-.5 7.9V19H7z" /><path d="M7 16.5h10" />
+  </svg>
+)
 
 const Chevron = () => (
   <svg className="home-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
@@ -151,15 +160,27 @@ export default function Home() {
   const shown = slides[Math.min(active, slides.length - 1)]
   // The page glows in the colours of the dish on screen.
   useGlow(shown && { id: shown.r.id, title: shown.r.title, photoKey: shown.r.photoKey })
+  const shownArt = useFileUrl(shown?.r.photoKey)
 
   const onTop = new Set(slides.map((s) => s.r.id))
   const restOfMenu = menu.filter((r) => !onTop.has(r.id))
   const recent = (recipes ?? []).filter((r) => !onTop.has(r.id)).slice(0, 8)
   const week = weekDays(mondayOf(t)).map((d) => {
     const key = dayKey(d)
-    const first = plan.find((e) => e.day === key && byId.has(e.recipeId))
-    return { key, d, r: first && byId.get(first.recipeId) }
+    const dishes = plan.filter((e) => e.day === key && byId.has(e.recipeId))
+    return { key, d, r: dishes[0] && byId.get(dishes[0].recipeId) }
   })
+  // Nothing planned today: three dishes from the notebook, those not cooked for the longest
+  // time first (never cooked counts as longest), each one tap away from today's menu.
+  const logs = useRecipeLogs()
+  const weekKeys = new Set(week.map((w) => w.key))
+  const planned = new Set(plan.filter((e) => weekKeys.has(e.day)).map((e) => e.recipeId))
+  const suggest = () => (recipes ?? [])
+    .filter((r) => r.mine !== false && !planned.has(r.id))
+    .map((r) => ({ r, last: logs.get(r.id)?.cooked.at(-1) ?? '' }))
+    .sort((a, b) => a.last.localeCompare(b.last) || a.r.title.localeCompare(b.r.title, 'ro'))
+    .slice(0, 3)
+  const ideas = menu.length ? [] : suggest()
   const categories = useMemo(() => {
     const m = new Map<string, Recipe[]>()
     for (const r of recipes ?? []) if (r.category) m.set(r.category, [...(m.get(r.category) ?? []), r])
@@ -192,10 +213,10 @@ export default function Home() {
         slides={slides.map((x): VitrineSlide => ({
           id: x.r.id, art: <Thumb r={x.r} />, kicker: x.kicker, title: x.r.title, href: `/retete/${x.r.id}`,
           meta: [x.r.category, x.r.servings && `${x.r.servings} porții`].filter(Boolean).join(' · ') || undefined,
-          action: x.action, actionTo: x.to, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
+          action: x.action, actionTo: x.to, actionIcon: <ChefHat />, side: <Link to={`/retete/${x.r.id}`} className="vt-ghost">Rețeta</Link>,
         }))} />
 
-      <HomeTabs memory="kt-home-tab" label="Acasă" tabs={[
+      <HomeTabs memory="kt-home-tab" label="Acasă" art={shownArt} tabs={[
         { key: 'azi', label: 'Azi', body: <>
           {restOfMenu.length > 0 ? (
             <ul className="home-rows">
@@ -209,6 +230,22 @@ export default function Home() {
                 </li>
               ))}
             </ul>
+          ) : ideas.length > 0 ? (
+            <section className="home-sec">
+              <Sec title="Ce gătim azi?" link="Planifică" to="/saptamana/planifica" />
+              <ul className="home-rows">
+                {ideas.map(({ r, last }) => (
+                  <li key={r.id} className="home-idea">
+                    <Link to={`/retete/${r.id}`}>
+                      <span className="home-row-img"><Thumb r={r} /></span>
+                      <span className="home-row-text"><b>{r.title}</b><small>{[last ? `gătită ultima dată ${new Date(last).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' })}` : 'încă negătită', r.minutes && formatMinutes(r.minutes)].filter(Boolean).join(' · ')}</small></span>
+                    </Link>
+                    <button type="button" className="home-idea-add" aria-label={`Pune ${r.title} în meniul de azi`}
+                      onClick={() => { planRecipe(r, todayKey); showToast(`${r.title} e în meniul de azi`) }}>+ Azi</button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : (
             <Link to="/saptamana" className="home-note">{menu.length ? 'Atât e azi în meniu.' : 'Nimic în plan azi.'} <b>Săptămâna</b></Link>
           )}
@@ -216,20 +253,7 @@ export default function Home() {
           <MonthCard />
         </> },
         { key: 'saptamana', label: 'Săptămâna', body: <>
-          <div className="vt-week">
-            {week.map(({ key, d, r }, i) => {
-              const isToday = key === todayKey
-              const name = d.toLocaleDateString('ro-RO', { weekday: 'long' })
-              return (
-                <Link key={key} to={`/saptamana?zi=${key}`} className={isToday ? 'vt-day today' : 'vt-day'}
-                  aria-label={r ? `${name}: ${r.title}` : `${name}: nimic planificat`}>
-                  <span className={r ? 'vt-plate' : 'vt-plate free'}>{r ? <Thumb r={r} /> : '+'}</span>
-                  <small>{isToday ? 'Azi' : WEEK_DAYS[i]}</small>
-                </Link>
-              )
-            })}
-          </div>
-          <div className="home-links"><Link to="/saptamana">Toată săptămâna</Link><Link to="/saptamana/planifica">Planifică</Link></div>
+          <WeekDayPanel week={week} todayKey={todayKey} plan={plan} byId={byId} ideas={suggest} thumb={(r) => <Thumb r={r} />} />
         </> },
         { key: 'caiet', label: 'Caiet', body: <>
           {recent.length > 0 && (

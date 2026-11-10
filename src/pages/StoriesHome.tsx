@@ -156,6 +156,7 @@ export default function StoriesHome() {
   const shown = slides[active]?.story
   // The page glows in the colours of the cover on screen.
   useGlow(shown)
+  const shownArt = useFileUrl(shown?.coverKey)
 
   // The heart on top: marked at once, put back if it could not be saved.
   const [hearts, setHearts] = useState<Record<string, boolean>>({})
@@ -223,7 +224,7 @@ export default function StoriesHome() {
           ),
         }))} />
 
-      <HomeTabs memory="kt-shome-tab" label="Povești" tabs={[
+      <HomeTabs memory="kt-shome-tab" label="Povești" art={shownArt} tabs={[
         { key: 'diseara', label: evening ? 'Diseară' : 'Azi', body: <>
           <Row title={evening ? 'Pentru diseară' : 'Pentru azi'} to="/povesti" stories={tonightRow} />
           <Row title="Adăugate recent" to="/povesti" stories={recent.filter((s) => !onTop.has(s.id))} />

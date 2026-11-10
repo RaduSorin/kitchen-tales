@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       // push-sw.js adds the cooking-timer notifications to the generated service worker.
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'], importScripts: ['push-sw.js'] },
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2,ttf}'], importScripts: ['push-sw.js'] },
       manifest: {
         name: 'Bucătăria cu povești',
         short_name: 'Bucătăria',

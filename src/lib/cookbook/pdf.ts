@@ -1,4 +1,4 @@
-// The family cookbook as an A4 PDF: a cover, contents by category (each line links to its page) and
+// The family cookbook as an A5 PDF: a cover, contents by category (each line links to its page) and
 // one page or more per recipe. Pure layout: the fonts and photos come in as bytes, so the same code
 // runs on the phone (src/lib/cookbook/index.ts) and in the tests.
 
@@ -40,25 +40,30 @@ export interface CookbookInput {
   onProgress?: (done: number, total: number, title: string) => void
 }
 
-// A4 in points.
-const W = 595.28
-const H = 841.89
-const M = 48 // side margin
-const FOOT = 40 // bottom area for the folio
+// A5 in points. The layout is written in the concept's pixels (design-polish/cookbook/board.html,
+// pages 440 px wide) and scaled: 1 px = K pt, so the PDF matches the concept's proportions.
+const W = 419.53
+const H = 595.28
+const K = W / 440
+const PH = H / K // page height in px (~624)
 
 const hex = (h: string) => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255)
 
+// Colours from the concept's CSS.
 interface Theme {
-  page?: RGB; ink: RGB; soft: RGB; muted: RGB; gold: RGB; rule: RGB; box: RGB; boxEdge: RGB; stepDisc: RGB; stepNum: RGB; heart: RGB
+  page: RGB; ink: RGB; text: RGB; chips: RGB; muted: RGB; gold: RGB; rule: RGB; leader: RGB; box: RGB; boxEdge: RGB; noteText: RGB
+  check: RGB; nutEdge: RGB; stepDisc: RGB; stepNum: RGB; heart: RGB; folio: RGB
 }
 const THEMES: Record<CookbookStyle, Theme> = {
   classic: {
-    page: hex('#fbf7ef'), ink: hex('#2a231d'), soft: hex('#5d4c37'), muted: hex('#8b7a63'), gold: hex('#a8792a'),
-    rule: hex('#d9c9a8'), box: hex('#f3ead7'), boxEdge: hex('#c9a35a'), stepDisc: hex('#f1e4c6'), stepNum: hex('#7a561c'), heart: hex('#c0504d'),
+    page: hex('#fbf7ef'), ink: hex('#2a231d'), text: hex('#2a231d'), chips: hex('#6f604e'), muted: hex('#8b7a63'), gold: hex('#a8792a'),
+    rule: hex('#d9c9a8'), leader: hex('#c9b892'), box: hex('#f3ead7'), boxEdge: hex('#c9a35a'), noteText: hex('#5d4c37'), check: hex('#b9a37a'),
+    nutEdge: hex('#e2d5b8'), stepDisc: hex('#f1e4c6'), stepNum: hex('#7a561c'), heart: hex('#c0504d'), folio: hex('#a8936e'),
   },
   evening: {
-    page: hex('#14110f'), ink: hex('#f4efe6'), soft: hex('#e7dfd3'), muted: hex('#a49b91'), gold: hex('#f2c879'),
-    rule: hex('#3a332d'), box: hex('#221d1a'), boxEdge: hex('#f2c879'), stepDisc: hex('#3a3122'), stepNum: hex('#f2c879'), heart: hex('#e0736a'),
+    page: hex('#14110f'), ink: hex('#f4efe6'), text: hex('#e7dfd3'), chips: hex('#cfc4b6'), muted: hex('#a49b91'), gold: hex('#f2c879'),
+    rule: hex('#3a332d'), leader: hex('#4a4038'), box: hex('#221c17'), boxEdge: hex('#c9a35a'), noteText: hex('#e7dfd3'), check: hex('#8f8170'),
+    nutEdge: hex('#3a332d'), stepDisc: hex('#3a3122'), stepNum: hex('#f2c879'), heart: hex('#e0736a'), folio: hex('#8f8170'),
   },
 }
 
@@ -134,309 +139,352 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
   const images = new Map<CookbookRecipe, PDFImage>()
   for (const r of all) if (r.photo) images.set(r, await doc.embedJpg(r.photo.jpeg))
 
-  // ---- drawing helpers ----
+  // ---- drawing in concept pixels, measured from the top of the page ----
+  const X = (x: number) => x * K
+  const Y = (top: number) => H - top * K
+  const width = (s: string, font: PDFFont, size: number, track = 0) => font.widthOfTextAtSize(s, size) + track * size * Math.max(0, s.length - 1)
+  /** Text with its baseline `base` px from the top; `track` is letter-spacing in em. */
+  const text = (p: PDFPage, s: string, x: number, base: number, font: PDFFont, size: number, color: RGB, track = 0) => {
+    if (track) p.pushOperators(setCharacterSpacing(track * size * K))
+    p.drawText(s, { x: X(x), y: Y(base), font, size: size * K, color })
+    if (track) p.pushOperators(setCharacterSpacing(0))
+  }
+  const centered = (p: PDFPage, s: string, base: number, font: PDFFont, size: number, color: RGB, track = 0) =>
+    text(p, s, (440 - width(s, font, size, track)) / 2, base, font, size, color, track)
+  const box = (p: PDFPage, x: number, top: number, w: number, h: number, o: { color?: RGB; border?: RGB; bw?: number; opacity?: number }) =>
+    p.drawRectangle({ x: X(x), y: Y(top + h), width: X(w), height: X(h), color: o.color, borderColor: o.border, borderWidth: o.border ? (o.bw ?? 1) * K : undefined, opacity: o.opacity })
+  const hline = (p: PDFPage, x: number, top: number, w: number, color: RGB, th = 1) => box(p, x, top, w, th, { color })
+  const kicker = (p: PDFPage, s: string, x: number, base: number, size = 10, track = 0.2) => text(p, s.toLocaleUpperCase('ro'), x, base, sansBlack, size, t.gold, track)
+
+  /** A vertical gradient of the page colour (alpha per stop, top to bottom) as an image, stretched over a box. */
+  const gradient = (stops: [number, number][], color: RGB = t.page) => {
+    const n = 256
+    const alpha = new Uint8Array(n)
+    for (let i = 0; i < n; i++) {
+      const at = i / (n - 1)
+      let j = 0
+      while (j < stops.length - 2 && at > stops[j + 1][0]) j++
+      const [p0, a0] = stops[j], [p1, a1] = stops[j + 1]
+      const f = p1 > p0 ? Math.min(1, Math.max(0, (at - p0) / (p1 - p0))) : 1
+      alpha[i] = Math.round(255 * (a0 + (a1 - a0) * f))
+    }
+    const mask = doc.context.register(doc.context.stream(alpha, { Type: 'XObject', Subtype: 'Image', Width: 1, Height: n, ColorSpace: 'DeviceGray', BitsPerComponent: 8, Interpolate: true }))
+    const px = new Uint8Array(n * 3)
+    for (let i = 0; i < n; i++) px.set([color.red, color.green, color.blue].map((v) => Math.round(v * 255)), i * 3)
+    return doc.context.register(doc.context.stream(px, { Type: 'XObject', Subtype: 'Image', Width: 1, Height: n, ColorSpace: 'DeviceRGB', BitsPerComponent: 8, Interpolate: true, SMask: mask }))
+  }
+  /** The evening pages' warm glow at the top (the concept's radial gradient). */
+  const glow = dark ? (() => {
+    const w = 64, h = 40
+    const alpha = new Uint8Array(w * h)
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      const dx = (i / (w - 1) - 0.5) / 1.2, dy = (j / (h - 1)) / 1
+      const d = Math.sqrt(dx * dx + dy * dy) / 0.6
+      alpha[j * w + i] = Math.round(255 * 0.35 * Math.max(0, 1 - d))
+    }
+    const mask = doc.context.register(doc.context.stream(alpha, { Type: 'XObject', Subtype: 'Image', Width: w, Height: h, ColorSpace: 'DeviceGray', BitsPerComponent: 8, Interpolate: true }))
+    const px = new Uint8Array(w * h * 3).map((_, i) => [150, 90, 40][i % 3])
+    return doc.context.register(doc.context.stream(px, { Type: 'XObject', Subtype: 'Image', Width: w, Height: h, ColorSpace: 'DeviceRGB', BitsPerComponent: 8, Interpolate: true, SMask: mask }))
+  })() : undefined
+  const stretch = (p: PDFPage, ref: PDFRef, x: number, top: number, w: number, h: number) => {
+    const name = p.node.newXObject('G', ref)
+    p.pushOperators(pushGraphicsState(), concatTransformationMatrix(X(w), 0, 0, X(h), X(x), Y(top + h)), drawObject(name), popGraphicsState())
+  }
+  const heroFade = dark ? gradient([[0, 0], [0.6, 0], [1, 1]]) : undefined // mask-image: #000 60%, transparent
+  const coverShade = dark ? gradient([[0, 0.15], [0.4, 0.2], [0.78, 1], [1, 1]]) : undefined
+
   const newPage = () => {
     const p = doc.addPage([W, H])
-    if (t.page) p.drawRectangle({ x: 0, y: 0, width: W, height: H, color: t.page })
+    p.drawRectangle({ x: 0, y: 0, width: W, height: H, color: t.page })
+    if (glow) stretch(p, glow, 0, 0, 440, PH * 0.6)
     return p
   }
-  const text = (p: PDFPage, s: string, x: number, y: number, font: PDFFont, size: number, color: RGB, spacing = 0) => {
-    if (spacing) p.pushOperators(setCharacterSpacing(spacing))
-    p.drawText(s, { x, y, font, size, color })
-    if (spacing) p.pushOperators(setCharacterSpacing(0))
-  }
-  const spacedWidth = (s: string, font: PDFFont, size: number, spacing: number) => font.widthOfTextAtSize(s, size) + spacing * Math.max(0, s.length - 1)
-  const centered = (p: PDFPage, s: string, y: number, font: PDFFont, size: number, color: RGB, spacing = 0) =>
-    text(p, s, (W - spacedWidth(s, font, size, spacing)) / 2, y, font, size, color, spacing)
-  const kicker = (p: PDFPage, s: string, x: number, y: number, center = false) => {
-    const up = s.toLocaleUpperCase('ro')
-    if (center) centered(p, up, y, sansBlack, 8, t.gold, 1.8)
-    else text(p, up, x, y, sansBlack, 8, t.gold, 1.6)
-  }
   /** Draws `img` filling the box (cropped to it, like CSS background-size: cover). */
-  const cover = (p: PDFPage, img: PDFImage, x: number, y: number, w: number, h: number) => {
+  const cover = (p: PDFPage, img: PDFImage, x: number, top: number, w: number, h: number) => {
     const s = Math.max(w / img.width, h / img.height)
     const dw = img.width * s, dh = img.height * s
-    p.pushOperators(pushGraphicsState(), rectangle(x, y, w, h), clip(), endPath())
-    p.drawImage(img, { x: x + (w - dw) / 2, y: y + (h - dh) / 2, width: dw, height: dh })
+    p.pushOperators(pushGraphicsState(), rectangle(X(x), Y(top + h), X(w), X(h)), clip(), endPath())
+    p.drawImage(img, { x: X(x + (w - dw) / 2), y: Y(top + (h + dh) / 2), width: X(dw), height: X(dh) })
     p.pushOperators(popGraphicsState())
   }
-  /** The evening style's photos melt into the page: a page-coloured image, transparent at the top, solid at the bottom. */
-  const fadeRef = (() => {
-    if (!dark) return undefined
-    const n = 128
-    const alpha = new Uint8Array(n)
-    for (let i = 0; i < n; i++) alpha[i] = Math.round(255 * Math.pow(i / (n - 1), 1.4)) // row 0 is the top
-    const mask = doc.context.register(doc.context.stream(alpha, {
-      Type: 'XObject', Subtype: 'Image', Width: 1, Height: n, ColorSpace: 'DeviceGray', BitsPerComponent: 8, Interpolate: true,
-    }))
-    const c = t.page!
-    const px = new Uint8Array(n * 3)
-    for (let i = 0; i < n; i++) px.set([c.red, c.green, c.blue].map((v) => Math.round(v * 255)), i * 3)
-    return doc.context.register(doc.context.stream(px, {
-      Type: 'XObject', Subtype: 'Image', Width: 1, Height: n, ColorSpace: 'DeviceRGB', BitsPerComponent: 8, Interpolate: true, SMask: mask,
-    }))
-  })()
-  const fadeBottom = (p: PDFPage, x: number, y: number, w: number, h: number) => {
-    if (!fadeRef) return
-    const fade = p.node.newXObject('Fade', fadeRef)
-    p.pushOperators(pushGraphicsState(), concatTransformationMatrix(w, 0, 0, h, x, y), drawObject(fade), popGraphicsState())
+  /** ♥ drawn as two circles and a triangle: the fonts have no heart sign. `base` is the text baseline. */
+  const heart = (p: PDFPage, x: number, base: number, size: number) => {
+    const r = size / 4, cy = base - size * 0.5
+    p.drawCircle({ x: X(x + r), y: Y(cy), size: X(r), color: t.heart })
+    p.drawCircle({ x: X(x + 3 * r), y: Y(cy), size: X(r), color: t.heart })
+    p.drawSvgPath(`M 0 0 L ${X(size)} 0 L ${X(size / 2)} ${X(size * 0.62)} Z`, { x: X(x), y: Y(cy - 0.12 * size), color: t.heart })
+    return size
   }
-  const heart = (p: PDFPage, x: number, y: number, size: number) => {
-    // Two circles and a triangle: the fonts have no heart sign.
-    const r = size / 4
-    p.drawCircle({ x: x + r, y: y + size * 0.55, size: r, color: t.heart })
-    p.drawCircle({ x: x + 3 * r, y: y + size * 0.55, size: r, color: t.heart })
-    p.drawSvgPath(`M 0 0 L ${size} 0 L ${size / 2} ${size * 0.62} Z`, { x, y: y + size * 0.62, color: t.heart, scale: 1 })
-  }
-  const folio = (p: PDFPage, n: number, label?: string) => {
-    const s = label ? `${n}  ·  ${label.toLocaleUpperCase('ro')}` : String(n)
-    centered(p, s, 22, sansBold, 7.5, t.muted, 1.2)
-  }
+  const folio = (p: PDFPage, n: number, label?: string) =>
+    centered(p, label ? `${n}  ·  ${label.toLocaleUpperCase('ro')}` : String(n), PH - 21, sans, 10, t.folio, 0.14)
 
-  // ---- contents: how many pages it needs (each line links to its recipe) ----
-  const TOC_TOP = H - 120
+  // ---- contents: plan the pages first (they come before the recipes) ----
+  const TOC_FIRST = 127, TOC_NEXT = 52, TOC_END = PH - 52
   type TocLine = { kind: 'cat'; text: string } | { kind: 'item'; r: CookbookRecipe }
-  const tocLines: TocLine[] = groups.flatMap((g) => [{ kind: 'cat' as const, text: g.category }, ...g.items.map((r) => ({ kind: 'item' as const, r }))])
-  const lineH = (l: TocLine) => (l.kind === 'cat' ? 34 : 21)
-  const tocPagesPlan: TocLine[][] = [[]]
+  const lineH = (l: TocLine) => (l.kind === 'cat' ? 39 : 24)
+  const tocPlan: TocLine[][] = [[]]
   {
-    let y = TOC_TOP
-    for (const l of tocLines) {
-      if (y - lineH(l) < FOOT + 20 || (l.kind === 'cat' && y - 34 - 21 < FOOT + 20)) { tocPagesPlan.push([]); y = H - 70 }
-      tocPagesPlan[tocPagesPlan.length - 1].push(l)
-      y -= lineH(l)
+    let y = TOC_FIRST
+    for (const g of groups) {
+      const lines: TocLine[] = [{ kind: 'cat', text: g.category }, ...g.items.map((r) => ({ kind: 'item' as const, r }))]
+      lines.forEach((l, i) => {
+        const need = lineH(l) + (i === 0 ? 24 : 0) // a category title never ends a page
+        if (y + need > TOC_END) { tocPlan.push([]); y = TOC_NEXT }
+        tocPlan[tocPlan.length - 1].push(l)
+        y += lineH(l)
+      })
     }
   }
 
   // ---- cover ----
-  const coverPage = newPage()
   {
-    const p = coverPage
+    const p = newPage()
+    const meta = (cats: boolean) => [count(all.length, 'rețetă', 'rețete'), cats ? count(groups.length, 'categorie', 'categorii') : '', `${MONTHS[input.date.getMonth()]} ${input.date.getFullYear()}`].filter(Boolean)
     if (dark) {
       const hero = all.find((r) => r.favorite && images.has(r)) ?? all.find((r) => images.has(r))
-      if (hero) { cover(p, images.get(hero)!, 0, 0, W, H); fadeBottom(p, 0, 0, W, H * 0.7); fadeBottom(p, 0, 0, W, H * 0.45) }
-      kicker(p, 'Bucătăria cu povești', M, 250)
-      text(p, 'Rețetele', M, 186, serif, 64, t.ink)
-      text(p, 'noastre', M, 124, serif, 64, t.ink)
-      const meta = `${count(all.length, 'rețetă', 'rețete')}  ·  ${MONTHS[input.date.getMonth()]} ${input.date.getFullYear()}`
-      text(p, meta, M, 92, sans, 11, t.muted)
-      if (input.authors) text(p, `adunate de ${input.authors}`, M, 72, serifItalic, 13, t.muted)
+      if (hero) cover(p, images.get(hero)!, 0, 0, 440, PH)
+      if (hero && coverShade) stretch(p, coverShade, 0, 0, 440, PH)
+      // .tx: left 36, bottom 60; kicker, 48 px title (line-height 1), 13 px line.
+      const bottom = PH - 60
+      text(p, meta(false).join(' · '), 36, bottom - 3, sans, 13, t.chips)
+      text(p, 'noastre', 36, bottom - 16 - 10 - 10, serif, 48, t.ink)
+      text(p, 'Rețetele', 36, bottom - 16 - 10 - 10 - 48, serif, 48, t.ink)
+      kicker(p, 'Bucătăria cu povești', 36, bottom - 16 - 10 - 96 - 10 - 2, 11, 0.24)
     } else {
-      p.drawRectangle({ x: 22, y: 22, width: W - 44, height: H - 44, borderColor: hex('#d6c39a'), borderWidth: 0.8 })
-      p.drawRectangle({ x: 29, y: 29, width: W - 58, height: H - 58, borderColor: hex('#ecdfc3'), borderWidth: 0.8 })
-      kicker(p, 'Bucătăria cu povești', 0, H - 120, true)
-      centered(p, 'Rețetele', H - 196, serif, 62, t.ink)
-      centered(p, 'noastre', H - 262, serif, 62, t.ink)
-      if (input.authors) centered(p, `adunate de ${input.authors}`, H - 298, serifItalic, 16, t.soft)
-      // Three photos: favourites first, then the most cooked.
+      box(p, 16, 16, 440 - 32, PH - 32, { border: hex('#d6c39a') })
+      box(p, 21, 21, 440 - 42, PH - 42, { border: hex('#ecdfc3') })
+      centered(p, 'BUCĂTĂRIA CU POVEȘTI', 73, sansBlack, 11, t.gold, 0.24)
+      centered(p, 'Rețetele', 128, serif, 46, t.ink)
+      centered(p, 'noastre', 175, serif, 46, t.ink)
+      if (input.authors) centered(p, `adunate de ${input.authors}`, 205, serifItalic, 16, hex('#7b6a55'))
+      // Three photos, favourites first, then the most cooked: one tall on the left, two on the right.
       const picks = [...all].filter((r) => images.has(r)).sort((a, b) => Number(b.favorite) - Number(a.favorite) || b.cooked - a.cooked).slice(0, 3)
-      const top = H - 340, gx = 6, mx = 62, cw = W - 2 * mx
+      const top = 248, left = 46, w = 440 - 92, gap = 6
+      const big = ((w - gap) * 1.3) / 2.3, small = w - gap - big
       if (picks.length >= 3) {
-        const big = cw * 0.565, small = cw - big - gx, hh = 162
-        cover(p, images.get(picks[0])!, mx, top - 2 * hh - gx, big, 2 * hh + gx)
-        cover(p, images.get(picks[1])!, mx + big + gx, top - hh, small, hh)
-        cover(p, images.get(picks[2])!, mx + big + gx, top - 2 * hh - gx, small, hh)
+        cover(p, images.get(picks[0])!, left, top, big, 242)
+        cover(p, images.get(picks[1])!, left + big + gap, top, small, 118)
+        cover(p, images.get(picks[2])!, left + big + gap, top + 124, small, 118)
+      } else if (picks.length === 2) {
+        cover(p, images.get(picks[0])!, left, top, big, 242)
+        cover(p, images.get(picks[1])!, left + big + gap, top, small, 242)
       } else if (picks.length) {
-        cover(p, images.get(picks[0])!, mx, top - 330, cw, 330)
+        cover(p, images.get(picks[0])!, left, top, w, 242)
       }
-      const cats = groups.length
-      const meta = `${count(all.length, 'rețetă', 'rețete')}  ·  ${count(cats, 'categorie', 'categorii')}  ·  ${MONTHS[input.date.getMonth()]} ${input.date.getFullYear()}`
-      centered(p, meta, 70, sans, 10.5, t.soft, 0.4)
+      // "24 de rețete · 6 categorii · noiembrie 2026", the first part bold.
+      const parts = meta(true)
+      const sep = '  ·  '
+      const full = width(parts[0], sansBold, 12, 0.06) + width(sep + parts.slice(1).join(sep), sans, 12, 0.06)
+      const x0 = (440 - full) / 2, base = PH - 48
+      text(p, parts[0], x0, base, sansBold, 12, t.ink, 0.06)
+      text(p, sep + parts.slice(1).join(sep), x0 + width(parts[0], sansBold, 12, 0.06), base, sans, 12, hex('#7b6a55'), 0.06)
     }
   }
 
-  // Contents pages come right after the cover; they are filled in once the recipes have page numbers.
-  const tocPages = tocPagesPlan.map(() => newPage())
+  const tocPages = tocPlan.map(() => newPage())
 
   // ---- recipes ----
   const firstPage = new Map<CookbookRecipe, PDFPage>()
   const pageNo = new Map<CookbookRecipe, number>()
-  const COL_GAP = 22
-  const LEFT_W = 168
-  const RIGHT_X = M + LEFT_W + COL_GAP
-  const RIGHT_W = W - M - RIGHT_X
-  const BODY = 9.6
-  const LEAD = 14
+  const L = 30, LW = 150, R = 200, RW = 210 // the two columns: .cols 150px 1fr, gap 20, page padding 30
+  const SIZE = 11.5, LH = 17.25 // font-size 11.5px, line-height 1.5
+  const END = PH - 46 // content stops above the folio
+  const firstBase = (lh: number, size: number) => (lh - size) / 2 + size * 0.78
 
   let done = 0
   for (const g of groups) {
     for (const r of g.items) {
       input.onProgress?.(done, all.length, r.recipe.title)
       const rec = r.recipe
+      const label = g.category
       let p = newPage()
       firstPage.set(r, p)
       pageNo.set(r, doc.getPageCount())
-      const label = g.category
-      let y: number
       const img = images.get(r)
+      let y: number
       if (img) {
-        const hh = dark ? 300 : 250
-        cover(p, img, 0, H - hh, W, hh)
-        if (dark) fadeBottom(p, 0, H - hh, W, hh * 0.55)
-        y = H - hh - (dark ? -10 : 34)
+        const hh = dark ? 230 : 176
+        cover(p, img, 0, 0, 440, hh)
+        if (heroFade) stretch(p, heroFade, 0, 0, 440, hh + 0.5)
+        y = dark ? hh - 30 : hh + 20
       } else {
-        y = H - 86
+        y = 44
       }
-      kicker(p, label, M, y)
-      y -= 34
-      const titleSize = img ? 28 : 32
-      for (const line of wrap(printable(rec.title), serif, titleSize, W - 2 * M)) { text(p, line, M, y, serif, titleSize, t.ink); y -= titleSize * 1.12 }
-      y += titleSize * 1.12 - 6
-      if (!img) { p.drawLine({ start: { x: M, y: y - 6 }, end: { x: M + 54, y: y - 6 }, thickness: 1, color: t.boxEdge }); y -= 10 }
-      // Servings, time, how often cooked, favourite.
-      y -= 18
-      let x = M
-      const chip = (bold: string, rest: string) => {
-        text(p, bold, x, y, sansBold, 9.5, t.ink); x += sansBold.widthOfTextAtSize(bold, 9.5) + 3
-        text(p, rest, x, y, sans, 9.5, t.muted); x += sans.widthOfTextAtSize(rest, 9.5) + 16
+      kicker(p, label, L, y + 9)
+      y += 12
+      const ts = img ? 30 : 34, tl = ts * 1.05
+      y += 6
+      for (const line of wrap(printable(rec.title), serif, ts, 440 - 2 * L)) { text(p, line, L, y + firstBase(tl, ts), serif, ts, t.ink); y += tl }
+      y += img ? 8 : 0
+      if (!img) { hline(p, L, y + 10, 60, t.boxEdge); y += 10 + 1 + 12 }
+      // .chips: servings, minutes, times cooked, favourite.
+      let x = L
+      const cb = y + firstBase(14, 11.5)
+      const chip = (n: string, rest: string) => {
+        if (n) { text(p, n, x, cb, sansBold, 11.5, t.ink); x += width(n, sansBold, 11.5) + 3 }
+        text(p, rest, x, cb, sans, 11.5, t.chips); x += width(rest, sans, 11.5) + 14
       }
       if (rec.servings) chip(String(rec.servings), rec.servings === 1 ? 'porție' : 'porții')
       if (rec.minutes) chip(String(rec.minutes), 'min')
-      if (r.cooked) chip(String(r.cooked), r.cooked === 1 ? 'dată gătită' : 'ori gătită')
-      if (r.favorite) { heart(p, x, y - 1, 9); text(p, 'favorită', x + 13, y, sans, 9.5, t.muted) }
-      y -= 14
-      p.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 0.6, color: t.rule })
-      y -= 24
+      if (r.cooked === 1) chip('', 'gătită o dată')
+      else if (r.cooked) {
+        // "gătită de 9 ori", the number bold, as in the concept.
+        const a = 'gătită de'
+        text(p, a, x, cb, sans, 11.5, t.chips); x += width(a, sans, 11.5) + 3
+        chip(String(r.cooked), r.cooked >= 20 && (r.cooked % 100 === 0 || r.cooked % 100 >= 20) ? 'de ori' : 'ori')
+      }
+      if (r.favorite) { heart(p, x, cb, 10); text(p, 'favorită', x + 14, cb, sans, 11.5, t.chips) }
+      y += 14 + 12
+      hline(p, L, y, 440 - 2 * L, t.rule)
+      y += 1 + 12
 
-      // Two columns that flow onto further pages when a recipe is long.
-      const top = y
       const continued = () => {
         p = newPage()
-        kicker(p, `${label}  ·  continuare`, M, H - 62)
-        text(p, printable(rec.title), M, H - 88, serif, 18, t.ink)
-        p.drawLine({ start: { x: M, y: H - 102 }, end: { x: W - M, y: H - 102 }, thickness: 0.6, color: t.rule })
-        return H - 126
+        kicker(p, `${label}  ·  continuare`, L, 44)
+        text(p, printable(rec.title), L, 70, serif, 20, t.ink)
+        hline(p, L, 82, 440 - 2 * L, t.rule)
+        return 96
       }
 
-      type Block = { h: number; draw: (pg: PDFPage, y: number) => void }
-      const left: Block[] = []
-      const right: Block[] = []
-      left.push({ h: 18, draw: (pg, yy) => kicker(pg, 'Ingrediente', M, yy) })
+      type Block = { h: number; draw: (pg: PDFPage, top: number) => void }
+      const left: Block[] = [], right: Block[] = []
+      const heading = (s: string, x: number) => ({ h: 19, draw: (pg: PDFPage, top: number) => kicker(pg, s, x, top + 9, 10, 0.18) })
+      left.push(heading('Ingrediente', L))
+      const bullet = '· '
+      const bw = width(bullet, sansBold, SIZE)
       for (const raw of rec.ingredients) {
         const s = printable(raw)
         if (!s) continue
-        const head = isHeading(s)
-        const lines = wrap(s, head ? sansBold : sans, BODY, LEFT_W - (head ? 0 : 15))
+        if (isHeading(s)) {
+          const lines = wrap(s, sansBold, SIZE, LW)
+          left.push({ h: 6 + lines.length * LH + 3, draw: (pg, top) => lines.forEach((l, i) => text(pg, l, L, top + 6 + firstBase(LH, SIZE) + i * LH, sansBold, SIZE, t.text)) })
+          continue
+        }
+        const indent = dark ? bw : 16
+        const lines = wrap(s, sans, SIZE, LW - indent)
         left.push({
-          h: lines.length * LEAD + (head ? 8 : 3),
-          draw: (pg, yy) => {
-            const yy0 = yy - (head ? 6 : 0)
-            if (!head) pg.drawRectangle({ x: M, y: yy0 - 1.5, width: 7.5, height: 7.5, borderColor: t.muted, borderWidth: 0.7 })
-            lines.forEach((l, i) => text(pg, l, M + (head ? 0 : 15), yy0 - i * LEAD, head ? sansBold : sans, BODY, t.soft))
+          h: lines.length * LH + 3,
+          draw: (pg, top) => {
+            if (dark) text(pg, bullet, L, top + firstBase(LH, SIZE), sansBold, SIZE, t.gold)
+            else box(pg, L, top + 4, 9, 9, { border: t.check })
+            lines.forEach((l, i) => text(pg, l, L + indent, top + firstBase(LH, SIZE) + i * LH, sans, SIZE, t.text))
           },
         })
       }
       const n = rec.nutrition
       if (n) {
         left.push({
-          h: 52,
-          draw: (pg, yy) => {
-            const cells = [[String(Math.round(n.kcal)), 'kcal'], [`${Math.round(n.protein)} g`, 'proteine'], [`${Math.round(n.carbs)} g`, 'carbohidrați']]
-            const cw = LEFT_W / 3, bx = M, by = yy - 34
-            pg.drawRectangle({ x: bx, y: by, width: LEFT_W, height: 38, borderColor: t.rule, borderWidth: 0.7 })
+          h: 10 + 40,
+          draw: (pg, top) => {
+            const cells = [[String(Math.round(n.kcal)), 'kcal'], [String(Math.round(n.protein)), 'prot.'], [String(Math.round(n.carbs)), 'carb.']]
+            const by = top + 10, cw = LW / 3
+            pg.drawRectangle({ x: X(L), y: Y(by + 40), width: X(LW), height: X(40), borderColor: t.nutEdge, borderWidth: K })
             cells.forEach(([v, k], i) => {
-              if (i) pg.drawLine({ start: { x: bx + cw * i, y: by }, end: { x: bx + cw * i, y: by + 38 }, thickness: 0.7, color: t.rule })
-              const vx = bx + cw * i + (cw - sansBold.widthOfTextAtSize(v, 10.5)) / 2
-              text(pg, v, vx, by + 21, sansBold, 10.5, t.ink)
-              text(pg, k, bx + cw * i + (cw - sans.widthOfTextAtSize(k, 7)) / 2, by + 9, sans, 7, t.muted)
+              if (i) box(pg, L + cw * i, by, 1, 40, { color: t.nutEdge })
+              const cx = L + cw * i + cw / 2
+              text(pg, v, cx - width(v, sansBold, 13) / 2, by + 6 + 12, sansBold, 13, t.ink)
+              text(pg, k, cx - width(k, sans, 10) / 2, by + 6 + 15.6 + 10, sans, 10, t.chips)
             })
-            text(pg, 'pe porție, estimat', bx, by - 10, sans, 7, t.muted)
           },
         })
       }
 
-      right.push({ h: 18, draw: (pg, yy) => kicker(pg, 'Mod de preparare', RIGHT_X, yy) })
+      right.push(heading('Mod de preparare', R))
       rec.steps.map(printable).filter(Boolean).forEach((s, i) => {
-        const lines = wrap(s, sans, BODY, RIGHT_W - 24)
+        const num = dark ? `${i + 1}.` : String(i + 1)
+        const indent = dark ? 16 : 27
+        const lines = wrap(s, sans, SIZE, RW - indent)
         right.push({
-          h: lines.length * LEAD + 8,
-          draw: (pg, yy) => {
-            pg.drawCircle({ x: RIGHT_X + 7.5, y: yy + 3, size: 7.5, color: t.stepDisc })
-            const num = String(i + 1)
-            text(pg, num, RIGHT_X + 7.5 - sansBlack.widthOfTextAtSize(num, 7.5) / 2, yy + 0.5, sansBlack, 7.5, t.stepNum)
-            lines.forEach((l, j) => text(pg, l, RIGHT_X + 24, yy - j * LEAD, sans, BODY, t.soft))
+          h: lines.length * LH + 7,
+          draw: (pg, top) => {
+            if (dark) text(pg, num, R + 12 - width(num, sansBlack, SIZE), top + firstBase(LH, SIZE), sansBlack, SIZE, t.gold)
+            else {
+              pg.drawCircle({ x: X(R + 9), y: Y(top + 1 + 9), size: X(9), color: t.stepDisc })
+              text(pg, num, R + 9 - width(num, sansBlack, 10) / 2, top + 1 + 9 + 3.6, sansBlack, 10, t.stepNum)
+            }
+            lines.forEach((l, j) => text(pg, l, R + indent, top + firstBase(LH, SIZE) + j * LH, sans, SIZE, t.text))
           },
         })
       })
-      // The recipe's own note, then the latest notes written after cooking.
-      const quotes: { text: string; by: string }[] = []
-      if (rec.notes?.trim()) quotes.push({ text: printable(rec.notes), by: 'Notă' })
-      for (const c of r.notes.slice(-3).reverse()) quotes.push({ text: `„${printable(c.text)}”`, by: [c.by, romanianDate(c.day)].filter(Boolean).join(' · ') })
+      // The recipe's own note, then the latest notes written after cooking (.note).
+      const quotes: { text: string; by?: string; font: PDFFont }[] = []
+      if (rec.notes?.trim()) quotes.push({ text: printable(rec.notes), font: serifItalic })
+      for (const c of r.notes.slice(-3).reverse()) quotes.push({ text: `„${printable(c.text)}”`, by: [c.by, romanianDate(c.day)].filter(Boolean).join(' · '), font: serifItalic })
       for (const q of quotes) {
-        const font = q.by === 'Notă' ? sans : serifItalic
-        const lines = wrap(q.text, font, 10, RIGHT_W - 26)
-        const h = lines.length * 14 + 30
+        const lines = wrap(q.text, q.font, 12, RW - 26)
+        const inner = lines.length * 16.8 + (q.by ? 4 + 12 : 0)
+        const h = 9 + inner + 9
         right.push({
-          h: h + 10,
-          draw: (pg, yy) => {
-            const top0 = yy + 10
-            pg.drawRectangle({ x: RIGHT_X, y: top0 - h, width: RIGHT_W, height: h, color: t.box })
-            pg.drawRectangle({ x: RIGHT_X, y: top0 - h, width: 1.6, height: h, color: t.boxEdge })
-            lines.forEach((l, j) => text(pg, l, RIGHT_X + 13, top0 - 18 - j * 14, font, 10, t.soft))
-            text(pg, q.by, RIGHT_X + 13, top0 - h + 9, sans, 7.5, t.muted)
+          h: 10 + h,
+          draw: (pg, top) => {
+            const bt = top + 10
+            box(pg, R, bt, RW, h, { color: t.box })
+            box(pg, R, bt, 2, h, { color: t.boxEdge })
+            lines.forEach((l, j) => text(pg, l, R + 12, bt + 9 + firstBase(16.8, 12) + j * 16.8, q.font, 12, t.noteText))
+            if (q.by) text(pg, q.by, R + 12, bt + 9 + lines.length * 16.8 + 4 + 9.5, sans, 10, t.muted)
           },
         })
       }
 
-      // Flow both columns from `top`; when one runs out of room both continue on a new page.
-      let li = 0, ri = 0
-      let ly = top, ry = top
-      while (li < left.length || ri < right.length) {
-        let moved = false
-        while (li < left.length && ly - left[li].h >= FOOT + 14) { left[li].draw(p, ly); ly -= left[li].h; li++; moved = true }
-        while (ri < right.length && ry - right[ri].h >= FOOT + 14) { right[ri].draw(p, ry); ry -= right[ri].h; ri++; moved = true }
-        if (li < left.length || ri < right.length) {
-          if (!moved && ly === top && ry === top) { li = left.length; ri = right.length; break } // a block taller than a page
-          folio(p, doc.getPageCount(), label)
-          ly = ry = continued()
-        }
+      // Flow both columns; when one runs out of room both continue on a new page.
+      const top = y
+      let li = 0, ri = 0, ly = top, ry = top
+      for (;;) {
+        while (li < left.length && ly + left[li].h <= END) { left[li].draw(p, ly); ly += left[li].h; li++ }
+        while (ri < right.length && ry + right[ri].h <= END) { right[ri].draw(p, ry); ry += right[ri].h; ri++ }
+        if (li >= left.length && ri >= right.length) break
+        const fresh = continued()
+        if (ly === fresh && ry === fresh) break // a single block taller than a page: give up on it
+        folio(p, doc.getPageCount(), label)
+        ly = ry = fresh
       }
       folio(p, doc.getPageCount(), label)
-      if (p !== firstPage.get(r)) folio(firstPage.get(r)!, pageNo.get(r)!, label)
+      const first = firstPage.get(r)!
+      if (p !== first) folio(first, pageNo.get(r)!, label)
       done++
     }
   }
   input.onProgress?.(all.length, all.length, '')
 
-  // ---- contents (now that every recipe has its page) ----
-  tocPagesPlan.forEach((lines, i) => {
+  // ---- contents ----
+  tocPlan.forEach((lines, i) => {
     const p = tocPages[i]
+    const x0 = 44, x1 = 440 - 44
     let y: number
     if (i === 0) {
-      text(p, 'Cuprins', M + 8, H - 92, serif, 34, t.ink)
-      const legendY = H - 112
-      heart(p, M + 8, legendY - 1, 8)
-      text(p, '= favorită   ·   ×3 = de câte ori ați gătit-o', M + 20, legendY, sans, 8.5, t.muted)
-      y = TOC_TOP - 22
+      text(p, 'Cuprins', x0, 48 + firstBase(38, 32), serif, 32, t.ink)
+      const lb = 90 + firstBase(15, 12)
+      heart(p, x0, lb, 10)
+      text(p, '= favorită  ·  cifra mică = de câte ori ați gătit-o', x0 + 13, lb, sans, 12, t.muted)
+      y = TOC_FIRST
     } else {
-      y = H - 70
+      y = TOC_NEXT
     }
     for (const l of lines) {
-      if (l.kind === 'cat') { y -= 14; kicker(p, l.text, M + 8, y); y -= 20; continue }
+      if (l.kind === 'cat') { kicker(p, l.text, x0, y + 18 + 9.5, 10.5, 0.2); y += 39; continue }
       const r = l.r
+      const base = y + 7 + firstBase(17, 14)
       const title = printable(r.recipe.title)
       const num = String(pageNo.get(r) ?? '')
-      let x = M + 8
-      text(p, title, x, y, sans, 11, t.ink)
-      x += sans.widthOfTextAtSize(title, 11) + 6
-      if (r.favorite) { heart(p, x, y, 8); x += 12 }
-      if (r.cooked) { const c = `×${r.cooked}`; text(p, c, x, y, sans, 8.5, t.muted); x += sans.widthOfTextAtSize(c, 8.5) + 6 }
-      const nx = W - M - 8 - sans.widthOfTextAtSize(num, 11)
-      // Dotted leader to the page number.
-      for (let dx = x + 4; dx < nx - 6; dx += 4) p.drawCircle({ x: dx, y: y + 2.5, size: 0.45, color: t.muted })
-      text(p, num, nx, y, sans, 11, t.ink)
+      let x = x0
+      text(p, title, x, base, sans, 14, t.ink)
+      x += width(title, sans, 14) + 6
+      if (r.favorite) { x += heart(p, x, base - 1, 10) + 4 }
+      if (r.cooked) { const c = `×${r.cooked}`; text(p, c, x, base, sans, 12, t.muted); x += width(c, sans, 12) + 6 }
+      const nx = x1 - width(num, sans, 14)
+      for (let dx = x + 2; dx < nx - 6; dx += 3) p.drawCircle({ x: X(dx), y: Y(base), size: 0.42, color: t.leader })
+      text(p, num, nx, base, sans, 14, t.ink)
       const target = firstPage.get(r)
-      if (target) link(p, M, y - 5, W - 2 * M, 19, target.ref)
-      y -= 21
+      if (target) link(p, x0, y + 3, x1 - x0, 22, target.ref)
+      y += 24
     }
     folio(p, i + 2)
   })
 
-  /** A tap on the rectangle opens `dest` (the recipe's first page). */
-  function link(p: PDFPage, x: number, y: number, w: number, h: number, dest: PDFRef) {
+  /** A tap on the box opens `dest` (the recipe's first page). */
+  function link(p: PDFPage, x: number, top: number, w: number, h: number, dest: PDFRef) {
     const annot = doc.context.obj({
-      Type: 'Annot', Subtype: 'Link', Rect: [x, y, x + w, y + h], Border: [0, 0, 0],
+      Type: 'Annot', Subtype: 'Link', Rect: [X(x), Y(top + h), X(x + w), Y(top)], Border: [0, 0, 0],
       Dest: [dest, PDFName.of('XYZ'), PDFNull, PDFNull, PDFNull],
     })
     const ref = doc.context.register(annot)
@@ -444,6 +492,7 @@ export async function buildCookbook(input: CookbookInput): Promise<{ bytes: Uint
     if (annots instanceof PDFArray) annots.push(ref)
     else p.node.set(PDFName.of('Annots'), doc.context.obj([ref]))
   }
+
   const bytes = await doc.save()
   return { bytes, pages: doc.getPageCount() }
 }

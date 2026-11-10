@@ -34,7 +34,7 @@ describe('cookbook', () => {
         recipes: [recipe('1', 'Ciorbă', 'Ciorbe și supe'), { ...recipe('2', 'Clătite', 'Deserturi'), favorite: true, cooked: 4, notes: [{ day: '2026-10-12', text: 'Mai multă dulceață', by: 'Loredana' }] }, long],
         style, fonts, authors: 'Sorin și Loredana', date: new Date('2026-11-10'),
       })
-      expect(pages).toBe(1 + 1 + 1 + 1 + 2)
+      expect(pages).toBe(1 + 1 + 1 + 1 + 4) // cover, contents, two short recipes, the long one on four A5 pages
       const doc = await PDFDocument.load(bytes)
       expect(doc.getTitle()).toBe('Rețetele noastre')
       const links = doc.getPage(1).node.lookup(PDFName.of('Annots'), PDFArray)

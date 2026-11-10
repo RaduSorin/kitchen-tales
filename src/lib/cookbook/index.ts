@@ -69,8 +69,8 @@ export async function makeCookbook(o: CookbookOptions): Promise<{ file: File; pa
 /** A rough page count and size for the sheet, before anything is made. */
 export function estimate(recipes: Recipe[], photos: boolean) {
   const withPhoto = photos ? recipes.filter((r) => r.photoKey).length : 0
-  const long = recipes.filter((r) => r.ingredients.length > 16 || r.steps.join(' ').length > 1400).length
-  const pages = 1 + Math.max(1, Math.ceil((recipes.length + 8) / 32)) + recipes.length + long
+  const long = recipes.filter((r) => r.ingredients.length > 14 || r.steps.join(' ').length > 700).length
+  const pages = 1 + Math.max(1, Math.ceil((recipes.length + 8) / 20)) + recipes.length + long
   const mb = 0.25 + withPhoto * 0.2
   return { pages, mb: mb < 1 ? Math.round(mb * 10) / 10 : Math.round(mb) }
 }

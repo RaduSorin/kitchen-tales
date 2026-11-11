@@ -162,7 +162,6 @@ export default function Home() {
   useGlow(shown && { id: shown.r.id, title: shown.r.title, photoKey: shown.r.photoKey })
 
   const onTop = new Set(slides.map((s) => s.r.id))
-  const restOfMenu = menu.filter((r) => !onTop.has(r.id))
   const recent = (recipes ?? []).filter((r) => !onTop.has(r.id)).slice(0, 8)
   const week = weekDays(mondayOf(t)).map((d) => {
     const key = dayKey(d)
@@ -217,9 +216,11 @@ export default function Home() {
 
       <HomeTabs memory="kt-home-tab" label="Acasă" tabs={[
         { key: 'azi', label: 'Azi', body: <>
-          {restOfMenu.length > 0 ? (
+          {/* All of today's menu, even the dish that is also a photo on top: that photo can sit
+              behind another slide (a recipe still in progress), so it is easy to miss. */}
+          {menu.length > 0 ? (
             <ul className="home-rows">
-              {restOfMenu.map((r, i) => (
+              {menu.map((r, i) => (
                 <li key={`${r.id}-${i}`}>
                   <Link to={`/retete/${r.id}`}>
                     <span className="home-row-img"><Thumb r={r} /></span>
@@ -246,7 +247,7 @@ export default function Home() {
               </ul>
             </section>
           ) : (
-            <Link to="/saptamana" className="home-note">{menu.length ? 'Atât e azi în meniu.' : 'Nimic în plan azi.'} <b>Săptămâna</b></Link>
+            <Link to="/saptamana" className="home-note">Nimic în plan azi. <b>Săptămâna</b></Link>
           )}
           {playable && <StoryCard key={playable.length} stories={playable} evening={evening} />}
           <MonthCard />

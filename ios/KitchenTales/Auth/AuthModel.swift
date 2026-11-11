@@ -88,6 +88,20 @@ final class AuthModel {
                                                code: code, newPassword: newPassword)
     }
 
+    /// Saves a new name and fetches fresh tokens, so the ID token (and `account`) carry it.
+    func rename(_ name: String) async throws {
+        let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty else { return }
+        if LaunchOptions.demoAccount != nil, let account {
+            state = .signedIn(Account(user: account.user, email: account.email, name: clean, groups: account.groups))
+            return
+        }
+        guard let client else { throw AuthError.notConfigured }
+        let current = try await validTokens()
+        try await client.updateName(clean, accessToken: current.accessToken)
+        accept(try await client.refresh(current))
+    }
+
     func signOut() async {
         if let tokens, let client { await client.revoke(tokens) }
         signOutLocally()

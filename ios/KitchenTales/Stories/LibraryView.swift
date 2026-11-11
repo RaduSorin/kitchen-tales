@@ -323,6 +323,7 @@ struct FolderView: View {
 struct CoverFlow: View {
     let stories: [Story]
     @State private var centered: String?
+    @AppStorage(PhoneSettings.shelfClickKey) private var shelfClick = true
     private let side: CGFloat = 220
 
     var body: some View {
@@ -337,6 +338,7 @@ struct CoverFlow: View {
             }
             .scrollTargetBehavior(.viewAligned)
             .scrollPosition(id: $centered)
+            .onChange(of: centered) { old, _ in if old != nil, shelfClick { Haptics.select() } }
             .contentMargins(.horizontal, 80, for: .scrollContent)
             .scrollIndicators(.hidden)
             .frame(height: side + 30)

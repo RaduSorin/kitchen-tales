@@ -38,6 +38,11 @@ shot 2d-week -demo YES -tab week
 shot 2e-week-add -demo YES -tab week -screen week-add
 shot 2f-list -demo YES -tab list
 shot 3-profile -demo YES -tab profile
+shot 3b-profile-child -demo YES -tab profile -screen profile-child
+shot 3c-profile-family -demo YES -tab profile -screen profile-family
+shot 3d-profile-invite -demo YES -tab profile -screen profile-invite
+shot 3e-profile-prefs -demo YES -tab profile -screen profile-prefs
+shot 3f-kid-mode -demo YES -area stories -tab home -screen kid
 shot 4-catalog -demo YES -tab profile -screen catalog
 # Stories side (made-up library, drawn covers).
 shot 5-stories-home -demo YES -area stories -tab home

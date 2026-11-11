@@ -171,6 +171,13 @@ struct CognitoClient: Sendable {
         ])
     }
 
+    /// Changes the person's name (the Cognito `name` attribute the web shows too).
+    func updateName(_ name: String, accessToken: String) async throws {
+        _ = try await call("UpdateUserAttributes", [
+            "AccessToken": accessToken, "UserAttributes": [["Name": "name", "Value": name]],
+        ])
+    }
+
     /// Ends the session on the server too (best effort: signing out works offline).
     func revoke(_ tokens: Tokens) async {
         _ = try? await call("RevokeToken", ["ClientId": config.clientId, "Token": tokens.refreshToken])

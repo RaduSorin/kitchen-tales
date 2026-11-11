@@ -325,6 +325,12 @@
 .home-search { margin-left: auto; }
 @media (max-width: 380px) { :root .tab-label { font-size: var(--fs-xxs); letter-spacing: -.01em; } }
 
+/* The open tab's icon turns solid (dark glyph in the gold bubble), like the concept. */
+.tab .ic-fill { display: none; }
+@media (max-width: 759px) {
+  :root .tab.active .ic-line { display: none; }
+  :root .tab.active .ic-fill { display: inline; }
+}
 
 /* ---------- Illustrated covers (no picture): sky, stars, hills, emoji, and the title on big ones ---------- */
 .story-cover { container-type: inline-size; }

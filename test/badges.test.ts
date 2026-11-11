@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BADGE, BADGES, STAMPS, STICKERS } from '../src/lib/badges/catalog'
+import { BADGE, BADGES, longestRun, STAMPS, STICKERS } from '../src/lib/badges/catalog'
 import { backLabelFor } from '../src/lib/badges/backLabel'
 import { applyEvent, emptyState, EPOCH, evaluate, mergeStates, progressOf, type BadgeEvent, type BadgeState } from '../src/lib/badges/engine'
 
@@ -11,7 +11,7 @@ describe('catalogue', () => {
   it('has unique ids, and stamps and stickers', () => {
     expect(new Set(BADGES.map((b) => b.id)).size).toBe(BADGES.length)
     expect(STAMPS.length).toBe(33)
-    expect(STICKERS.length).toBe(20)
+    expect(STICKERS.length).toBe(32)
     expect(STAMPS.every((b) => b.cap && b.ink)).toBe(true)
   })
 })
@@ -100,6 +100,52 @@ describe('stories', () => {
     s = applyEvent(s, finished('b'), at('2026-11-11T00:30:00'))
     s = applyEvent(s, finished('c'), at('2026-11-11T19:00:00'))
     expect(s.sets.evenings).toEqual(['2026-11-10'])
+  })
+})
+
+describe('new story stickers', () => {
+  const done = (id: string, s: BadgeState, now: Date) => progressOf(BADGE.get(id)!, s, now).done
+  const now = at('2026-11-12T10:00:00')
+
+  it('finds the longest run of evenings in a row', () => {
+    expect(longestRun([])).toBe(0)
+    expect(longestRun(['2026-11-01', '2026-11-02', '2026-11-04'])).toBe(2)
+    expect(longestRun(['2026-11-30', '2026-12-01', '2026-12-02', '2026-11-10'])).toBe(3)
+    // A gap starts the count again.
+    let s = emptyState()
+    for (const d of ['01', '02', '04', '05']) s = applyEvent(s, finished('a'), at(`2026-11-${d}T20:00:00`))
+    expect(done('k-cat', s, now)).toBe(false)
+    s = applyEvent(s, finished('a'), at('2026-11-06T20:00:00'))
+    expect(done('k-cat', s, now)).toBe(true)
+    expect(done('k-dragon', s, now)).toBe(false)
+    for (const d of ['07', '08', '09', '10']) s = applyEvent(s, finished('a'), at(`2026-11-${d}T20:00:00`))
+    expect(done('k-dragon', s, now)).toBe(true)
+  })
+
+  it('counts morning, long, short, recorded, offline and kid-mode listening', () => {
+    expect(done('k-fox', run([finished('a')], at('2026-11-10T07:30:00')), now)).toBe(true)
+    expect(done('k-fox', run([finished('a')], at('2026-11-10T10:00:00')), now)).toBe(false)
+    expect(done('k-snail', run([{ t: 'story-finished', storyId: 'a', folder: 'B', folders: ['B'], secs: 1500 }]), now)).toBe(true)
+    const short = (i: number): BadgeEvent => ({ t: 'story-finished', storyId: `s${i}`, folder: 'B', folders: ['B'], secs: 200 })
+    expect(done('k-bunny', run([0, 1, 2, 3].map(short)), now)).toBe(false)
+    expect(done('k-bunny', run([0, 1, 2, 3, 4].map(short)), now)).toBe(true)
+    const rec: BadgeEvent = { t: 'story-finished', storyId: 'mama', folder: 'B', folders: ['B'], source: 'recording' }
+    expect(done('k-parrot', run([rec, rec, rec, rec, rec]), now)).toBe(true)
+    expect(done('k-parrot', run([rec, rec, rec, rec, finished('mama')]), now)).toBe(false)
+    expect(done('k-umbrella', run([{ t: 'story-finished', storyId: 'a', folder: 'B', folders: ['B'], offline: true }]), now)).toBe(true)
+    const kid: BadgeEvent = { t: 'story-finished', storyId: 'a', folder: 'B', folders: ['B'], kid: true }
+    expect(done('k-penguin', run(Array.from({ length: 10 }, () => kid)), now)).toBe(true)
+    expect(done('k-penguin', run(Array.from({ length: 9 }, () => kid)), now)).toBe(false)
+  })
+
+  it('gives the key for a favourite story', () => {
+    expect(evaluate(run([{ t: 'favorite' }]), now).fresh).toEqual(['k-key'])
+  })
+
+  it('gives the holiday surprises only on those days', () => {
+    expect(evaluate(run([finished('a')], at('2026-12-25T19:00:00')), at('2026-12-25T19:00:00')).fresh).toContain('k-snow')
+    expect(evaluate(run([finished('a')], at('2026-12-27T19:00:00')), at('2026-12-27T19:00:00')).fresh).not.toContain('k-snow')
+    expect(evaluate(run([finished('a')], at('2026-10-31T19:00:00')), at('2026-10-31T19:00:00')).fresh).toContain('k-pumpkin')
   })
 })
 

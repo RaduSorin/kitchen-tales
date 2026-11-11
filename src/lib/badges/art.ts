@@ -12,9 +12,9 @@ const face = (x: number, y: number, s = 1, sleepy = false) => `<g transform="tra
   : `<circle cx="-8" cy="0" r="3.2" fill="${INK_TEXT}"/><circle cx="8" cy="0" r="3.2" fill="${INK_TEXT}"/><circle cx="-7" cy="-1.2" r="1" fill="#fff"/><circle cx="9" cy="-1.2" r="1" fill="#fff"/>`}
   <path d="M-5 7q5 5 10 0" fill="none" stroke="${INK_TEXT}" stroke-width="2.4" stroke-linecap="round"/><circle cx="-15" cy="6" r="4" fill="#ff6f8f" opacity=".45"/><circle cx="15" cy="6" r="4" fill="#ff6f8f" opacity=".45"/></g>`
 
-function star(cx: number, cy: number, R: number, r: number) {
+function star(cx: number, cy: number, R: number, r: number, n = 5) {
   let d = ''
-  for (let i = 0; i < 10; i++) { const a = (i * Math.PI) / 5, q = i % 2 ? r : R; d += `${i ? 'L' : 'M'}${(cx + q * Math.sin(a)).toFixed(1)} ${(cy - q * Math.cos(a)).toFixed(1)}` }
+  for (let i = 0; i < n * 2; i++) { const a = (i * Math.PI) / n, q = i % 2 ? r : R; d += `${i ? 'L' : 'M'}${(cx + q * Math.sin(a)).toFixed(1)} ${(cy - q * Math.cos(a)).toFixed(1)}` }
   return `${d}Z`
 }
 const rect = (x: number, y: number, w: number, h: number, r: number) => `M${x + r} ${y}H${x + w - r}Q${x + w} ${y} ${x + w} ${y + r}V${y + h - r}Q${x + w} ${y + h} ${x + w - r} ${y + h}H${x + r}Q${x} ${y + h} ${x} ${y + h - r}V${y + r}Q${x} ${y} ${x + r} ${y}Z`
@@ -73,6 +73,30 @@ const STORY: Record<string, Art> = {
   balloon: { d: 'M50 8C72 8 86 24 86 42C86 58 72 68 60 72L60 78L63 78L63 92L37 92L37 78L40 78L40 72C28 68 14 58 14 42C14 24 28 8 50 8Z', col: '#c9843a', det: `<path d="M50 8C72 8 86 24 86 42C86 60 66 73 50 73C34 73 14 60 14 42C14 24 28 8 50 8Z" fill="#ff9f5a"/><path d="M50 8C60 20 60 60 50 73C40 60 40 20 50 8Z" fill="#ffd24d" opacity=".7"/>${face(50, 40, 0.9)}`, r: -7 },
   teddy: { d: 'M26 30A12 12 0 1 1 40 20A30 30 0 0 1 60 20A12 12 0 1 1 74 30A32 32 0 0 1 82 54C82 74 68 88 50 88C32 88 18 74 18 54A32 32 0 0 1 26 30Z', col: '#d9a066', det: `<circle cx="28" cy="22" r="5" fill="#f3c9a0"/><circle cx="72" cy="22" r="5" fill="#f3c9a0"/><ellipse cx="50" cy="64" rx="15" ry="12" fill="#f8e3c8"/><circle cx="39" cy="48" r="3.4" fill="${INK_TEXT}"/><circle cx="61" cy="48" r="3.4" fill="${INK_TEXT}"/><ellipse cx="50" cy="59" rx="4.5" ry="3.2" fill="${INK_TEXT}"/><path d="M44 66q6 6 12 0" fill="none" stroke="${INK_TEXT}" stroke-width="2.2" stroke-linecap="round"/>`, r: 5 },
   ghost: { d: 'M50 10C70 10 82 26 82 46L82 90L72 81L61 90L50 81L39 90L28 81L18 90L18 46C18 26 30 10 50 10Z', col: '#f3f0ff', det: face(50, 44), r: -6 },
+  fox: { d: 'M12 12L36 30Q50 26 64 30L88 12L82 46Q86 60 74 72L50 88L26 72Q14 60 18 46Z', col: '#ff8f4d', r: -5,
+    det: `<path d="M20 20L34 31L24 40Z M80 20L66 31L76 40Z" fill="#7a3b1f" opacity=".55"/><path d="M22 56Q36 58 44 70L50 88L26 72Q18 64 22 56Z M78 56Q64 58 56 70L50 88L74 72Q82 64 78 56Z" fill="#fff5e6"/><circle cx="50" cy="80" r="4" fill="${INK_TEXT}"/>${face(50, 54, 0.85)}` },
+  cat: { d: 'M20 42L18 10L40 26Q50 23 60 26L82 10L80 42Q88 54 84 68Q78 88 50 88Q22 88 16 68Q12 54 20 42Z', col: '#ffb35c', r: 5,
+    det: `<path d="M23 34L22 18L34 27Z M77 34L78 18L66 27Z" fill="#ff8fa8"/><path d="M42 18L46 30M54 18L52 30" stroke="#e08a3a" stroke-width="3" stroke-linecap="round"/><path d="M10 62H30M12 70L30 66M90 62H70M88 70L70 66" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>${face(50, 58, 0.95)}` },
+  dragon: { d: 'M22 88Q10 64 24 46Q22 28 38 18L42 6L50 15L58 8L60 18Q78 20 84 38Q92 56 80 72L94 80L76 84Q64 92 44 90Z', col: '#6fd08f', r: -4,
+    det: `<ellipse cx="50" cy="72" rx="20" ry="14" fill="#fff1a8"/><path d="M58 64L66 60M56 72L66 70M52 80L60 80" stroke="#e8c85a" stroke-width="2.4" stroke-linecap="round"/><path d="M84 38Q96 30 98 18Q88 22 80 30Z" fill="#4fae70"/><circle cx="46" cy="32" r="2.5" fill="#4fae70"/><circle cx="64" cy="30" r="2.5" fill="#4fae70"/>${face(54, 44, 0.85)}` },
+  snail: { d: `${circle(58, 46, 30)}M14 88Q6 88 6 80L6 52Q6 40 17 40Q28 40 28 52L28 76L86 76Q94 76 94 82Q94 88 86 88ZM12 40L8 26M22 40L26 26`, col: '#ffd9a8', r: 4,
+    det: `<path d="M12 40L8 26M22 40L26 26" stroke="#e8b47a" stroke-width="3.5" stroke-linecap="round"/><circle cx="8" cy="25" r="3.5" fill="#e8b47a"/><circle cx="26" cy="25" r="3.5" fill="#e8b47a"/><path d="${circle(58, 46, 30)}" fill="#ff9f7a"/><path d="M58 46m-4 0a4 4 0 1 1 8 0a10 10 0 1 1-20 0a16 16 0 1 1 32 0a22 22 0 1 1-44 0" fill="none" stroke="#e07a5a" stroke-width="3.5" stroke-linecap="round"/>${face(17, 56, 0.55)}` },
+  bunny: { d: 'M30 50Q20 20 28 6Q40 2 42 40Q46 38 50 38Q54 38 58 40Q60 2 72 6Q80 20 70 50Q86 58 86 72Q86 90 50 90Q14 90 14 72Q14 58 30 50Z', col: '#f5f0ff', r: -6,
+    det: `<path d="M32 44Q26 22 31 12Q36 12 38 40Z M68 44Q74 22 69 12Q64 12 62 40Z" fill="#ffc2d4"/><ellipse cx="50" cy="78" rx="3.4" ry="2.6" fill="#ff8fa8"/>${face(50, 68, 0.95)}` },
+  umbrella: { d: 'M8 52Q10 14 50 12Q90 14 92 52Q84 45 76 52Q67 45 58 52Q50 45 42 52Q33 45 24 52Q16 45 8 52ZM50 52V82Q50 92 41 92Q33 92 33 84', col: '#7fd0ff', r: 5,
+    det: `<path d="M50 52V82Q50 92 41 92Q33 92 33 84" fill="none" stroke="#c9843a" stroke-width="6" stroke-linecap="round"/><path d="M50 12Q36 22 42 52Q33 45 24 52Q22 26 50 12Z M50 12Q64 22 58 52Q67 45 76 52Q78 26 50 12Z" fill="#ff9fc0"/><path d="M14 66q-3 6 0 8q3-2 0-8M86 66q-3 6 0 8q3-2 0-8M22 80q-3 6 0 8q3-2 0-8" fill="#bfe6ff"/>${face(50, 34, 0.7)}` },
+  key: { d: `${circle(30, 42, 24)}M50 36L92 36L92 50L84 50L84 62L72 62L72 50L50 50Z`, col: '#ffc247', r: -8,
+    det: `<path d="M56 43H90" stroke="#e0a320" stroke-width="2.4" stroke-linecap="round"/><circle cx="30" cy="42" r="17" fill="#ffd77a"/>${face(30, 42, 0.72)}` },
+  parrot: { d: 'M52 10Q76 10 78 36Q80 56 68 70L72 92L60 84L52 94L48 82Q30 78 28 58Q26 40 32 28Q38 10 52 10Z', col: '#5cd08a', r: 6,
+    det: `<path d="M44 12Q48 2 56 4Q52 8 54 12Z" fill="#ff6f6f"/><path d="M32 36Q14 38 18 54Q24 46 34 50Z" fill="#ffb347"/><ellipse cx="60" cy="58" rx="14" ry="20" fill="#3fae6e" transform="rotate(-15 60 58)"/><path d="M60 84L72 92L68 70Z" fill="#7fd0ff"/>${face(50, 36, 0.72)}` },
+  penguin: { d: 'M50 8Q76 8 80 40Q84 62 78 78L90 88L66 88Q50 92 34 88L10 88L22 78Q16 62 20 40Q24 8 50 8Z', col: '#3f4478', r: -5,
+    det: `<ellipse cx="50" cy="62" rx="22" ry="24" fill="#fff"/><ellipse cx="50" cy="34" rx="20" ry="15" fill="#fff"/><path d="M45 44L55 44L50 51Z" fill="#ffb347"/><path d="M28 88L22 92L38 92Z M72 88L78 92L62 92Z" fill="#ffb347"/>${face(50, 34, 0.7)}` },
+  comet: { d: `${star(64, 36, 28, 14)}M48 50Q30 72 6 94Q22 66 38 42Z`, col: '#ffd24d', r: 0,
+    det: `<path d="M48 50Q30 72 6 94Q22 66 38 42Z" fill="#ff9fc0"/><path d="M44 48Q30 66 12 86" fill="none" stroke="#7fd0ff" stroke-width="4" stroke-linecap="round"/>${face(64, 38, 0.62)}` },
+  snow: { d: star(50, 50, 42, 18, 6), col: '#cfeaff', r: 8,
+    det: `<path d="M50 14V86M19 32L81 68M19 68L81 32" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/><circle cx="50" cy="50" r="17" fill="#e8f5ff"/>${face(50, 50, 0.7)}` },
+  pumpkin: { d: 'M50 24Q54 8 64 8L62 24Q90 24 92 54Q92 88 50 88Q8 88 8 54Q10 24 50 24Z', col: '#ff9f3a', r: -4,
+    det: `<path d="M50 24Q54 8 64 8L62 24Z" fill="#6fae4f"/><path d="M34 26Q22 56 34 86M66 26Q78 56 66 86" fill="none" stroke="#e07a1f" stroke-width="3"/>${face(50, 58)}` },
 }
 
 const INKS: Record<Ink, string> = { add: '#c9553a', cook: '#2d7470', plan: '#b07a1f', family: '#3a3f8c', secret: '#6b4a7c' }
@@ -165,7 +189,7 @@ export function stickerSvg(b: Badge, earned: boolean, opts: { label?: string } =
   }
   return `<svg viewBox="-6 -6 112 112" role="img" aria-label="${label}"><g transform="rotate(${r} 50 50)">
     <path d="${a.d}" fill="rgb(0 0 0 / .35)" stroke="rgb(0 0 0 / .35)" stroke-width="11" stroke-linejoin="round" transform="translate(0 3)"/>
-    <path d="${a.d}" fill="#fff" stroke="#fff" stroke-width="11" stroke-linejoin="round"/>
+    <path d="${a.d}" fill="#fff" stroke="#fff" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
     <path d="${a.d}" fill="${a.col}" stroke="${a.col}" stroke-width="3" stroke-linejoin="round"/>${a.det}</g></svg>`
 }
 

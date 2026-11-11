@@ -723,6 +723,7 @@ export async function setStoryFavorite(s: Story, favorite: boolean) {
     if (res.errors?.length) throw new Error(res.errors.map((e) => e.message).join('; '))
   }
   await storiesFeed.changed((list) => list.map((x) => (x.id === s.id ? { ...x, favorite } : x)), false)
+  if (favorite) track({ t: 'favorite' })
 }
 
 export async function setStoryCover(s: Story, coverKey: string) {

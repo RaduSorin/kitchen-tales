@@ -5,7 +5,7 @@ import { folderOf, getPosition, markPlayed, setPosition } from './stories'
 import { useOfflineIds, useOnline } from './useOffline'
 import { useCoverUrl } from './useCoverUrl'
 import { storyArtwork } from './artwork'
-import { isKidLocked } from './kidMode'
+import { isKidLocked, isKidMode } from './kidMode'
 import { track } from './badges/store'
 
 /** How many stories to play in a row before stopping. */
@@ -316,7 +316,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     if (storyRef.current) setPosition(storyRef.current.id, undefined)
     played.current += 1
     const done = storyRef.current
-    if (done) track({ t: 'story-finished', storyId: done.id, folder: folderOf(done), folders: shelfFolders.current })
+    if (done) track({ t: 'story-finished', storyId: done.id, folder: folderOf(done), folders: shelfFolders.current, secs: done.durationSec, source: done.source, offline: fromDevice.current, kid: isKidMode() })
     const following = nextRef.current
     if (following && played.current < sleepRef.current && !isKidLocked()) load(following, { autoplay: true, continued: true })
     else {

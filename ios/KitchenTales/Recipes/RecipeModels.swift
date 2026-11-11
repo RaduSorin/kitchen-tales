@@ -19,6 +19,9 @@ struct Recipe: Codable, Identifiable, Hashable, Sendable {
     var mine: Bool
     var shared: Bool
     var spaceName: String?
+    /// Values per serving and allergens as JSON (src/lib/diet.ts), worked out by AI.
+    var nutrition: String?
+    var allergens: String?
     /// Screenshots only: a photo bundled with the app instead of one on the server.
     var demoPhoto: String?
 
@@ -54,19 +57,23 @@ struct Recipe: Codable, Identifiable, Hashable, Sendable {
         mine = mySpace.map { groups.contains($0) } ?? false
         shared = (row["readerGroups"] as? [String] ?? []).contains("everyone")
         spaceName = row["spaceName"] as? String
+        nutrition = Self.nonEmpty(row["nutrition"])
+        allergens = Self.nonEmpty(row["allergens"])
         demoPhoto = nil
     }
 
     init(id: String, title: String, category: String, servings: Int? = nil, minutes: Int? = nil,
          ingredients: [String] = [], steps: [String] = [], notes: String? = nil, createdAt: String? = nil,
-         mine: Bool = true, shared: Bool = false, spaceName: String? = nil, demoPhoto: String? = nil) {
+         mine: Bool = true, shared: Bool = false, spaceName: String? = nil, demoPhoto: String? = nil,
+         nutrition: String? = nil, allergens: String? = nil) {
         self.id = id; self.title = title; self.category = category; self.servings = servings; self.minutes = minutes
         self.ingredients = ingredients; self.steps = steps; stepPhotoKeys = []; self.notes = notes; sourceUrl = nil
         photoKey = nil; self.createdAt = createdAt; self.mine = mine; self.shared = shared; self.spaceName = spaceName
         self.demoPhoto = demoPhoto
+        self.nutrition = nutrition; self.allergens = allergens
     }
 
-    static let fields = "id title category servings minutes ingredients steps stepPhotoKeys notes sourceUrl photoKey createdAt spaceGroups readerGroups spaceName"
+    static let fields = "id title category servings minutes ingredients steps stepPhotoKeys notes sourceUrl photoKey createdAt spaceGroups readerGroups spaceName nutrition allergens"
 
     private static func lines(_ value: Any?) -> [String] {
         ((value as? [Any]) ?? []).compactMap { $0 as? String }.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }

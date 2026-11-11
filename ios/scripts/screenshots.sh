@@ -33,6 +33,9 @@ shot 1-home -demo YES -tab home
 shot 1b-home-week -demo YES -tab home -screen home-week
 shot 2-recipes -demo YES -tab recipes
 shot 2b-recipe -demo YES -tab home -screen recipe
+shot 2b2-recipe-steps -demo YES -tab home -screen recipe-steps
+shot 2b3-recipe-notes -demo YES -tab home -screen recipe-notes
+shot 2b4-recipe-facts -demo YES -tab home -screen recipe-facts
 shot 2c-cook -demo YES -tab home -screen cook
 shot 2d-week -demo YES -tab week
 shot 2e-week-add -demo YES -tab week -screen week-add

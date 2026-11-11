@@ -322,7 +322,7 @@ private struct AziPanel: View {
                     ForEach(Array(menu.enumerated()), id: \.offset) { i, r in
                         if i > 0 { HomeRowDivider() }
                         NavigationLink(value: RecipeRoute.recipe(r.id)) {
-                            HomeDishRow(recipe: r, line: ["Azi în meniu", Self.meta(r)].filter { !$0.isEmpty }.joined(separator: " · ")) { HomeChevron() }
+                            HomeDishRow(recipe: r, line: Self.todayLine(r)) { HomeChevron() }
                         }
                         .buttonStyle(.plain)
                         .recipeContextMenu(r)
@@ -333,6 +333,11 @@ private struct AziPanel: View {
             }
             TonightStory()
         }
+    }
+
+    static func todayLine(_ r: Recipe) -> String {
+        let m = meta(r)
+        return m.isEmpty ? "Azi în meniu" : "Azi în meniu · " + m
     }
 
     static func meta(_ r: Recipe) -> String {
@@ -416,7 +421,7 @@ private struct TonightStory: View {
                     StoryCover(story: pick.story, cornerRadius: 12)
                         .frame(width: 64, height: 64)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text((pick.resume ? "Ați rămas la jumătate" : "Pentru \(child), \(Self.evening ? "diseară" : "la culcare")").uppercased(with: Locale(identifier: "ro")))
+                        Text(Self.kicker(pick.resume, child: child))
                             .font(.ktLabel).tracking(1.2)
                             .foregroundStyle(Theme.accent)
                             .lineLimit(1)
@@ -454,6 +459,11 @@ private struct TonightStory: View {
             }
             .buttonStyle(PressScale())
         }
+    }
+
+    static func kicker(_ resume: Bool, child: String) -> String {
+        let text: String = resume ? "Ați rămas la jumătate" : "Pentru \(child), " + (evening ? "diseară" : "la culcare")
+        return text.uppercased(with: Locale(identifier: "ro"))
     }
 
     /// Evening from 18:00, like the sky on the stories side.
@@ -497,11 +507,11 @@ private struct WeekDayPanel: View {
             plates(days, todayKey: todayKey)
 
             HStack(alignment: .firstTextBaseline) {
-                Text(entries.isEmpty ? "\(label) e liberă" : "\(label) · \(isToday ? "\(RecipeText.dayName(day).lowercased()) \(Calendar.current.component(.day, from: day))" : date)")
+                Text(Self.title(day, label: label, isToday: isToday, empty: entries.isEmpty, date: date))
                     .font(.custom(AppFont.displaySemibold, size: 22, relativeTo: .title2))
                     .foregroundStyle(Theme.text)
                 Spacer()
-                Text(entries.isEmpty ? date : "\(entries.count) \(entries.count == 1 ? "fel" : "feluri")")
+                Text(entries.isEmpty ? date : (entries.count == 1 ? "1 fel" : "\(entries.count) feluri"))
                     .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .footnote))
                     .foregroundStyle(Theme.muted)
             }
@@ -514,8 +524,7 @@ private struct WeekDayPanel: View {
                         if k > 0 { HomeRowDivider() }
                         HStack(spacing: 8) {
                             NavigationLink(value: RecipeRoute.recipe(idea.r.id)) {
-                                HomeDishRow(recipe: idea.r, line: [idea.last.map { "gătită ultima dată \(TodayIdeas.addedOn($0))" } ?? "încă negătită",
-                                                                    idea.r.minutes.map(RecipeText.formatMinutes)].compactMap { $0 }.joined(separator: " · ")) { EmptyView() }
+                                HomeDishRow(recipe: idea.r, line: freeLine(idea)) { EmptyView() }
                             }
                             .buttonStyle(.plain)
                             HomeAddPill(title: "+ \(isToday ? "Azi" : Self.abbr[i])", label: "Pune \(idea.r.title) \(isToday ? "azi" : "pe \(RecipeText.dayName(day).lowercased())")") {
@@ -623,8 +632,7 @@ private struct WeekDayPanel: View {
     @ViewBuilder private func row(_ e: PlanEntry, _ r: Recipe, isToday: Bool) -> some View {
         let on = open == e.id
         let servings = store.servings(of: e)
-        let meta = e.leftovers ? "Resturi · nu trebuie gătit"
-            : [r.minutes.map(RecipeText.formatMinutes), servings.map { "\($0) porții" }].compactMap { $0 }.joined(separator: " · ")
+        let meta: String = e.leftovers ? "Resturi · nu trebuie gătit" : Self.dishLine(r, servings: servings)
         VStack(spacing: 0) {
             HStack(spacing: 10) {
                 Button { withAnimation(.snappy) { open = on ? nil : e.id } } label: {
@@ -691,12 +699,38 @@ private struct WeekDayPanel: View {
     }
 
     /// A free day's ideas: the notebook's dishes not planned this week, cooked longest ago first.
-    private func ideas(_ days: [Date]) -> [(r: Recipe, last: String?)] {
-        let planned = store.plannedThisWeek
-        return store.recipes.filter { $0.mine && !planned.contains($0.id) }
-            .map { (r: $0, last: store.lastCooked($0.id)) }
-            .sorted { a, b in (a.last ?? "") != (b.last ?? "") ? (a.last ?? "") < (b.last ?? "") : a.r.title < b.r.title }
-            .prefix(3).map { $0 }
+    private func ideas(_ days: [Date]) -> [FreeDayIdea] {
+        let planned: Set<String> = store.plannedThisWeek
+        var list: [FreeDayIdea] = []
+        for r in store.recipes where r.mine && !planned.contains(r.id) {
+            list.append(FreeDayIdea(r: r, last: store.lastCooked(r.id)))
+        }
+        list.sort { a, b in
+            let x = a.last ?? "", y = b.last ?? ""
+            if x != y { return x < y }
+            return a.r.title < b.r.title
+        }
+        return Array(list.prefix(3))
+    }
+
+    private func freeLine(_ idea: FreeDayIdea) -> String {
+        var parts: [String] = []
+        if let last = idea.last { parts.append("gătită ultima dată \(TodayIdeas.addedOn(last))") } else { parts.append("încă negătită") }
+        if let m = idea.r.minutes { parts.append(RecipeText.formatMinutes(m)) }
+        return parts.joined(separator: " · ")
+    }
+
+    static func title(_ day: Date, label: String, isToday: Bool, empty: Bool, date: String) -> String {
+        if empty { return label + " e liberă" }
+        let when: String = isToday ? RecipeText.dayName(day).lowercased() + " \(Calendar.current.component(.day, from: day))" : date
+        return label + " · " + when
+    }
+
+    static func dishLine(_ r: Recipe, servings: Int?) -> String {
+        var parts: [String] = []
+        if let m = r.minutes { parts.append(RecipeText.formatMinutes(m)) }
+        if let n = servings { parts.append("\(n) porții") }
+        return parts.joined(separator: " · ")
     }
 
     static func date(_ d: Date) -> String {
@@ -705,6 +739,11 @@ private struct WeekDayPanel: View {
         f.dateFormat = "d MMMM"
         return f.string(from: d)
     }
+}
+
+private struct FreeDayIdea {
+    let r: Recipe
+    let last: String?
 }
 
 /// "Pe ce zi o muți?": the week's days, the dish's day marked "acum".

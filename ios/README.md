@@ -57,3 +57,22 @@ Each pull request that changes `ios/` builds the app, runs the unit tests on the
 simulator and takes screenshots of the main screens: they are uploaded as the artifact
 `ios-screenshots` and committed to the `ios-screenshots` branch under `pr-<number>/`. The `testflight-readiness` job reports which App Store Connect secrets are set
 (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`), never their values.
+
+## TestFlight
+
+`.github/workflows/testflight.yml` archives the app, signs it and uploads it to TestFlight
+whenever a change to `ios/` reaches `main` (or by hand: Actions › TestFlight › Run workflow).
+Signing is cloud-managed: Xcode uses the App Store Connect API key to get the distribution
+certificate and profile, so no certificates live in the repo. Without the four secrets the job
+skips with a warning.
+
+One-time setup in App Store Connect:
+
+1. Accept the agreements, then *Apps › + › New App*: platform iOS, name "Bucătăria cu povești",
+   bundle ID `app.kitchentales.ios` (register it first under developer.apple.com › Identifiers
+   if it is not offered), SKU e.g. `kitchentales`.
+2. *Users and Access › Integrations › App Store Connect API › Team Keys › +*, role **Admin**
+   (needed for cloud-managed certificates). Download the `.p8` (only possible once).
+3. In GitHub, *Settings › Secrets and variables › Actions*: `ASC_KEY_ID`, `ASC_ISSUER_ID`,
+   `ASC_KEY_P8` (the whole file), `APPLE_TEAM_ID`.
+4. *TestFlight › Internal Testing*: add a group with Sorin and Lori; both install TestFlight.

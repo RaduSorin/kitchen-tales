@@ -42,6 +42,7 @@ struct DesignCatalogView: View {
                         Text("diacritice: ă â î ș ț Ă Â Î Ș Ț").font(.ktBodyEmphasis).foregroundStyle(Theme.accent)
                     }
                     .foregroundStyle(Theme.text)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .ktCard()
                 }
 

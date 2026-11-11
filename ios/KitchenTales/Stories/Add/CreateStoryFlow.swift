@@ -270,7 +270,10 @@ private struct GeneratingView: View {
 private struct VoicePill: View {
     let name: String
     var body: some View {
-        Label(name.isEmpty ? "Carmen" : String(name.split(separator: " - ").first ?? ""), systemImage: "headphones")
+        HStack(spacing: 6) {
+            Image(systemName: "headphones")
+            Text(name.isEmpty ? "Carmen" : String(name.split(separator: " - ").first ?? ""))
+        }
             .font(.custom(AppFont.bodySemibold, size: 13, relativeTo: .footnote))
             .foregroundStyle(Theme.text)
             .padding(.horizontal, 12)

@@ -125,8 +125,8 @@ struct StoriesHomeView: View {
         let tonightRow = StoryHomePlan.tonight(store.stories).filter { !onTop.contains($0.id) }
         let recent = store.recent.filter { !onTop.contains($0.id) }
         VStack(alignment: .leading, spacing: 22) {
-            StoryRow(title: StoryHomePlan.evening ? "Pentru diseară" : "Pentru azi", stories: tonightRow, openAll: openLibrary)
-            StoryRow(title: "Adăugate recent", stories: recent, openAll: openLibrary)
+            StoryCoverRow(title: StoryHomePlan.evening ? "Pentru diseară" : "Pentru azi", stories: tonightRow, openAll: openLibrary)
+            StoryCoverRow(title: "Adăugate recent", stories: recent, openAll: openLibrary)
             if tonightRow.isEmpty && recent.isEmpty {
                 NoteLink(text: "Toate poveștile", link: "Bibliotecă", action: openLibrary)
             }
@@ -156,7 +156,7 @@ struct StoriesHomeView: View {
                 .font(.custom(AppFont.body, size: 14, relativeTo: .subheadline))
                 .foregroundStyle(Theme.Night.muted)
         } else {
-            StoryRow(title: "Favorite", stories: list, openAll: openLibrary)
+            StoryCoverRow(title: "Favorite", stories: list, openAll: openLibrary)
         }
     }
 
@@ -244,7 +244,7 @@ enum StoryHomePlan {
 
 /// A section of covers: the title with "Toate", then a row of 124-point covers with the length
 /// and "Nou" on them and the folder under the title.
-struct StoryRow: View {
+struct StoryCoverRow: View {
     let title: String
     let stories: [Story]
     var openAll: (() -> Void)?

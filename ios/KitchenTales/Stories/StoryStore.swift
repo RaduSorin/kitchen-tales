@@ -70,7 +70,7 @@ final class StoryStore {
         return stories.filter { Self.fold($0.title).contains(q) || Self.fold(StoryLibrary.folderOf($0)).contains(q) }
     }
 
-    static func fold(_ s: String) -> String {
+    nonisolated static func fold(_ s: String) -> String {
         s.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "ro"))
             .trimmingCharacters(in: .whitespaces)
     }

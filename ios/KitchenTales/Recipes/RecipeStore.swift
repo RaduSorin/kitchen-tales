@@ -270,6 +270,18 @@ final class RecipeStore {
         save()
     }
 
+    /// Deletes our recipe with its photos (and its plan entries go with it on the phone).
+    func delete(_ id: String) async throws {
+        guard let r = recipe(id) else { return }
+        if !demo, let client {
+            try await client.deleteWithFiles([r.photoKey] + r.stepPhotoKeys, ref: r.fileRef) {
+                _ = try await client.run("mutation D($input: DeleteRecipeInput!) { deleteRecipe(input: $input) { id } }", variables: ["input": ["id": id]])
+            }
+        }
+        recipes.removeAll { $0.id == id }
+        save()
+    }
+
     // MARK: Sharing (Profil → Ce partajez)
 
     /// Shares a recipe of ours with every account ("everyone"), or makes it private again.

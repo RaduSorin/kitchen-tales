@@ -7,6 +7,7 @@ import SwiftUI
 struct PlayerView: View {
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
+    @Environment(KidMode.self) private var kid
     @State private var scrubbing: Double?
     @State private var showsQueue = false
 
@@ -34,6 +35,12 @@ struct PlayerView: View {
                     .padding(.bottom, 12)
                 }
                 .frame(maxWidth: .infinity)
+            }
+            .overlay(alignment: .topTrailing) {
+                // A child only listens: no deleting or moving from the player in kid mode.
+                if !kid.active {
+                    StoryMoreMenu(story: story).padding(.top, 14).padding(.trailing, 20)
+                }
             }
             .foregroundStyle(Theme.text)
             .background {

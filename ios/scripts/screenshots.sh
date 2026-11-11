@@ -44,6 +44,7 @@ shot 2j-editor-ideas -demo YES -tab recipes -screen editor-ideas
 shot 2k-editor-details -demo YES -tab recipes -screen editor-edit
 shot 2l-editor-ingredients -demo YES -tab recipes -screen editor-ingredients
 shot 2m-editor-steps -demo YES -tab recipes -screen editor-steps
+shot 2n-recipe-delete -demo YES -tab home -screen recipe-delete
 shot 3-profile -demo YES -tab profile
 shot 3b-profile-child -demo YES -tab profile -screen profile-child
 shot 3c-profile-family -demo YES -tab profile -screen profile-family
@@ -60,6 +61,15 @@ shot 6d-stories-folder -demo YES -area stories -tab library -screen folder
 shot 7-stories-favorites -demo YES -area stories -tab favorites
 shot 8-stories-mini-player -demo YES -area stories -tab library -screen mini-player
 shot 9-stories-player -demo YES -area stories -tab home -screen player
+shot 9b-story-move -demo YES -area stories -tab home -screen story-move
+shot 9c-story-move-new -demo YES -area stories -tab home -screen story-move-new
+shot 9d-story-text -demo YES -area stories -tab home -screen story-text
+shot 9e-story-delete -demo YES -area stories -tab home -screen story-delete
+shot 6e-folder-new -demo YES -area stories -tab library -screen folder-new
+shot 6f-folder-squares -demo YES -area stories -tab library -screen folder -folder-look "Pătrate"
+shot 6g-folder-share -demo YES -area stories -tab library -screen folder-share
+shot 6h-folder-edit -demo YES -area stories -tab library -screen folder-edit
+shot 6i-folder-delete -demo YES -area stories -tab library -screen folder-delete
 shot 10-stories-profile -demo YES -area stories -tab profile
 shot 11a-add -demo YES -area stories -tab add
 shot 11b-add-create -demo YES -area stories -tab add -screen add-create

@@ -9,8 +9,10 @@ struct LibraryView: View {
 
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
+    @Environment(KidMode.self) private var kid
     @AppStorage("library-mode") private var mode: Mode = .folders
     @State private var query = ""
+    @State private var creating = LaunchOptions.screen == "folder-new"
     @State private var path: [StoryFolder] = []
 
     var body: some View {
@@ -55,7 +57,7 @@ struct LibraryView: View {
         }
         .onAppear {
             // Screenshots: `-screen folder` opens the first folder.
-            if LaunchOptions.screen == "folder", path.isEmpty, let first = store.folders.first(where: { !$0.items.isEmpty }) {
+            if ["folder", "folder-menu", "folder-edit", "folder-delete", "folder-share"].contains(LaunchOptions.screen ?? ""), path.isEmpty, let first = store.folders.first(where: { !$0.items.isEmpty }) {
                 path = [first]
             }
         }
@@ -70,8 +72,14 @@ struct LibraryView: View {
                 .buttonStyle(PressableStyle())
                 .contextMenu { FolderActions(folder: folder) }
             }
+            if !kid.active {
+                Button { creating = true } label: { NewFolderCard().aspectRatio(1, contentMode: .fit) }
+                    .buttonStyle(PressableStyle())
+                    .accessibilityLabel("Folder nou")
+            }
         }
         .padding(.horizontal, 16)
+        .sheet(isPresented: $creating) { FolderSheet(folder: nil) }
     }
 
     private var shelves: some View {
@@ -207,7 +215,7 @@ private struct FolderActions: View {
                 }
             } else {
                 Button(role: .destructive) { store.offline.remove(folder.items.map(\.id)) } label: {
-                    Label("Șterge de pe telefon", systemImage: "trash")
+                    Label("Șterge de pe dispozitiv", systemImage: "trash")
                 }
             }
         }
@@ -254,53 +262,68 @@ struct StoryRow: View {
     }
 }
 
-/// A folder's stories, with Redă tot and Amestecă on top.
+/// A folder's stories, shown as Pătrate, Listă, Raft or Cover Flow, with the folder's ⋯ menu.
 struct FolderView: View {
+    enum Look: String, CaseIterable {
+        case squares = "Pătrate", list = "Listă", shelf = "Raft", coverFlow = "Cover Flow"
+        var symbol: String {
+            switch self {
+            case .squares: "square.grid.2x2"
+            case .list: "list.bullet"
+            case .shelf: "books.vertical"
+            case .coverFlow: "rectangle.stack"
+            }
+        }
+    }
+
     let folderName: String
+    @State private var name: String
     @State private var adding: AddMode?
+    @State private var editing = LaunchOptions.screen == "folder-edit" || LaunchOptions.screen == "folder-delete"
+    @State private var askShare = LaunchOptions.screen == "folder-share"
+    @AppStorage("folder-look") private var look: Look = .list
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
+    @Environment(KitchenModel.self) private var kitchen
+    @Environment(KidMode.self) private var kid
+    @Environment(ProfileStore.self) private var profile
+    @Environment(AuthModel.self) private var auth
+    @Environment(\.dismiss) private var dismiss
+
+    init(folderName: String) {
+        self.folderName = folderName
+        _name = State(initialValue: folderName)
+    }
 
     var body: some View {
-        let folder = store.folders.first { $0.name == folderName }
+        let folder = store.folders.first { $0.name == name }
         let items = folder?.items ?? []
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if let folder {
                     Text(folder.items.isEmpty ? "Niciun fișier încă." : folder.subtitle)
                         .font(.ktFootnote).foregroundStyle(Theme.Night.muted)
+                        .padding(.horizontal, 16)
                 }
                 if !items.isEmpty {
                     HStack(spacing: 12) {
-                        Button { Task { await player.play(items[0], queue: items, store: store) } } label: {
-                            Label("Redă tot", systemImage: "play.fill")
-                        }
-                        .buttonStyle(.ktPrimaryWide)
-                        Button {
-                            let mixed = items.shuffled()
-                            Task { await player.play(mixed[0], queue: mixed, store: store) }
-                        } label: { Label("Amestecă", systemImage: "shuffle") }
-                        .buttonStyle(.ktSecondaryWide)
+                        Button { play(items) } label: { Label("Redă tot", systemImage: "play.fill") }
+                            .buttonStyle(.ktPrimaryWide)
+                        Button { play(items.shuffled()) } label: { Label("Amestecă", systemImage: "shuffle") }
+                            .buttonStyle(.ktSecondaryWide)
                     }
-                }
-                LazyVStack(spacing: 0) {
-                    ForEach(items) { story in
-                        StoryRow(story: story, queue: items)
-                        Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 74)
-                    }
+                    .padding(.horizontal, 16)
+                    stories(items)
                 }
             }
-            .padding(.horizontal, 16)
             .padding(.bottom, 24)
+            .animation(.snappy, value: look)
         }
         .ktNightBackground()
-        .navigationTitle(folderName)
+        .navigationTitle([folder?.icon, name].compactMap { $0 }.joined(separator: " "))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
-            if !items.isEmpty {
-                ToolbarItem(placement: .topBarTrailing) { FolderDownloadButton(items: items) }
-            }
-            if let folder, folder.mine, !folder.builtin {
+            if let folder, folder.mine, !folder.builtin, !kid.active {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         ForEach(AddMode.allCases) { mode in
@@ -309,13 +332,176 @@ struct FolderView: View {
                     } label: {
                         Image(systemName: "plus.circle.fill").foregroundStyle(Theme.accent)
                     }
-                    .accessibilityLabel("Adaugă o poveste în dosar")
+                    .accessibilityLabel("Adaugă o poveste în folder")
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) { moreMenu(folder, items) }
         }
         .fullScreenCover(item: $adding) { mode in
-            AddFlow(mode: mode, folder: folderName)
+            AddFlow(mode: mode, folder: name)
         }
+        .sheet(isPresented: $editing) {
+            if let folder {
+                FolderSheet(folder: folder, onDeleted: { dismiss() }, onRenamed: { name = $0 })
+            }
+        }
+        .confirmationDialog("Cine vede folderul?", isPresented: $askShare, titleVisibility: .visible) {
+            if let folder { shareButtons(folder) }
+        } message: {
+            if let folder { Text(Self.shareText(folder)) }
+        }
+    }
+
+    @ViewBuilder private func stories(_ items: [Story]) -> some View {
+        switch look {
+        case .squares:
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], alignment: .leading, spacing: 16) {
+                ForEach(items) { story in
+                    Button { play(items, from: story) } label: { SquareTile(story: story) }
+                        .buttonStyle(PressableStyle())
+                        .storyContextMenu(story)
+                }
+            }
+            .padding(.horizontal, 16)
+        case .list:
+            LazyVStack(spacing: 0) {
+                ForEach(items) { story in
+                    StoryRow(story: story, queue: items)
+                    Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 74)
+                }
+            }
+            .padding(.horizontal, 16)
+        case .shelf:
+            // Rows of three covers, each standing on its shelf.
+            let rows = stride(from: 0, to: items.count, by: 3).map { Array(items[$0..<min($0 + 3, items.count)]) }
+            LazyVStack(alignment: .leading, spacing: 18) {
+                ForEach(rows, id: \.first!.id) { row in
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ForEach(row) { story in
+                                Button { play(items, from: story) } label: { CoverTile(story: story, width: 104) }
+                                    .buttonStyle(PressableStyle())
+                                    .storyContextMenu(story)
+                            }
+                        }
+                        Capsule().fill(Color.white.opacity(0.08)).frame(height: 3)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+        case .coverFlow:
+            CoverFlow(stories: items)
+        }
+    }
+
+    private func moreMenu(_ folder: StoryFolder?, _ items: [Story]) -> some View {
+        let missing = items.filter { !store.offline.saved.contains($0.id) }
+        return Menu {
+            Section("Vizualizare") {
+                ControlGroup {
+                    ForEach(Look.allCases, id: \.self) { l in
+                        Button { Haptics.select(); look = l } label: {
+                            Label(l.rawValue, systemImage: l == look ? "checkmark.circle.fill" : l.symbol)
+                        }
+                    }
+                }
+            }
+            if !items.isEmpty {
+                Section {
+                    Button { play(items) } label: { Label("Redă tot", systemImage: "play.fill") }
+                    Button { play(items.shuffled()) } label: { Label("Amestecă", systemImage: "shuffle") }
+                }
+            }
+            if let folder, !kid.active {
+                Section {
+                    if folder.mine && !folder.builtin {
+                        Button { askShare = true } label: { Label("Partajează folderul", systemImage: folder.shared ? "person.2.fill" : "person.2") }
+                    }
+                    if !items.isEmpty {
+                        if missing.isEmpty {
+                            Button { store.offline.remove(items.map(\.id)) } label: { Label("Șterge de pe dispozitiv", systemImage: "iphone.slash") }
+                        } else {
+                            Button { Task { await store.offline.download(missing, links: store.links) } } label: {
+                                Label("Salvează pentru offline (\(missing.count))", systemImage: "arrow.down.circle")
+                            }
+                        }
+                    }
+                    if folder.mine && !folder.builtin {
+                        Button { editing = true } label: { Label("Redenumește", systemImage: "pencil") }
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+        .accessibilityLabel("Mai multe")
+    }
+
+    @ViewBuilder private func shareButtons(_ folder: StoryFolder) -> some View {
+        let total = folder.items.filter(\.mine).count
+        let privateCount = total - folder.sharedCount
+        if !folder.shared {
+            Button("Partajează cu toate conturile" + (privateCount > 0 && folder.sharedCount > 0 ? " (încă \(Self.many(privateCount)))" : "")) {
+                share(folder, true)
+            }
+        }
+        if folder.sharedCount > 0 || (total == 0 && folder.rowShared) {
+            Button("Doar în spațiul nostru") { share(folder, false) }
+        }
+        Button("Renunță", role: .cancel) {}
+    }
+
+    static func many(_ n: Int) -> String { n == 1 ? "o poveste" : "\(n) povești" }
+
+    /// What the web's "Cine vede folderul?" says about the folder now.
+    static func shareText(_ folder: StoryFolder) -> String {
+        let total = folder.items.filter(\.mine).count
+        let privateCount = total - folder.sharedCount
+        let state: String
+        if total == 0 {
+            state = folder.rowShared ? "Folderul e partajat cu toate conturile." : "Folderul e doar în spațiul nostru."
+        } else if folder.shared {
+            state = "Toate cele \(many(total)) sunt partajate cu toate conturile."
+        } else if folder.sharedCount > 0 {
+            state = "\(folder.sharedCount) din \(total) povești sunt partajate cu toate conturile, \(privateCount == 1 ? "una e" : "\(privateCount) sunt") doar în spațiul nostru."
+        } else {
+            state = total == 1 ? "Povestea e doar în spațiul nostru." : "Toate cele \(total) povești sunt doar în spațiul nostru."
+        }
+        return state + "\n\nPartajarea se aplică folderului și fiecărei povești din el. Poveștile adăugate apoi în folder îi iau partajarea."
+    }
+
+    private func share(_ folder: StoryFolder, _ on: Bool) {
+        Task {
+            do {
+                try await store.setFolderShared(folder, on, spaceName: mySpaceName(profile, auth))
+                Haptics.success()
+                kitchen.say(on ? "Folderul e partajat cu toate conturile" : "Folderul e acum doar în spațiul nostru")
+            } catch {
+                kitchen.say("Nu am putut schimba partajarea. Verifică internetul.")
+            }
+        }
+    }
+
+    private func play(_ queue: [Story], from story: Story? = nil) {
+        guard let first = story ?? queue.first else { return }
+        Task { await player.play(first, queue: queue, store: store) }
+    }
+}
+
+/// A story as a square cover with its title and length under it ("Pătrate").
+private struct SquareTile: View {
+    let story: Story
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            StoryCover(story: story, cornerRadius: 16)
+                .aspectRatio(1, contentMode: .fit)
+            Text(story.title).font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.text).lineLimit(1)
+            if let time = story.minutesLabel {
+                Text(time).font(.system(size: 12)).foregroundStyle(Theme.Night.muted)
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -468,25 +654,3 @@ struct OfflineBadge: View {
     }
 }
 
-/// Folder page: download the whole folder, or see that it is all on the phone.
-private struct FolderDownloadButton: View {
-    let items: [Story]
-    @Environment(StoryStore.self) private var store
-
-    var body: some View {
-        let offline = store.offline
-        let missing = items.filter { !offline.saved.contains($0.id) }
-        let busy = items.contains { offline.downloading.contains($0.id) }
-        Button {
-            Task { await offline.download(missing, links: store.links) }
-        } label: {
-            if busy {
-                ProgressView().tint(Theme.Night.moon)
-            } else {
-                Image(systemName: missing.isEmpty ? "checkmark.circle.fill" : "arrow.down.circle")
-            }
-        }
-        .disabled(missing.isEmpty || busy)
-        .accessibilityLabel(missing.isEmpty ? "Tot dosarul e pe telefon" : "Descarcă dosarul pentru offline")
-    }
-}

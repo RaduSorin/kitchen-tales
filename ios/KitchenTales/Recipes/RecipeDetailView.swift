@@ -10,6 +10,11 @@ struct RecipeDetailView: View {
     @State private var servings: Int?
     @State private var ticked: Set<Int> = []
     @State private var editing: Recipe?
+    @State private var confirmDelete = LaunchOptions.screen == "recipe-delete"
+    @State private var deleting = false
+    @Environment(ProfileStore.self) private var profile
+    @Environment(AuthModel.self) private var auth
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         if let r = store.recipe(recipeId) {
@@ -50,6 +55,10 @@ struct RecipeDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { moreMenu(r) } }
+        .confirmationDialog("Ștergi rețeta? Nu se mai poate recupera.", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Da, șterge", role: .destructive) { remove(r) }
+            Button("Nu", role: .cancel) {}
+        }
         .fullScreenCover(item: $editing) { r in
             RecipeEditorScreen(recipe: r, server: store.server) { saved in
                 editing = nil
@@ -110,24 +119,67 @@ struct RecipeDetailView: View {
         return "Gătește pas cu pas"
     }
 
+    /// The web's ⋯ of a recipe: who sees it, Editează, favorite, send, source, and Șterge apart.
     private func moreMenu(_ r: Recipe) -> some View {
         let favorite = store.isFavorite(r.id)
         return Menu {
             if r.mine {
-                Button { editing = r } label: { Label("Editează", systemImage: "pencil") }
+                Section(r.shared ? "Rețeta · partajată" : "Rețeta · doar la noi") {
+                    Button { share(r, !r.shared) } label: {
+                        Label(r.shared ? "Oprește partajarea" : "Partajează cu toate conturile", systemImage: r.shared ? "person.2.slash" : "person.2")
+                    }
+                    Button { editing = r } label: { Label("Editează rețeta", systemImage: "pencil") }
+                }
+            } else {
+                Section("De la \(r.spaceName ?? "alt cont"). O poți găti, planifica și pune pe listă, dar nu o poți modifica.") {}
             }
-            Button { Task { await store.toggleFavorite(r.id) } } label: {
-                Label(favorite ? "Scoate din favorite" : "Pune la favorite", systemImage: favorite ? "heart.slash" : "heart")
+            Section {
+                Button { Task { await store.toggleFavorite(r.id) } } label: {
+                    Label(favorite ? "Scoate din favorite" : "Pune la favorite", systemImage: favorite ? "heart.slash" : "heart")
+                }
+                ShareLink(item: RecipeShare.text(r)) { Label("Trimite", systemImage: "square.and.arrow.up") }
+                if let source = r.sourceUrl, let url = URL(string: source) {
+                    Link(destination: url) { Label("Deschide sursa", systemImage: "safari") }
+                }
             }
-            ShareLink(item: RecipeShare.text(r)) { Label("Partajează", systemImage: "square.and.arrow.up") }
-            if let source = r.sourceUrl, let url = URL(string: source) {
-                Link(destination: url) { Label("Deschide sursa", systemImage: "safari") }
+            if r.mine {
+                Section {
+                    Button(role: .destructive) { confirmDelete = true } label: { Label("Șterge rețeta", systemImage: "trash") }
+                }
             }
         } label: {
             Image(systemName: favorite ? "heart.fill" : "ellipsis")
                 .foregroundStyle(favorite ? Theme.accent : Theme.text)
         }
+        .disabled(deleting)
         .accessibilityLabel("Mai multe")
+    }
+
+    private func share(_ r: Recipe, _ on: Bool) {
+        Task {
+            if await store.setShared(r.id, on, spaceName: mySpaceName(profile, auth)) {
+                Haptics.success()
+                kitchen.say(on ? "Rețeta e partajată cu toate conturile" : "Rețeta e acum doar la noi")
+            } else {
+                kitchen.say("Nu am putut schimba partajarea. Verifică internetul.")
+            }
+        }
+    }
+
+    private func remove(_ r: Recipe) {
+        deleting = true
+        Task {
+            do {
+                try await store.delete(r.id)
+                Haptics.success()
+                dismiss()
+                kitchen.say("Am șters rețeta")
+            } catch {
+                Haptics.warning()
+                kitchen.say("Nu am putut șterge rețeta. Verifică internetul.")
+            }
+            deleting = false
+        }
     }
 
     private func addToList(_ r: Recipe) {

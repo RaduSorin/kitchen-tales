@@ -44,6 +44,7 @@ targets:
         UIUserInterfaceStyle: Dark
         UILaunchScreen:
           UIColorName: LaunchBackground
+        NSMicrophoneUsageDescription: Ca să înregistrezi povești citite cu vocea ta.
         # Stories keep playing with the screen off and show on the Lock Screen.
         UIBackgroundModes:
           - audio

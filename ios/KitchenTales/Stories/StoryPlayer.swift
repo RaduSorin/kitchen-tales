@@ -83,7 +83,10 @@ final class StoryPlayer {
             isLoading = false
             return
         }
-        guard let links = store.links, let url = await links.url(for: story.audioKey, ref: story.fileRef) else {
+        let local = store.offline.localFile(story.id)
+        var remote: URL?
+        if local == nil, let links = store.links { remote = await links.url(for: story.audioKey, ref: story.fileRef) }
+        guard let url = local ?? remote else {
             isLoading = false
             failure = "Povestea nu se poate deschide acum. Verifică internetul."
             return

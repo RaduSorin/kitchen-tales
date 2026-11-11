@@ -11,9 +11,10 @@ struct LibraryView: View {
     @Environment(StoryPlayer.self) private var player
     @AppStorage("library-mode") private var mode: Mode = .folders
     @State private var query = ""
+    @State private var path: [StoryFolder] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Picker("Vizualizare", selection: $mode) {
@@ -51,6 +52,12 @@ struct LibraryView: View {
             .navigationTitle("Bibliotecă")
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Caută povești")
             .navigationDestination(for: StoryFolder.self) { FolderView(folderName: $0.name) }
+        }
+        .onAppear {
+            // Screenshots: `-screen folder` opens the first folder.
+            if LaunchOptions.screen == "folder", path.isEmpty, let first = store.folders.first(where: { !$0.items.isEmpty }) {
+                path = [first]
+            }
         }
     }
 
@@ -193,6 +200,16 @@ private struct FolderActions: View {
                 let mixed = folder.items.shuffled()
                 Task { await player.play(mixed[0], queue: mixed, store: store) }
             } label: { Label("Amestecă", systemImage: "shuffle") }
+            let missing = folder.items.filter { !store.offline.saved.contains($0.id) }
+            if !missing.isEmpty {
+                Button { Task { await store.offline.download(missing, links: store.links) } } label: {
+                    Label("Descarcă pentru offline", systemImage: "arrow.down.circle")
+                }
+            } else {
+                Button(role: .destructive) { store.offline.remove(folder.items.map(\.id)) } label: {
+                    Label("Șterge de pe telefon", systemImage: "trash")
+                }
+            }
         }
     }
 }
@@ -219,8 +236,11 @@ struct StoryRow: View {
                         }
                     VStack(alignment: .leading, spacing: 3) {
                         Text(story.title).font(.ktBodyEmphasis).foregroundStyle(Theme.text).lineLimit(2)
-                        Text(story.detailLine)
-                            .font(.ktFootnote).foregroundStyle(Theme.Night.muted).lineLimit(1)
+                        HStack(spacing: 5) {
+                            OfflineBadge(id: story.id)
+                            Text(story.detailLine)
+                                .font(.ktFootnote).foregroundStyle(Theme.Night.muted).lineLimit(1)
+                        }
                     }
                     Spacer(minLength: 0)
                 }
@@ -237,6 +257,7 @@ struct StoryRow: View {
 /// A folder's stories, with Redă tot and Amestecă on top.
 struct FolderView: View {
     let folderName: String
+    @State private var adding: AddMode?
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
 
@@ -275,6 +296,26 @@ struct FolderView: View {
         .ktNightBackground()
         .navigationTitle(folderName)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            if !items.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) { FolderDownloadButton(items: items) }
+            }
+            if let folder, folder.mine, !folder.builtin {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        ForEach(AddMode.allCases) { mode in
+                            Button { adding = mode } label: { Label(mode.title, systemImage: mode.symbol) }
+                        }
+                    } label: {
+                        Image(systemName: "plus.circle.fill").foregroundStyle(Theme.accent)
+                    }
+                    .accessibilityLabel("Adaugă o poveste în dosar")
+                }
+            }
+        }
+        .fullScreenCover(item: $adding) { mode in
+            AddFlow(mode: mode, folder: folderName)
+        }
     }
 }
 
@@ -405,5 +446,45 @@ struct FavoritesView: View {
             .refreshable { await store.refresh() }
             .navigationTitle("Favorite")
         }
+    }
+}
+
+/// A small arrow next to a story saved on the phone (a spinner while it downloads).
+struct OfflineBadge: View {
+    let id: String
+    @Environment(StoryStore.self) private var store
+
+    var body: some View {
+        if store.offline.downloading.contains(id) {
+            ProgressView().controlSize(.mini).tint(Theme.Night.moon)
+        } else if store.offline.saved.contains(id) {
+            Image(systemName: "arrow.down.circle.fill")
+                .font(.caption)
+                .foregroundStyle(Theme.Night.moon)
+                .accessibilityLabel("Salvată pe telefon")
+        }
+    }
+}
+
+/// Folder page: download the whole folder, or see that it is all on the phone.
+private struct FolderDownloadButton: View {
+    let items: [Story]
+    @Environment(StoryStore.self) private var store
+
+    var body: some View {
+        let offline = store.offline
+        let missing = items.filter { !offline.saved.contains($0.id) }
+        let busy = items.contains { offline.downloading.contains($0.id) }
+        Button {
+            Task { await offline.download(missing, links: store.links) }
+        } label: {
+            if busy {
+                ProgressView().tint(Theme.Night.moon)
+            } else {
+                Image(systemName: missing.isEmpty ? "checkmark.circle.fill" : "arrow.down.circle")
+            }
+        }
+        .disabled(missing.isEmpty || busy)
+        .accessibilityLabel(missing.isEmpty ? "Tot dosarul e pe telefon" : "Descarcă dosarul pentru offline")
     }
 }

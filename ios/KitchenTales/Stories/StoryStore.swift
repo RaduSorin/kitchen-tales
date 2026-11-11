@@ -14,6 +14,8 @@ final class StoryStore {
     private(set) var showingCopy = false
 
     let links: FileLinks?
+    /// Stories saved on this phone for listening without internet.
+    let offline = OfflineAudio()
     private let client: GraphQLClient?
     private let cache: DeviceCache
     private let mySpace: () -> String?
@@ -35,6 +37,7 @@ final class StoryStore {
             stories = DemoLibrary.stories
             folderRows = []
             phase = .loaded
+            offline.showAsSaved(["d1", "d2", "d3"])
         } else if let saved = cache.read(Saved.self, key: Self.cacheKey) {
             stories = saved.stories
             folderRows = saved.folders
@@ -62,6 +65,19 @@ final class StoryStore {
         let short = stories.filter { ($0.durationSec ?? 0) > 0 && ($0.durationSec ?? 0) <= 15 * 60 }
         let pool = short.isEmpty ? stories : short
         return Array((pool.filter(\.favorite) + pool.filter { !$0.favorite }).prefix(10))
+    }
+
+    /// What adding a story needs (nil without a server or a space).
+    func creator(account: Account?) -> StoryCreator? {
+        guard let client, let account, let space = account.space else { return nil }
+        return StoryCreator(client: client, space: space, spaceName: account.displayName)
+    }
+
+    /// A story just added on this phone: at the top of the library right away.
+    func added(_ story: Story) {
+        stories.removeAll { $0.id == story.id }
+        stories.insert(story, at: 0)
+        cache.write(Saved(stories: stories, folders: folderRows), key: Self.cacheKey)
     }
 
     func search(_ text: String) -> [Story] {
@@ -95,6 +111,7 @@ final class StoryStore {
             stories = list
             folderRows = folderRowsRaw.compactMap { StoryFolderRow(row: $0, mySpace: space) }
             cache.write(Saved(stories: stories, folders: folderRows), key: Self.cacheKey)
+            offline.prune(keeping: Set(stories.map(\.id)))
             showingCopy = false
             phase = .loaded
         } catch {

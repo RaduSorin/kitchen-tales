@@ -151,6 +151,13 @@ final class DeviceCache: @unchecked Sendable {
         for file in files { try? FileManager.default.removeItem(at: file) }
     }
 
+    /// A folder inside the cache for files (story audio kept for offline); cleared with the rest.
+    func folder(_ name: String) -> URL {
+        let url = directory.appendingPathComponent(name, isDirectory: true)
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+
     private func url(_ key: String) -> URL {
         let safe = key.map { $0.isLetter || $0.isNumber || $0 == "-" ? $0 : "_" }
         return directory.appendingPathComponent(String(safe) + ".json")

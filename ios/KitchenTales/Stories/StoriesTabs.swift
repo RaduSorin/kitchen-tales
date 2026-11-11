@@ -24,22 +24,22 @@ struct StoriesTabs: View {
                     .miniPlayerInset()
             }
             Tab("Adaugă", systemImage: "plus", value: StoryTab.add) {
-                NavigationStack {
-                    EmptyStateView(symbol: "plus.circle", title: "În curând",
-                                   message: "Adăugarea unei povești (fișier, înregistrare sau poveste nouă) vine într-un pas următor. Până atunci, adaug-o din aplicația web.")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .ktNightBackground()
-                        .navigationTitle("Adaugă")
-                }
+                AddStoryView(onAdded: { tab = .home })
                 .miniPlayerInset()
             }
             Tab("Profil", systemImage: "person.crop.circle", value: StoryTab.profile) {
-                ProfileView()
+                ProfileView(night: true)
                     .miniPlayerInset()
             }
         }
         .onChange(of: tab) { Haptics.select() }
         .storyPlayerSheet()
+        .alert("Descărcarea nu a mers", isPresented: Binding(get: { store.offline.lastError != nil },
+                                                              set: { if !$0 { store.offline.clearError() } })) {
+            Button("OK") { store.offline.clearError() }
+        } message: {
+            Text(store.offline.lastError ?? "")
+        }
         .task {
             if let first = store.stories.first, ["player", "mini-player"].contains(LaunchOptions.screen) {
                 await StoryPlayer.shared.play(first, queue: store.stories, store: store)

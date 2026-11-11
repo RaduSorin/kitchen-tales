@@ -86,8 +86,27 @@ extension View {
 
     /// The stories-side night-sky background.
     func ktNightBackground() -> some View {
-        background(Theme.Night.gradient.ignoresSafeArea())
+        background { NightBackdrop() }
             .scrollContentBackground(.hidden)
+    }
+}
+
+/// The stories background from the web: near-black with a violet light at the top left and a
+/// warm one at the top right (`.cover-glow::before` in src/stories-a.css).
+struct NightBackdrop: View {
+    var body: some View {
+        GeometryReader { geo in
+            let w = max(geo.size.width, 1)
+            ZStack {
+                Theme.Night.top
+                RadialGradient(colors: [Color(hex: 0x744296).opacity(0.5), .clear],
+                               center: UnitPoint(x: 0.12, y: 0), startRadius: 0, endRadius: w * 1.0)
+                RadialGradient(colors: [Color(hex: 0xBE7A3E).opacity(0.3), .clear],
+                               center: UnitPoint(x: 0.95, y: 0.1), startRadius: 0, endRadius: w * 0.85)
+            }
+        }
+        .ignoresSafeArea()
+        .accessibilityHidden(true)
     }
 }
 

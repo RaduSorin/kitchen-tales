@@ -145,3 +145,73 @@
 
 /* Long words (links, words without spaces) wrap instead of being cut. */
 .ragaz, .ragaz .rg-entry p, .ragaz .rg-msg, .ragaz .rg-steps { overflow-wrap: anywhere; }
+
+/* The herbarium (pages/ragaz/Herbarium.tsx): pressed plants on a light paper page inside Răgaz. */
+.hb-plant { display: block; width: 100%; }
+.hb-plant svg, .hb-card svg { display: block; width: 100%; height: auto; overflow: visible; }
+.hb-card { display: block; }
+
+.hb-page { padding-bottom: 40px; }
+.hb-paper {
+  --ink: #4a3b2c; --pencil: rgb(74 59 44 / .5);
+  position: relative; display: grid; gap: 12px; padding: 16px 16px 24px; border-radius: 22px; color: var(--ink);
+  background-color: #efe6d2;
+  background-image: linear-gradient(90deg, rgb(0 0 0 / .07), transparent 16px), repeating-linear-gradient(0deg, transparent 0 31px, rgb(74 59 44 / .05) 31px 32px);
+  box-shadow: 0 18px 40px rgb(0 0 0 / .45);
+}
+.hb-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.hb-back { width: 40px; height: 40px; border: 0; border-radius: 50%; display: grid; place-items: center; background: rgb(74 59 44 / .1); color: var(--ink); cursor: pointer; }
+.hb-back-pill { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 9px 14px 9px 10px; background: var(--ink); color: #efe6d2; font: inherit; font-weight: 800; cursor: pointer; }
+.hb-count { font-size: .74rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #8a6a3a; }
+.hb-title { margin: 0; font-family: 'Caveat', 'Bradley Hand', cursive; font-weight: 600; font-size: 2.6rem; line-height: 1; }
+.hb-group { margin: 10px 0 2px; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: rgb(74 59 44 / .6); }
+.hb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 4px 6px; }
+.hb-cell { position: relative; display: grid; justify-items: center; align-content: start; gap: 0; padding: 4px 2px 6px; border: 0; border-radius: 14px; background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.hb-cell .hb-plant { width: 84px; }
+.hb-cell-name { font-family: 'Caveat', 'Bradley Hand', cursive; font-weight: 600; font-size: 1.12rem; line-height: 1.05; text-align: center; }
+.hb-cell.off .hb-cell-name { color: var(--pencil); }
+.hb-lvl { position: absolute; top: 4px; right: 8px; font-family: 'Caveat', cursive; font-weight: 600; font-size: 1.1rem; color: #8a6a3a; }
+.hb-cell.off .hb-lvl { color: var(--pencil); }
+.hb-cell:focus-visible, .hb-back:focus-visible, .hb-back-pill:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.hb-cell.waiting .hb-plant { animation: hb-breathe 2.4s ease-in-out infinite; }
+.hb-tag { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); padding: 2px 9px; border-radius: 999px; background: var(--ink); color: #efe6d2; font-size: .7rem; font-weight: 800; }
+.hb-cell.landed .hb-plant { animation: hb-settle .9s ease-out; }
+.hb-cell.landed::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; border: 2px solid rgb(201 162 76 / .7); animation: hb-ring .9s ease-out forwards; pointer-events: none; }
+.hb-note { margin: 12px 0 0; font-size: .92rem; line-height: 1.45; color: rgb(74 59 44 / .75); }
+.hb-quiet { display: flex; align-items: center; gap: 10px; font-size: .92rem; color: var(--ink); }
+.hb-quiet input { width: 20px; height: 20px; accent-color: #6b7f55; }
+@keyframes hb-breathe { 50% { transform: scale(1.06) rotate(-2deg); } }
+@keyframes hb-settle { 0% { transform: scale(1.12); } 60% { transform: scale(.97); } 100% { transform: none; } }
+@keyframes hb-ring { from { opacity: 1; transform: scale(.7); } to { opacity: 0; transform: scale(1.25); } }
+
+.hb-row .hb-row-plants { display: flex; flex: none; }
+.hb-row .hb-plant { width: 40px; margin-left: -8px; }
+.hb-dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--accent); vertical-align: middle; }
+
+/* The moment a plant comes. */
+.hb-layer { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  background: radial-gradient(120% 70% at 50% 38%, #2a2420 0%, #15120f 60%, #0b0a0e 100%); color: #f4efe6; overflow-y: auto; }
+.hb-pop { display: grid; justify-items: center; gap: 12px; text-align: center; max-width: 340px; }
+.hb-press { width: min(52vw, 190px); filter: drop-shadow(0 16px 24px rgb(0 0 0 / .5)); transform: rotate(-2deg); animation: hb-press 2.4s cubic-bezier(.3, .7, .3, 1) both; }
+.hb-text { display: grid; gap: 6px; justify-items: center; animation: hb-fade 1s ease 1.4s both; }
+.hb-name { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 1.7rem; line-height: 1.1; }
+.hb-text p { margin: 0; color: #aaa3b2; line-height: 1.4; }
+.hb-text em { font-family: 'Fraunces', Georgia, serif; font-size: 1rem; }
+.hb-btn { min-width: 220px; animation: hb-fade 1s ease 1.7s both; }
+.hb-later { color: #aaa3b2; animation: hb-fade 1s ease 1.7s both; }
+@keyframes hb-press { 0% { transform: scale(1.45) rotate(7deg); opacity: 0; filter: blur(3px) drop-shadow(0 30px 30px rgb(0 0 0 / .3)); } 45% { transform: scale(1.04) rotate(-2deg); opacity: 1; filter: drop-shadow(0 16px 24px rgb(0 0 0 / .5)); } 62% { transform: scale(.97) rotate(-2deg); } 100% { transform: scale(1) rotate(-2deg); } }
+@keyframes hb-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.hb-flyer { position: fixed; z-index: 90; pointer-events: none; transform-origin: 0 0; filter: drop-shadow(0 12px 16px rgb(0 0 0 / .35)); }
+.hb-flyer svg { display: block; width: 100%; height: auto; }
+
+.hb-detail { display: grid; justify-items: center; gap: 10px; text-align: center; padding-bottom: 8px; }
+.hb-detail .hb-card { width: 170px; transform: rotate(-2deg); }
+.hb-detail .hb-detail-sketch { width: 140px; padding: 10px; border-radius: 12px; background: #efe6d2; }
+.hb-detail p { margin: 0; line-height: 1.45; max-width: 34ch; }
+.hb-detail small { color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hb-press, .hb-text, .hb-btn, .hb-later, .hb-cell.waiting .hb-plant, .hb-cell.landed .hb-plant, .hb-cell.landed::after { animation: none !important; }
+}
+.hb-tag { white-space: nowrap; }
+.hb-pop .hb-later { justify-self: center; }

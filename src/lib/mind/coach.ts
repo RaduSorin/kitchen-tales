@@ -7,6 +7,7 @@ import { generateClient } from 'aws-amplify/data'
 import type { Schema } from '../../../amplify/data/resource'
 import type { CoachInput, CoachMessage, CoachOutput } from '../../../amplify/shared/mindCoach'
 import { getItem, putItem } from './vault'
+import { mindSaved } from './store'
 import { getMonth, listNotes } from './store'
 import { monthSummary } from './stats'
 import { monthName, thisMonth } from './model'
@@ -29,7 +30,7 @@ export const saveSettings = (s: CoachSettings) => putItem(KIND, 'settings', s)
 export const getNote = async () => (await getItem<{ text: string }>(KIND, 'note'))?.text ?? ''
 export const saveNote = (text: string) => putItem(KIND, 'note', { text: text.slice(0, 6000) })
 export const getChat = async () => (await getItem<ChatMessage[]>(KIND, 'chat')) ?? []
-export const saveChat = (list: ChatMessage[]) => putItem(KIND, 'chat', list.slice(-KEEP))
+export const saveChat = async (list: ChatMessage[]) => { await putItem(KIND, 'chat', list.slice(-KEEP)); mindSaved() }
 
 async function call<T extends CoachOutput>(input: CoachInput): Promise<T> {
   const res = await client.mutations.mindCoach({ input: JSON.stringify(input) })

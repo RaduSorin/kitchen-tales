@@ -4,6 +4,12 @@
 import { getItem, getLocal, listItems, putItem, removeItem, setLocal } from './vault'
 import { KIND, type Exercise, type MonthPlan, type Note } from './model'
 
+// Told after each save, so the herbarium (herbStore.ts) can look for a new plant.
+const savedListeners = new Set<() => void>()
+export function onMindSaved(fn: () => void) { savedListeners.add(fn); return () => { savedListeners.delete(fn) } }
+export function mindSaved() { savedListeners.forEach((l) => l()) }
+const told = <A extends unknown[]>(fn: (...a: A) => Promise<void>) => async (...a: A) => { await fn(...a); mindSaved() }
+
 const byTitle = (a: Exercise, b: Exercise) => a.title.localeCompare(b.title, 'ro')
 
 // ---- the exercise bank ----
@@ -16,16 +22,16 @@ export async function listExercises() {
 }
 
 export const getExercise = (id: string) => getItem<Exercise>(KIND.exercise, id)
-export const saveExercise = (e: Exercise & { order?: number }) => putItem(KIND.exercise, e.id, e)
+export const saveExercise = told((e: Exercise & { order?: number }) => putItem(KIND.exercise, e.id, e))
 export const removeExercise = (id: string) => removeItem(KIND.exercise, id)
 
 // ---- months ----
 
 export const getMonth = (id: string) => getItem<MonthPlan>(KIND.month, id)
-export async function saveMonth(m: MonthPlan) {
+export const saveMonth = told(async (m: MonthPlan) => {
   await putItem(KIND.month, m.id, { ...m, savedAt: Date.now() })
   await rememberPlanned([m])
-}
+})
 
 /** Notes on this phone which months are planned and which Fridays have a theme (for the Home card). */
 export async function rememberPlanned(months: MonthPlan[]) {
@@ -39,7 +45,7 @@ export async function listMonths() {
 
 // ---- notes ----
 
-export const saveNote = (n: Note) => putItem(KIND.note, n.id, n)
+export const saveNote = told((n: Note) => putItem(KIND.note, n.id, n))
 export const removeNote = (id: string) => removeItem(KIND.note, id)
 /** Newest first. */
 export async function listNotes() {

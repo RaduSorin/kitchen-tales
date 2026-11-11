@@ -3,7 +3,7 @@
 // screen. Listening goes through the same Amazon Transcribe streaming as the dictation button;
 // speaking uses the phone's own Romanian voice.
 import { useEffect, useRef, useState } from 'react'
-import { startDictation, type Dictation } from './dictation'
+import { dictationError, openMic, startDictation, type Dictation, type Mic } from './dictation'
 
 export type Command =
   | { kind: 'next' } | { kind: 'prev' } | { kind: 'repeat' } | { kind: 'ingredients' }
@@ -28,11 +28,11 @@ export function parseCommand(said: string): Command | undefined {
   const rules: [Command['kind'], RegExp][] = [
     ['stop', / (nu mai asculta|opreste ascultarea|gata cu vocea|stop ascultare) /],
     ['pause', / (opreste|pauza|stop) (timerul|cronometrul|alarma)? ?/],
-    ['timer', / (porneste|start|da drumul la|pune) (timerul|cronometrul|alarma|minutarul)? ?|^ (timerul|timer|cronometrul|minutarul) $/],
+    ['timer', / (porneste|start|da drumul la|pune) (timerul|cronometrul|alarma|minutarul)? ?|^ (timerul|timer|cronometrul|minutarul) $| continua (timerul|cronometrul|minutarul) /],
     ['ingredients', / (ingredientele|ingrediente|ce ingrediente|ce imi trebuie) /],
     ['repeat', / (repeta|din nou|inca o data|ce ai zis|citeste) /],
     ['prev', / (inapoi|anterior|pasul anterior|precedent) /],
-    ['next', / (urmatorul|urmatorul pas|mai departe|inainte|next|am terminat|gata) /],
+    ['next', / (urmatorul|urmatoru|urmatorul pas|pasul urmator|urmatoarea|mai departe|inainte|continua|continuam|hai mai departe|next|am terminat|gata) /],
   ]
   let best: { kind: Command['kind']; at: number } | undefined
   for (const [kind, re] of rules) {
@@ -64,68 +64,115 @@ export function speak(text: string) {
       u.rate = 0.95
       const v = romanianVoice()
       if (v) u.voice = v
-      u.onend = () => done()
-      u.onerror = () => done()
+      let poll: ReturnType<typeof setInterval> | undefined
+      const finish = () => { clearInterval(poll); clearTimeout(guess); done() }
+      u.onend = finish
+      u.onerror = finish
       synth.speak(u)
-      // Safari sometimes never fires onend: give up after a generous guess.
-      setTimeout(done, 2000 + text.length * 90)
+      // Safari sometimes never fires onend (often once the microphone is on): watch the voice itself,
+      // and as a last resort give up after a generous guess.
+      const guess = setTimeout(finish, 2000 + text.length * 90)
+      setTimeout(() => { poll = setInterval(() => { if (!synth.speaking && !synth.pending) finish() }, 250) }, 800)
     } catch { done() }
   })
 }
 
 export const stopSpeaking = () => { try { window.speechSynthesis?.cancel() } catch { /* nothing to stop */ } }
 
-export type HandsFreeState = { listening: boolean; heard: string; error: string }
+export type HandsFreeState = { listening: boolean; heard: string; error: string; detail?: string }
+
+/** Commands safe to act on before the phrase is finished: nothing longer starts with them. */
+const QUICK = new Set<Command['kind']>(['next', 'prev', 'repeat', 'ingredients'])
 
 /**
- * While `on`, listens and calls `onCommand` for each command heard. What is said while the phone
- * itself is speaking is ignored (it would hear its own voice). Restarts by itself after a dropped
- * connection, a few times; a new `attempt` starts over after it gave up.
+ * Hands-free listening. `start()` must be called straight from a tap: it opens the microphone
+ * there and keeps it for the whole session (on iOS one opened later, without a touch, stays
+ * silent). Calls `onCommand` for each command heard; while `speaking()` the phone hears silence
+ * instead of its own voice. A dropped connection restarts by itself a few times; after that, a
+ * new `start()` (another tap) starts over.
  */
-export function useHandsFree(on: boolean, attempt: number, onCommand: (c: Command) => void, speaking: () => boolean): HandsFreeState {
+export function useHandsFree(onCommand: (c: Command) => void, speaking: () => boolean) {
   const [state, setState] = useState<HandsFreeState>({ listening: false, heard: '', error: '' })
   const cmd = useRef(onCommand)
   const busy = useRef(speaking)
   useEffect(() => { cmd.current = onCommand; busy.current = speaking })
+  const run = useRef<() => void>(undefined)
 
-  useEffect(() => {
-    if (!on) { setState({ listening: false, heard: '', error: '' }); return }
-    let session: Dictation | undefined
+  const stop = () => {
+    run.current?.()
+    run.current = undefined
+    setState({ listening: false, heard: '', error: '' })
+  }
+
+  const start = () => {
+    run.current?.()
     let cancelled = false
+    let mic: Mic | undefined
+    let session: Dictation | undefined
     let failures = 0
     let restart: ReturnType<typeof setTimeout> | undefined
+    const giveUp = (err: unknown) => {
+      const w = dictationError(err)
+      console.error('Mâini libere:', err)
+      // Let go of the microphone until the next tap opens it again.
+      mic?.close(); mic = undefined
+      setState({ listening: false, heard: '', error: w.text, detail: w.detail })
+    }
+    const again = (err: unknown) => {
+      failures++
+      if (failures >= 3) { giveUp(err); return }
+      restart = setTimeout(begin, 800)
+    }
+    // Everything up to the first await runs inside the tap.
     const begin = async () => {
       let used = 0
+      let firedFor = -1
       try {
+        if (!mic?.ok()) { mic?.close(); mic = undefined; mic = await openMic() }
+        if (cancelled) { mic.close(); return }
         session = await startDictation({
-          onText: (segments) => {
+          muted: () => busy.current(),
+          onText: (segments, partial) => {
+            if (cancelled) return
+            if (segments.length || partial) failures = 0 // it hears: a later drop starts the count over
             for (; used < segments.length; used++) {
               const said = segments[used]
-              if (busy.current()) continue
+              if (busy.current() || firedFor === used) continue
               setState((s) => ({ ...s, heard: said }))
               const c = parseCommand(said)
               if (c) cmd.current(c)
+            }
+            // Act on a clear command while it is still being said, without waiting for the pause.
+            if (partial && !busy.current()) {
+              setState((s) => ({ ...s, heard: partial }))
+              const c = firedFor === segments.length ? undefined : parseCommand(partial)
+              if (c && QUICK.has(c.kind)) { firedFor = segments.length; cmd.current(c) }
             }
           },
           onEnd: (err) => {
             session = undefined
             if (cancelled) return
-            failures = err ? failures + 1 : 0
-            if (failures >= 3) { setState({ listening: false, heard: '', error: 'Nu te mai aud. Apasă din nou pe microfon.' }); return }
-            restart = setTimeout(begin, 800)
+            if (!err) { failures = 0; restart = setTimeout(begin, 300); return }
+            console.warn('Mâini libere, reiau:', err)
+            again(err)
           },
-        })
+        }, mic)
         if (cancelled) { session.stop(); return }
         setState({ listening: true, heard: '', error: '' })
       } catch (err) {
-        const e = err as Error
-        setState({ listening: false, heard: '', error: e?.name === 'NotAllowedError' ? 'Am nevoie de microfon. Permite-l din setările telefonului.' : 'Nu pot porni microfonul.' })
+        if (cancelled) return
+        const name = (err as Error)?.name
+        if (name === 'NotAllowedError' || name === 'SecurityError' || name === 'NotFoundError') giveUp(err)
+        else again(err)
       }
     }
+    setState({ listening: false, heard: '', error: '' })
     begin()
-    return () => { cancelled = true; clearTimeout(restart); session?.stop() }
-  }, [on, attempt])
-  return state
+    run.current = () => { cancelled = true; clearTimeout(restart); session?.stop(); mic?.close() }
+  }
+
+  useEffect(() => () => run.current?.(), [])
+  return { ...state, start, stop }
 }
 
 /** "10 minute", "1 minut și 30 de secunde", "45 de secunde": a timer as it is said aloud. */

@@ -80,16 +80,18 @@ export default function CookMode() {
 
   // Hands-free: each step is read aloud and voice commands move through the recipe.
   const [handsFree, setHandsFree] = useState(false)
-  const [hfAttempt, setHfAttempt] = useState(0)
   const speakingUntil = useRef(0)
+  const saying = useRef(0)
   const say = useCallback(async (text: string) => {
+    // A newer sentence cuts this one short; only the last one decides when the phone is quiet again.
+    const n = ++saying.current
     speakingUntil.current = Date.now() + 120_000
     await speak(text)
     // The microphone still hears the end of our own voice for a moment.
-    speakingUntil.current = Date.now() + 700
+    if (n === saying.current) speakingUntil.current = Date.now() + 600
   }, [])
   const onCommand = useRef<(c: Command) => void>(() => {})
-  const hf = useHandsFree(handsFree, hfAttempt, (c) => onCommand.current(c), () => Date.now() < speakingUntil.current)
+  const hf = useHandsFree((c) => onCommand.current(c), () => Date.now() < speakingUntil.current)
   const spokenKey = useRef('')
   const stepSpeech = useCallback((x: Recipe, k: number) => {
     const d = detectDuration(x.steps[k])
@@ -109,9 +111,11 @@ export default function CookMode() {
   const toggleHandsFree = () => {
     if (!r) return
     // It stopped hearing (no internet, the microphone taken): a tap starts listening again.
-    if (handsFree && hf.error) { setHfAttempt((n) => n + 1); say('Te ascult.'); return }
-    if (handsFree) { setHandsFree(false); return }
+    if (handsFree && hf.error) { hf.start(); say('Te ascult.'); return }
+    if (handsFree) { hf.stop(); setHandsFree(false); return }
     unlockAlarm()
+    // The microphone is opened right here, from the tap, and kept until hands-free is turned off.
+    hf.start()
     // Spoken straight from the tap: iOS lets a page speak only after a touch.
     spokenKey.current = finished ? 'done' : String(i)
     say(`Te ascult. Spune: următorul, înapoi, repetă, ingrediente sau pornește timerul. ${finished ? '' : stepSpeech(r, i)}`)
@@ -238,7 +242,7 @@ export default function CookMode() {
     else if (c.kind === 'step') {
       if (c.n >= 1 && c.n <= count) { setFinished(false); setSheet(false); setI(c.n - 1); setProgress(r.id, c.n - 1) }
       else say(`Rețeta are ${count} pași.`)
-    } else if (c.kind === 'stop') { setHandsFree(false); say('Gata, nu mai ascult.') }
+    } else if (c.kind === 'stop') { hf.stop(); setHandsFree(false); say('Gata, nu mai ascult.') }
   }
 
   // Swipes change the step or open the ingredients; inside the ingredients sheet a finger scrolls the
@@ -312,9 +316,9 @@ export default function CookMode() {
           <div className="cook-panel" aria-live="polite">
             {handsFree && (
               <div className="cook-listen" role="status">
-                {hf.error ? <span className="cook-listen-err">{hf.error}</span> : <>
+                {hf.error ? <><span className="cook-listen-err">{hf.error}</span>{hf.detail && <small className="cook-listen-detail">{hf.detail}</small>}</> : <>
                   <b>{hf.listening ? 'Te ascult' : 'Pornesc microfonul…'}</b>
-                  <span>{hf.heard ? `„${hf.heard}”` : '„următorul” · „înapoi” · „repetă” · „pornește timerul”'}</span>
+                  <span>{hf.heard ? `„${hf.heard}”` : '„următorul” · „înapoi” · „repetă” · „ingrediente” · „pornește timerul”'}</span>
                 </>}
               </div>
             )}

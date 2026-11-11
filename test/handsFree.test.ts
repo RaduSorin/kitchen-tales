@@ -13,6 +13,12 @@ describe('parseCommand (hands-free cook mode)', () => {
     ['ce ingrediente', { kind: 'ingredients' }],
     ['repetă', { kind: 'repeat' }],
     ['nu mai asculta', { kind: 'stop' }],
+    ['Continuă.', { kind: 'next' }],
+    ['Pasul următor.', { kind: 'next' }],
+    ['Următoru', { kind: 'next' }],
+    ['Înapoi!', { kind: 'prev' }],
+    ['Continuă timerul', { kind: 'timer' }],
+    ['Ingrediente.', { kind: 'ingredients' }],
   ])('"%s"', (said, command) => {
     expect(parseCommand(said)).toEqual(command)
   })

@@ -14,7 +14,11 @@ struct StoryCover: View {
             DrawnCover(scene: CoverScene.of(story), emoji: showsEmoji ? story.emoji : nil)
             if let image {
                 Color(hex: 0xF4EFE6)
-                Image(uiImage: image).resizable().scaledToFill()
+                // Fills the space it is given without asking for more: a square cover in a wide
+                // hero must not push the hero's text off screen.
+                Color.clear
+                    .overlay { Image(uiImage: image).resizable().scaledToFill() }
+                    .clipped()
                     .transition(.opacity)
             }
         }

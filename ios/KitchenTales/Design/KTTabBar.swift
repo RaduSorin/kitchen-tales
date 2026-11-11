@@ -129,7 +129,7 @@ private struct AppTabBarHost<Value: Hashable>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .environment(bar)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+            .overlay(alignment: .bottom) {
                 if !bar.hidden {
                     KTTabBar(items: items, selection: $selection, night: night)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -137,4 +137,25 @@ private struct AppTabBarHost<Value: Hashable>: ViewModifier {
             }
             .animation(.easeInOut(duration: 0.25), value: bar.hidden)
     }
+}
+
+extension View {
+    /// Room for the app's tab bar under a tab's content, so the end of a list and the mini player
+    /// stay above it (a TabView does not pass a safe-area inset on to its tabs).
+    func tabBarRoom() -> some View { modifier(TabBarRoom()) }
+}
+
+private struct TabBarRoom: ViewModifier {
+    @Environment(TabBarModel.self) private var bar: TabBarModel?
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: bar.map { $0.hidden ? 0 : KTTabBarMetrics.height } ?? 0)
+        }
+    }
+}
+
+enum KTTabBarMetrics {
+    /// The bar's height over the bottom safe area: 50 tab + 2 × 7 padding + 4 below.
+    static let height: CGFloat = 68
 }

@@ -83,6 +83,7 @@ private struct MiniPlayerInset: ViewModifier {
             }
         }
         .animation(.snappy, value: player.current?.id)
+        .tabBarRoom()
     }
 }
 

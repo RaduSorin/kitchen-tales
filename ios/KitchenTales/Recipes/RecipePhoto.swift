@@ -17,15 +17,18 @@ struct RecipePhoto: View {
     }
 
     var body: some View {
-        ZStack {
-            if let image {
-                Image(uiImage: image).resizable().scaledToFill()
-                    .transition(.opacity)
-            } else {
-                PlateDrawing(seed: recipe.title)
+        // The clear base takes the size it is given, so a wide photo is cropped, never widens the layout.
+        Color.clear
+            .overlay {
+                if let image {
+                    Image(uiImage: image).resizable().scaledToFill()
+                        .transition(.opacity)
+                } else {
+                    PlateDrawing(seed: recipe.title)
+                }
             }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .task(id: key ?? recipe.demoPhoto) { await load() }
         .accessibilityHidden(true)
     }

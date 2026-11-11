@@ -149,7 +149,7 @@ struct WeekView: View {
                 }
         }
         .presentationDetents([.medium])
-        .environment(Locale(identifier: "ro_RO"))
+        .environment(\.locale, Locale(identifier: "ro_RO"))
     }
 
     private func addWeekToList() {

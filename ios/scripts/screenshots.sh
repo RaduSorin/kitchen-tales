@@ -37,6 +37,13 @@ shot 2c-cook -demo YES -tab home -screen cook
 shot 2d-week -demo YES -tab week
 shot 2e-week-add -demo YES -tab week -screen week-add
 shot 2f-list -demo YES -tab list
+shot 2g-editor-new -demo YES -tab recipes -screen editor-new
+shot 2h-editor-paste -demo YES -tab recipes -screen editor-paste
+shot 2i-editor-ai -demo YES -tab recipes -screen editor-ai
+shot 2j-editor-ideas -demo YES -tab recipes -screen editor-ideas
+shot 2k-editor-details -demo YES -tab recipes -screen editor-edit
+shot 2l-editor-ingredients -demo YES -tab recipes -screen editor-ingredients
+shot 2m-editor-steps -demo YES -tab recipes -screen editor-steps
 shot 3-profile -demo YES -tab profile
 shot 3b-profile-child -demo YES -tab profile -screen profile-child
 shot 3c-profile-family -demo YES -tab profile -screen profile-family

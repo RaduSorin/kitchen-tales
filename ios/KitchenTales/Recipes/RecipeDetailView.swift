@@ -9,6 +9,7 @@ struct RecipeDetailView: View {
     @Environment(KitchenModel.self) private var kitchen
     @State private var servings: Int?
     @State private var ticked: Set<Int> = []
+    @State private var editing: Recipe?
 
     var body: some View {
         if let r = store.recipe(recipeId) {
@@ -49,6 +50,12 @@ struct RecipeDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { moreMenu(r) } }
+        .fullScreenCover(item: $editing) { r in
+            RecipeEditorScreen(recipe: r, server: store.server) { saved in
+                editing = nil
+                if let saved { servings = saved.servings }
+            }
+        }
         .task {
             if servings == nil { servings = r.servings }
             if LaunchOptions.screen == "cook", kitchen.cooking == nil { kitchen.cook(r) }
@@ -106,6 +113,9 @@ struct RecipeDetailView: View {
     private func moreMenu(_ r: Recipe) -> some View {
         let favorite = store.isFavorite(r.id)
         return Menu {
+            if r.mine {
+                Button { editing = r } label: { Label("Editează", systemImage: "pencil") }
+            }
             Button { Task { await store.toggleFavorite(r.id) } } label: {
                 Label(favorite ? "Scoate din favorite" : "Pune la favorite", systemImage: favorite ? "heart.slash" : "heart")
             }

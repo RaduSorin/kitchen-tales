@@ -250,6 +250,26 @@ final class RecipeStore {
     // MARK: Changing the plan
 
     /// One AppSync mutation (`createX`, `updateX`, `deleteX`) with its input.
+    // MARK: Writing recipes (the editor)
+
+    /// The editor's way to the server; nil in demo screenshots or without a space.
+    var server: RecipeServer? {
+        guard !demo, let client, let space = mySpace() else { return nil }
+        return RecipeServer(client: client, space: space)
+    }
+
+    var isDemo: Bool { demo }
+
+    /// A recipe just saved by the editor: replaces its old copy, or comes first in the list.
+    func saved(_ recipe: Recipe) {
+        if let i = recipes.firstIndex(where: { $0.id == recipe.id }) {
+            recipes[i] = recipe
+        } else {
+            recipes.insert(recipe, at: 0)
+        }
+        save()
+    }
+
     // MARK: Sharing (Profil → Ce partajez)
 
     /// Shares a recipe of ours with every account ("everyone"), or makes it private again.

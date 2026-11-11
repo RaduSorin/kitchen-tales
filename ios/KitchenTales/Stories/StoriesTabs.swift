@@ -40,6 +40,12 @@ struct StoriesTabs: View {
         }
         .onChange(of: tab) { Haptics.select() }
         .storyPlayerSheet()
+        .alert("Descărcarea nu a mers", isPresented: Binding(get: { store.offline.lastError != nil },
+                                                              set: { if !$0 { store.offline.clearError() } })) {
+            Button("OK") { store.offline.clearError() }
+        } message: {
+            Text(store.offline.lastError ?? "")
+        }
         .task {
             if let first = store.stories.first, ["player", "mini-player"].contains(LaunchOptions.screen) {
                 await StoryPlayer.shared.play(first, queue: store.stories, store: store)

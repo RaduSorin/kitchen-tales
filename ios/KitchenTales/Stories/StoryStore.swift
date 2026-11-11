@@ -14,6 +14,8 @@ final class StoryStore {
     private(set) var showingCopy = false
 
     let links: FileLinks?
+    /// Stories saved on this phone for listening without internet.
+    let offline = OfflineAudio()
     private let client: GraphQLClient?
     private let cache: DeviceCache
     private let mySpace: () -> String?
@@ -35,6 +37,7 @@ final class StoryStore {
             stories = DemoLibrary.stories
             folderRows = []
             phase = .loaded
+            offline.showAsSaved(["d1", "d2", "d3"])
         } else if let saved = cache.read(Saved.self, key: Self.cacheKey) {
             stories = saved.stories
             folderRows = saved.folders
@@ -95,6 +98,7 @@ final class StoryStore {
             stories = list
             folderRows = folderRowsRaw.compactMap { StoryFolderRow(row: $0, mySpace: space) }
             cache.write(Saved(stories: stories, folders: folderRows), key: Self.cacheKey)
+            offline.prune(keeping: Set(stories.map(\.id)))
             showingCopy = false
             phase = .loaded
         } catch {

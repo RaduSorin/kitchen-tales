@@ -263,6 +263,15 @@ private struct StoryContextMenu: ViewModifier {
             Button { Task { await store.toggleFavorite(story.id) } } label: {
                 Label(favorite ? "Scoate de la favorite" : "Adaugă la favorite", systemImage: favorite ? "heart.slash" : "heart")
             }
+            if store.offline.saved.contains(story.id) {
+                Button(role: .destructive) { store.offline.remove([story.id]) } label: {
+                    Label("Șterge de pe telefon", systemImage: "trash")
+                }
+            } else {
+                Button { Task { await store.offline.download(story, links: store.links) } } label: {
+                    Label("Descarcă pentru offline", systemImage: "arrow.down.circle")
+                }
+            }
         } preview: {
             StoryCover(story: story).frame(width: 260, height: 260)
                 .environment(store)

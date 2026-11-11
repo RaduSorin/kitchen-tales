@@ -25,9 +25,9 @@ struct EditorBackButton: View {
 /// The big gold button of the editor pages ("Completează rețeta", "Salvează rețeta"); dimmed
 /// while it can't be used, like the web's disabled `btn primary big`.
 struct EditorBigButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View { Body(configuration: configuration) }
+    func makeBody(configuration: Configuration) -> some View { BigLabel(configuration: configuration) }
 
-    private struct Body: View {
+    private struct BigLabel: View {
         let configuration: Configuration
         @Environment(\.isEnabled) private var enabled
 

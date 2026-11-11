@@ -27,6 +27,7 @@ The native iPhone app, built next to the web app in the same repo and on the sam
 | --- | --- |
 | `project.yml` | XcodeGen spec; the `.xcodeproj` and `Info.plist` are generated, not committed |
 | `KitchenTales/App` | App entry point and launch options |
+| `KitchenTales/Auth` | Cognito sign-in without an SDK: SRP math (`BigUInt`, `CognitoSRP`), the user pool API, Keychain session, device cache |
 | `KitchenTales/Design` | Style A "Seară iOS": colors (`Theme`), fonts (`AppFont`), shared components |
 | `KitchenTales/Features` | Screens, one folder per area |
 | `KitchenTales/Resources` | Asset catalog (icon, accent color) and the bundled fonts |
@@ -76,3 +77,19 @@ One-time setup in App Store Connect:
 3. In GitHub, *Settings › Secrets and variables › Actions*: `ASC_KEY_ID`, `ASC_ISSUER_ID`,
    `ASC_KEY_P8` (the whole file), `APPLE_TEAM_ID`.
 4. *TestFlight › Internal Testing*: add a group with Sorin and Lori; both install TestFlight.
+
+## Sign-in
+
+The app talks to the same Cognito user pool as the web app, directly over its JSON API (no AWS
+SDK, which would add minutes to every CI build). It signs in with SRP like Amplify does, so the
+password never leaves the phone, handles the first sign-in with an invitation's temporary
+password (NEW_PASSWORD_REQUIRED) and "Ai uitat parola?" (code by e-mail). Tokens are kept in the
+Keychain and refreshed when they expire; without internet the saved session keeps the app open.
+The family space comes from the `space-<id>` Cognito group, as on the web.
+
+`KitchenTales/Resources/AuthConfig.json` holds the `auth` part of Amplify's
+`amplify_outputs.json` (region, user pool ID, app client ID). These are public identifiers.
+While the client ID is empty the login screen says the app is not set up yet.
+
+The SRP unit tests use vectors from `scripts/srp-vectors.py`, a Python reference checked
+against pycognito.

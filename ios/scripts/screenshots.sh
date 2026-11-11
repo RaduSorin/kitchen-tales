@@ -24,7 +24,12 @@ shot() {
   echo "saved $OUT/$name.png"
 }
 
-shot 1-home -tab home
-shot 2-recipes -tab recipes
-shot 3-profile -tab profile
-shot 4-catalog -tab profile -screen catalog
+# Signed out (no session in a fresh simulator): the login sheet and its steps.
+shot 0a-login
+shot 0b-login-new-password -screen login-new-password
+shot 0c-login-code -screen login-code
+# Signed in with a made-up account (-demo, debug builds only).
+shot 1-home -demo YES -tab home
+shot 2-recipes -demo YES -tab recipes
+shot 3-profile -demo YES -tab profile
+shot 4-catalog -demo YES -tab profile -screen catalog

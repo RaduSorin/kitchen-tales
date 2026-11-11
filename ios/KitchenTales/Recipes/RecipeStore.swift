@@ -63,6 +63,19 @@ final class RecipeStore {
 
     var today: [Recipe] { entries(on: Date()).compactMap { recipe($0.recipeId) } }
 
+    /// The recipes on the plan this week (Monday to Sunday), so ideas don't suggest them again.
+    var plannedThisWeek: Set<String> {
+        let keys = Set(RecipeText.weekDays(of: Date()).map { RecipeText.dayKey($0) })
+        return Set(plan.filter { keys.contains($0.day) }.map(\.recipeId))
+    }
+
+    /// The cook logs by recipe, merged like `log(_:)`.
+    var logsById: [String: RecipeLog] {
+        var out: [String: RecipeLog] = [:]
+        for id in Set(logs.map(\.recipeId)) { out[id] = log(id) }
+        return out
+    }
+
     /// The categories with their recipes, biggest first ("Fără categorie" last).
     var categories: [(name: String, recipes: [Recipe])] {
         let groups = Dictionary(grouping: recipes) { $0.category.isEmpty ? "Fără categorie" : $0.category }
@@ -528,7 +541,7 @@ struct HeroSlide: Identifiable, Hashable {
     var eyebrow: String {
         let time = recipe.minutes.map { " · " + RecipeText.formatMinutes($0) } ?? ""
         switch kind {
-        case .cooking(let step): return "Ați rămas la pasul \(step + 1)"
+        case .cooking(let step): return "Continuă · pasul \(step + 1)"
         case .planned: return "Azi în plan" + time
         case .newest: return "Adăugată recent" + time
         case .fromBook: return "Din caietul tău" + time

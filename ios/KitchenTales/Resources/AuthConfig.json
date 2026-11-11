@@ -1,0 +1,7 @@
+{
+  "auth": {
+    "aws_region": "eu-central-1",
+    "user_pool_id": "eu-central-1_mH3Vk6Rfm",
+    "user_pool_client_id": "4eiiqrg9hfhm54ckehvnr2d86d"
+  }
+}

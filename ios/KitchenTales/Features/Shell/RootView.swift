@@ -86,11 +86,40 @@ struct PlaceholderScreen: View {
 }
 
 struct ProfileView: View {
+    @Environment(AuthModel.self) private var auth
     @State private var path: [String] = LaunchOptions.screen == "catalog" ? ["catalog"] : []
+    @State private var confirmSignOut = false
 
     var body: some View {
         NavigationStack(path: $path) {
             List {
+                if let account = auth.account {
+                    Section {
+                        HStack(spacing: 14) {
+                            Text(String(account.displayName.prefix(1)).uppercased())
+                                .font(.ktTitle2)
+                                .foregroundStyle(Theme.onAccent)
+                                .frame(width: 52, height: 52)
+                                .background(Circle().fill(Theme.accent))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(account.displayName).font(.ktTitle3).foregroundStyle(Theme.text)
+                                if let email = account.email {
+                                    Text(email).font(.ktFootnote).foregroundStyle(Theme.muted)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                        if account.space == nil {
+                            Label("Contul nu are încă un spațiu. Ieși din cont și intră din nou.", systemImage: "exclamationmark.triangle")
+                                .font(.ktFootnote).foregroundStyle(Theme.danger)
+                        }
+                        if auth.isOffline {
+                            Label("Fără internet: folosești copia de pe telefon.", systemImage: "wifi.slash")
+                                .font(.ktFootnote).foregroundStyle(Theme.muted)
+                        }
+                    }
+                    .listRowBackground(Theme.surface)
+                }
                 Section {
                     NavigationLink(value: "catalog") {
                         Label("Componente de design", systemImage: "paintpalette")
@@ -103,6 +132,16 @@ struct ProfileView: View {
                     LabeledContent("Versiune", value: AppInfo.version)
                 }
                 .listRowBackground(Theme.surface)
+                Section {
+                    Button("Ieși din cont", role: .destructive) { confirmSignOut = true }
+                        .foregroundStyle(Theme.danger)
+                }
+                .listRowBackground(Theme.surface)
+            }
+            .confirmationDialog("Ieși din cont?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+                Button("Ieși din cont", role: .destructive) { Task { await auth.signOut() } }
+            } message: {
+                Text("Pe acest telefon va trebui să intri din nou cu e-mailul și parola.")
             }
             .ktBackground()
             .navigationTitle("Profil")

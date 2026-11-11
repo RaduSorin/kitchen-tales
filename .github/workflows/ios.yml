@@ -23,7 +23,7 @@ jobs:
       run:
         working-directory: ios
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Use the newest Xcode on the runner
         run: |
@@ -68,20 +68,22 @@ jobs:
 
       - name: Upload screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ios-screenshots
           path: ios/build/screenshots
           if-no-files-found: ignore
 
-      # Also commit them to the ios-screenshots branch (folder pr-<number>), so they can be
-      # viewed on GitHub and compared before/after without downloading the artifact.
+      # Also commit them to the ios-screenshots branch (folder pr-<number>, or the branch name for
+      # a run started by hand), so they can be viewed on GitHub and compared before/after
+      # without downloading the artifact.
       - name: Publish screenshots to the ios-screenshots branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
-          DEST: pr-${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # pr-<number>, or the branch name for a run started by hand.
+          DEST: ${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           SRC="$PWD/build/screenshots"
           cd "$RUNNER_TEMP" && git init -q shots && cd shots
@@ -97,7 +99,7 @@ jobs:
 
       - name: Upload build log on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ios-build-log
           path: |

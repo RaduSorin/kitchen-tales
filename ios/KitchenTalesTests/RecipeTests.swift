@@ -84,4 +84,21 @@ struct RecipeTests {
         #expect(log.notes.first?.text == "Bună")
         #expect(log.noteStrings.count == 1)
     }
+
+    @Test func sortsShoppingLinesByAisle() {
+        let expected = ["2 piepți de pui": "meat", "500 g carne tocată": "meat", "busuioc proaspăt": "produce",
+                        "2 l lapte": "dairy", "lapte de cocos": "pantry", "8 roșii": "produce",
+                        "hârtie de copt": "home", "ceva ciudat": "other"]
+        for (text, aisle) in expected { #expect(ShoppingAisles.aisleOf(text) == aisle, "\(text)") }
+    }
+
+    @Test func saysHowLongAgo() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Bucharest")!
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 11, hour: 15)))
+        #expect(RecipeText.since("2026-11-11", now: now, calendar: calendar) == "azi")
+        #expect(RecipeText.since("2026-11-10", now: now, calendar: calendar) == "ieri")
+        #expect(RecipeText.since("2026-11-06", now: now, calendar: calendar) == "acum 5 zile")
+        #expect(RecipeText.since("2026-11-04", now: now, calendar: calendar) == "acum o săptămână")
+    }
 }

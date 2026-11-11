@@ -34,6 +34,9 @@ shot 1b-home-week -demo YES -tab home -screen home-week
 shot 2-recipes -demo YES -tab recipes
 shot 2b-recipe -demo YES -tab home -screen recipe
 shot 2c-cook -demo YES -tab home -screen cook
+shot 2d-week -demo YES -tab week
+shot 2e-week-add -demo YES -tab week -screen week-add
+shot 2f-list -demo YES -tab list
 shot 3-profile -demo YES -tab profile
 shot 4-catalog -demo YES -tab profile -screen catalog
 # Stories side (made-up library, drawn covers).

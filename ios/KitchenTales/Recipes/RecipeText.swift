@@ -210,6 +210,22 @@ enum RecipeText {
         return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: monday) }
     }
 
+    /// "azi", "ieri", "acum 5 zile", "acum 3 săptămâni", "acum 2 luni", "acum un an" (recipeLog.ts).
+    static func since(_ dayKey: String, now: Date = Date(), calendar: Calendar = .current) -> String {
+        let parts = dayKey.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3, let then = calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2])) else { return "" }
+        let days = Int((calendar.startOfDay(for: now).timeIntervalSince(then) / 86400).rounded())
+        if days <= 0 { return "azi" }
+        if days == 1 { return "ieri" }
+        if days < 7 { return "acum \(days) zile" }
+        let weeks = Int((Double(days) / 7).rounded())
+        if days < 30 { return weeks == 1 ? "acum o săptămână" : "acum \(weeks) săptămâni" }
+        let months = Int((Double(days) / 30).rounded())
+        if days < 365 { return months == 1 ? "acum o lună" : "acum \(months) luni" }
+        let years = Int((Double(days) / 365).rounded())
+        return years == 1 ? "acum un an" : "acum \(years) ani"
+    }
+
     /// L, Ma, Mi, J, V, S, D (Monday first).
     static let dayLetters = ["L", "Ma", "Mi", "J", "V", "S", "D"]
 

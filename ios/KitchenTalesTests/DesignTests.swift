@@ -37,6 +37,7 @@ struct DesignTests {
     @Test func launchTabParsesFromDefaults() {
         UserDefaults.standard.set("profile", forKey: "tab")
         defer { UserDefaults.standard.removeObject(forKey: "tab") }
-        #expect(LaunchOptions.tab == .profile)
+        #expect(LaunchOptions.tab.flatMap(AppTab.init(rawValue:)) == .profile)
+        #expect(LaunchOptions.tab.flatMap(StoryTab.init(rawValue:)) == .profile)
     }
 }

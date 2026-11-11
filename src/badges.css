@@ -159,8 +159,8 @@
 /* The page is sized to the screen and keeps the notebook's proportions; everything inside is
    measured in cqw (hundredths of the page's width), so it scales as one drawing. */
 .fb { display: grid; justify-items: center; gap: 6px; width: 100%; }
-.fb-desk { display: grid; place-items: center; padding: 6px 28px 10px 16px; }
-.fb-stage { position: relative; width: min(calc(100vw - 76px), 360px, calc((100dvh - 290px) * .6)); min-width: 220px; aspect-ratio: 282 / 470; container-type: inline-size;
+.fb-desk { display: grid; place-items: center; width: 100%; padding-block: 6px 10px; }
+.fb-stage { position: relative; width: min(calc(100vw - 64px), 360px, calc((100dvh - 330px) * .6)); min-width: 220px; aspect-ratio: 282 / 470; container-type: inline-size;
   perspective: 1600px; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: pointer; border-radius: 1.8cqw 5cqw 5cqw 1.8cqw; outline: none; }
 .fb-stage:focus-visible { outline: 3px solid #ffd76a; outline-offset: 4px; }
 .fb-page, .fb-leaf, .fb-face { position: absolute; inset: 0; }
@@ -187,7 +187,11 @@
 
 /* ---- the sticker notebook: spiral, colored cardboard, washi tape ---- */
 .nb { color: #fff6d6; }
-.nb .fb-stage { border-radius: 1.8cqw 5cqw 5cqw 1.8cqw; }
+.nb .fb-stage { border-radius: 1.8cqw 5cqw 5cqw 1.8cqw;
+  /* The spiral sticks out 3.2% on the left and the tabs 8.5% on the right: the page is sized so all
+     three fit the screen with the usual 16px margins, and moved left by half the difference so the
+     whole notebook sits in the middle. */
+  width: min(calc((100vw - 32px) * .88), 360px, calc((100dvh - 330px) * .6)); translate: -2.65% 0; }
 .nb-paper { background-color: var(--paper); color: #f4eddc; }
 .nb-paper::before { background: var(--grain-w), var(--fiber), var(--grain-b); mix-blend-mode: soft-light; }
 .nb-paper::after, .nb-cover::after { content: ""; position: absolute; inset: 0; pointer-events: none;

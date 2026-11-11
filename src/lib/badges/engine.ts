@@ -15,13 +15,19 @@ export interface BadgeState {
   seen: string[]
   /** The day (YYYY-MM-DD) the last listening sticker was given: at most one an evening. */
   listenDay?: string
-  /** When the person's history was counted the first time (ISO). */
-  seeded?: string
-  /** The person's first recipe or story (ISO), for the one-year stamp. */
+  /** When this person started collecting (ISO), for the one-year stamp. */
   since?: string
+  /** Which start this copy belongs to: copies from an older start are dropped (see EPOCH). */
+  epoch?: number
 }
 
-export const emptyState = (): BadgeState => ({ counts: {}, sets: {}, earned: {}, seen: [] })
+/**
+ * Badges start fresh from this version on: nothing done before counts. Raise it to start
+ * everyone over again; an older copy (on a phone or in the cloud) is then thrown away.
+ */
+export const EPOCH = 2
+
+export const emptyState = (): BadgeState => ({ counts: {}, sets: {}, earned: {}, seen: [], epoch: EPOCH })
 
 /** How a new recipe came into the app. */
 export type RecipeWay = 'written' | 'link' | 'video' | 'photo' | 'dictation' | 'text' | 'ai' | 'fridge'
@@ -114,10 +120,10 @@ export function progressOf(b: Badge, s: BadgeState, now: Date) {
 
 /**
  * Gives every badge whose goal is reached. Listening stickers come at most one an evening (the
- * next waits for a story on another day), except when the history is counted the first time.
+ * next waits for a story on another day).
  * Returns the new state and the badges just earned, in catalogue order.
  */
-export function evaluate(s: BadgeState, now: Date, opts: { history?: boolean } = {}): { state: BadgeState; fresh: string[] } {
+export function evaluate(s: BadgeState, now: Date): { state: BadgeState; fresh: string[] } {
   const today = dayOf(now)
   let listenDay = s.listenDay
   const earned = { ...s.earned }
@@ -125,7 +131,7 @@ export function evaluate(s: BadgeState, now: Date, opts: { history?: boolean } =
   for (const b of BADGES) {
     if (earned[b.id]) continue
     if (!progressOf(b, s, now).done) continue
-    if (b.listen && !opts.history) {
+    if (b.listen) {
       if (listenDay === today) continue
       listenDay = today
     }
@@ -153,61 +159,7 @@ export function mergeStates(a: BadgeState, b: BadgeState): BadgeState {
     counts, sets, earned,
     seen: [...new Set([...a.seen, ...b.seen])],
     listenDay: max(a.listenDay, b.listenDay),
-    seeded: min(a.seeded, b.seeded),
     since: min(a.since, b.since),
+    epoch: Math.max(a.epoch ?? 0, b.epoch ?? 0),
   }
-}
-
-/** What the app already knows, for counting the person's history the first time. */
-export interface History {
-  recipes: { category?: string; sourceUrl?: string; photoKey?: string; shared?: boolean; mine?: boolean; createdAt?: string }[]
-  logs: { recipeId: string; cooked: string[]; notes: unknown[] }[]
-  /** Planned days (YYYY-MM-DD). */
-  planDays: string[]
-  stories: { source: 'upload' | 'recording' | 'generated'; coverKey?: string; mine?: boolean; createdAt?: string }[]
-  /** The family's own folders. */
-  folders: number
-  kidMode: boolean
-  /** Stories saved on this phone for offline listening. */
-  offline: number
-  /** Stories started on this phone (the app never counted finished ones before badges). */
-  played: number
-  isVideo: (url: string) => boolean
-}
-
-const mondayKey = (day: string) => {
-  const [y, m, d] = day.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  date.setDate(date.getDate() - ((date.getDay() + 6) % 7))
-  return dayOf(date)
-}
-
-/** The counters for what the person (and their household) did before badges existed. */
-export function historyState(h: History, now: Date): BadgeState {
-  let s = emptyState()
-  const recipes = h.recipes.filter((r) => r.mine !== false)
-  s = atLeast(s, 'recipes', recipes.length)
-  const links = recipes.filter((r) => r.sourceUrl)
-  s = atLeast(s, 'way:video', links.filter((r) => h.isVideo(r.sourceUrl!)).length)
-  s = atLeast(s, 'way:link', links.filter((r) => !h.isVideo(r.sourceUrl!)).length)
-  s = addTo(s, 'categories', ...recipes.map((r) => r.category?.trim().toLowerCase() ?? ''))
-  s = atLeast(s, 'photos', recipes.filter((r) => r.photoKey).length)
-  s = atLeast(s, 'desserts', recipes.filter((r) => isDessert(r.category)).length)
-  if (recipes.some((r) => r.shared)) s = atLeast(s, 'shared', 1)
-  s = atLeast(s, 'cooked', h.logs.reduce((n, l) => n + l.cooked.length, 0))
-  for (const l of h.logs) if (l.cooked.length) s = atLeast(s, `cook:${l.recipeId}`, (s.counts[`cook:${l.recipeId}`] ?? 0) + l.cooked.length)
-  s = atLeast(s, 'notes', h.logs.reduce((n, l) => n + l.notes.length, 0))
-  const weeks = new Map<string, Set<string>>()
-  for (const d of h.planDays) { const k = mondayKey(d); weeks.set(k, (weeks.get(k) ?? new Set()).add(d)) }
-  if ([...weeks.values()].some((days) => days.size >= 7)) s = atLeast(s, 'week', 1)
-  const stories = h.stories.filter((x) => x.mine !== false)
-  s = atLeast(s, 'stories', stories.length)
-  for (const src of ['upload', 'recording', 'generated'] as const) s = atLeast(s, `source:${src}`, stories.filter((x) => x.source === src).length)
-  s = atLeast(s, 'covers', stories.filter((x) => x.coverKey).length)
-  s = atLeast(s, 'folders', h.folders)
-  if (h.kidMode) s = atLeast(s, 'kid', 1)
-  s = atLeast(s, 'offline', h.offline)
-  s = atLeast(s, 'listened', h.played)
-  const first = [...recipes, ...stories].map((x) => x.createdAt).filter((x): x is string => !!x).sort()[0]
-  return { ...s, since: first, seeded: now.toISOString() }
 }

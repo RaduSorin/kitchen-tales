@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BADGE, BADGES, STAMPS, STICKERS } from '../src/lib/badges/catalog'
-import { applyEvent, emptyState, evaluate, historyState, mergeStates, progressOf, type BadgeEvent, type BadgeState, type History } from '../src/lib/badges/engine'
-import { videoSite } from '../src/lib/videoSite'
+import { applyEvent, emptyState, EPOCH, evaluate, mergeStates, progressOf, type BadgeEvent, type BadgeState } from '../src/lib/badges/engine'
 
 const at = (iso: string) => new Date(iso)
 const run = (events: BadgeEvent[], now = at('2026-11-10T18:00:00')) => events.reduce((s, e) => applyEvent(s, e, now), emptyState())
@@ -117,33 +116,19 @@ describe('merge', () => {
   })
 })
 
-describe('history', () => {
-  const h: History = {
-    recipes: [
-      { category: 'Desert', sourceUrl: 'https://www.youtube.com/watch?v=1', photoKey: 'p1', createdAt: '2025-10-01T10:00:00Z' },
-      { category: 'Ciorbe', sourceUrl: 'https://jamilacuisine.ro/x', shared: true },
-      { category: 'Paste' },
-      { category: 'Străină', mine: false },
-    ],
-    logs: [{ recipeId: 'a', cooked: ['2026-01-01', '2026-01-08'], notes: [{}] }],
-    planDays: ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14', '2026-11-15'],
-    stories: [{ source: 'recording', coverKey: 'c' }, { source: 'generated' }],
-    folders: 1, kidMode: true, offline: 0, played: 4,
-    isVideo: (u) => !!videoSite(u),
-  }
-  it('counts only our own things and finds a full week', () => {
-    const s = historyState(h, at('2026-11-10T12:00:00'))
-    expect(s.counts.recipes).toBe(3)
-    expect(s.counts['way:video']).toBe(1)
-    expect(s.counts['way:link']).toBe(1)
-    expect(s.counts.cooked).toBe(2)
-    expect(s.counts.week).toBe(1)
-    expect(s.since).toBe('2025-10-01T10:00:00Z')
-    const { fresh } = evaluate(s, at('2026-11-10T12:00:00'), { history: true })
-    expect(fresh).toEqual(expect.arrayContaining(['link', 'video', 'prima', 'nota', 'saptamana', 'impartim', 'an', 'k-star', 'k-heart', 'k-wand', 'k-crayon', 'k-house', 'k-teddy']))
-    // History is not held to one listening sticker an evening.
-    expect(fresh).toContain('k-star')
-    expect(fresh).not.toContain('k-moon')
+describe('fresh start', () => {
+  it('starts empty, from this version on, and keeps the version when merging', () => {
+    const s = emptyState()
+    expect(s.epoch).toBe(EPOCH)
+    expect(evaluate(s, new Date()).fresh).toEqual([])
+    const old: BadgeState = { counts: { recipes: 40 }, sets: {}, earned: { c25: '2026-11-10T10:00:00.000Z' }, seen: ['c25'] }
+    expect(mergeStates(old, s).epoch).toBe(EPOCH)
+  })
+
+  it('counts the one-year stamp from the first thing done', () => {
+    const s = run([{ t: 'cooked', recipeId: 'a' }], at('2026-11-11T10:00:00'))
+    expect(s.since).toBe(at('2026-11-11T10:00:00').toISOString())
+    expect(evaluate(s, at('2027-11-12T10:00:00')).fresh).toContain('an')
   })
 })
 

@@ -1,21 +1,27 @@
 // One person's stamps and stickers on this device: `track()` counts what they just did, new
 // badges wait in a queue to be celebrated (BadgeCelebration), and everything is kept on the
 // phone and in the cloud (one BadgeBook row per account, merged with the phone's copy).
-// The first time, the person's history (recipes, cooked meals, stories…) is counted quietly.
+// Only what is done from the start (EPOCH) on counts: nothing from before badges existed.
 import { useSyncExternalStore } from 'react'
 import { BADGE } from './catalog'
-import { applyEvent, emptyState, evaluate, historyState, mergeStates, type BadgeEvent, type BadgeState } from './engine'
+import { applyEvent, emptyState, EPOCH, evaluate, mergeStates, type BadgeEvent, type BadgeState } from './engine'
 import { onAccountChange, myUserId, spaceReady } from '../space'
 import { isKidLocked } from '../kidMode'
 
 const KEY = 'kt-badges' // a "kt-" key: dropped when another account signs in on this device
 const SAVE_MS = 1500
 
-const read = (): BadgeState => {
+/** A saved copy, or an empty one when it is from an older start (or unreadable). */
+const parse = (raw: string | null | undefined): BadgeState => {
   try {
-    const raw = localStorage.getItem(KEY)
-    return raw ? { ...emptyState(), ...(JSON.parse(raw) as BadgeState) } : emptyState()
+    const x = raw ? (JSON.parse(raw) as BadgeState) : undefined
+    return x && x.epoch === EPOCH ? { ...emptyState(), ...x } : emptyState()
   } catch { return emptyState() }
+}
+const isCurrent = (raw: string) => { try { return (JSON.parse(raw) as BadgeState).epoch === EPOCH } catch { return false } }
+
+const read = (): BadgeState => {
+  try { return parse(localStorage.getItem(KEY)) } catch { return emptyState() }
 }
 
 let state = read()
@@ -73,14 +79,11 @@ async function saveNow() {
   return saving
 }
 
-const parse = (raw: string): BadgeState => {
-  try { return { ...emptyState(), ...(JSON.parse(raw) as BadgeState) } } catch { return emptyState() }
-}
 
-// ---- first start: the cloud copy, then the history ----
+// ---- first start: the cloud copy ----
 
 let starting: Promise<void> | undefined
-/** Loads the cloud copy and, the first time, counts the history. Once per app start. */
+/** Loads the cloud copy and starts the collection if it is new. Once per app start. */
 export function startBadges() {
   return (starting ??= (async () => {
     await spaceReady()
@@ -91,39 +94,14 @@ export function startBadges() {
       const row = await badgeBookApi.get(id)
       cloudExists = !!row
       if (row) set(mergeStates(state, parse(row.state)), false)
+      // The cloud still has badges from before the fresh start: replace them.
+      if (row && !isCurrent(row.state)) scheduleSave()
     } catch { /* offline: carry on with the phone's copy */ }
-    if (!state.seeded) await countHistory()
+    // A new collection starts today (the one-year stamp counts from here).
+    if (!state.since) set({ ...state, since: new Date().toISOString() })
     // Anything due by now (the one-year stamp, a sticker held back yesterday).
     check()
   })().catch((err) => { starting = undefined; console.warn('badges: start', err) }))
-}
-
-async function countHistory() {
-  const [{ listRecipes, listStories, listFolders, cachedFolders }, { recipeLogStore }, { planStore }, { getSettings }, { savedAudioSummary }, { playedCount }, { videoSite }] = await Promise.all([
-    import('../db'), import('../recipeLog'), import('../plan'), import('../settings'), import('../offline'), import('../stories'), import('../videoSite'),
-  ])
-  // Only when the lists really came from the server (or this phone's copy): never count an empty history.
-  const recipes = await listRecipes().catch(() => undefined)
-  const stories = await listStories().catch(() => undefined)
-  if (!recipes || !stories) return
-  await Promise.all([recipeLogStore.refresh(), planStore.refresh()]).catch(() => {})
-  const folders = await listFolders().catch(() => cachedFolders())
-  const offline = await savedAudioSummary().then((x) => x.count).catch(() => 0)
-  const now = new Date()
-  const history = historyState({
-    recipes, stories,
-    logs: recipeLogStore.get(),
-    planDays: planStore.get().map((e) => e.day),
-    folders: folders.filter((f) => f.mine !== false).length,
-    kidMode: !!getSettings().kid.pinHash,
-    offline,
-    played: playedCount(),
-    isVideo: (u) => !!videoSite(u),
-  }, now)
-  const merged = mergeStates(state, history)
-  // History is earned quietly: no celebrations for what was done before badges existed.
-  const { state: next, fresh } = evaluate(merged, now, { history: true })
-  set({ ...next, seen: [...new Set([...next.seen, ...fresh])] })
 }
 
 /** Gives any badge whose goal is now reached (it then waits to be celebrated). */

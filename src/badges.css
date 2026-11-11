@@ -84,8 +84,7 @@
 .bd-chips { margin-bottom: 4px; }
 .bd-group { display: grid; gap: 10px; margin: 10px 0 14px; }
 .bd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 14px 8px;
-  padding: 14px 10px; border-radius: 16px; background: rgb(255 255 255 / .03);
-  background-image: repeating-linear-gradient(transparent 0 119px, rgb(255 255 255 / .05) 119px 120px); }
+  padding: 14px 10px; border-radius: 16px; background: rgb(255 255 255 / .03); }
 .bd-cell { display: grid; justify-items: center; gap: 4px; border: 0; background: none; color: var(--text); font: inherit; padding: 4px 2px; cursor: pointer; border-radius: 12px; min-width: 0; }
 .bd-cell .bd-art { width: 100%; max-width: 112px; }
 .bd-cell-name { font-size: var(--fs-xs); font-weight: 600; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }

@@ -122,8 +122,6 @@ export function markPlayed(id: string) {
   p.add(id)
   try { localStorage.setItem(PLAYED, JSON.stringify([...p].slice(-2000))) } catch { /* storage unavailable */ }
 }
-/** How many stories were ever started on this device. */
-export const playedCount = () => playedSet().size
 
 /** Added in the last two weeks and never started on this device. */
 export function isNewStory(s: Story, now = Date.now()) {

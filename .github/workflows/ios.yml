@@ -1,11 +1,10 @@
 # Native iOS app (ios/): generates the Xcode project, builds it, runs the unit tests on an iPhone
 # simulator and saves screenshots of the main screens as a downloadable artifact.
-# Runs only when something under ios/ (or this file) changes: macOS minutes cost 10x Linux ones.
+# Runs only on pull requests that change something under ios/ (or this file): macOS minutes cost
+# 10x Linux ones, so there is no second run on push.
 name: iOS
 
 on:
-  push:
-    paths: ['ios/**', '.github/workflows/ios.yml']
   pull_request:
     paths: ['ios/**', '.github/workflows/ios.yml']
   workflow_dispatch:
@@ -18,6 +17,8 @@ jobs:
   build-and-test:
     runs-on: macos-15
     timeout-minutes: 30
+    permissions:
+      contents: write   # only to publish the screenshots to the ios-screenshots branch
     defaults:
       run:
         working-directory: ios
@@ -39,7 +40,11 @@ jobs:
 
       - name: Pick a simulator
         id: sim
-        run: echo "udid=$(bash scripts/pick-simulator.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          UDID=$(bash scripts/pick-simulator.sh)
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          # Boot it now, so the boot overlaps the build instead of following it.
+          xcrun simctl boot "$UDID" || true
 
       - name: Build and run the unit tests
         run: |
@@ -47,7 +52,8 @@ jobs:
           mkdir -p build
           xcodebuild test \
             -project KitchenTales.xcodeproj -scheme KitchenTales \
-            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -destination "id=${{ steps.sim.outputs.udid }},arch=arm64" \
+            -parallel-testing-enabled NO \
             -derivedDataPath build/DerivedData \
             -resultBundlePath build/Tests.xcresult \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
@@ -67,6 +73,27 @@ jobs:
           name: ios-screenshots
           path: ios/build/screenshots
           if-no-files-found: ignore
+
+      # Also commit them to the ios-screenshots branch (folder pr-<number>), so they can be
+      # viewed on GitHub and compared before/after without downloading the artifact.
+      - name: Publish screenshots to the ios-screenshots branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEST: pr-${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          SRC="$PWD/build/screenshots"
+          cd "$RUNNER_TEMP" && git init -q shots && cd shots
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          if git fetch -q --depth 1 origin ios-screenshots; then git checkout -q FETCH_HEAD; fi
+          git checkout -q -B ios-screenshots
+          rm -rf "$DEST" && mkdir -p "$DEST" && cp "$SRC"/*.png "$DEST"/
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -qm "Screenshots for $DEST at $HEAD_SHA"
+          git push -q origin ios-screenshots
+          echo "Screenshots: https://github.com/${{ github.repository }}/tree/ios-screenshots/$DEST"
 
       - name: Upload build log on failure
         if: failure()

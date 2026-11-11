@@ -9,7 +9,7 @@ OUT="${OUT:-build/screenshots}"
 BUNDLE_ID="app.kitchentales.ios"
 mkdir -p "$OUT"
 
-xcrun simctl bootstatus "$UDID" -b
+xcrun simctl bootstatus "$UDID" -b >/dev/null
 # A clean status bar (9:41, full battery), like Apple's marketing shots.
 xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 \
   --cellularBars 4 --wifiBars 3 || true

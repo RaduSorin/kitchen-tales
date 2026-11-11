@@ -53,7 +53,7 @@ cd ios && xcodegen generate && open KitchenTales.xcodeproj
 
 ## CI
 
-Each push that changes `ios/` builds the app, runs the unit tests on the newest iPhone
-simulator and uploads screenshots of the main screens (artifact `ios-screenshots` on the
-workflow run). The `testflight-readiness` job reports which App Store Connect secrets are set
+Each pull request that changes `ios/` builds the app, runs the unit tests on the newest iPhone
+simulator and takes screenshots of the main screens: they are uploaded as the artifact
+`ios-screenshots` and committed to the `ios-screenshots` branch under `pr-<number>/`. The `testflight-readiness` job reports which App Store Connect secrets are set
 (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`), never their values.

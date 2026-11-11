@@ -33,3 +33,11 @@ shot 1-home -demo YES -tab home
 shot 2-recipes -demo YES -tab recipes
 shot 3-profile -demo YES -tab profile
 shot 4-catalog -demo YES -tab profile -screen catalog
+# Stories side (made-up library, drawn covers).
+shot 5-stories-home -demo YES -area stories -tab home
+shot 6a-stories-library -demo YES -area stories -tab library
+shot 6b-stories-shelf -demo YES -area stories -tab library -library-mode Raft
+shot 6c-stories-cover-flow -demo YES -area stories -tab library -library-mode "Cover Flow"
+shot 7-stories-favorites -demo YES -area stories -tab favorites
+shot 8-stories-mini-player -demo YES -area stories -tab library -screen mini-player
+shot 9-stories-player -demo YES -area stories -tab home -screen player

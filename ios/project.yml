@@ -44,6 +44,9 @@ targets:
         UIUserInterfaceStyle: Dark
         UILaunchScreen:
           UIColorName: LaunchBackground
+        # Stories keep playing with the screen off and show on the Lock Screen.
+        UIBackgroundModes:
+          - audio
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations:

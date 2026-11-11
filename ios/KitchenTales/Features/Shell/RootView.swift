@@ -1,59 +1,133 @@
 import SwiftUI
 
+/// The two halves of the app. Acasă on each side has the Rețete / Povești switch, like the web;
+/// each half has its own tab bar.
+enum AppArea: String, CaseIterable, Hashable {
+    case recipes, stories
+    var label: String { self == .recipes ? "Rețete" : "Povești" }
+}
+
 /// The recipes-side tabs, as in the plan: Acasă, Săptămâna, Rețete, Listă, Profil.
-/// (Povești gets its own bar in Phase 2.)
 enum AppTab: String, CaseIterable, Hashable {
     case home, week, recipes, list, profile
 }
 
+/// Signed in: the side last used (remembered on the phone), with the stories library and the
+/// player shared by both sides, so a story keeps playing while you look at a recipe.
 struct RootView: View {
-    @State private var tab: AppTab = LaunchOptions.tab ?? .home
+    @Environment(AuthModel.self) private var auth
+
+    var body: some View {
+        SignedInRoot(auth: auth)
+    }
+}
+
+private struct SignedInRoot: View {
+    @AppStorage("area") private var savedArea: AppArea = .recipes
+    @State private var stories: StoryStore
+    @State private var area = AreaModel()
+
+    init(auth: AuthModel) {
+        _stories = State(initialValue: StoryStore(auth: auth))
+    }
+
+    var body: some View {
+        ZStack {
+            switch area.current {
+            case .recipes: RecipesTabs().transition(.opacity)
+            case .stories: StoriesTabs().transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: area.current)
+        .environment(stories)
+        .environment(StoryPlayer.shared)
+        .environment(area)
+        .onAppear { area.current = LaunchOptions.area ?? savedArea }
+        .onChange(of: area.current) { savedArea = area.current; Haptics.select() }
+    }
+}
+
+/// Which side is showing; Acasă on either side switches it.
+@MainActor @Observable
+final class AreaModel {
+    var current: AppArea = LaunchOptions.area ?? .recipes
+}
+
+/// The Rețete / Povești capsule at the top of Acasă.
+struct AreaPicker: View {
+    let current: AppArea
+    @Environment(AreaModel.self) private var area
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(AppArea.allCases, id: \.self) { item in
+                Button {
+                    if item != current { area.current = item }
+                } label: {
+                    Text(item.label)
+                        .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .subheadline))
+                        .foregroundStyle(item == current ? Theme.text : Theme.text.opacity(0.75))
+                        .padding(.horizontal, 14)
+                        .frame(height: 32)
+                        .background(Capsule().fill(item == current ? Color.white.opacity(0.22) : .clear))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(item == current ? .isSelected : [])
+            }
+        }
+        .padding(3)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(.white.opacity(0.12)))
+        .environment(\.colorScheme, .dark)
+    }
+}
+
+struct RecipesTabs: View {
+    @State private var tab: AppTab = LaunchOptions.tab.flatMap(AppTab.init(rawValue:)) ?? .home
 
     var body: some View {
         TabView(selection: $tab) {
             Tab("Acasă", systemImage: "house.fill", value: AppTab.home) {
                 HomePlaceholderView()
+                    .miniPlayerInset()
             }
             Tab("Săptămâna", systemImage: "calendar", value: AppTab.week) {
                 PlaceholderScreen(title: "Săptămâna", symbol: "calendar",
                                   message: "Planul săptămânii vine în faza Rețete.")
+                    .miniPlayerInset()
             }
             Tab("Rețete", systemImage: "book.closed.fill", value: AppTab.recipes) {
                 PlaceholderScreen(title: "Rețete", symbol: "book.closed",
                                   message: "Lista și căutarea rețetelor vin în faza Rețete.")
+                    .miniPlayerInset()
             }
             Tab("Listă", systemImage: "checklist", value: AppTab.list) {
                 PlaceholderScreen(title: "Listă", symbol: "cart",
                                   message: "Lista de cumpărături vine în faza Rețete.")
+                    .miniPlayerInset()
             }
             Tab("Profil", systemImage: "person.crop.circle.fill", value: AppTab.profile) {
                 ProfileView()
+                    .miniPlayerInset()
             }
         }
         .onChange(of: tab) { Haptics.select() }
+        .storyPlayerSheet()
     }
 }
 
-/// Acasă keeps the web structure: the Rețete / Povești switch on top. The content arrives in
-/// Phase 2 (Povești) and Phase 3 (Rețete).
+/// Acasă on the recipes side: the switch on top; the recipes themselves arrive in Phase 3.
 struct HomePlaceholderView: View {
-    enum Area: String, CaseIterable { case recipes = "Rețete", stories = "Povești" }
-    @State private var area: Area = .recipes
-
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    Picker("Zona", selection: $area) {
-                        ForEach(Area.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-
+                    AreaPicker(current: .recipes)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     VStack(spacing: 12) {
-                        SectionLabel(area == .recipes ? "De gătit" : "Povești de seară")
-                        EmptyStateView(symbol: area == .recipes ? "fork.knife" : "moon.stars",
-                                       title: "În curând",
-                                       message: "Aplicația nativă se construiește pas cu pas. Până atunci, folosește aplicația web.")
+                        SectionLabel("De gătit")
+                        EmptyStateView(symbol: "fork.knife", title: "În curând",
+                                       message: "Rețetele native vin în faza următoare. Până atunci, folosește aplicația web.")
                             .frame(maxWidth: .infinity)
                             .ktCard(padding: 8)
                     }
@@ -61,10 +135,7 @@ struct HomePlaceholderView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
             }
-            .background {
-                if area == .stories { Theme.Night.gradient.ignoresSafeArea() } else { Theme.background.ignoresSafeArea() }
-            }
-            .animation(.easeInOut(duration: 0.3), value: area)
+            .ktBackground()
             .navigationTitle("Bucătăria")
         }
     }

@@ -44,7 +44,10 @@ struct AppRoot: View {
 /// Launch arguments used by the simulator screenshots in CI, e.g. `-tab profile -screen catalog`.
 /// Passing `-key value` on launch puts the value into UserDefaults under `key`.
 enum LaunchOptions {
-    static var tab: AppTab? { UserDefaults.standard.string(forKey: "tab").flatMap(AppTab.init(rawValue:)) }
+    /// `-tab <name>`: the tab to open (a recipes tab or a stories tab, by its raw value).
+    static var tab: String? { UserDefaults.standard.string(forKey: "tab") }
+    /// `-area recipes|stories`: the side to open.
+    static var area: AppArea? { UserDefaults.standard.string(forKey: "area").flatMap(AppArea.init(rawValue:)) }
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
 
     /// `-demo 1`: a made-up signed-in account, so screenshots can show the app without a real

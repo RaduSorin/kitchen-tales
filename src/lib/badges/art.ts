@@ -194,3 +194,7 @@ export function stickerSvg(b: Badge, earned: boolean, opts: { label?: string } =
 }
 
 export const hasArt = (b: Badge) => !!(b.kind === 'stamp' ? KITCHEN[b.art] : STORY[b.art])
+
+/** A missing badge's outline in another ink, for light paper (the passport): its white lines become `rgb`, `k` times stronger. */
+export const inked = (svg: string, rgb: string, k: number) =>
+  svg.replace(/rgb\(255 255 255 \/ \.(\d+)\)/g, (_, a: string) => `rgb(${rgb} / ${Math.min(1, Number(`.${a}`) * k).toFixed(2)})`)

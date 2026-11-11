@@ -132,9 +132,10 @@ struct MiniPlayer: View {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color(hex: CoverScene.of(story).top).opacity(0.25))
                     if player.duration > 0 {
+                        let done: Double = min(1, player.position / player.duration)
                         GeometryReader { geo in
                             Capsule().fill(Theme.Night.moon)
-                                .frame(width: geo.size.width * min(1, player.position / player.duration), height: 2)
+                                .frame(width: geo.size.width * CGFloat(done), height: 2)
                                 .frame(maxHeight: .infinity, alignment: .bottom)
                         }
                         .padding(.horizontal, 14)

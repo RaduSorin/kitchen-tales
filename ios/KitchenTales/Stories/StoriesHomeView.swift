@@ -182,7 +182,7 @@ private struct HeroCard: View {
                     .foregroundStyle(Theme.text)
                     .lineLimit(2)
                     .minimumScaleFactor(0.7)
-                Text([StoryLibrary.folderOf(story), story.minutesLabel].compactMap { $0 }.joined(separator: " · "))
+                Text(story.detailLine)
                     .font(.ktCallout)
                     .foregroundStyle(Theme.text.opacity(0.8))
                 HStack(spacing: 12) {

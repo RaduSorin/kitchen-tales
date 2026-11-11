@@ -30,6 +30,11 @@ struct Story: Codable, Identifiable, Hashable, Sendable {
         return "\(max(1, Int((durationSec / 60).rounded()))) min"
     }
 
+    /// "Povești Disney · 10 min"
+    var detailLine: String {
+        [StoryLibrary.folderOf(self), minutesLabel].compactMap { $0 }.joined(separator: " · ")
+    }
+
     /// From a GraphQL `Story` row. `mySpace` is the signed-in account's space group.
     init?(row: [String: Any], mySpace: String?) {
         guard let id = row["id"] as? String, let title = row["title"] as? String,

@@ -134,13 +134,8 @@ struct FolderCard: View {
                     if art.isEmpty {
                         Text(folder.icon ?? "📁").font(.system(size: side * 0.6))
                     }
-                    ForEach(Array(art.prefix(3).enumerated().reversed()), id: \.element.id) { index, story in
-                        StoryCover(story: story, cornerRadius: 8)
-                            .frame(width: side, height: side)
-                            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.7), lineWidth: 1.5))
-                            .rotationEffect(.degrees(Double(index) * -7))
-                            .offset(x: CGFloat(index) * -side * 0.42, y: CGFloat(index) * 2)
-                            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                    ForEach(Array(art.prefix(3).enumerated().reversed()), id: \.element.id) { pair in
+                        FannedCover(story: pair.element, index: pair.offset, side: side)
                     }
                 }
                 .frame(width: geo.size.width - 14, height: side + 20, alignment: .trailing)
@@ -162,6 +157,24 @@ struct FolderCard: View {
         .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).strokeBorder(.white.opacity(0.1)))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(folder.name), \(folder.subtitle)")
+    }
+}
+
+/// One of the covers fanned out on a folder card (0 is in front).
+private struct FannedCover: View {
+    let story: Story
+    let index: Int
+    let side: CGFloat
+
+    var body: some View {
+        let step = CGFloat(index)
+        let angle: Angle = .degrees(Double(index) * -7)
+        StoryCover(story: story, cornerRadius: 8)
+            .frame(width: side, height: side)
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.7), lineWidth: 1.5))
+            .rotationEffect(angle)
+            .offset(x: step * side * -0.42, y: step * 2)
+            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
     }
 }
 
@@ -206,7 +219,7 @@ struct StoryRow: View {
                         }
                     VStack(alignment: .leading, spacing: 3) {
                         Text(story.title).font(.ktBodyEmphasis).foregroundStyle(Theme.text).lineLimit(2)
-                        Text([StoryLibrary.folderOf(story), story.minutesLabel].compactMap { $0 }.joined(separator: " · "))
+                        Text(story.detailLine)
                             .font(.ktFootnote).foregroundStyle(Theme.Night.muted).lineLimit(1)
                     }
                     Spacer(minLength: 0)
@@ -268,30 +281,15 @@ struct FolderView: View {
 /// Covers in a row that turn as they move away from the middle, like Cover Flow on the iPod.
 struct CoverFlow: View {
     let stories: [Story]
-    @Environment(StoryStore.self) private var store
-    @Environment(StoryPlayer.self) private var player
     @State private var centered: String?
+    private let side: CGFloat = 220
 
     var body: some View {
-        let side: CGFloat = 220
         VStack(spacing: 18) {
             ScrollView(.horizontal) {
                 LazyHStack(spacing: -40) {
                     ForEach(stories) { story in
-                        Button { Task { await player.play(story, queue: stories, store: store) } } label: {
-                            StoryCover(story: story, cornerRadius: 10)
-                                .frame(width: side, height: side)
-                                .shadow(color: .black.opacity(0.5), radius: 12, y: 8)
-                        }
-                        .buttonStyle(PressableStyle())
-                        .scrollTransition(.interactive, axis: .horizontal) { content, phase in
-                            content
-                                .rotation3DEffect(.degrees(phase.value * -55), axis: (x: 0, y: 1, z: 0), perspective: 0.5)
-                                .scaleEffect(1 - abs(phase.value) * 0.18)
-                                .zIndex(-abs(phase.value))
-                                .opacity(1 - abs(phase.value) * 0.25)
-                        }
-                        .id(story.id)
+                        CoverFlowItem(story: story, queue: stories, side: side).id(story.id)
                     }
                 }
                 .scrollTargetLayout()
@@ -301,18 +299,71 @@ struct CoverFlow: View {
             .contentMargins(.horizontal, 80, for: .scrollContent)
             .scrollIndicators(.hidden)
             .frame(height: side + 30)
-
-            if let story = stories.first(where: { $0.id == (centered ?? stories.first?.id) }) {
-                VStack(spacing: 4) {
-                    Text(story.title).font(.ktStoryTitle).foregroundStyle(Theme.text).multilineTextAlignment(.center)
-                    Text([StoryLibrary.folderOf(story), story.minutesLabel].compactMap { $0 }.joined(separator: " · "))
-                        .font(.ktFootnote).foregroundStyle(Theme.Night.muted)
-                }
-                .padding(.horizontal, 24)
-                .animation(.snappy, value: centered)
-            }
+            caption
         }
         .padding(.top, 20)
+    }
+
+    @ViewBuilder private var caption: some View {
+        let id = centered ?? stories.first?.id
+        if let story = stories.first(where: { $0.id == id }) {
+            CoverCaption(story: story)
+                .padding(.horizontal, 24)
+                .animation(.snappy, value: centered)
+        }
+    }
+}
+
+private struct CoverFlowItem: View {
+    let story: Story
+    let queue: [Story]
+    let side: CGFloat
+    @Environment(StoryStore.self) private var store
+    @Environment(StoryPlayer.self) private var player
+
+    var body: some View {
+        Button(action: play) {
+            StoryCover(story: story, cornerRadius: 10)
+                .frame(width: side, height: side)
+                .shadow(color: .black.opacity(0.5), radius: 12, y: 8)
+        }
+        .buttonStyle(PressableStyle())
+        .scrollTransition(.interactive, axis: .horizontal) { content, phase in
+            content.coverFlowTurn(phase.value)
+        }
+    }
+
+    private func play() {
+        Task { await player.play(story, queue: queue, store: store) }
+    }
+}
+
+private extension View {
+    /// -1 (left) ... 0 (middle) ... 1 (right): turned, smaller and dimmer away from the middle.
+    func coverFlowTurn(_ value: Double) -> some View {
+        let distance: Double = abs(value)
+        let angle: Angle = .degrees(value * -55)
+        return self
+            .rotation3DEffect(angle, axis: (x: 0, y: 1, z: 0), perspective: 0.5)
+            .scaleEffect(1 - distance * 0.18)
+            .opacity(1 - distance * 0.25)
+            .zIndex(-distance)
+    }
+}
+
+private struct CoverCaption: View {
+    let story: Story
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(story.title)
+                .font(.ktStoryTitle)
+                .foregroundStyle(Theme.text)
+                .multilineTextAlignment(.center)
+            Text(story.detailLine)
+                .font(.ktFootnote)
+                .foregroundStyle(Theme.Night.muted)
+        }
     }
 }
 
@@ -338,7 +389,7 @@ struct FavoritesView: View {
                                         .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
                                     Text(story.title).font(.custom(AppFont.bodySemibold, size: 15, relativeTo: .subheadline))
                                         .foregroundStyle(Theme.text).lineLimit(1)
-                                    Text([StoryLibrary.folderOf(story), story.minutesLabel].compactMap { $0 }.joined(separator: " · "))
+                                    Text(story.detailLine)
                                         .font(.ktCaption).foregroundStyle(Theme.Night.muted).lineLimit(1)
                                 }
                             }

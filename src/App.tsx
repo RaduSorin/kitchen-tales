@@ -105,10 +105,12 @@ function backFallback(pathname: string) {
 
 function BackButton({ to }: { to: string }) {
   const back = useBack(to)
+  // A badge just put in the clasor says where back leads ("Înapoi la rețetă").
+  const label = ((useLocation().state ?? {}) as { backLabel?: string }).backLabel ?? 'Înapoi'
   return (
-    <button type="button" className="back-btn" onClick={back} aria-label="Înapoi">
+    <button type="button" className="back-btn" onClick={back} aria-label={label}>
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
-      <span>Înapoi</span>
+      <span>{label}</span>
     </button>
   )
 }
@@ -136,8 +138,10 @@ function useHideOnScroll(enabled: boolean) {
 
 function Shell() {
   const online = useOnline()
-  const { pathname } = useLocation()
+  const location = useLocation()
+  const { pathname } = location
   const back = backFallback(pathname)
+  const landingBack = pathname === '/profil/clasor' && !!(location.state as { backLabel?: string } | null)?.backLabel
   // The Profile is the same on both sides: its title replaces the Rețete / Povești switch.
   const profile = pathname.startsWith('/profil')
   const childName = useSettings().child.name
@@ -195,7 +199,8 @@ function Shell() {
       {!online && <div className="offline-banner">Ești offline. Vezi rețetele și poveștile salvate pe acest dispozitiv.</div>}
       <main>
         {/* Phones have no top bar: pages that need a way back get the arrow at the top of the page. */}
-        {back && !kid && !player && <div className={back === '/retete' ? 'page-back over' : 'page-back'}><BackButton to={back} /></div>}
+        {/* The clasor shows its own named way back after a new stamp (Badges.tsx). */}
+        {back && !kid && !player && !landingBack && <div className={back === '/retete' ? 'page-back over' : 'page-back'}><BackButton to={back} /></div>}
         <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<Home />} />

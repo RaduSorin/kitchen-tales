@@ -1,5 +1,5 @@
 /* Stamps (Rețete) and stickers (Povești): the celebration, the Clasor, the Album, the Profile cards.
-   The arrival animations run only inside the celebration (.bd-anim, .bd-reward), never in grids. */
+   The arrival animations run only in the celebration and for the one badge landing in its place. */
 
 .bd-art { display: block; line-height: 0; }
 .bd-art svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -45,8 +45,6 @@
   animation: bd-spin 14s linear infinite; }
 .bd-tw { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; animation: bd-twinkle 1.8s ease-in-out infinite both; pointer-events: none; }
 .bd-sticker-big { position: relative; z-index: 1; width: 82%; animation: bd-pop-in .7s .25s cubic-bezier(.3, 1.7, .5, 1) both; filter: drop-shadow(0 10px 16px rgb(0 0 0 / .35)); }
-.bd-reward.sticking .bd-sticker-big { animation: bd-stick .65s cubic-bezier(.5, 0, .8, .4) forwards; }
-.bd-reward.sticking .bd-glow, .bd-reward.sticking .bd-tw { opacity: 0; transition: opacity .3s; }
 .bd-ura-name { font-family: var(--f-kids); font-size: var(--fs-3xl); font-weight: 800; line-height: 1.1; }
 .bd-ura-how { margin: 0 0 6px; font-size: var(--fs-lg); color: rgb(255 246 214 / .78); max-width: 26ch; }
 .bd-kbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 220px; min-height: 60px; padding: 12px 26px; border: 0; border-radius: 999px;
@@ -59,7 +57,6 @@
 
 @keyframes bd-hop { 0% { opacity: 0; transform: scale(.4) translateY(20px); } 100% { opacity: 1; transform: none; } }
 @keyframes bd-pop-in { 0% { opacity: 0; transform: scale(.2) rotate(-25deg); } 100% { opacity: 1; transform: none; } }
-@keyframes bd-stick { 0% { transform: none; } 30% { transform: scale(1.12) rotate(4deg); } 100% { opacity: 0; transform: translateY(46vh) scale(.25) rotate(-10deg); } }
 @keyframes bd-spin { to { transform: rotate(360deg); } }
 @keyframes bd-twinkle { 0%, 100% { opacity: .15; transform: scale(.5); } 50% { opacity: 1; transform: scale(1.1); } }
 
@@ -132,10 +129,45 @@
 @media (prefers-reduced-motion: reduce) {
   .bd-layer, .bd-anim .bd-drop, .bd-anim .bd-pm, .bd-anim .bd-shake, .bd-ripple::before, .bd-ripple::after,
   .bd-ura-title, .bd-glow, .bd-tw, .bd-sticker-big, .bd-slot.waiting, .bd-slot.stuck .bd-art { animation: none !important; }
-  .bd-reward.sticking .bd-sticker-big { animation: none; opacity: .4; }
 }
 
 /* The stories home's top row: the album next to search; in kid mode, next to the lock. */
 .home-head-end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .home-head .bd-album-btn { width: 42px; height: 42px; background: rgb(0 0 0 / .28); }
 .kid-head .bd-album-btn { width: 48px; height: 48px; margin-right: auto; }
+
+/* ---- landing in the album or clasor ---- */
+/* The copy that flies from the middle of the screen to the badge's place (useLanding). */
+.bd-flyer { position: fixed; z-index: 90; pointer-events: none; transform-origin: 0 0; filter: drop-shadow(0 12px 16px rgb(0 0 0 / .4)); }
+.bd-flyer svg { display: block; width: 100%; height: auto; overflow: visible; }
+/* The press-in: a ring spreading from the place and, for stickers, a burst of dots. */
+.bd-land { position: fixed; z-index: 89; pointer-events: none; }
+.bd-land-ring { position: absolute; inset: 0; border-radius: 16px; border: 3px solid #ffd76a; animation: bd-ring .6s ease-out forwards; }
+.bd-land i { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: #ffd76a; animation: bd-dot .65s cubic-bezier(.2, .8, .3, 1) forwards; }
+.bd-land i:nth-child(3n) { background: #ff9fc0; }
+.bd-land i:nth-child(3n+1) { background: #9fe3ff; }
+@keyframes bd-ring { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(1.5); } }
+@keyframes bd-dot { from { opacity: 1; transform: none; } to { opacity: 0; transform: translate(var(--x), var(--y)) scale(.2); } }
+/* A stamp that just landed gets its postmark slammed on. */
+.bd-postmark .bd-pm { animation: bd-slam .34s .1s cubic-bezier(.5, 0, .7, 1.4) both; }
+.bd-postmark .bd-shake { animation: bd-shake .3s .38s ease-out both; }
+.bd-cell.landed .bd-art, .bd-slot.landed .bd-art { animation: bd-press .42s ease-out; }
+@keyframes bd-press { 0% { transform: scale(1.08); } 40% { transform: scale(.9, .94); } 75% { transform: scale(1.03); } 100% { transform: none; } }
+
+/* The album's named way back ("Înapoi la poveste"), big enough for a child's finger. */
+.bd-back-pill { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 4px; min-height: 48px; padding: 0 18px 0 12px; border: 0; border-radius: 999px;
+  background: rgb(255 255 255 / .12); color: #fff6d6; font: 700 var(--fs-md) var(--f-kids); cursor: pointer; }
+.bd-back-pill:active { background: rgb(255 255 255 / .2); }
+.bd-back-pill:focus-visible { outline: 3px solid #ffd76a; outline-offset: 3px; }
+.bd-album-top:has(.bd-back-pill) { grid-template-columns: 1fr; gap: 6px; }
+.bd-album-top:has(.bd-back-pill) .bd-album-title { grid-column: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bd-land, .bd-postmark .bd-pm, .bd-postmark .bd-shake, .bd-cell.landed .bd-art, .bd-slot.landed .bd-art { animation: none !important; }
+}
+
+/* The night area sets every h1 in its serif; the album's title stays in the children's face. */
+:root[data-area] .bd-album-title { font-family: var(--f-kids); font-weight: 800; }
+/* The clasor's named way back stays in sight while the page scrolls to the new stamp. */
+.bd-back-sticky { position: sticky; z-index: 8; top: calc(env(safe-area-inset-top, 0px) + 8px); margin: 0 0 8px; background: var(--surface-2); color: var(--text);
+  font-family: var(--f-body); font-weight: 600; box-shadow: 0 6px 18px rgb(0 0 0 / .35); }

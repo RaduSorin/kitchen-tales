@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BADGE, BADGES, STAMPS, STICKERS } from '../src/lib/badges/catalog'
+import { backLabelFor } from '../src/lib/badges/backLabel'
 import { applyEvent, emptyState, EPOCH, evaluate, mergeStates, progressOf, type BadgeEvent, type BadgeState } from '../src/lib/badges/engine'
 
 const at = (iso: string) => new Date(iso)
@@ -129,6 +130,17 @@ describe('fresh start', () => {
     const s = run([{ t: 'cooked', recipeId: 'a' }], at('2026-11-11T10:00:00'))
     expect(s.since).toBe(at('2026-11-11T10:00:00').toISOString())
     expect(evaluate(s, at('2027-11-12T10:00:00')).fresh).toContain('an')
+  })
+})
+
+describe('back button', () => {
+  it('names the page the badge was earned on', () => {
+    expect(backLabelFor('/povesti/abc123')).toBe('Înapoi la poveste')
+    expect(backLabelFor('/povesti/acasa')).toBe('Înapoi la povești')
+    expect(backLabelFor('/retete/r1/gateste')).toBe('Înapoi la gătit')
+    expect(backLabelFor('/retete/r1')).toBe('Înapoi la rețetă')
+    expect(backLabelFor('/retete/noua')).toBe('Înapoi la rețete')
+    expect(backLabelFor('/profil')).toBe('Înapoi')
   })
 })
 

@@ -17,17 +17,18 @@ enum Theme {
     static let onAccent = Color(hex: 0x1A1410)
     static let danger = Color(hex: 0xFF8F7A)
 
-    /// Stories side ("noapte"): a night-sky gradient and its own muted/danger tones.
+    /// Stories side, "Seară de lux" like the web (src/stories-a.css): near-black with soft warm
+    /// light at the top, gold accents and its own muted/danger tones.
     enum Night {
-        static let top = Color(hex: 0x171A45)
-        static let bottom = Color(hex: 0x2C2368)
+        static let top = Color(hex: 0x0F0E13)
+        static let bottom = Color(hex: 0x15131B)
         static let surface = Color.white.opacity(0.07)
         static let surface2 = Color.white.opacity(0.11)
         static let muted = Color(hex: 0xAAA3B2)
         static let gold = Color(hex: 0xE2B84F)
         static let danger = Color(hex: 0xFF8FA3)
-        static let moon = Color(hex: 0xFFD76A)
-        static let ink = Color(hex: 0x171A45)
+        static let moon = Color(hex: 0xF2C879)
+        static let ink = Color(hex: 0x1A1410)
         static var gradient: LinearGradient {
             LinearGradient(colors: [top, bottom], startPoint: .top, endPoint: .bottom)
         }

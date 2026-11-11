@@ -28,7 +28,7 @@ struct StoriesTabs: View {
                 .miniPlayerInset()
             }
             Tab("Profil", systemImage: "person.crop.circle", value: StoryTab.profile) {
-                ProfileView()
+                ProfileView(night: true)
                     .miniPlayerInset()
             }
         }

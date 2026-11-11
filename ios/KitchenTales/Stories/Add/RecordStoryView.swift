@@ -127,7 +127,7 @@ struct RecordStoryView: View {
         .foregroundStyle(Theme.text)
         .background {
             ZStack {
-                Theme.Night.gradient
+                NightBackdrop()
                 RadialGradient(colors: [Color(hex: 0xFF6E6E).opacity(recorder.state == .recording ? 0.22 : 0.08), .clear],
                                center: UnitPoint(x: 0.5, y: 0.45), startRadius: 10, endRadius: 320)
             }

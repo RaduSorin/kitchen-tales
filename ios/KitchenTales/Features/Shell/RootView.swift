@@ -157,6 +157,8 @@ struct PlaceholderScreen: View {
 }
 
 struct ProfileView: View {
+    /// On the stories side Profil sits on the night background, like the web.
+    var night = false
     @Environment(AuthModel.self) private var auth
     @State private var path: [String] = LaunchOptions.screen == "catalog" ? ["catalog"] : []
     @State private var confirmSignOut = false
@@ -189,9 +191,9 @@ struct ProfileView: View {
                                 .font(.ktFootnote).foregroundStyle(Theme.muted)
                         }
                     }
-                    .listRowBackground(Theme.surface)
+                    .listRowBackground(rowBackground)
                 }
-                OfflineSection()
+                OfflineSection(rowBackground: rowBackground)
                 Section {
                     NavigationLink(value: "catalog") {
                         Label("Componente de design", systemImage: "paintpalette")
@@ -199,27 +201,32 @@ struct ProfileView: View {
                 } header: {
                     Text("Dezvoltare")
                 }
-                .listRowBackground(Theme.surface)
+                .listRowBackground(rowBackground)
                 Section {
                     LabeledContent("Versiune", value: AppInfo.version)
                 }
-                .listRowBackground(Theme.surface)
+                .listRowBackground(rowBackground)
                 Section {
                     Button("Ieși din cont", role: .destructive) { confirmSignOut = true }
                         .foregroundStyle(Theme.danger)
                 }
-                .listRowBackground(Theme.surface)
+                .listRowBackground(rowBackground)
             }
             .confirmationDialog("Ieși din cont?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button("Ieși din cont", role: .destructive) { Task { await auth.signOut() } }
             } message: {
                 Text("Pe acest telefon va trebui să intri din nou cu e-mailul și parola.")
             }
-            .ktBackground()
+            .background { if night { NightBackdrop() } else { Theme.background.ignoresSafeArea() } }
+            .scrollContentBackground(.hidden)
             .navigationTitle("Profil")
             .navigationDestination(for: String.self) { _ in DesignCatalogView() }
         }
     }
+}
+
+extension ProfileView {
+    var rowBackground: Color { night ? Theme.Night.surface : Theme.surface }
 }
 
 enum AppInfo {
@@ -233,6 +240,7 @@ enum AppInfo {
 
 /// Profil: how many stories are saved on the phone, and a way to free the space.
 private struct OfflineSection: View {
+    let rowBackground: Color
     @Environment(StoryStore.self) private var store
     @State private var confirmClear = false
 
@@ -251,7 +259,7 @@ private struct OfflineSection: View {
         } footer: {
             Text("Ține apăsat pe o poveste sau pe un dosar și alege „Descarcă” ca să le asculți fără internet.")
         }
-        .listRowBackground(Theme.surface)
+        .listRowBackground(rowBackground)
         .confirmationDialog("Ștergi poveștile salvate?", isPresented: $confirmClear, titleVisibility: .visible) {
             Button("Șterge de pe telefon", role: .destructive) { offline.remove(Array(offline.saved)) }
         } message: {

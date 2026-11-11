@@ -39,7 +39,7 @@ final class StoryPlayer {
     @ObservationIgnored private var artwork: MPMediaItemArtwork?
     @ObservationIgnored private weak var store: StoryStore?
     /// The volume is lowered over this many seconds before a sleep stop.
-    static let fadeSeconds: Double = 30
+    nonisolated static let fadeSeconds: Double = 30
 
     /// One player for the whole app (it owns the Lock Screen controls).
     static let shared = StoryPlayer()

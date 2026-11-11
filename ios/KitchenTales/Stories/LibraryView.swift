@@ -338,16 +338,15 @@ private struct CoverFlowItem: View {
     }
 }
 
-private extension View {
+private extension VisualEffect {
     /// -1 (left) ... 0 (middle) ... 1 (right): turned, smaller and dimmer away from the middle.
-    func coverFlowTurn(_ value: Double) -> some View {
+    func coverFlowTurn(_ value: Double) -> some VisualEffect {
         let distance: Double = abs(value)
         let angle: Angle = .degrees(value * -55)
         return self
             .rotation3DEffect(angle, axis: (x: 0, y: 1, z: 0), perspective: 0.5)
             .scaleEffect(1 - distance * 0.18)
             .opacity(1 - distance * 0.25)
-            .zIndex(-distance)
     }
 }
 

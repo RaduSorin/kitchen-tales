@@ -37,7 +37,10 @@ enum BackendError: Error, LocalizedError, Equatable {
 
 /// Plain GraphQL over HTTPS to the same AppSync API the web app uses, signed in with the
 /// Cognito access token (user pool authorization, groups decide what each space sees).
-struct GraphQLClient: Sendable {
+/// Main-actor bound: the JSON dictionaries never cross actors, and the waiting happens in
+/// URLSession, so the interface stays smooth.
+@MainActor
+struct GraphQLClient {
     let config: BackendConfig
     let token: @Sendable () async throws -> String
     var session: URLSession = .shared
@@ -45,7 +48,7 @@ struct GraphQLClient: Sendable {
     /// Runs a query and returns its `data` object. Field errors that still come with data
     /// (for example `spaceGroups` on another space's shared story, which only its owners may
     /// read) are ignored, like the web app does.
-    func run(_ query: String, variables: sending [String: Any] = [:]) async throws -> sending [String: Any] {
+    func run(_ query: String, variables: [String: Any] = [:]) async throws -> [String: Any] {
         var request = URLRequest(url: config.graphqlURL, timeoutInterval: 20)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -70,7 +73,7 @@ struct GraphQLClient: Sendable {
     }
 
     /// Every page of a `list…` query: `{ items { … } nextToken }`.
-    func listAll(_ field: String, fields: String, pageSize: Int = 200) async throws -> sending [[String: Any]] {
+    func listAll(_ field: String, fields: String, pageSize: Int = 200) async throws -> [[String: Any]] {
         let query = "query List($limit: Int, $nextToken: String) { \(field)(limit: $limit, nextToken: $nextToken) { items { \(fields) } nextToken } }"
         var items: [[String: Any]] = []
         var next: String?
@@ -88,7 +91,8 @@ struct GraphQLClient: Sendable {
 
 /// Signed links (valid one hour) to read stored files, asked for through the `fileUrls` query,
 /// which checks the caller's space. Kept for 50 minutes, so a shelf of covers is one call.
-actor FileLinks {
+@MainActor
+final class FileLinks {
     private let client: GraphQLClient
     private var cache: [String: (url: URL, until: Date)] = [:]
     private var pending: [String: Task<URL?, Never>] = [:]

@@ -52,7 +52,12 @@ export type BadgeEvent =
   | { t: 'folder-made' }
   | { t: 'kid-mode' }
   | { t: 'offline-saved' }
-  | { t: 'story-finished'; storyId: string; folder: string; folders: string[] }
+  | {
+      t: 'story-finished'; storyId: string; folder: string; folders: string[]
+      /** The story's length, how it was made, played from the phone's copy, in kid mode. */
+      secs?: number; source?: 'upload' | 'recording' | 'generated'; offline?: boolean; kid?: boolean
+    }
+  | { t: 'favorite' }
   | { t: 'sleep-stop' }
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -107,7 +112,18 @@ export function applyEvent(s: BadgeState, e: BadgeEvent, now: Date): BadgeState 
       x = replace(x, 'allFolders', e.folders)
       // An evening story: after 9 pm (or past midnight).
       if (hour >= 21 || hour < 4) x = addTo(x, 'evenings', dayOf(hour < 4 ? new Date(now.getTime() - 5 * 3_600_000) : now))
+      // Every day with a story (past midnight still counts as the evening before), for "evenings in a row".
+      x = addTo(x, 'days', dayOf(hour < 4 ? new Date(now.getTime() - 5 * 3_600_000) : now))
+      if (hour >= 4 && hour < 9) x = bump(x, 'morning')
+      if (e.secs && e.secs >= 20 * 60) x = bump(x, 'long')
+      if (e.secs && e.secs < 5 * 60) x = bump(x, 'short')
+      if (e.source === 'recording') x = bump(x, `rec:${e.storyId}`)
+      if (e.offline) x = bump(x, 'offlineListen')
+      if (e.kid) x = bump(x, 'kidListen')
+      if (now.getMonth() === 11 && now.getDate() >= 24 && now.getDate() <= 26) x = bump(x, 'xmas')
+      if (now.getMonth() === 9 && now.getDate() === 31) x = bump(x, 'halloween')
       return x
+    case 'favorite': return bump(x, 'favorite')
     case 'sleep-stop': return bump(x, 'sleepstop')
   }
 }

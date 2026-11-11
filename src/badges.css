@@ -70,6 +70,11 @@
 .bd-detail-art { width: min(62vw, 210px); }
 .bd-detail.kid .bd-detail-art { width: min(52vw, 180px); }
 .bd-detail.kid .bd-name { font-family: var(--f-kids); font-weight: 800; }
+.bd-spoiler-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1.5px dashed var(--accent); background: transparent; color: var(--accent); font: inherit; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; }
+.bd-spoiler { margin: 4px 0 0; padding: 10px 14px; max-width: 32ch; border-radius: 14px; border: 1.5px dashed var(--accent); font-size: var(--fs-md); line-height: 1.45; animation: bd-spoiler-in .25s ease-out; }
+.bd-spoiler b { display: block; margin-bottom: 2px; font-size: var(--fs-sm); color: var(--accent); }
+@keyframes bd-spoiler-in { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .bd-spoiler { animation: none; } }
 .bd-when { margin: 0; font-size: var(--fs-sm); color: var(--accent); font-weight: 600; }
 .bd-progress { display: grid; gap: 6px; width: min(100%, 260px); font-size: var(--fs-sm); color: var(--muted); }
 .bd-series { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }

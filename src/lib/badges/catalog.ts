@@ -29,6 +29,13 @@ export interface Badge {
   goal: (s: BadgeState, now: Date) => [number, number]
 }
 
+/** The longest run of consecutive days in a list of YYYY-MM-DD days. */
+export function longestRun(days: string[]) {
+  const ms = [...new Set(days)].map((d) => { const [y, m, n] = d.split('-').map(Number); return Date.UTC(y, m - 1, n) }).sort((a, b) => a - b)
+  let best = 0, run = 0
+  ms.forEach((t, i) => { run = i && t - ms[i - 1] === 86_400_000 ? run + 1 : 1; best = Math.max(best, run) })
+  return best
+}
 const c = (s: BadgeState, key: string) => s.counts[key] ?? 0
 const count = (key: string, need = 1) => (s: BadgeState): [number, number] => [c(s, key), need]
 const size = (key: string, need: number) => (s: BadgeState): [number, number] => [s.sets[key]?.length ?? 0, need]
@@ -40,7 +47,7 @@ const stamps = (group: string, ink: Ink, defs: Def[]): Badge[] => defs.map((d) =
 const stickers = (group: string, defs: Def[]): Badge[] => defs.map((d) => ({ ...d, kind: 'sticker', group }))
 
 export const STAMP_GROUPS = ['Adăugare', 'La gătit', 'Plan și caiet', 'Familie', 'Surprize'] as const
-export const STICKER_GROUPS = ['La ascultat', 'La făcut povești'] as const
+export const STICKER_GROUPS = ['La ascultat', 'La făcut povești', 'Obiceiuri bune'] as const
 
 export const BADGES: Badge[] = [
   ...stamps('Adăugare', 'add', [
@@ -101,6 +108,15 @@ export const BADGES: Badge[] = [
     { id: 'k-cloud', art: 'cloud', listen: true, name: 'Norișorul', how: 'Mai multe povești la rând, până s-a oprit singur playerul.', goal: count('sleepstop') },
     { id: 'k-balloon', art: 'balloon', name: 'Balonul', how: 'O poveste salvată pe telefon, pentru drum fără internet.', goal: count('offline') },
     { id: 'k-ghost', art: 'ghost', listen: true, secret: true, name: 'Stafia', how: 'Povești ascultate după ora 21, în 7 seri diferite.', goal: size('evenings', 7) },
+    { id: 'k-fox', art: 'fox', listen: true, name: 'Vulpița', how: 'O poveste ascultată dimineața, înainte de ora 9.', goal: count('morning') },
+    { id: 'k-snail', art: 'snail', listen: true, name: 'Melcul', how: 'O poveste lungă, de peste 20 de minute, ascultată până la capăt.', goal: count('long') },
+    { id: 'k-bunny', art: 'bunny', listen: true, name: 'Iepurașul', how: '5 povești scurte, sub 5 minute, ascultate până la capăt.', goal: count('short', 5) },
+    { id: 'k-parrot', art: 'parrot', listen: true, name: 'Papagalul', how: 'O poveste înregistrată de voi, ascultată de 5 ori.', goal: most('rec:', 5) },
+    { id: 'k-umbrella', art: 'umbrella', listen: true, name: 'Umbrela', how: 'O poveste ascultată fără internet, de pe telefon.', goal: count('offlineListen') },
+    { id: 'k-comet', art: 'comet', listen: true, name: 'Cometa', how: '200 de povești ascultate până la capăt.', goal: count('listened', 200) },
+    // Surprises on the calendar: they come right away, not held for the evening's one sticker.
+    { id: 'k-snow', art: 'snow', secret: true, name: 'Fulgul de nea', how: 'O poveste ascultată de Crăciun.', goal: count('xmas') },
+    { id: 'k-pumpkin', art: 'pumpkin', secret: true, name: 'Dovlecelul', how: 'O poveste ascultată de Halloween.', goal: count('halloween') },
   ]),
   ...stickers('La făcut povești', [
     { id: 'k-heart', art: 'heart', name: 'Inimioara', how: 'Prima poveste înregistrată cu vocea voastră.', goal: count('source:recording') },
@@ -112,6 +128,12 @@ export const BADGES: Badge[] = [
     { id: 'k-tree', art: 'tree', name: 'Copacul', how: '25 de povești în bibliotecă.', goal: count('stories', 25) },
     { id: 'k-castle', art: 'castle', name: 'Castelul', how: '50 de povești în bibliotecă.', goal: count('stories', 50) },
     { id: 'k-teddy', art: 'teddy', name: 'Ursulețul', how: 'Modul copil pornit prima dată.', goal: count('kid') },
+  ]),
+  ...stickers('Obiceiuri bune', [
+    { id: 'k-cat', art: 'cat', listen: true, name: 'Pisicuța', how: 'Povești ascultate 3 seri la rând.', goal: (s) => [longestRun(s.sets.days ?? []), 3] },
+    { id: 'k-dragon', art: 'dragon', listen: true, name: 'Dragonul', how: 'Povești ascultate 7 seri la rând.', goal: (s) => [longestRun(s.sets.days ?? []), 7] },
+    { id: 'k-key', art: 'key', name: 'Cheița', how: 'Prima poveste pusă la favorite.', goal: count('favorite') },
+    { id: 'k-penguin', art: 'penguin', listen: true, name: 'Pinguinul', how: '10 povești ascultate în modul copil.', goal: count('kidListen', 10) },
   ]),
 ]
 

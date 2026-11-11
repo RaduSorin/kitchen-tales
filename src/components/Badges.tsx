@@ -193,6 +193,7 @@ function BadgeSheet({ b, onClose }: { b: Badge; onClose: () => void }) {
   const earned = state.earned[b.id]
   const p = progressOf(b, state, new Date())
   const hidden = b.secret && !earned
+  const [spoiler, setSpoiler] = useState(false)
   const progress = progressText(b, p.have, p.need)
   const series = b.lvl ? STAMPS.filter((x) => x.art === b.art) : []
   return (
@@ -201,6 +202,13 @@ function BadgeSheet({ b, onClose }: { b: Badge; onClose: () => void }) {
         <BadgeArt b={b} earned={earned} className="bd-detail-art" />
         <b className="bd-name">{hidden ? 'Surpriză' : b.name}</b>
         <p className="bd-how">{hidden ? 'O descoperi făcând ce faci de obicei în aplicație, doar puțin altfel.' : b.how}</p>
+        {/* Spoiler: the secret's rule, only when asked for. */}
+        {hidden && (spoiler
+          ? <p className="bd-spoiler" role="status"><b>Cum o primești</b>{b.how}</p>
+          : <button type="button" className="bd-spoiler-btn" onClick={() => setSpoiler(true)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+            Arată ce trebuie să faci
+          </button>)}
         {earned ? <p className="bd-when">Primit pe {romanDay(earned)}</p> : progress && (
           <div className="bd-progress">
             <div className="bd-bar"><i style={{ width: `${Math.round((p.have / p.need) * 100)}%` }} /></div>

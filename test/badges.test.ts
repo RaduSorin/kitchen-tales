@@ -196,3 +196,11 @@ describe('drawings', async () => {
     expect(BADGES.filter((b) => !hasArt(b)).map((b) => b.id)).toEqual([])
   })
 })
+
+describe('passport ink', async () => {
+  const { inked } = await import('../src/lib/badges/art')
+  it('redraws a missing badge outline in the page ink, stronger', () => {
+    expect(inked('<path stroke="rgb(255 255 255 / .3)"/>', '95 55 62', 2)).toBe('<path stroke="rgb(95 55 62 / 0.60)"/>')
+    expect(inked('fill="rgb(255 255 255 / .8)"', '1 2 3', 2)).toBe('fill="rgb(1 2 3 / 1.00)"')
+  })
+})

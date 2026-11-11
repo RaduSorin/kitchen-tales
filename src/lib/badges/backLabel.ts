@@ -1,4 +1,4 @@
-// Where the album's or clasor's back button leads, said in words, after a new badge was put there.
+// Where the album's or passport's back button leads, said in words, after a new badge was put there.
 
 /** The back button's words for the page the badge was earned on. */
 export function backLabelFor(path: string) {

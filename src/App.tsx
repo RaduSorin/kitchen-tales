@@ -106,7 +106,7 @@ function backFallback(pathname: string) {
 
 function BackButton({ to }: { to: string }) {
   const back = useBack(to)
-  // A badge just put in the clasor says where back leads ("Înapoi la rețetă").
+  // A badge just put in the passport says where back leads ("Înapoi la rețetă").
   const label = ((useLocation().state ?? {}) as { backLabel?: string }).backLabel ?? 'Înapoi'
   return (
     <button type="button" className="back-btn" onClick={back} aria-label={label}>
@@ -200,7 +200,7 @@ function Shell() {
       {!online && <div className="offline-banner">Ești offline. Vezi rețetele și poveștile salvate pe acest dispozitiv.</div>}
       <main>
         {/* Phones have no top bar: pages that need a way back get the arrow at the top of the page. */}
-        {/* The clasor shows its own named way back after a new stamp (Badges.tsx). */}
+        {/* The passport shows its own named way back after a new stamp (Badges.tsx). */}
         {back && !kid && !player && !landingBack && <div className={back === '/retete' ? 'page-back over' : 'page-back'}><BackButton to={back} /></div>}
         <Suspense fallback={<Loading />}>
         <Routes>

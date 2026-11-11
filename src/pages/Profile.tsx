@@ -649,7 +649,7 @@ const PAGES: Record<string, [string, ComponentType]> = {
   offline: ['Povești fără internet', OfflineStorage],
   raft: ['Raftul cu povești', ShelfSettings],
   ragaz: ['Răgaz', RagazSettings],
-  clasor: ['Clasorul meu', Clasor],
+  clasor: ['Pașaportul meu', Clasor],
 }
 
 /** The Profile page's title, shown in the top bar instead of the Rețete / Povești switch. */

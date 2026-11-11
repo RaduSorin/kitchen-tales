@@ -45,9 +45,11 @@ struct AuthTests {
         #expect(AuthConfig.parse(placeholder) == nil)
     }
 
-    @Test func bundledConfigIsReadable() {
-        // The file must be in the app; while the client ID is empty it reads as "not set up".
-        #expect(Bundle.main.url(forResource: "AuthConfig", withExtension: "json") != nil)
+    @Test func bundledConfigPointsAtTheFamilyPool() throws {
+        let config = try #require(AuthConfig.fromBundle())
+        #expect(config.region == "eu-central-1")
+        #expect(config.userPoolId == "eu-central-1_mH3Vk6Rfm")
+        #expect(!config.clientId.isEmpty)
     }
 
     @Test func cognitoErrorsBecomeRomanianMessages() {

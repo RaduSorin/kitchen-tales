@@ -89,7 +89,7 @@ The family space comes from the `space-<id>` Cognito group, as on the web.
 
 `KitchenTales/Resources/AuthConfig.json` holds the `auth` part of Amplify's
 `amplify_outputs.json` (region, user pool ID, app client ID). These are public identifiers.
-While the client ID is empty the login screen says the app is not set up yet.
+They point at the family user pool (`eu-central-1_mH3Vk6Rfm`) and its single app client, the one the web app uses (SRP and refresh flows, no client secret).
 
 The SRP unit tests use vectors from `scripts/srp-vectors.py`, a Python reference checked
 against pycognito.

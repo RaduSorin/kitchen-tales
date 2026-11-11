@@ -244,9 +244,18 @@ struct LoginScene: View {
     var compact: Bool
     var greeting: String?
 
-    private static let stars: [(x: CGFloat, y: CGFloat, size: CGFloat, opacity: Double)] = (0..<14).map { i in
-        (CGFloat((i * 37 + 11) % 100) / 100, CGFloat((i * 53 + 7) % 46 + 4) / 100, CGFloat(i % 3) * 1.2 + 2.2, 0.35 + Double(i % 3) * 0.2)
+    private struct Star {
+        let x: CGFloat, y: CGFloat, size: CGFloat, opacity: Double
+        init(_ i: Int) {
+            let tier = Double(i % 3)
+            x = CGFloat((i * 37 + 11) % 100) / 100
+            y = CGFloat((i * 53 + 7) % 46 + 4) / 100
+            size = CGFloat(tier * 1.2 + 2.2)
+            opacity = 0.35 + tier * 0.2
+        }
     }
+
+    private static let stars: [Star] = (0..<14).map(Star.init)
 
     var body: some View {
         GeometryReader { geo in
@@ -349,17 +358,23 @@ struct CodeField: View {
                 .accessibilityLabel("Cod din e-mail")
             HStack(spacing: 8) {
                 ForEach(0..<6, id: \.self) { i in
-                    let chars = Array(code)
-                    Text(i < chars.count ? String(chars[i]) : "")
-                        .font(.custom(AppFont.bodySemibold, size: 24, relativeTo: .title2))
-                        .foregroundStyle(Theme.text)
-                        .frame(maxWidth: .infinity, minHeight: 56)
-                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface2))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(i < chars.count || i == chars.count ? Theme.accent.opacity(i < chars.count ? 1 : 0.5) : Theme.border))
+                    box(i)
                 }
             }
             .allowsHitTesting(false)
         }
+    }
+
+    private func box(_ i: Int) -> some View {
+        let chars = Array(code)
+        let digit: String = i < chars.count ? String(chars[i]) : ""
+        let edge: Color
+        if i < chars.count { edge = Theme.accent } else if i == chars.count { edge = Theme.accent.opacity(0.5) } else { edge = Theme.border }
+        return Text(digit)
+            .font(.custom(AppFont.bodySemibold, size: 24, relativeTo: .title2))
+            .foregroundStyle(Theme.text)
+            .frame(maxWidth: .infinity, minHeight: 56)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface2))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(edge))
     }
 }

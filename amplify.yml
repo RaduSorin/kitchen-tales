@@ -11,7 +11,16 @@ backend:
         # dependencies inside @aws-amplify/data-construct; `npm install`
         # resolves the same tree from package-lock.json.
         - npm install --no-audit --no-fund --cache .npm --prefer-offline
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        # A merge that only touches the native iOS app (ios/) skips the backend deploy and only
+        # fetches the existing outputs; the web bundle then builds unchanged, so the installed
+        # web app sees no new version. If git cannot tell (shallow clone), it deploys as usual.
+        - |
+          if git diff --quiet HEAD^1 HEAD -- . ':(exclude)ios' 2>/dev/null; then
+            echo "Only ios/ changed: skipping the backend deploy"
+            npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID
+          else
+            npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+          fi
 frontend:
   phases:
     build:

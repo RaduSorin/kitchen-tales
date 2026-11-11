@@ -1,0 +1,125 @@
+# Native iOS app (ios/): generates the Xcode project, builds it, runs the unit tests on an iPhone
+# simulator and saves screenshots of the main screens as a downloadable artifact.
+# Runs only on pull requests that change something under ios/ (or this file): macOS minutes cost
+# 10x Linux ones, so there is no second run on push.
+name: iOS
+
+on:
+  pull_request:
+    paths: ['ios/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: write   # only to publish the screenshots to the ios-screenshots branch
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use the newest Xcode on the runner
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Pick a simulator
+        id: sim
+        run: |
+          UDID=$(bash scripts/pick-simulator.sh)
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          # Boot it now, so the boot overlaps the build instead of following it.
+          xcrun simctl boot "$UDID" || true
+
+      - name: Build and run the unit tests
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild test \
+            -project KitchenTales.xcodeproj -scheme KitchenTales \
+            -destination "id=${{ steps.sim.outputs.udid }},arch=arm64" \
+            -parallel-testing-enabled NO \
+            -derivedDataPath build/DerivedData \
+            -resultBundlePath build/Tests.xcresult \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|Test (Case|Suite|run)|✔|✘|\*\* (TEST|BUILD)" || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild.log
+
+      - name: Screenshots
+        run: |
+          APP=$(find build/DerivedData/Build/Products/Debug-iphonesimulator -maxdepth 1 -name 'KitchenTales.app' | head -1)
+          bash scripts/screenshots.sh "$APP" "${{ steps.sim.outputs.udid }}"
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-screenshots
+          path: ios/build/screenshots
+          if-no-files-found: ignore
+
+      # Also commit them to the ios-screenshots branch (folder pr-<number>), so they can be
+      # viewed on GitHub and compared before/after without downloading the artifact.
+      - name: Publish screenshots to the ios-screenshots branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEST: pr-${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          SRC="$PWD/build/screenshots"
+          cd "$RUNNER_TEMP" && git init -q shots && cd shots
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          if git fetch -q --depth 1 origin ios-screenshots; then git checkout -q FETCH_HEAD; fi
+          git checkout -q -B ios-screenshots
+          rm -rf "$DEST" && mkdir -p "$DEST" && cp "$SRC"/*.png "$DEST"/
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -qm "Screenshots for $DEST at $HEAD_SHA"
+          git push -q origin ios-screenshots
+          echo "Screenshots: https://github.com/${{ github.repository }}/tree/ios-screenshots/$DEST"
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: |
+            ios/build/xcodebuild.log
+            ios/build/Tests.xcresult
+
+  # Tells whether the App Store Connect secrets needed for TestFlight are set (never their values).
+  # The TestFlight upload itself comes in the next PR.
+  testflight-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the App Store Connect secrets
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
+            if [ -n "${!name}" ]; then echo "$name: set"; else echo "$name: missing"; fi
+          done
+          if [ -n "$ASC_KEY_P8" ] && ! printf '%s' "$ASC_KEY_P8" | grep -q "BEGIN PRIVATE KEY"; then
+            echo "::warning::ASC_KEY_P8 is set but does not look like the contents of a .p8 file"
+          fi

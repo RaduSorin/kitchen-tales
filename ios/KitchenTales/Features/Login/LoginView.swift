@@ -287,7 +287,7 @@ struct LoginScene: View {
                         }
                     }
                 }
-                .padding(.top, geo.size.height * (compact ? 0.07 : 0.14))
+                .padding(.top, geo.size.height * (compact ? 0.12 : 0.14))
             }
             .ignoresSafeArea()
         }

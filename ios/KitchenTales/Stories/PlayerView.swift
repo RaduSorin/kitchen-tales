@@ -133,9 +133,10 @@ struct PlayerView: View {
         .accessibilityLabel(label)
     }
 
+    /// Four equal columns, so the buttons line up whatever their captions.
     private var options: some View {
         @Bindable var player = player
-        return HStack(alignment: .top) {
+        return HStack(alignment: .top, spacing: 0) {
             Menu {
                 Picker("Viteză", selection: $player.rate) {
                     ForEach([Float(0.75), 1, 1.25, 1.5], id: \.self) { Text(Self.rateLabel($0)).tag($0) }
@@ -143,7 +144,7 @@ struct PlayerView: View {
             } label: {
                 OptionLabel(text: Self.rateLabel(player.rate), caption: "Viteză")
             }
-            Spacer()
+            .frame(maxWidth: .infinity)
             Menu {
                 Picker("Somn", selection: $player.sleep) {
                     ForEach(StoryPlayer.Sleep.allCases, id: \.self) { Text($0.label).tag($0) }
@@ -153,16 +154,21 @@ struct PlayerView: View {
                             caption: player.sleep == .off ? "Somn" : player.sleep.label,
                             active: player.sleep != .off)
             }
-            Spacer()
+            .frame(maxWidth: .infinity)
             VStack(spacing: 6) {
-                AirPlayButton().frame(width: 44, height: 44)
+                AirPlayButton()
+                    .frame(width: 44, height: 44)
                     .background(Circle().fill(.white.opacity(0.12)))
-                Text("AirPlay").font(.ktCaption).foregroundStyle(Theme.text.opacity(0.75))
+                Text("AirPlay")
+                    .font(.ktCaption)
+                    .foregroundStyle(Theme.text.opacity(0.75))
+                    .lineLimit(2)
             }
-            Spacer()
+            .frame(maxWidth: .infinity)
             Button { showsQueue = true } label: {
                 OptionLabel(symbol: "list.bullet", caption: "La rând")
             }
+            .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
     }
@@ -188,7 +194,7 @@ private struct OptionLabel: View {
             .frame(width: 44, height: 44)
             .background(Circle().fill(active ? Theme.Night.moon : .white.opacity(0.12)))
             Text(caption).font(.ktCaption).foregroundStyle(Theme.text.opacity(0.75))
-                .multilineTextAlignment(.center).lineLimit(2).frame(width: 76)
+                .multilineTextAlignment(.center).lineLimit(2)
         }
     }
 }

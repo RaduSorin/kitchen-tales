@@ -251,4 +251,22 @@ enum PlaybackMemory {
     }
 
     static var lastStoryId: String? { UserDefaults.standard.string(forKey: "kt-last-story") }
+
+    /// Stories started on this phone (the web's kt-played-stories), so "Nou" goes away.
+    static var played: Set<String> { Set(UserDefaults.standard.stringArray(forKey: "kt-played-stories") ?? []) }
+
+    static func markPlayed(_ id: String) {
+        var list = UserDefaults.standard.stringArray(forKey: "kt-played-stories") ?? []
+        guard !list.contains(id) else { return }
+        list.append(id)
+        UserDefaults.standard.set(Array(list.suffix(2000)), forKey: "kt-played-stories")
+    }
+
+    /// Added in the last two weeks and never started on this phone (isNewStory in stories.ts).
+    static func isNew(_ s: Story, now: Date = Date()) -> Bool {
+        guard let created = s.createdAt,
+              let date = ISO8601DateFormatter.flexible.date(from: created) ?? DateFormatter.dayKey.date(from: String(created.prefix(10))),
+              now.timeIntervalSince(date) <= 14 * 86400 else { return false }
+        return !played.contains(s.id) && position(s.id) == 0
+    }
 }

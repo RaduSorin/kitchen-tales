@@ -100,7 +100,7 @@ struct LibraryView: View {
                         LazyHStack(alignment: .top, spacing: 12) {
                             ForEach(folder.items) { story in
                                 Button { Task { await player.play(story, queue: folder.items, store: store) } } label: {
-                                    CoverTile(story: story, width: 112)
+                                    CoverTile(story: story, width: 112, showsFolder: false)
                                 }
                                 .buttonStyle(PressableStyle())
                                 .storyContextMenu(story)
@@ -379,7 +379,7 @@ struct FolderView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .top, spacing: 12) {
                             ForEach(row) { story in
-                                Button { play(items, from: story) } label: { CoverTile(story: story, width: 104) }
+                                Button { play(items, from: story) } label: { CoverTile(story: story, width: 104, showsFolder: false) }
                                     .buttonStyle(PressableStyle())
                                     .storyContextMenu(story)
                             }

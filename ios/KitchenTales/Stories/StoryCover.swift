@@ -79,18 +79,43 @@ struct DrawnCover: View {
 struct CoverTile: View {
     let story: Story
     var width: CGFloat = 132
+    /// The folder under the title (Acasă), or the length (inside a folder).
+    var showsFolder = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 2) {
             StoryCover(story: story)
                 .frame(width: width, height: width)
+                .overlay(alignment: .bottomTrailing) {
+                    if let minutes = story.minutesLabel {
+                        Text(minutes)
+                            .font(.custom(AppFont.bodyBold, size: 11.5, relativeTo: .caption2))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(.black.opacity(0.5)))
+                            .padding(7)
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if PlaybackMemory.isNew(story) {
+                        Text("Nou")
+                            .font(.custom(AppFont.bodyHeavy, size: 11.5, relativeTo: .caption2))
+                            .foregroundStyle(Theme.Night.ink)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Theme.Night.gold))
+                            .padding(7)
+                    }
+                }
                 .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
             Text(story.title)
-                .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .subheadline))
+                .font(.custom(AppFont.bodyBold, size: 15, relativeTo: .subheadline))
                 .foregroundStyle(Theme.text)
                 .lineLimit(1)
-            if let minutes = story.minutesLabel {
-                Text(minutes).font(.ktCaption).foregroundStyle(Theme.Night.muted)
+                .padding(.top, 6)
+            if let line = showsFolder ? Optional(StoryLibrary.folderOf(story)) : story.minutesLabel {
+                Text(line).font(.custom(AppFont.body, size: 14, relativeTo: .footnote)).foregroundStyle(Theme.Night.muted).lineLimit(1)
             }
         }
         .frame(width: width, alignment: .leading)

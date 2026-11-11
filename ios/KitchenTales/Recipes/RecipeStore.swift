@@ -250,6 +250,35 @@ final class RecipeStore {
     // MARK: Changing the plan
 
     /// One AppSync mutation (`createX`, `updateX`, `deleteX`) with its input.
+    // MARK: Sharing (Profil → Ce partajez)
+
+    /// Shares a recipe of ours with every account ("everyone"), or makes it private again.
+    func setShared(_ id: String, _ shared: Bool, spaceName: String?) async -> Bool {
+        guard let i = recipes.firstIndex(where: { $0.id == id }) else { return false }
+        recipes[i].shared = shared
+        save()
+        do {
+            var input: [String: Any] = ["id": id, "readerGroups": shared ? ["everyone"] : [String]()]
+            if let spaceName { input["spaceName"] = spaceName }
+            try await mutate("updateRecipe", "UpdateRecipeInput", input)
+            return true
+        } catch {
+            if let j = recipes.firstIndex(where: { $0.id == id }) { recipes[j].shared = !shared }
+            save()
+            Haptics.warning()
+            return false
+        }
+    }
+
+    /// Puts the space's new name on the recipes it already shares.
+    func renameShared(to name: String) async {
+        for r in recipes where r.mine && r.shared && r.spaceName != name {
+            if let i = recipes.firstIndex(where: { $0.id == r.id }) { recipes[i].spaceName = name }
+            try? await mutate("updateRecipe", "UpdateRecipeInput", ["id": r.id, "spaceName": name])
+        }
+        save()
+    }
+
     private func mutate(_ field: String, _ inputType: String, _ input: [String: Any]) async throws {
         guard !demo, let client else { return }
         _ = try await client.run("mutation M($input: \(inputType)!) { \(field)(input: $input) { id } }", variables: ["input": input])

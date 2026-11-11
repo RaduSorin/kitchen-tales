@@ -26,12 +26,15 @@ private struct SignedInRoot: View {
     @AppStorage("area") private var savedArea: AppArea = .recipes
     @State private var stories: StoryStore
     @State private var recipes: RecipeStore
+    @State private var profile: ProfileStore
+    @State private var kid = KidMode()
     @State private var kitchen = KitchenModel()
     @State private var area = AreaModel()
 
     init(auth: AuthModel) {
         _stories = State(initialValue: StoryStore(auth: auth))
         _recipes = State(initialValue: RecipeStore(auth: auth))
+        _profile = State(initialValue: ProfileStore(auth: auth))
     }
 
     var body: some View {
@@ -44,11 +47,25 @@ private struct SignedInRoot: View {
         .animation(.easeInOut(duration: 0.3), value: area.current)
         .environment(stories)
         .environment(recipes)
+        .environment(profile)
+        .environment(kid)
         .environment(kitchen)
         .environment(StoryPlayer.shared)
         .environment(area)
-        .onAppear { area.current = LaunchOptions.area ?? savedArea }
-        .onChange(of: area.current) { savedArea = area.current; Haptics.select() }
+        .onAppear {
+            area.current = LaunchOptions.area ?? savedArea
+            // Kid mode stays on after the app is closed: the child is back on the stories side.
+            if kid.active {
+                stories.kidFolders = profile.settings.kidFolders
+                area.current = .stories
+            }
+        }
+        .onChange(of: area.current) {
+            if kid.active, area.current != .stories { area.current = .stories; return }
+            savedArea = area.current
+            Haptics.select()
+        }
+        .onChange(of: kid.active) { if !kid.active { stories.kidFolders = [] } }
     }
 }
 
@@ -62,8 +79,13 @@ final class AreaModel {
 struct AreaPicker: View {
     let current: AppArea
     @Environment(AreaModel.self) private var area
+    @Environment(KidMode.self) private var kid
 
     var body: some View {
+        if !kid.active { picker }
+    }
+
+    private var picker: some View {
         HStack(spacing: 2) {
             ForEach(AppArea.allCases, id: \.self) { item in
                 Button {
@@ -141,79 +163,6 @@ struct PlaceholderScreen: View {
     }
 }
 
-struct ProfileView: View {
-    /// On the stories side Profil sits on the night background, like the web.
-    var night = false
-    @Environment(AuthModel.self) private var auth
-    @State private var path: [String] = LaunchOptions.screen == "catalog" ? ["catalog"] : []
-    @State private var confirmSignOut = false
-
-    var body: some View {
-        NavigationStack(path: $path) {
-            List {
-                if let account = auth.account {
-                    Section {
-                        HStack(spacing: 14) {
-                            Text(String(account.displayName.prefix(1)).uppercased())
-                                .font(.ktTitle2)
-                                .foregroundStyle(Theme.onAccent)
-                                .frame(width: 52, height: 52)
-                                .background(Circle().fill(Theme.accent))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(account.displayName).font(.ktTitle3).foregroundStyle(Theme.text)
-                                if let email = account.email {
-                                    Text(email).font(.ktFootnote).foregroundStyle(Theme.muted)
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                        if account.space == nil {
-                            Label("Contul nu are încă un spațiu. Ieși din cont și intră din nou.", systemImage: "exclamationmark.triangle")
-                                .font(.ktFootnote).foregroundStyle(Theme.danger)
-                        }
-                        if auth.isOffline {
-                            Label("Fără internet: folosești copia de pe telefon.", systemImage: "wifi.slash")
-                                .font(.ktFootnote).foregroundStyle(Theme.muted)
-                        }
-                    }
-                    .listRowBackground(rowBackground)
-                }
-                OfflineSection(rowBackground: rowBackground)
-                Section {
-                    NavigationLink(value: "catalog") {
-                        Label("Componente de design", systemImage: "paintpalette")
-                    }
-                } header: {
-                    Text("Dezvoltare")
-                }
-                .listRowBackground(rowBackground)
-                Section {
-                    LabeledContent("Versiune", value: AppInfo.version)
-                }
-                .listRowBackground(rowBackground)
-                Section {
-                    Button("Ieși din cont", role: .destructive) { confirmSignOut = true }
-                        .foregroundStyle(Theme.danger)
-                }
-                .listRowBackground(rowBackground)
-            }
-            .confirmationDialog("Ieși din cont?", isPresented: $confirmSignOut, titleVisibility: .visible) {
-                Button("Ieși din cont", role: .destructive) { Task { await auth.signOut() } }
-            } message: {
-                Text("Pe acest telefon va trebui să intri din nou cu e-mailul și parola.")
-            }
-            .background { if night { NightBackdrop() } else { Theme.background.ignoresSafeArea() } }
-            .scrollContentBackground(.hidden)
-            .navigationTitle("Profil")
-            .navigationDestination(for: String.self) { _ in DesignCatalogView() }
-        }
-    }
-}
-
-extension ProfileView {
-    var rowBackground: Color { night ? Theme.Night.surface : Theme.surface }
-}
-
 enum AppInfo {
     static var version: String {
         let info = Bundle.main.infoDictionary
@@ -223,32 +172,3 @@ enum AppInfo {
     }
 }
 
-/// Profil: how many stories are saved on the phone, and a way to free the space.
-private struct OfflineSection: View {
-    let rowBackground: Color
-    @Environment(StoryStore.self) private var store
-    @State private var confirmClear = false
-
-    var body: some View {
-        let offline = store.offline
-        Section {
-            LabeledContent("Povești pe telefon") {
-                Text(offline.saved.isEmpty ? "niciuna" : "\(offline.saved.count) · \(offline.sizeLabel)")
-            }
-            if !offline.saved.isEmpty {
-                Button("Șterge poveștile de pe telefon", role: .destructive) { confirmClear = true }
-                    .foregroundStyle(Theme.danger)
-            }
-        } header: {
-            Text("Offline")
-        } footer: {
-            Text("Ține apăsat pe o poveste sau pe un dosar și alege „Descarcă” ca să le asculți fără internet.")
-        }
-        .listRowBackground(rowBackground)
-        .confirmationDialog("Ștergi poveștile salvate?", isPresented: $confirmClear, titleVisibility: .visible) {
-            Button("Șterge de pe telefon", role: .destructive) { offline.remove(Array(offline.saved)) }
-        } message: {
-            Text("Rămân în bibliotecă; doar nu se mai pot asculta fără internet până le descarci din nou.")
-        }
-    }
-}

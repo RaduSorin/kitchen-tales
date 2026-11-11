@@ -8,6 +8,7 @@ enum StoryTab: String, CaseIterable, Hashable {
 struct StoriesTabs: View {
     @State private var tab: StoryTab = LaunchOptions.tab.flatMap(StoryTab.init(rawValue:)) ?? .home
     @Environment(StoryStore.self) private var store
+    @Environment(KidMode.self) private var kid
 
     var body: some View {
         TabView(selection: $tab) {
@@ -23,16 +24,21 @@ struct StoriesTabs: View {
                 LibraryView()
                     .miniPlayerInset()
             }
-            Tab("Adaugă", systemImage: "plus", value: StoryTab.add) {
-                AddStoryView(onAdded: { tab = .home })
-                .miniPlayerInset()
-            }
-            Tab("Profil", systemImage: "person.crop.circle", value: StoryTab.profile) {
-                ProfileView(night: true)
+            // In kid mode the child sees only listening: no Adaugă, no Profil.
+            if !kid.active {
+                Tab("Adaugă", systemImage: "plus", value: StoryTab.add) {
+                    AddStoryView(onAdded: { tab = .home })
                     .miniPlayerInset()
+                }
+                Tab("Profil", systemImage: "person.crop.circle", value: StoryTab.profile) {
+                    ProfileView(night: true)
+                        .miniPlayerInset()
+                }
             }
         }
         .onChange(of: tab) { Haptics.select() }
+        .onChange(of: kid.active) { if kid.active, [.add, .profile].contains(tab) { tab = .home } }
+        .kidModeChrome()
         .storyPlayerSheet()
         .alert("Descărcarea nu a mers", isPresented: Binding(get: { store.offline.lastError != nil },
                                                               set: { if !$0 { store.offline.clearError() } })) {

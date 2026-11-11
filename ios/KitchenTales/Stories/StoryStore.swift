@@ -7,7 +7,13 @@ import Observation
 final class StoryStore {
     enum Phase: Equatable { case idle, loading, loaded, failed(String) }
 
-    private(set) var stories: [Story] = []
+    private(set) var allStories: [Story] = []
+    /// In kid mode, only the folders the parent picked (empty = all of them).
+    var kidFolders: [String] = []
+    /// What the app shows: every story, or in kid mode only the allowed folders.
+    var stories: [Story] {
+        kidFolders.isEmpty ? allStories : allStories.filter { kidFolders.contains(StoryLibrary.folderOf($0)) }
+    }
     private(set) var folderRows: [StoryFolderRow] = []
     private(set) var phase: Phase = .idle
     /// True when the list shown is the phone's copy because the server could not be reached.
@@ -34,23 +40,25 @@ final class StoryStore {
         self.cache = cache
         mySpace = { [weak auth] in auth?.account?.space }
         if demo {
-            stories = DemoLibrary.stories
+            allStories = DemoLibrary.stories
             folderRows = []
             phase = .loaded
             offline.showAsSaved(["d1", "d2", "d3"])
         } else if let saved = cache.read(Saved.self, key: Self.cacheKey) {
-            stories = saved.stories
+            allStories = saved.stories
             folderRows = saved.folders
         }
     }
 
     var folders: [StoryFolder] { StoryLibrary.groupFolders(stories, rows: folderRows) }
     var favorites: [Story] { stories.filter(\.favorite) }
+    /// Every folder name, also in kid mode (for choosing what the child sees).
+    var allFolders: [String] { StoryLibrary.groupFolders(allStories, rows: folderRows).map(\.name) }
 
     /// Newest first, the way the web lists them.
     var recent: [Story] { Array(stories.prefix(12)) }
 
-    func story(_ id: String) -> Story? { stories.first { $0.id == id } }
+    func story(_ id: String) -> Story? { allStories.first { $0.id == id } }
 
     /// The paused story to continue, if any, else the newest ones (for the hero carousel).
     var heroStories: [Story] {
@@ -75,9 +83,9 @@ final class StoryStore {
 
     /// A story just added on this phone: at the top of the library right away.
     func added(_ story: Story) {
-        stories.removeAll { $0.id == story.id }
-        stories.insert(story, at: 0)
-        cache.write(Saved(stories: stories, folders: folderRows), key: Self.cacheKey)
+        allStories.removeAll { $0.id == story.id }
+        allStories.insert(story, at: 0)
+        cache.write(Saved(stories: allStories, folders: folderRows), key: Self.cacheKey)
     }
 
     func search(_ text: String) -> [Story] {
@@ -108,25 +116,66 @@ final class StoryStore {
                 list[i].favorite = favoriteIds.contains(list[i].id)
             }
             list.sort { ($0.createdAt ?? "") > ($1.createdAt ?? "") }
-            stories = list
+            allStories = list
             folderRows = folderRowsRaw.compactMap { StoryFolderRow(row: $0, mySpace: space) }
-            cache.write(Saved(stories: stories, folders: folderRows), key: Self.cacheKey)
-            offline.prune(keeping: Set(stories.map(\.id)))
+            cache.write(Saved(stories: allStories, folders: folderRows), key: Self.cacheKey)
+            offline.prune(keeping: Set(allStories.map(\.id)))
             showingCopy = false
             phase = .loaded
         } catch {
-            showingCopy = !stories.isEmpty
+            showingCopy = !allStories.isEmpty
             phase = .failed((error as? LocalizedError)?.errorDescription ?? "Nu am putut încărca poveștile.")
         }
+    }
+
+    private func persist() { cache.write(Saved(stories: allStories, folders: folderRows), key: Self.cacheKey) }
+
+    private func updateStory(_ input: [String: Any]) async throws {
+        guard !demo, let client else { return }
+        _ = try await client.run("mutation S($input: UpdateStoryInput!) { updateStory(input: $input) { id } }", variables: ["input": input])
+    }
+
+    /// Shares a story of ours with every account, or makes it private (Profil → Ce partajez).
+    func setShared(_ id: String, _ shared: Bool, spaceName: String?) async -> Bool {
+        guard let i = allStories.firstIndex(where: { $0.id == id }) else { return false }
+        allStories[i].shared = shared
+        persist()
+        do {
+            var input: [String: Any] = ["id": id, "readerGroups": shared ? ["everyone"] : [String](), "sharedDirect": shared]
+            if let spaceName { input["spaceName"] = spaceName }
+            try await updateStory(input)
+            return true
+        } catch {
+            if let j = allStories.firstIndex(where: { $0.id == id }) { allStories[j].shared = !shared }
+            persist()
+            Haptics.warning()
+            return false
+        }
+    }
+
+    /// Puts the space's new name on the stories and folders it already shares.
+    func renameShared(to name: String) async {
+        for s in allStories where s.mine && s.shared && s.spaceName != name {
+            if let i = allStories.firstIndex(where: { $0.id == s.id }) { allStories[i].spaceName = name }
+            try? await updateStory(["id": s.id, "spaceName": name])
+        }
+        for f in folderRows where f.mine && f.shared && f.spaceName != name {
+            if let i = folderRows.firstIndex(where: { $0.id == f.id }) { folderRows[i].spaceName = name }
+            if !demo, let client {
+                _ = try? await client.run("mutation F($input: UpdateStoryFolderInput!) { updateStoryFolder(input: $input) { id } }",
+                                          variables: ["input": ["id": f.id, "spaceName": name]])
+            }
+        }
+        persist()
     }
 
     /// Marks or unmarks a favourite: our own story keeps it on its row, another space's story
     /// through a StoryFavorite row of ours (like the web).
     func toggleFavorite(_ id: String) async {
-        guard let i = stories.firstIndex(where: { $0.id == id }) else { return }
-        stories[i].favorite.toggle()
-        let story = stories[i]
-        cache.write(Saved(stories: stories, folders: folderRows), key: Self.cacheKey)
+        guard let i = allStories.firstIndex(where: { $0.id == id }) else { return }
+        allStories[i].favorite.toggle()
+        let story = allStories[i]
+        cache.write(Saved(stories: allStories, folders: folderRows), key: Self.cacheKey)
         guard !demo, let client else { return }
         do {
             if story.mine {
@@ -143,7 +192,7 @@ final class StoryStore {
                 }
             }
         } catch {
-            if let j = stories.firstIndex(where: { $0.id == id }) { stories[j].favorite = !story.favorite }
+            if let j = allStories.firstIndex(where: { $0.id == id }) { allStories[j].favorite = !story.favorite }
             Haptics.warning()
         }
     }

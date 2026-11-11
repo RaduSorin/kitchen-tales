@@ -1,0 +1,92 @@
+# XcodeGen spec for the native iOS app. The .xcodeproj is generated from this file (in CI and on
+# any Mac with `xcodegen generate`) and is not committed. See ios/README.md.
+name: KitchenTales
+options:
+  bundleIdPrefix: app.kitchentales
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  developmentLanguage: ro
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    # CI sets the build number from the workflow run (CURRENT_PROJECT_VERSION=<run number>).
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+targets:
+  KitchenTales:
+    type: application
+    platform: iOS
+    sources:
+      - path: KitchenTales
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.kitchentales.ios
+        PRODUCT_NAME: KitchenTales
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: KitchenTales/Info.plist
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: KitchenTales/Info.plist
+      properties:
+        CFBundleDisplayName: Bucătăria
+        CFBundleDevelopmentRegion: ro
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
+        # The app is always dark ("Seară de lux"), like the web app.
+        UIUserInterfaceStyle: Dark
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIAppFonts:
+          - Fraunces-400.ttf
+          - Fraunces-600.ttf
+          - Fraunces-600-Italic.ttf
+          - Figtree-400.ttf
+          - Figtree-600.ttf
+          - Figtree-700.ttf
+          - Figtree-800.ttf
+          - Baloo2-400.ttf
+          - Baloo2-600.ttf
+          - Baloo2-800.ttf
+          - YoungSerif-400.ttf
+  KitchenTalesTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: KitchenTalesTests
+    dependencies:
+      - target: KitchenTales
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.kitchentales.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  KitchenTales:
+    build:
+      targets:
+        KitchenTales: all
+        KitchenTalesTests: [test]
+    test:
+      targets:
+        - KitchenTalesTests
+      gatherCoverageData: false
+    run:
+      config: Debug
+    archive:
+      config: Release

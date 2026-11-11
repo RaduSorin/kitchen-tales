@@ -20,7 +20,8 @@ A personal family app (phone, tablet, web), shown in the app as **Bucătăria cu
   - **Functions**: `import-recipe` (Claude on Bedrock for import, ideas, week plan, nutrition; Stable Image for photos), `generate-story` (Claude + ElevenLabs/Polly), `find-cover`, `timer-alarm` and `mind-push` (Web Push through EventBridge Scheduler), `mind-coach` (Răgaz chat), `client-log` (error reports from the app to CloudWatch). Long AI work runs as async jobs (`amplify/shared/jobs.ts`).
   - **Limits**: paid AI work is capped per space and month (`amplify/shared/aiUsage.ts`); Răgaz chat per person (`amplify/shared/mindCoach.ts`).
 - Secrets (Amplify console › Hosting › Secrets): `ELEVENLABS_API_KEY`, `VAPID_PRIVATE_KEY`.
-- `amplify.yml`: Amplify Hosting deploys the backend and frontend on every push to `main`.
+- `amplify.yml`: Amplify Hosting deploys the backend and frontend on every push to `main` (a merge that only changes `ios/` skips the backend deploy).
+- Native iOS app (SwiftUI, in progress): `ios/`, built and tested on macOS in GitHub Actions (`.github/workflows/ios.yml`). See [`ios/README.md`](ios/README.md).
 
 ## Deployment
 

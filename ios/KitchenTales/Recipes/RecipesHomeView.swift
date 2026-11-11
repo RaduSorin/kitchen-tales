@@ -11,6 +11,7 @@ struct RecipesHomeView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 30) {
                     if store.recipes.isEmpty {
@@ -18,7 +19,7 @@ struct RecipesHomeView: View {
                     } else {
                         hero
                         todayMenu
-                        WeekPlates()
+                        WeekPlates().id("week")
                         recent
                         notebook
                     }
@@ -27,6 +28,14 @@ struct RecipesHomeView: View {
             }
             .ignoresSafeArea(edges: .top)
             .scrollIndicators(.hidden)
+            .task {
+                // Screenshots: the middle of the page (the week and the recent recipes).
+                if LaunchOptions.screen == "home-week" {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    proxy.scrollTo("week", anchor: .top)
+                }
+            }
+            }
             .ktKitchenBackground()
             .refreshable { await store.refresh() }
             .toolbar(.hidden, for: .navigationBar)

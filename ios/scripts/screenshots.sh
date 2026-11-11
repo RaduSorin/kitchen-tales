@@ -30,6 +30,7 @@ shot 0b-login-new-password -screen login-new-password
 shot 0c-login-code -screen login-code
 # Signed in with a made-up account (-demo, debug builds only).
 shot 1-home -demo YES -tab home
+shot 1b-home-week -demo YES -tab home -screen home-week
 shot 2-recipes -demo YES -tab recipes
 shot 2b-recipe -demo YES -tab home -screen recipe
 shot 2c-cook -demo YES -tab home -screen cook

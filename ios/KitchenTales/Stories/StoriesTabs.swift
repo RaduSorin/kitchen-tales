@@ -24,13 +24,7 @@ struct StoriesTabs: View {
                     .miniPlayerInset()
             }
             Tab("Adaugă", systemImage: "plus", value: StoryTab.add) {
-                NavigationStack {
-                    EmptyStateView(symbol: "plus.circle", title: "În curând",
-                                   message: "Adăugarea unei povești (fișier, înregistrare sau poveste nouă) vine într-un pas următor. Până atunci, adaug-o din aplicația web.")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .ktNightBackground()
-                        .navigationTitle("Adaugă")
-                }
+                AddStoryView(onAdded: { tab = .home })
                 .miniPlayerInset()
             }
             Tab("Profil", systemImage: "person.crop.circle", value: StoryTab.profile) {

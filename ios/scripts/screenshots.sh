@@ -43,3 +43,7 @@ shot 7-stories-favorites -demo YES -area stories -tab favorites
 shot 8-stories-mini-player -demo YES -area stories -tab library -screen mini-player
 shot 9-stories-player -demo YES -area stories -tab home -screen player
 shot 10-stories-profile -demo YES -area stories -tab profile
+shot 11a-add -demo YES -area stories -tab add
+shot 11b-add-create -demo YES -area stories -tab add -screen add-create
+shot 11c-add-record -demo YES -area stories -tab add -screen add-record
+shot 11d-add-finish -demo YES -area stories -tab add -screen add-finish

@@ -70,6 +70,20 @@ final class OfflineAudio {
         }
     }
 
+    /// Keeps a file made on this phone (a recording, an uploaded file) as the story's offline copy.
+    func adopt(_ file: URL, for story: Story) {
+        let name = Self.fileName(id: story.id, audioKey: story.audioKey)
+        let target = folder.appendingPathComponent(name)
+        try? FileManager.default.removeItem(at: target)
+        guard (try? FileManager.default.moveItem(at: file, to: target)) != nil else { return }
+        var url = target
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? url.setResourceValues(values)
+        files[story.id] = name
+        saved.insert(story.id)
+    }
+
     func remove(_ ids: [String]) {
         for id in ids {
             if let url = localFile(id) { try? FileManager.default.removeItem(at: url) }

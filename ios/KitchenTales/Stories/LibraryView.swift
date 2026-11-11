@@ -257,6 +257,7 @@ struct StoryRow: View {
 /// A folder's stories, with Redă tot and Amestecă on top.
 struct FolderView: View {
     let folderName: String
+    @State private var adding: AddMode?
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
 
@@ -299,6 +300,21 @@ struct FolderView: View {
             if !items.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) { FolderDownloadButton(items: items) }
             }
+            if let folder, folder.mine, !folder.builtin {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        ForEach(AddMode.allCases) { mode in
+                            Button { adding = mode } label: { Label(mode.title, systemImage: mode.symbol) }
+                        }
+                    } label: {
+                        Image(systemName: "plus.circle.fill").foregroundStyle(Theme.accent)
+                    }
+                    .accessibilityLabel("Adaugă o poveste în dosar")
+                }
+            }
+        }
+        .fullScreenCover(item: $adding) { mode in
+            AddFlow(mode: mode, folder: folderName)
         }
     }
 }

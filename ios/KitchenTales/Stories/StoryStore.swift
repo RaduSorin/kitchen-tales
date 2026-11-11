@@ -67,6 +67,19 @@ final class StoryStore {
         return Array((pool.filter(\.favorite) + pool.filter { !$0.favorite }).prefix(10))
     }
 
+    /// What adding a story needs (nil without a server or a space).
+    func creator(account: Account?) -> StoryCreator? {
+        guard let client, let account, let space = account.space else { return nil }
+        return StoryCreator(client: client, space: space, spaceName: account.displayName)
+    }
+
+    /// A story just added on this phone: at the top of the library right away.
+    func added(_ story: Story) {
+        stories.removeAll { $0.id == story.id }
+        stories.insert(story, at: 0)
+        cache.write(Saved(stories: stories, folders: folderRows), key: Self.cacheKey)
+    }
+
     func search(_ text: String) -> [Story] {
         let q = Self.fold(text)
         guard !q.isEmpty else { return stories }

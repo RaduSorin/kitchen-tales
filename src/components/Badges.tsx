@@ -1,11 +1,12 @@
 // Stamps and stickers on screen: the drawings, the moment one is earned ("Timbru nou" with the
 // postmark, or "Ura!" with the sticker to stick), the Clasor (Profile) and the Album (stories).
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Sheet from './Sheet'
 import { BADGE, STAMPS, STAMP_GROUPS, STICKERS, type Badge } from '../lib/badges/catalog'
 import { plainStampSvg, stampSvg, stickerSvg } from '../lib/badges/art'
 import { progressOf } from '../lib/badges/engine'
+import { backLabelFor } from '../lib/badges/backLabel'
 import { markSeen, putOff, startBadges, useBadges, usePendingBadges } from '../lib/badges/store'
 import { useBack } from '../lib/back'
 import { useKid } from '../lib/kidMode'
@@ -24,25 +25,36 @@ export function BadgeArt({ b, earned, wide, plain, className }: { b: Badge; earn
 /** The four-pointed sparkles around a new sticker. */
 const TWINKLES = [[8, 14, 0], [86, 22, 0.5], [14, 78, 0.9], [84, 80, 0.3], [48, 2, 1.2], [2, 48, 0.7], [94, 54, 1.4]]
 
+/** What the album and clasor are told when a new badge is on its way to them. */
+type Landing = { fly?: string; backLabel?: string; backTo?: string }
+
 /**
- * Celebrates the badges just earned, one at a time: a stamp lands and gets its postmark; a
- * sticker jumps on screen and the child taps "Lipește în album". Mounted once, in the app shell.
+ * Celebrates the badges just earned, one at a time: "Timbru nou" with the postmark, or "Ura!"
+ * with the sticker. Its button takes the badge to the clasor or the album, where it flies into
+ * its place (useLanding); the back button there returns to the page it was earned on.
+ * Mounted once, in the app shell.
  */
 export function BadgeCelebration() {
   const pending = usePendingBadges()
-  const { pathname } = useLocation()
+  const { pathname, state: navState } = useLocation()
   const nav = useNavigate()
-  // The sticker being stuck right now (its little flight into the album).
-  const [stuckId, setStuckId] = useState<string>()
   useEffect(() => { startBadges() }, [])
-  // Not over Răgaz (private) or the album itself (it shows the sticker waiting there).
-  const quiet = pathname.startsWith('/ragaz') || pathname === '/povesti/album'
+  const landing = (navState ?? {}) as Landing
+  // Not over Răgaz (private), nor while a badge is flying into the album or clasor.
+  const quiet = pathname.startsWith('/ragaz') || (!!landing.fly && pending[0] === landing.fly)
   const id = quiet ? undefined : pending[0]
   const b = id ? BADGE.get(id) : undefined
   const state = useBadges()
   if (!b) return null
   const earned = state.earned[b.id]
-  const sticking = stuckId === b.id
+
+  /** To the clasor or the album, remembering where we came from (kept when already there). */
+  const place = () => {
+    const to = b.kind === 'stamp' ? '/profil/clasor' : '/povesti/album'
+    const there = pathname === to
+    const back = there ? { backLabel: landing.backLabel, backTo: landing.backTo } : { backLabel: backLabelFor(pathname), backTo: pathname }
+    nav(to, { state: { fly: b.id, ...back } satisfies Landing, replace: there })
+  }
 
   if (b.kind === 'stamp') {
     const next = nextInSeries(b)
@@ -56,22 +68,18 @@ export function BadgeCelebration() {
           </div>
           <b className="bd-name">{b.name}</b>
           <p className="bd-how">{b.how}{next ? ` Următorul timbru: ${next.name}.` : ''}</p>
-          <button type="button" className="btn primary bd-btn" autoFocus onClick={() => markSeen(b.id)}>Gata</button>
-          <button type="button" className="bd-link" onClick={() => { markSeen(b.id); nav('/profil/clasor') }}>Vezi clasorul</button>
+          <button type="button" className="btn primary bd-btn" autoFocus onClick={place}>Pune în clasor</button>
+          <button type="button" className="bd-link" onClick={() => markSeen(b.id)}>Gata</button>
         </div>
       </div>
     )
   }
 
-  const stick = () => {
-    setStuckId(b.id)
-    setTimeout(() => markSeen(b.id), window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 650)
-  }
   return (
     <div className="bd-layer bd-kid" role="dialog" aria-modal="true" aria-label={`Abțibild nou: ${b.name}`}>
       <div className="bd-ura">
         <span className="bd-ura-title">Ura!</span>
-        <div className={`bd-reward${sticking ? ' sticking' : ''}`}>
+        <div className="bd-reward">
           <div className="bd-glow" aria-hidden="true" />
           {TWINKLES.map(([x, y, d], i) => (
             <svg key={i} className="bd-tw" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${d}s` }} viewBox="0 0 24 24" aria-hidden="true">
@@ -82,11 +90,89 @@ export function BadgeCelebration() {
         </div>
         <b className="bd-ura-name">{b.name}</b>
         <p className="bd-ura-how">{b.how}</p>
-        <button type="button" className="bd-kbtn" autoFocus disabled={sticking} onClick={stick}>Lipește în album</button>
-        <button type="button" className="bd-kbtn soft" disabled={sticking} onClick={() => putOff(b.id)}>Mai târziu</button>
+        <button type="button" className="bd-kbtn" autoFocus onClick={place}>Lipește în album</button>
+        <button type="button" className="bd-kbtn soft" onClick={() => putOff(b.id)}>Mai târziu</button>
       </div>
     </div>
   )
+}
+
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
+ * A badge on its way here (from the celebration, or a waiting sticker tapped in the album):
+ * a copy rises from the middle of the screen, flies in an arc to its place and presses in,
+ * with a ripple and sparkles. Returns the id still in the air (its place stays empty until then).
+ */
+function useLanding(holder: React.RefObject<HTMLElement | null>) {
+  const { state: navState } = useLocation()
+  const state = useBadges()
+  const fly = ((navState ?? {}) as Landing).fly
+  const due = fly && state.earned[fly] && !state.seen.includes(fly) ? fly : undefined
+  const [inAir, setInAir] = useState<string>()
+  const [landed, setLanded] = useState<string>()
+  const started = useRef<string>(undefined)
+  const start = useCallback((id: string) => {
+    if (started.current === id) return
+    started.current = id
+    const b = BADGE.get(id)
+    const root = holder.current
+    const place = root?.querySelector<HTMLElement>(`[data-badge="${id}"]`)
+    if (!b || !place || reducedMotion()) { markSeen(id); return }
+    setInAir(id)
+    place.scrollIntoView({ block: 'center' })
+    requestAnimationFrame(() => {
+      const to = (place.querySelector('.bd-art') ?? place).getBoundingClientRect()
+      const stamp = b.kind === 'stamp'
+      // Start where the celebration showed it: big, in the middle of the screen. A stamp flies
+      // without its postmark (the place's drawing is 150 wide, the stamp itself 120 of it).
+      const w = Math.min(window.innerWidth * (stamp ? 0.42 : 0.6), stamp ? 170 : 230)
+      const h = stamp ? w * (124 / 120) : w
+      const x0 = (window.innerWidth - w) / 2, y0 = window.innerHeight * 0.42 - h / 2
+      const el = document.createElement('div')
+      el.className = 'bd-flyer'
+      el.innerHTML = stamp ? plainStampSvg(b) : stickerSvg(b, true)
+      Object.assign(el.style, { left: `${x0}px`, top: `${y0}px`, width: `${w}px` })
+      document.body.appendChild(el)
+      const k = (stamp ? to.width * (120 / 150) : to.width) / w
+      const dx = to.left - x0, dy = to.top - y0
+      const anim = el.animate([
+        { transform: 'none', opacity: 0.6 },
+        { transform: 'translate(0, -16px) scale(1.1) rotate(-6deg)', opacity: 1, offset: 0.18 },
+        { transform: `translate(${dx * 0.55}px, ${dy * 0.55 - 80}px) scale(${(1 + k) / 2}) rotate(8deg)`, offset: 0.6 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${k}) rotate(0deg)` },
+      ], { duration: 950, easing: 'cubic-bezier(.45, 0, .25, 1)', fill: 'forwards' })
+      const land = () => {
+        el.remove()
+        markSeen(id)
+        setInAir(undefined)
+        setLanded(id)
+        setTimeout(() => setLanded((x) => (x === id ? undefined : x)), 1200)
+        sparkle(to, !stamp)
+      }
+      anim.finished.then(land, land)
+    })
+  }, [holder])
+  useEffect(() => {
+    if (!due) return
+    // Let the page lay out first (and the stickers' slots exist).
+    const t = setTimeout(() => start(due), 120)
+    return () => clearTimeout(t)
+  }, [due, start])
+  return { inAir: inAir ?? due, landed, flyIn: start }
+}
+
+/** The press-in: a ring and, for stickers, a little burst of dots around the place. */
+function sparkle(r: DOMRect, dots: boolean) {
+  const box = document.createElement('div')
+  box.className = 'bd-land'
+  Object.assign(box.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` })
+  box.innerHTML = '<span class="bd-land-ring"></span>' + (dots ? Array.from({ length: 12 }, (_, i) => {
+    const a = (i / 12) * Math.PI * 2, d = 38 + (i % 3) * 10
+    return `<i style="--x:${Math.round(Math.cos(a) * d)}px;--y:${Math.round(Math.sin(a) * d)}px"></i>`
+  }).join('') : '')
+  document.body.appendChild(box)
+  setTimeout(() => box.remove(), 900)
 }
 
 /** The next stamp of the same series (same drawing, bigger number), if any. */
@@ -136,11 +222,21 @@ export function Clasor() {
   const state = useBadges()
   const [group, setGroup] = useState<string>('')
   const [open, setOpen] = useState<Badge>()
+  const holder = useRef<HTMLDivElement>(null)
+  const { inAir, landed } = useLanding(holder)
   const now = new Date()
-  const have = STAMPS.filter((b) => state.earned[b.id]).length
-  const groups = STAMP_GROUPS.filter((g) => !group || g === group)
+  const has = (b: Badge) => !!state.earned[b.id] && b.id !== inAir
+  const have = STAMPS.filter(has).length
+  // A stamp on its way in: show every group, so its place is there.
+  const groups = STAMP_GROUPS.filter((g) => !group || g === group || inAir)
+  const { backLabel, backTo } = (useLocation().state ?? {}) as Landing
+  const back = useBack(backTo ?? '/profil')
   return (
-    <div className="bd-clasor">
+    <div className="bd-clasor" ref={holder}>
+      {backLabel && <button type="button" className="bd-back-pill bd-back-sticky" onClick={back}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+        <span>{backLabel}</span>
+      </button>}
       <p className="bd-sum">{have} {have === 1 ? 'timbru' : 'timbre'} din {STAMPS.length}</p>
       <div className="bd-bar big"><i style={{ width: `${Math.round((have / STAMPS.length) * 100)}%` }} /></div>
       <div className="chips bd-chips" role="group" aria-label="Arată">
@@ -152,12 +248,12 @@ export function Clasor() {
           <h2 className="set-label">{g}</h2>
           <div className="bd-grid">
             {STAMPS.filter((b) => b.group === g).map((b) => {
-              const earned = state.earned[b.id]
+              const earned = has(b) ? state.earned[b.id] : undefined
               const p = progressOf(b, state, now)
               const hidden = b.secret && !earned
               return (
-                <button type="button" key={b.id} className={`bd-cell${earned ? '' : ' off'}`} onClick={() => setOpen(b)}>
-                  <BadgeArt b={b} earned={earned} />
+                <button type="button" key={b.id} data-badge={b.id} className={`bd-cell${earned ? '' : ' off'}${landed === b.id ? ' landed' : ''}`} onClick={() => setOpen(b)}>
+                  <BadgeArt b={b} earned={earned} className={landed === b.id ? 'bd-postmark' : undefined} />
                   <span className="bd-cell-name">{hidden ? 'Surpriză' : b.name}</span>
                   <small>{earned ? romanDay(earned) : progressText(b, p.have, p.need) || ' '}</small>
                 </button>
@@ -175,15 +271,28 @@ export function Clasor() {
 export function Album() {
   const state = useBadges()
   const kid = useKid().active
-  const back = useBack('/povesti/acasa')
+  const { backLabel, backTo } = (useLocation().state ?? {}) as Landing
+  const back = useBack(backTo ?? '/povesti/acasa')
   const [open, setOpen] = useState<Badge>()
   const [justStuck, setJustStuck] = useState<string>()
+  const holder = useRef<HTMLElement>(null)
+  const { inAir, landed } = useLanding(holder)
   const seen = new Set(state.seen)
-  const have = STICKERS.filter((b) => state.earned[b.id]).length
+  const has = (b: Badge) => !!state.earned[b.id] && b.id !== inAir
+  const have = STICKERS.filter(has).length
+  const stickHere = (b: Badge, el: HTMLElement) => {
+    markSeen(b.id)
+    setJustStuck(b.id)
+    if (!reducedMotion()) sparkle((el.querySelector('.bd-art') ?? el).getBoundingClientRect(), true)
+  }
   return (
-    <section className="bd-album-page">
+    <section className="bd-album-page" ref={holder}>
       <div className="bd-album-top">
-        {!kid && <button type="button" className="night-btn bd-album-back" aria-label="Înapoi" onClick={back}>
+        {/* Back to where the sticker was earned (named), or the usual round arrow. */}
+        {backLabel ? <button type="button" className="bd-back-pill" onClick={back}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+          <span>{backLabel}</span>
+        </button> : !kid && <button type="button" className="night-btn bd-album-back" aria-label="Înapoi" onClick={back}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>}
         <h1 className="bd-album-title">Albumul meu</h1>
@@ -191,12 +300,12 @@ export function Album() {
       <p className="bd-album-sum">{have} din {STICKERS.length}</p>
       <div className="bd-album">
         {STICKERS.map((b) => {
-          const earned = state.earned[b.id]
+          const earned = has(b) ? state.earned[b.id] : undefined
           const waiting = !!earned && !seen.has(b.id)
           return (
-            <button type="button" key={b.id} className={`bd-slot${waiting ? ' waiting' : ''}${justStuck === b.id ? ' stuck' : ''}`}
+            <button type="button" key={b.id} data-badge={b.id} className={`bd-slot${waiting ? ' waiting' : ''}${justStuck === b.id ? ' stuck' : ''}${landed === b.id ? ' landed' : ''}`}
               aria-label={waiting ? `${b.name}: lipește-l în album` : earned ? b.name : 'Loc gol'}
-              onClick={() => { if (waiting) { markSeen(b.id); setJustStuck(b.id) } else setOpen(b) }}>
+              onClick={(e) => { if (waiting) stickHere(b, e.currentTarget); else setOpen(b) }}>
               <BadgeArt b={b} earned={earned} />
               {waiting && <span className="bd-slot-tag">Lipește!</span>}
             </button>

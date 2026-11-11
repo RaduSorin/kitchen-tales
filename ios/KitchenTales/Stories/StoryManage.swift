@@ -397,15 +397,20 @@ struct FolderSheet: View {
 /// The last card of Dosare: "Folder nou · pentru povești sau muzică", gold dashed edge.
 struct NewFolderCard: View {
     var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: "plus").font(.system(size: 26, weight: .regular)).foregroundStyle(Theme.Night.moon)
-            Text("Folder nou").font(.custom(AppFont.storyDisplay, size: 18, relativeTo: .headline)).foregroundStyle(Theme.text)
-            Text("pentru povești sau muzică").font(.ktCaption).foregroundStyle(Theme.Night.muted)
+        HStack {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Folder nou").font(.custom(AppFont.storyDisplay, size: 19, relativeTo: .headline)).foregroundStyle(Theme.text)
+                Text("pentru povești sau muzică").font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .footnote)).foregroundStyle(Theme.Night.muted)
+            }
+            Spacer()
+            Image(systemName: "plus").font(.system(size: 28, weight: .light)).foregroundStyle(Theme.Night.muted)
+                .frame(width: 60, height: 60)
         }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
-            .strokeBorder(Theme.Night.moon.opacity(0.5), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
+        .padding(.leading, 16)
+        .padding(.trailing, 14)
+        .frame(maxWidth: .infinity, minHeight: 96)
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .strokeBorder(.white.opacity(0.16), style: StrokeStyle(lineWidth: 2, dash: [6, 5])))
         .contentShape(Rectangle())
     }
 }

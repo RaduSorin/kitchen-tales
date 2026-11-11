@@ -61,9 +61,9 @@ shot 5-stories-home -demo YES -area stories -tab home
 shot 5b-stories-colectii -demo YES -area stories -tab home -screen stories-colectii
 shot 5c-stories-favorite -demo YES -area stories -tab home -screen stories-favorite
 shot 6a-stories-library -demo YES -area stories -tab library
-shot 6b-stories-shelf -demo YES -area stories -tab library -library-mode Raft
-shot 6c-stories-cover-flow -demo YES -area stories -tab library -library-mode "Cover Flow"
-shot 6d-stories-folder -demo YES -area stories -tab library -screen folder
+shot 6b-stories-shelf -demo YES -area stories -tab library -screen folder -folder-look Raft
+shot 6c-stories-cover-flow -demo YES -area stories -tab library -screen folder -folder-look "Cover Flow"
+shot 6d-stories-folder -demo YES -area stories -tab library -screen folder -folder-look "Listă"
 shot 7-stories-favorites -demo YES -area stories -tab favorites
 shot 8-stories-mini-player -demo YES -area stories -tab library -screen mini-player
 shot 9-stories-player -demo YES -area stories -tab home -screen player

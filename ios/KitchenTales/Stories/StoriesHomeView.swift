@@ -377,7 +377,7 @@ struct CollectionCard: View {
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                Text(folder.subtitle)
+                Text(folder.items.isEmpty ? "gol" : folder.subtitle)
                     .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .footnote))
                     .foregroundStyle(.white.opacity(0.78))
                 Spacer(minLength: 0)
@@ -393,6 +393,13 @@ struct CollectionCard: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.trailing, 170)
 
+            if art.isEmpty {
+                Text(folder.icon ?? "📁").font(.system(size: 44))
+                    .frame(width: 86, height: 86)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.08)))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+                    .padding(.trailing, 14)
+            }
             HStack(spacing: -54) {
                 ForEach(Array(art.prefix(3).reversed().enumerated()), id: \.offset) { _, s in
                     StoryCover(story: s, cornerRadius: 9)

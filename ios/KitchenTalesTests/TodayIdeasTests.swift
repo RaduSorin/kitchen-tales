@@ -24,6 +24,6 @@ struct TodayIdeasTests {
         let ideas = TodayIdeas.ideas(recipes, logs: logs, exclude: [], now: now)
         #expect(ideas.map(\.recipe.id) == ["a", "b", "c"])
         #expect(ideas.map(\.kind) == [.demult, .rapida, .noua])
-        #expect(ideas[0].why == "N-ai mai gătit-o de 10 săptămâni")
+        #expect(ideas[0].why == "N-ai mai gătit-o de 2 luni")
     }
 }

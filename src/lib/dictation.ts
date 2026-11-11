@@ -17,9 +17,31 @@ export type DictationHandlers = {
   onLevel?: (level: number) => void
   /** Called once when the session ends; `error` is set when it ended on a failure. */
   onEnd: (error?: Error) => void
+  /** While this returns true, silence is sent instead of the microphone (the phone is speaking). */
+  muted?: () => boolean
 }
 
 export type Dictation = { stop: () => void }
+
+/** What went wrong, in words, plus the technical name and message (small, to tell us). */
+export function dictationError(err: unknown): { text: string; detail?: string } {
+  const e = err as (Error & { $metadata?: { websocketSynthetic500Error?: boolean; httpStatusCode?: number }; type?: string }) | undefined
+  // The SDK rejects with a bare object when the WebSocket doesn't open in time, and with an Event
+  // when the socket fails; give both a readable name.
+  if (e?.$metadata?.websocketSynthetic500Error) return { text: 'Nu mă pot conecta la serviciul de dictare. Încearcă din nou.', detail: 'WebSocket: conexiunea nu s-a deschis la timp' }
+  const name = e?.name ?? (e?.type ? `WebSocket ${e.type}` : '')
+  const msg = e?.message ?? (e?.type ? '' : String(err ?? ''))
+  const detail = [name, msg].filter(Boolean).join(': ').slice(0, 160) || undefined
+  if (name === 'NotAllowedError' || name === 'SecurityError') return { text: 'Nu am acces la microfon. Permite-l din Setări › Safari › Microfon.' }
+  if (name === 'NotFoundError') return { text: 'Nu găsesc niciun microfon.' }
+  if (name === 'AudioBlockedError') return { text: 'Telefonul nu a pornit microfonul. Atinge din nou butonul de microfon.', detail }
+  if (name === 'NoAudioError') return { text: 'Microfonul nu trimite sunet. Închide alte aplicații care îl folosesc (un apel, o înregistrare) și încearcă din nou.', detail }
+  if (/no new audio|timed out/i.test(msg)) return { text: 'Dictarea s-a oprit pentru că n-a mai auzit nimic. Apasă microfonul și vorbește din nou.', detail }
+  if (/Expired|UnrecognizedClient|InvalidSignature|AccessDenied|not authorized|Nu ești conectat/i.test(name + msg)) return { text: 'Sesiunea a expirat. Ieși din cont și intră din nou, apoi încearcă iar.', detail }
+  if (/LimitExceeded|Throttl/i.test(name + msg)) return { text: 'Serviciul de dictare e ocupat acum. Încearcă din nou peste câteva secunde.', detail }
+  if (/socket|network|fetch|connect/i.test(name + msg)) return { text: 'Nu mă pot conecta la serviciul de dictare. Unele rețele mobile îl blochează: încearcă pe Wi‑Fi.', detail }
+  return { text: 'Dictarea s-a oprit. Încearcă din nou.', detail }
+}
 
 // Runs on the audio thread: forwards each block of samples to the page.
 const WORKLET = `class Tap extends AudioWorkletProcessor {
@@ -48,7 +70,31 @@ function toPcm16(input: Float32Array, fromRate: number, carry: { buf: number[] }
   return chunks
 }
 
-export async function startDictation(h: DictationHandlers): Promise<Dictation> {
+/**
+ * An open microphone feeding an audio graph. Dictation opens one per session; hands-free cooking
+ * opens one on the tap and keeps it for every Transcribe stream after that, because on iOS a
+ * microphone or AudioContext opened later, without a touch, can stay silent.
+ */
+export type Mic = {
+  /** Receives each block of samples (at `rate`); `undefined` stops listening. */
+  listen: (fn: ((samples: Float32Array) => void) | undefined) => void
+  rate: number
+  /** Whether the microphone is still live (not ended by iOS, not closed). */
+  ok: () => boolean
+  /** Restarts the audio graph if iOS suspended or interrupted it (another sound, a call). */
+  wake: () => void
+  close: () => void
+}
+
+/** Rejects with a named error when `p` takes longer than `ms` (iOS can leave a resume pending forever). */
+function within<T>(p: Promise<T>, ms: number, name: string, message: string) {
+  return new Promise<T>((ok, fail) => {
+    const t = setTimeout(() => { const e = new Error(message); e.name = name; fail(e) }, ms)
+    p.then((v) => { clearTimeout(t); ok(v) }, (e) => { clearTimeout(t); fail(e) })
+  })
+}
+
+export async function openMic(): Promise<Mic> {
   // Created before the first await, while the tap still counts as a user gesture (iOS requires it).
   const ctx = new AudioContext()
   let stream: MediaStream
@@ -61,23 +107,58 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
     throw err
   }
   let wake: WakeLockSentinel | undefined
-  const cleanup = () => {
+  let closed = false
+  const close = () => {
+    if (closed) return
+    closed = true
     stream.getTracks().forEach((t) => t.stop())
     ctx.close().catch(() => {})
     wake?.release().catch(() => {})
   }
 
   try {
-    await ctx.resume()
+    await within(ctx.resume(), 4000, 'AudioBlockedError', 'AudioContext nu a pornit (fără atingere pe ecran?)')
     const url = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }))
     await ctx.audioWorklet.addModule(url)
     URL.revokeObjectURL(url)
   } catch (err) {
-    cleanup()
+    close()
     throw err
   }
   // Keep the screen on while talking: iOS stops the mic when the phone locks.
   navigator.wakeLock?.request('screen').then((w) => { wake = w }).catch(() => {})
+
+  let fn: ((samples: Float32Array) => void) | undefined
+  const source = ctx.createMediaStreamSource(stream)
+  const tap = new AudioWorkletNode(ctx, 'kt-tap')
+  tap.port.onmessage = (e: MessageEvent<Float32Array>) => { if (!closed) fn?.(e.data) }
+  source.connect(tap)
+  // Some browsers only pull audio through nodes that reach the output; keep it silent.
+  const mute = ctx.createGain()
+  mute.gain.value = 0
+  tap.connect(mute).connect(ctx.destination)
+
+  const wakeUp = () => { if (!closed && ctx.state !== 'running' && ctx.state !== 'closed') ctx.resume().catch(() => {}) }
+  // iOS puts the context in "interrupted" when something else takes the audio (the phone's own
+  // voice reading a step can be enough); start it again as soon as it lets us.
+  ctx.onstatechange = wakeUp
+  return {
+    listen: (f) => { fn = f },
+    rate: ctx.sampleRate,
+    ok: () => !closed && ctx.state !== 'closed' && stream.getAudioTracks().some((t) => t.readyState === 'live'),
+    wake: wakeUp,
+    close,
+  }
+}
+
+/**
+ * Streams the microphone to Amazon Transcribe until `stop()`. With `shared`, uses that open
+ * microphone and leaves it open at the end; otherwise opens one and closes it.
+ */
+export async function startDictation(h: DictationHandlers, shared?: Mic): Promise<Dictation> {
+  const mic = shared ?? await openMic()
+  const own = !shared
+  mic.wake()
 
   // Audio chunks waiting to be sent; `null` marks the end of speech.
   const queue: (Uint8Array | null)[] = []
@@ -89,34 +170,30 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
   const stop = () => {
     if (stopped) return
     stopped = true
+    mic.listen(undefined)
     push(null)
-    stream.getTracks().forEach((t) => t.stop())
+    if (own) mic.close()
   }
 
-  const source = ctx.createMediaStreamSource(stream)
-  const tap = new AudioWorkletNode(ctx, 'kt-tap')
   const carry = { buf: [] as number[] }
-  tap.port.onmessage = (e: MessageEvent<Float32Array>) => {
+  let heard = false
+  mic.listen((samples) => {
     if (stopped) return
     heard = true
     let peak = 0
-    for (const v of e.data) peak = Math.max(peak, Math.abs(v))
+    for (const v of samples) peak = Math.max(peak, Math.abs(v))
     h.onLevel?.(Math.min(1, peak * 3))
-    for (const c of toPcm16(e.data, ctx.sampleRate, carry)) push(c)
-  }
-  source.connect(tap)
+    // Silence instead of what the phone is saying itself: the stream stays open, nothing is heard.
+    const send = h.muted?.() ? new Float32Array(samples.length) : samples
+    for (const c of toPcm16(send, mic.rate, carry)) push(c)
+  })
   // No samples at all after a couple of seconds: the microphone is held by something else (a call,
   // another app) or the audio thread never started. Say so instead of waiting for a timeout.
-  let heard = false
   const noAudio = setTimeout(() => {
     if (heard || stopped) return
     const e = new Error('Microfonul nu a trimis niciun sunet în 3 secunde'); e.name = 'NoAudioError'
     failEarly(e)
   }, 3000)
-  // Some browsers only pull audio through nodes that reach the output; keep it silent.
-  const mute = ctx.createGain()
-  mute.gain.value = 0
-  tap.connect(mute).connect(ctx.destination)
 
   async function* audio() {
     for (;;) {
@@ -167,7 +244,8 @@ export async function startDictation(h: DictationHandlers): Promise<Dictation> {
     } finally {
       clearTimeout(noAudio)
       stopped = true
-      cleanup()
+      mic.listen(undefined)
+      if (own) mic.close()
     }
   })()
 

@@ -1,29 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { startDictation, type Dictation } from '../lib/dictation'
+import { dictationError as why, startDictation, type Dictation } from '../lib/dictation'
 import { useOnline } from '../lib/useOffline'
 
 const MAX_SECONDS = 5 * 60
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-
-/** What went wrong, in words, plus the technical name and message (small, to tell us). */
-function why(err: unknown): { text: string; detail?: string } {
-  const e = err as (Error & { $metadata?: { websocketSynthetic500Error?: boolean; httpStatusCode?: number }; type?: string }) | undefined
-  // The SDK rejects with a bare object when the WebSocket doesn't open in time, and with an Event
-  // when the socket fails; give both a readable name.
-  if (e?.$metadata?.websocketSynthetic500Error) return { text: 'Nu mă pot conecta la serviciul de dictare. Încearcă din nou.', detail: 'WebSocket: conexiunea nu s-a deschis la timp' }
-  const name = e?.name ?? (e?.type ? `WebSocket ${e.type}` : '')
-  const msg = e?.message ?? (e?.type ? '' : String(err ?? ''))
-  const detail = [name, msg].filter(Boolean).join(': ').slice(0, 160) || undefined
-  if (name === 'NotAllowedError' || name === 'SecurityError') return { text: 'Nu am acces la microfon. Permite-l din Setări › Safari › Microfon.' }
-  if (name === 'NotFoundError') return { text: 'Nu găsesc niciun microfon.' }
-  if (name === 'NoAudioError') return { text: 'Microfonul nu trimite sunet. Închide alte aplicații care îl folosesc (un apel, o înregistrare) și încearcă din nou.', detail }
-  if (/no new audio|timed out/i.test(msg)) return { text: 'Dictarea s-a oprit pentru că n-a mai auzit nimic. Apasă microfonul și vorbește din nou.', detail }
-  if (/Expired|UnrecognizedClient|InvalidSignature|AccessDenied|not authorized|Nu ești conectat/i.test(name + msg)) return { text: 'Sesiunea a expirat. Ieși din cont și intră din nou, apoi încearcă iar.', detail }
-  if (/LimitExceeded|Throttl/i.test(name + msg)) return { text: 'Serviciul de dictare e ocupat acum. Încearcă din nou peste câteva secunde.', detail }
-  if (/socket|network|fetch|connect/i.test(name + msg)) return { text: 'Nu mă pot conecta la serviciul de dictare. Unele rețele mobile îl blochează: încearcă pe Wi‑Fi.', detail }
-  return { text: 'Dictarea s-a oprit. Încearcă din nou.', detail }
-}
 
 /**
  * Round dictation button for a text box: tap to talk, tap again to stop.

@@ -1186,3 +1186,4 @@ button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
 .cook-listen b { color: var(--gold); }
 .cook-listen span { opacity: .8; min-width: 0; overflow-wrap: anywhere; }
 .cook-listen-err { color: #ffb4a3; opacity: 1 !important; }
+.cook-listen-detail { flex-basis: 100%; font-size: var(--fs-xxs); opacity: .55; overflow-wrap: anywhere; }

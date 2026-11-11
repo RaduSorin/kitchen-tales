@@ -94,6 +94,19 @@ export default function Reflection() {
         </div>
       )}
 
+      {plan?.success && (
+        <div className="rg-sec">
+          <h2 className="rg-label">Semnul tău</h2>
+          <p className="rg-sub">Ți-ai ales semnul „{plan.success}”. L-ai văzut luna asta, măcar o dată?</p>
+          <div className="pills" role="group" aria-label="Ai văzut semnul?">
+            {([['da', 'Da'], ['nu', 'Nu de data asta']] as const).map(([v, label]) => (
+              <button type="button" key={v} aria-pressed={answers.sign === v}
+                onClick={() => setAnswers({ ...answers, sign: answers.sign === v ? '' : v })}>{label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="rg-sec">
         <h2 className="rg-label">Întrebările lunii</h2>
         {QUESTIONS.map(([k, q]) => (

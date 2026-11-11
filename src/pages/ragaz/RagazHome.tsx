@@ -5,6 +5,8 @@ import { showToast } from '../../lib/toast'
 import { lockVault } from '../../lib/mind/vault'
 import { dayName, fridaysOf, monthName, nextMonth, thisMonth, today, type MonthPlan, type Note } from '../../lib/mind/model'
 import { getMonth, listMonths, listNotes, rememberPlanned } from '../../lib/mind/store'
+import { checkHerbarium } from '../../lib/mind/herbStore'
+import { HerbRow } from './Herbarium'
 import '../../ragaz.css'
 
 const CHECK = 'M5 12.5l4.5 4.5L19 7'
@@ -18,6 +20,8 @@ export default function RagazHome() {
       .then(([month, next, notes]) => setData({ month, next, notes }), (e: Error) => showToast(e.message))
     // For the Home card: which months are planned (also for plans made before it kept track).
     listMonths().then(rememberPlanned).catch(() => {})
+    // The herbarium: plants now due, and "Bine ai revenit" after a long pause.
+    void checkHerbarium(true)
   }, [])
   if (!data) return <Loading />
   const { month, next, notes } = data
@@ -84,6 +88,7 @@ export default function RagazHome() {
         <Link to="/ragaz/jurnal" className="rg-tile"><b>Jurnal</b><small>{notes.length ? `${notes.length} ${notes.length === 1 ? 'notă' : 'note'}` : 'gol încă'}</small></Link>
         <Link to="/ragaz/exercitii" className="rg-tile"><b>Exercițiile mele</b><small>pachete și banca ta</small></Link>
       </div>
+      <HerbRow />
       <Link to="/ragaz/claude" className="rg-card rg-link">
         <div><b>Vorbește cu Claude</b><small>Opțional. Pleacă doar ce trimiți tu.</small></div>
         <span aria-hidden="true">›</span>

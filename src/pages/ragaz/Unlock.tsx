@@ -1,3 +1,4 @@
+import { HerbMoment } from './Herbarium'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { Loading } from '../../components/LoadState'
@@ -118,5 +119,5 @@ export function RagazGate() {
       </section>
     )
   }
-  return <Outlet />
+  return <><Outlet /><HerbMoment /></>
 }

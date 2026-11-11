@@ -42,6 +42,7 @@ final class RecipeStore {
             recipes = DemoKitchen.recipes
             plan = DemoKitchen.plan()
             logs = DemoKitchen.logs
+            shopping = DemoKitchen.shopping
             phase = .loaded
         } else if let saved = cache.read(Saved.self, key: Self.cacheKey) {
             recipes = saved.recipes; plan = saved.plan; shopping = saved.shopping; logs = saved.logs
@@ -172,9 +173,10 @@ final class RecipeStore {
     // MARK: Week plan and shopping list
 
     /// Puts the recipe on a day of the week (servings only when they differ from the recipe's).
-    func planRecipe(_ recipe: Recipe, on day: Date, servings: Int? = nil) async -> Bool {
-        let entry = PlanEntry(id: UUID().uuidString.lowercased(), day: RecipeText.dayKey(day), recipeId: recipe.id,
+    func planRecipe(_ recipe: Recipe, on day: Date, servings: Int? = nil, leftovers: Bool = false) async -> Bool {
+        var entry = PlanEntry(id: UUID().uuidString.lowercased(), day: RecipeText.dayKey(day), recipeId: recipe.id,
                               servings: servings != recipe.servings ? servings : nil)
+        entry.leftovers = leftovers
         plan.append(entry)
         save()
         guard !demo, let client else { return true }
@@ -182,6 +184,7 @@ final class RecipeStore {
             guard let space = mySpace() else { throw BackendError.notConfigured }
             var input: [String: Any] = ["id": entry.id, "day": entry.day, "recipeId": entry.recipeId, "spaceGroups": [space]]
             if let s = entry.servings { input["servings"] = s }
+            if leftovers { input["leftovers"] = true }
             _ = try await client.run("mutation Plan($input: CreateMealPlanEntryInput!) { createMealPlanEntry(input: $input) { id } }",
                                      variables: ["input": input])
             return true
@@ -243,6 +246,137 @@ final class RecipeStore {
             return nil
         }
     }
+
+    // MARK: Changing the plan
+
+    /// One AppSync mutation (`createX`, `updateX`, `deleteX`) with its input.
+    private func mutate(_ field: String, _ inputType: String, _ input: [String: Any]) async throws {
+        guard !demo, let client else { return }
+        _ = try await client.run("mutation M($input: \(inputType)!) { \(field)(input: $input) { id } }", variables: ["input": input])
+    }
+
+    /// Runs a local change at once and sends it; on failure the old state comes back.
+    private func change(_ apply: () -> Void, send: () async throws -> Void) async -> Bool {
+        let before = (plan, shopping)
+        apply()
+        save()
+        do {
+            try await send()
+            return true
+        } catch {
+            (plan, shopping) = before
+            save()
+            Haptics.warning()
+            return false
+        }
+    }
+
+    @discardableResult
+    func removePlan(_ entryId: String) async -> Bool {
+        await change({ plan.removeAll { $0.id == entryId } }) {
+            try await mutate("deleteMealPlanEntry", "DeleteMealPlanEntryInput", ["id": entryId])
+        }
+    }
+
+    @discardableResult
+    func movePlan(_ entryId: String, to day: Date) async -> Bool {
+        let key = RecipeText.dayKey(day)
+        return await change({ if let i = plan.firstIndex(where: { $0.id == entryId }) { plan[i].day = key } }) {
+            try await mutate("updateMealPlanEntry", "UpdateMealPlanEntryInput", ["id": entryId, "day": key])
+        }
+    }
+
+    /// Servings for one planned cooking (nil = the recipe's own).
+    @discardableResult
+    func setServings(_ entryId: String, _ servings: Int) async -> Bool {
+        guard let entry = plan.first(where: { $0.id == entryId }) else { return false }
+        let base = recipe(entry.recipeId)?.servings
+        let value: Int? = servings == base ? nil : servings
+        return await change({ if let i = plan.firstIndex(where: { $0.id == entryId }) { plan[i].servings = value } }) {
+            try await mutate("updateMealPlanEntry", "UpdateMealPlanEntryInput", ["id": entryId, "servings": value.map { $0 as Any } ?? NSNull()])
+        }
+    }
+
+    /// The servings a planned cooking is for.
+    func servings(of entry: PlanEntry) -> Int? { entry.servings ?? recipe(entry.recipeId)?.servings }
+
+    /// What the next 7 days need, on the list: each planned cooking counts (twice planned, twice
+    /// the amounts), scaled to its servings; a recipe's open lines are replaced by the new totals.
+    /// Returns the lines added, or nil when the server refused.
+    func addPlanToShopping(from start: Date = Date()) async -> Int? {
+        let first = Calendar.current.startOfDay(for: start)
+        let days = Set((0..<7).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: first) }.map { RecipeText.dayKey($0) })
+        var factors: [String: Double] = [:]
+        for e in plan where days.contains(e.day) && !e.leftovers {
+            guard let r = recipe(e.recipeId) else { continue }
+            let one = r.servings.flatMap { base in e.servings.map { Double($0) / Double(base) } } ?? 1
+            factors[r.id, default: 0] += one
+        }
+        var toRemove: [ShoppingLine] = []
+        var toAdd: [ShoppingLine] = []
+        for (id, factor) in factors.sorted(by: { $0.key < $1.key }) {
+            guard let r = recipe(id) else { continue }
+            var want: [String] = []
+            for line in r.ingredients.map({ $0.trimmingCharacters(in: .whitespaces) }) where !line.isEmpty && !RecipeText.isHeading(line) {
+                let text = RecipeText.scaleIngredient(line, factor: factor)
+                if !want.contains(text) { want.append(text) }
+            }
+            let open = shopping.filter { !$0.checked && $0.recipeId == id }
+            toRemove += open.filter { !want.contains($0.text) }
+            for text in want where !open.contains(where: { $0.text == text }) {
+                toAdd.append(ShoppingLine(id: UUID().uuidString.lowercased(), text: text, recipeId: id, recipeTitle: r.title))
+            }
+        }
+        let space = mySpace()
+        let ok = await change({
+            shopping.removeAll { line in toRemove.contains { $0.id == line.id } }
+            shopping += toAdd
+        }) {
+            for old in toRemove { try await mutate("deleteShoppingItem", "DeleteShoppingItemInput", ["id": old.id]) }
+            for line in toAdd {
+                guard let space else { throw BackendError.notConfigured }
+                try await mutate("createShoppingItem", "CreateShoppingItemInput",
+                                 ["id": line.id, "text": line.text, "checked": false, "recipeId": line.recipeId ?? "",
+                                  "recipeTitle": line.recipeTitle ?? "", "spaceGroups": [space]])
+            }
+        }
+        return ok ? toAdd.count : nil
+    }
+
+    // MARK: Changing the shopping list
+
+    @discardableResult
+    func addShoppingText(_ text: String) async -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        let line = ShoppingLine(id: UUID().uuidString.lowercased(), text: trimmed)
+        let space = mySpace()
+        return await change({ shopping.insert(line, at: 0) }) {
+            guard let space else { throw BackendError.notConfigured }
+            try await mutate("createShoppingItem", "CreateShoppingItemInput",
+                             ["id": line.id, "text": line.text, "checked": false, "spaceGroups": [space]])
+        }
+    }
+
+    @discardableResult
+    func toggleChecked(_ lineId: String) async -> Bool {
+        guard let line = shopping.first(where: { $0.id == lineId }) else { return false }
+        let checked = !line.checked
+        return await change({ if let i = shopping.firstIndex(where: { $0.id == lineId }) { shopping[i].checked = checked } }) {
+            try await mutate("updateShoppingItem", "UpdateShoppingItemInput", ["id": lineId, "text": line.text, "checked": checked])
+        }
+    }
+
+    @discardableResult
+    func removeShopping(_ ids: [String]) async -> Bool {
+        guard !ids.isEmpty else { return true }
+        return await change({ shopping.removeAll { ids.contains($0.id) } }) {
+            for id in ids { try await mutate("deleteShoppingItem", "DeleteShoppingItemInput", ["id": id]) }
+        }
+    }
+
+    /// The last day each recipe was cooked ("gătită acum 2 săpt.").
+    func lastCooked(_ recipeId: String) -> String? { log(recipeId)?.cooked.max() }
 
     // MARK: Loading
 
@@ -372,6 +506,18 @@ enum DemoKitchen {
         }
         return entries
     }
+
+    static let shopping: [ShoppingLine] = [
+        ShoppingLine(id: "s1", text: "2 cepe", recipeId: "r1", recipeTitle: "Ciorbă de perișoare"),
+        ShoppingLine(id: "s2", text: "1 morcov", recipeId: "r1", recipeTitle: "Ciorbă de perișoare"),
+        ShoppingLine(id: "s3", text: "8 roșii", recipeId: "r7", recipeTitle: "Roșii umplute"),
+        ShoppingLine(id: "s4", text: "500 g carne tocată", recipeId: "r1", recipeTitle: "Ciorbă de perișoare"),
+        ShoppingLine(id: "s5", text: "1 ou", recipeId: "r1", recipeTitle: "Ciorbă de perișoare"),
+        ShoppingLine(id: "s6", text: "300 ml lapte", recipeId: "r5", recipeTitle: "Chifle de casă"),
+        ShoppingLine(id: "s7", text: "Detergent de vase"),
+        ShoppingLine(id: "s8", text: "500 g făină", checked: true, recipeId: "r5", recipeTitle: "Chifle de casă"),
+        ShoppingLine(id: "s9", text: "25 g drojdie", checked: true, recipeId: "r5", recipeTitle: "Chifle de casă"),
+    ]
 
     static let logs: [RecipeLog] = [
         RecipeLog(id: "l1", recipeId: "r1", favorite: true, cooked: ["2026-10-20"],

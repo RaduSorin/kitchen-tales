@@ -99,8 +99,7 @@ struct RecipesTabs: View {
                     .miniPlayerInset()
             }
             Tab("Săptămâna", systemImage: "calendar", value: AppTab.week) {
-                PlaceholderScreen(title: "Săptămâna", symbol: "calendar",
-                                  message: "Planul săptămânii vine în pasul următor. Până atunci, planifică din aplicația web.")
+                WeekView()
                     .miniPlayerInset()
             }
             Tab("Rețete", systemImage: "book.closed.fill", value: AppTab.recipes) {
@@ -108,8 +107,7 @@ struct RecipesTabs: View {
                     .miniPlayerInset()
             }
             Tab("Listă", systemImage: "cart", value: AppTab.list) {
-                PlaceholderScreen(title: "Listă", symbol: "cart",
-                                  message: "Lista de cumpărături vine în pasul următor. Ce pui în listă de aici apare deja pe web.")
+                ShoppingView()
                     .miniPlayerInset()
             }
             Tab("Profil", systemImage: "person.crop.circle.fill", value: AppTab.profile) {

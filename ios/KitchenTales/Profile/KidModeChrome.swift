@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension View {
-    /// In kid mode: a small lock with the time left at the top (the PIN takes you out), and the
+    /// In kid mode: a small lock with the time left at the top left (where the Rețete / Povești switch was) (the PIN takes you out), and the
     /// lock screen when the time runs out.
     func kidModeChrome() -> some View { modifier(KidModeChrome()) }
 }
@@ -13,11 +13,11 @@ private struct KidModeChrome: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .overlay(alignment: .topTrailing) {
+            .overlay(alignment: .topLeading) {
                 if kid.active {
                     Button { leaving = true } label: { KidBadge() }
                         .buttonStyle(.plain)
-                        .padding(.trailing, 16)
+                        .padding(.leading, 16)
                         .padding(.top, 2)
                         .accessibilityLabel("Ieși din modul copil")
                 }

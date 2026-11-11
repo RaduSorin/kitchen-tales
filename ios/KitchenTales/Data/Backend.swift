@@ -89,6 +89,24 @@ struct GraphQLClient {
     }
 }
 
+extension GraphQLClient {
+    /// Deletes a row and its files (deleteWithFiles in src/lib/db.ts): files from before spaces
+    /// had folders are checked through the row, so they go first; the rest after the row.
+    func deleteWithFiles(_ files: [String?], ref: String, deleteRow: () async throws -> Void) async throws {
+        let paths = files.compactMap { $0 }.filter { !$0.isEmpty }
+        func inSpace(_ p: String) -> Bool {
+            let parts = p.split(separator: "/", omittingEmptySubsequences: false)
+            return parts.count == 3 && parts[1].hasPrefix("space-")
+        }
+        let old = paths.filter { !inSpace($0) }
+        let mutation = "mutation Del($paths: [String]!, $refs: [String]) { deleteFiles(paths: $paths, refs: $refs) }"
+        if !old.isEmpty { _ = try? await run(mutation, variables: ["paths": old, "refs": old.map { _ in ref }]) }
+        try await deleteRow()
+        let rest = paths.filter(inSpace)
+        if !rest.isEmpty { _ = try? await run(mutation, variables: ["paths": rest]) }
+    }
+}
+
 /// Signed links (valid one hour) to read stored files, asked for through the `fileUrls` query,
 /// which checks the caller's space. Kept for 50 minutes, so a shelf of covers is one call.
 @MainActor

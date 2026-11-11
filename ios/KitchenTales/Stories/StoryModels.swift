@@ -96,6 +96,10 @@ struct StoryFolderRow: Codable, Hashable, Sendable {
         self.spaceName = spaceName
     }
 
+    init(id: String, name: String, icon: String?, mine: Bool, shared: Bool, spaceName: String?) {
+        self.id = id; self.name = name; self.icon = icon; self.mine = mine; self.shared = shared; self.spaceName = spaceName
+    }
+
     static let fields = "id name icon spaceGroups readerGroups spaceName"
 }
 
@@ -107,6 +111,17 @@ struct StoryFolder: Identifiable, Hashable, Sendable {
     var icon: String?
     var builtin: Bool
     var mine: Bool
+    /// The StoryFolder row (nil for a folder that exists only through its stories).
+    var rowId: String? = nil
+    var rowShared = false
+
+    /// Our stories in it that every account sees.
+    var sharedCount: Int { items.filter { $0.mine && $0.shared }.count }
+    /// Shared with every account: all of its stories are (an empty folder: its row is).
+    var shared: Bool {
+        let own = items.filter(\.mine)
+        return own.isEmpty ? rowShared : own.allSatisfy(\.shared)
+    }
 
     var subtitle: String {
         let count = items.count == 1 ? "1 poveste" : "\(items.count) povești"
@@ -146,13 +161,28 @@ enum StoryLibrary {
             let items = map[name] ?? []
             let row = rows.first { $0.name == name }
             let mine = row?.mine ?? items.allSatisfy(\.mine)
-            return StoryFolder(name: name, items: items, icon: row?.icon, builtin: mine && builtins.contains(name), mine: mine)
+            return StoryFolder(name: name, items: items, icon: row?.icon, builtin: mine && builtins.contains(name), mine: mine,
+                               rowId: row?.id, rowShared: row?.shared ?? false)
         }
         return folders.sorted { a, b in
             if a.mine != b.mine { return a.mine }
             if a.builtin != b.builtin { return !a.builtin }
             return a.name.compare(b.name, locale: Locale(identifier: "ro")) == .orderedAscending
         }
+    }
+
+    /// The emojis offered for a folder (FOLDER_ICONS).
+    static let folderIcons = ["🎵", "📚", "🌙", "⭐", "🐻", "🚗", "🦄", "🎄", "🌊", "🏰"]
+
+    /// What is wrong with a folder name, or nil (folderNameProblem in src/lib/stories.ts).
+    static func folderNameProblem(_ name: String, taken: [String], current: String? = nil) -> String? {
+        let n = StoryStore.fold(name)
+        if n.isEmpty { return "Scrie un nume pentru folder." }
+        if name.trimmingCharacters(in: .whitespaces).count > 40 { return "Numele e prea lung (cel mult 40 de litere)." }
+        if (taken + Array(sourceFolder.values)).contains(where: { $0 != current && StoryStore.fold($0) == n }) {
+            return "Există deja un folder cu acest nume."
+        }
+        return nil
     }
 
     /// Total listening time: "45 min", "2 h", "1 h 30".

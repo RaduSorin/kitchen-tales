@@ -41,7 +41,7 @@ final class StoryStore {
         mySpace = { [weak auth] in auth?.account?.space }
         if demo {
             allStories = DemoLibrary.stories
-            folderRows = []
+            folderRows = DemoLibrary.folders
             phase = .loaded
             offline.showAsSaved(["d1", "d2", "d3"])
         } else if let saved = cache.read(Saved.self, key: Self.cacheKey) {
@@ -169,6 +169,121 @@ final class StoryStore {
         persist()
     }
 
+    // MARK: Deleting, moving and folders (like src/lib/db.ts)
+
+    private func folderMutation(_ field: String, _ type: String, _ input: [String: Any]) async throws -> [String: Any] {
+        guard !demo, let client else { return [:] }
+        return try await client.run("mutation F($input: \(type)!) { \(field)(input: $input) { \(StoryFolderRow.fields) } }", variables: ["input": input])
+    }
+
+    /// Deletes our story with its audio and cover, and its copy on this phone.
+    func delete(_ id: String) async throws {
+        guard let story = story(id) else { return }
+        if !demo, let client {
+            try await client.deleteWithFiles([story.audioKey, story.coverKey], ref: story.fileRef) {
+                _ = try await client.run("mutation D($input: DeleteStoryInput!) { deleteStory(input: $input) { id } }", variables: ["input": ["id": id]])
+            }
+        }
+        offline.remove([id])
+        allStories.removeAll { $0.id == id }
+        persist()
+    }
+
+    /// The story's text (read when asked: the list leaves it out, it can be long).
+    func text(of id: String) async -> String? {
+        if let t = story(id)?.text, !t.isEmpty { return t }
+        if demo { return id == "d5" ? DemoLibrary.text : nil }
+        guard let client, let body = try? await client.run("query T($id: ID!) { getStory(id: $id) { text } }", variables: ["id": id]),
+              let row = body["getStory"] as? [String: Any], let t = row["text"] as? String, !t.isEmpty else { return nil }
+        if let i = allStories.firstIndex(where: { $0.id == id }) { allStories[i].text = t }
+        return t
+    }
+
+    /// Moves our story into a folder (nil: back to its own folder). Moving into one of our folders
+    /// takes the folder's sharing. Returns whether the sharing changed.
+    @discardableResult
+    func move(_ id: String, to collection: String?, spaceName: String?) async throws -> Bool {
+        guard let story = story(id) else { return false }
+        let folder = collection.flatMap { name in folderRows.first { $0.mine && $0.name == name } }
+        let shared = folder?.shared ?? story.shared
+        var input: [String: Any] = ["id": id, "collection": collection ?? NSNull()]
+        if folder != nil {
+            input["readerGroups"] = shared ? ["everyone"] : [String]()
+            input["sharedDirect"] = shared
+            if let spaceName { input["spaceName"] = spaceName }
+        }
+        try await updateStory(input)
+        if let i = allStories.firstIndex(where: { $0.id == id }) {
+            allStories[i].collection = collection
+            allStories[i].shared = shared
+        }
+        persist()
+        return shared != story.shared
+    }
+
+    /// A new folder of ours; it starts shared, like stories, unless `shared` says otherwise.
+    func createFolder(_ name: String, icon: String?, shared: Bool = true, spaceName: String?) async throws {
+        guard let space = mySpace() ?? (demo ? "space-demo" : nil) else { throw BackendError.notConfigured }
+        var input: [String: Any] = ["name": name, "icon": icon ?? NSNull(), "spaceGroups": [space], "readerGroups": shared ? ["everyone"] : [String]()]
+        if let spaceName { input["spaceName"] = spaceName }
+        let body = try await folderMutation("createStoryFolder", "CreateStoryFolderInput", input)
+        let row = (body["createStoryFolder"] as? [String: Any]).flatMap { StoryFolderRow(row: $0, mySpace: space) }
+            ?? StoryFolderRow(id: UUID().uuidString.lowercased(), name: name, icon: icon, mine: true, shared: shared, spaceName: spaceName)
+        folderRows.append(row)
+        persist()
+    }
+
+    /// Renames a folder and/or changes its icon, moving its stories along.
+    func saveFolder(_ folder: StoryFolder, name: String, icon: String?, spaceName: String?) async throws {
+        if let rowId = folder.rowId {
+            _ = try await folderMutation("updateStoryFolder", "UpdateStoryFolderInput", ["id": rowId, "name": name, "icon": icon ?? NSNull()])
+            if let i = folderRows.firstIndex(where: { $0.id == rowId }) { folderRows[i].name = name; folderRows[i].icon = icon }
+        } else {
+            try await createFolder(name, icon: icon, spaceName: spaceName)
+        }
+        if name != folder.name {
+            for s in allStories where s.mine && s.collection == folder.name {
+                try await updateStory(["id": s.id, "collection": name])
+                if let i = allStories.firstIndex(where: { $0.id == s.id }) { allStories[i].collection = name }
+            }
+        }
+        persist()
+    }
+
+    /// Removes a folder; its stories stay and go back to their own folders.
+    func deleteFolder(_ folder: StoryFolder) async throws {
+        for s in allStories where s.mine && s.collection == folder.name {
+            try await updateStory(["id": s.id, "collection": NSNull()])
+            if let i = allStories.firstIndex(where: { $0.id == s.id }) { allStories[i].collection = nil }
+        }
+        if let rowId = folder.rowId {
+            _ = try await folderMutation("deleteStoryFolder", "DeleteStoryFolderInput", ["id": rowId])
+        }
+        folderRows.removeAll { $0.name == folder.name && $0.mine }
+        persist()
+    }
+
+    /// Shares a whole folder (and every story of ours in it) with every account, or makes it all private.
+    func setFolderShared(_ folder: StoryFolder, _ shared: Bool, spaceName: String?) async throws {
+        let groups: [String] = shared ? ["everyone"] : []
+        for s in folder.items where s.mine {
+            var input: [String: Any] = ["id": s.id, "readerGroups": groups, "sharedDirect": shared]
+            if let spaceName { input["spaceName"] = spaceName }
+            try await updateStory(input)
+            if let i = allStories.firstIndex(where: { $0.id == s.id }) { allStories[i].shared = shared }
+        }
+        if let rowId = folder.rowId {
+            var input: [String: Any] = ["id": rowId, "readerGroups": groups]
+            if let spaceName { input["spaceName"] = spaceName }
+            _ = try await folderMutation("updateStoryFolder", "UpdateStoryFolderInput", input)
+            if let i = folderRows.firstIndex(where: { $0.id == rowId }) { folderRows[i].shared = shared }
+        } else if !folder.builtin {
+            // A folder that existed only through its stories gets a row, so it keeps its sharing.
+            try await createFolder(folder.name, icon: nil, shared: shared, spaceName: spaceName)
+        }
+        persist()
+    }
+
     /// Marks or unmarks a favourite: our own story keeps it on its row, another space's story
     /// through a StoryFavorite row of ours (like the web).
     func toggleFavorite(_ id: String) async {
@@ -200,6 +315,8 @@ final class StoryStore {
 
 /// Made-up stories for `-demo` screenshots (no server).
 enum DemoLibrary {
+    static let text = "A fost odată un ursuleț care nu putea să adoarmă. În fiecare seară se uita pe fereastră la lună și o întreba unde merge noaptea.\n\nÎntr-o seară, luna i-a răspuns: „Vino cu mine și îți arăt.” Și ursulețul a pornit, pas cu pas, pe o rază de lumină…"
+
     static let stories: [Story] = [
         Story(id: "d1", title: "Aladdin", emoji: "🧞", collection: "Povești Disney", durationSec: 600, favorite: true, createdAt: "2026-11-10"),
         Story(id: "d2", title: "Regele Leu", emoji: "🦁", collection: "Povești Disney", durationSec: 540, favorite: true, createdAt: "2026-11-09"),
@@ -207,10 +324,15 @@ enum DemoLibrary {
         Story(id: "d4", title: "Albă ca Zăpada", emoji: "🍎", collection: "Povești Disney", durationSec: 720, createdAt: "2026-11-07"),
         Story(id: "d5", title: "Ursulețul și luna", emoji: "🐻", source: .generated, durationSec: 360, favorite: true, createdAt: "2026-11-06"),
         Story(id: "d6", title: "Steaua căzătoare", emoji: "⭐", collection: "Povești de seară", durationSec: 420, createdAt: "2026-11-05"),
-        Story(id: "d7", title: "Trenulețul curajos", emoji: "🚂", collection: "Povești de seară", durationSec: 300, createdAt: "2026-11-04"),
+        Story(id: "d7", title: "Trenulețul curajos", emoji: "🚂", collection: "Povești de seară", durationSec: 300, createdAt: "2026-11-04", shared: false),
         Story(id: "d8", title: "Cântec de leagăn", emoji: "🌙", source: .recording, durationSec: 180, createdAt: "2026-11-03"),
         Story(id: "d9", title: "Șoricelul de la bibliotecă", emoji: "🐭", collection: "Povești Hachette", durationSec: 510, createdAt: "2026-11-02"),
         Story(id: "d10", title: "Dragonul care strănuta", emoji: "🐉", collection: "Basme", durationSec: 400,
               createdAt: "2026-11-01", mine: false, spaceName: "Ana"),
+    ]
+
+    static let folders: [StoryFolderRow] = [
+        StoryFolderRow(id: "f1", name: "Povești de seară", icon: "🌙", mine: true, shared: true, spaceName: "Sorin"),
+        StoryFolderRow(id: "f2", name: "Cântece", icon: "🎵", mine: true, shared: false, spaceName: "Sorin"),
     ]
 }

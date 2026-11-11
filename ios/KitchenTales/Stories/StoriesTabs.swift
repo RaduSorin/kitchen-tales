@@ -39,6 +39,7 @@ struct StoriesTabs: View {
         .onChange(of: tab) { Haptics.select() }
         .onChange(of: kid.active) { if kid.active, [.add, .profile].contains(tab) { tab = .home } }
         .kidModeChrome()
+        .kitchenToast()
         .storyPlayerSheet()
         .alert("Descărcarea nu a mers", isPresented: Binding(get: { store.offline.lastError != nil },
                                                               set: { if !$0 { store.offline.clearError() } })) {
@@ -47,9 +48,9 @@ struct StoriesTabs: View {
             Text(store.offline.lastError ?? "")
         }
         .task {
-            if let first = store.stories.first, ["player", "mini-player"].contains(LaunchOptions.screen) {
+            if let first = (LaunchOptions.screen == "story-text" ? store.story("d5") : nil) ?? store.stories.first, ["player", "mini-player", "story-move", "story-move-new", "story-text", "story-delete"].contains(LaunchOptions.screen) {
                 await StoryPlayer.shared.play(first, queue: store.stories, store: store)
-                StoryPlayer.shared.showsPlayer = LaunchOptions.screen == "player"
+                StoryPlayer.shared.showsPlayer = LaunchOptions.screen != "mini-player"
             }
             await store.refresh()
         }

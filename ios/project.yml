@@ -44,7 +44,9 @@ targets:
         UIUserInterfaceStyle: Dark
         UILaunchScreen:
           UIColorName: LaunchBackground
-        NSMicrophoneUsageDescription: Ca să înregistrezi povești citite cu vocea ta.
+        NSMicrophoneUsageDescription: Ca să înregistrezi povești citite cu vocea ta și să dictezi rețete.
+        NSSpeechRecognitionUsageDescription: Ca să dictezi rețete, ingrediente și pași.
+        NSCameraUsageDescription: Ca să fotografiezi o rețetă din carte sau poza unui fel de mâncare.
         # Stories keep playing with the screen off and show on the Lock Screen.
         UIBackgroundModes:
           - audio

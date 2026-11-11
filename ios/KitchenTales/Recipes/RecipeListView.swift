@@ -18,7 +18,8 @@ struct RecipeListView: View {
     @State private var query = ""
     @State private var chosen: String?
     @State private var showsNew = false
-    @Environment(\.openURL) private var openURL
+    @State private var opened: String?
+    @State private var editing: Recipe?
 
     init(category: String? = nil) {
         self.category = category
@@ -59,13 +60,19 @@ struct RecipeListView: View {
                 }
             }
         }
-        .alert("Rețetă nouă", isPresented: $showsNew) {
-            Button("Deschide aplicația web") {
-                if let url = URL(string: "https://main.d1b5q3cpreuzof.amplifyapp.com/retete/noua") { openURL(url) }
+        .fullScreenCover(isPresented: $showsNew) {
+            RecipeEditorScreen(recipe: nil, server: store.server) { saved in
+                showsNew = false
+                if let saved { opened = saved.id }
             }
-            Button("Renunță", role: .cancel) {}
-        } message: {
-            Text("Scrierea rețetelor în aplicația iPhone vine în pasul următor. Până atunci, adaug-o din aplicația web și apare aici.")
+        }
+        .fullScreenCover(item: $editing) { r in
+            RecipeEditorScreen(recipe: r, server: store.server) { _ in editing = nil }
+        }
+        .navigationDestination(item: $opened) { RecipeDetailView(recipeId: $0) }
+        .task {
+            guard category == nil, let screen = LaunchOptions.screen, screen.hasPrefix("editor-") else { return }
+            if DemoEditor.editingScreens.contains(screen) { editing = store.recipe("r1") } else { showsNew = true }
         }
     }
 
@@ -103,7 +110,7 @@ struct RecipeListView: View {
             ProgressView().tint(Theme.accent).frame(maxWidth: .infinity).padding(.top, 60)
         } else {
             EmptyStateView(symbol: "magnifyingglass", title: query.isEmpty ? "Nicio rețetă aici" : "Nimic găsit",
-                           message: query.isEmpty ? "Adaugă rețete din aplicația web." : "Încearcă alt cuvânt sau un ingredient.")
+                           message: query.isEmpty ? "Adaugă una cu +." : "Încearcă alt cuvânt sau un ingredient.")
                 .padding(.top, 40)
         }
     }

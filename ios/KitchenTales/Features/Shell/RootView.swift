@@ -25,10 +25,13 @@ struct RootView: View {
 private struct SignedInRoot: View {
     @AppStorage("area") private var savedArea: AppArea = .recipes
     @State private var stories: StoryStore
+    @State private var recipes: RecipeStore
+    @State private var kitchen = KitchenModel()
     @State private var area = AreaModel()
 
     init(auth: AuthModel) {
         _stories = State(initialValue: StoryStore(auth: auth))
+        _recipes = State(initialValue: RecipeStore(auth: auth))
     }
 
     var body: some View {
@@ -40,6 +43,8 @@ private struct SignedInRoot: View {
         }
         .animation(.easeInOut(duration: 0.3), value: area.current)
         .environment(stories)
+        .environment(recipes)
+        .environment(kitchen)
         .environment(StoryPlayer.shared)
         .environment(area)
         .onAppear { area.current = LaunchOptions.area ?? savedArea }
@@ -83,27 +88,28 @@ struct AreaPicker: View {
 }
 
 struct RecipesTabs: View {
-    @State private var tab: AppTab = LaunchOptions.tab.flatMap(AppTab.init(rawValue:)) ?? .home
+    @Environment(KitchenModel.self) private var kitchen
+    @Environment(RecipeStore.self) private var store
 
     var body: some View {
-        TabView(selection: $tab) {
+        @Bindable var kitchen = kitchen
+        TabView(selection: $kitchen.tab) {
             Tab("Acasă", systemImage: "house.fill", value: AppTab.home) {
-                HomePlaceholderView()
+                RecipesHomeView()
                     .miniPlayerInset()
             }
             Tab("Săptămâna", systemImage: "calendar", value: AppTab.week) {
                 PlaceholderScreen(title: "Săptămâna", symbol: "calendar",
-                                  message: "Planul săptămânii vine în faza Rețete.")
+                                  message: "Planul săptămânii vine în pasul următor. Până atunci, planifică din aplicația web.")
                     .miniPlayerInset()
             }
             Tab("Rețete", systemImage: "book.closed.fill", value: AppTab.recipes) {
-                PlaceholderScreen(title: "Rețete", symbol: "book.closed",
-                                  message: "Lista și căutarea rețetelor vin în faza Rețete.")
+                RecipesTabRoot()
                     .miniPlayerInset()
             }
-            Tab("Listă", systemImage: "checklist", value: AppTab.list) {
+            Tab("Listă", systemImage: "cart", value: AppTab.list) {
                 PlaceholderScreen(title: "Listă", symbol: "cart",
-                                  message: "Lista de cumpărături vine în faza Rețete.")
+                                  message: "Lista de cumpărături vine în pasul următor. Ce pui în listă de aici apare deja pe web.")
                     .miniPlayerInset()
             }
             Tab("Profil", systemImage: "person.crop.circle.fill", value: AppTab.profile) {
@@ -111,33 +117,14 @@ struct RecipesTabs: View {
                     .miniPlayerInset()
             }
         }
-        .onChange(of: tab) { Haptics.select() }
+        .onChange(of: kitchen.tab) { Haptics.select() }
+        .kitchenToast()
         .storyPlayerSheet()
-    }
-}
-
-/// Acasă on the recipes side: the switch on top; the recipes themselves arrive in Phase 3.
-struct HomePlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    AreaPicker(current: .recipes)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    VStack(spacing: 12) {
-                        SectionLabel("De gătit")
-                        EmptyStateView(symbol: "fork.knife", title: "În curând",
-                                       message: "Rețetele native vin în faza următoare. Până atunci, folosește aplicația web.")
-                            .frame(maxWidth: .infinity)
-                            .ktCard(padding: 8)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-            }
-            .ktBackground()
-            .navigationTitle("Bucătăria")
+        .fullScreenCover(item: $kitchen.cooking) { session in
+            CookModeView(session: session)
+                .environment(store)
         }
+        .task { await store.refresh() }
     }
 }
 
@@ -150,7 +137,7 @@ struct PlaceholderScreen: View {
         NavigationStack {
             EmptyStateView(symbol: symbol, title: "În curând", message: message)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ktBackground()
+                .ktKitchenBackground()
                 .navigationTitle(title)
         }
     }

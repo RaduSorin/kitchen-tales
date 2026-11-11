@@ -52,6 +52,7 @@ struct RecipeDetailView: View {
         .ignoresSafeArea(edges: .top)
         .scrollIndicators(.hidden)
         .background(Theme.background.ignoresSafeArea())
+        .hidesAppTabBar()
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { moreMenu(r) } }

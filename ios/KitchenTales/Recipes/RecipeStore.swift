@@ -172,6 +172,9 @@ final class RecipeStore {
 
     // MARK: Week plan and shopping list
 
+    /// Lines still to buy: the red count on the Listă tab.
+    var toBuyCount: Int { shopping.filter { !$0.checked }.count }
+
     /// Puts the recipe on a day of the week (servings only when they differ from the recipe's).
     func planRecipe(_ recipe: Recipe, on day: Date, servings: Int? = nil, leftovers: Bool = false) async -> Bool {
         var entry = PlanEntry(id: UUID().uuidString.lowercased(), day: RecipeText.dayKey(day), recipeId: recipe.id,

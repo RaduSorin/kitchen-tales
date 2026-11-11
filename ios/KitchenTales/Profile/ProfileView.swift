@@ -281,17 +281,24 @@ struct ProfileBackdrop: View {
     }
 }
 
-/// A page under Profil: a grouped list with the right background.
+/// A page under Profil, like the web: the round back button and the big title on the left, then a
+/// grouped list with the right background.
 struct ProfilePage<Content: View>: View {
     let title: String
     @ViewBuilder var content: Content
     @Environment(\.profileNight) private var night
 
     var body: some View {
-        List { content }
-            .ktProfileList(night: night)
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+        List {
+            KTPageHeader(title: title)
+                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            content
+        }
+        .ktProfileList(night: night)
+        .navigationTitle(title)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 

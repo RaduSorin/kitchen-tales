@@ -26,6 +26,7 @@ struct StoryCover: View {
     private func load() async {
         guard let key = story.coverKey else { image = nil; return }
         if let hit = CoverImages.shared.image(key) { image = hit; return }
+        if let demo = DemoPhotos.cover(key) { image = demo; return }
         guard let links = store.links, let url = await links.url(for: key, ref: story.fileRef),
               let loaded = try? await URLSession.shared.data(from: url), let picture = UIImage(data: loaded.0) else { return }
         CoverImages.shared.keep(picture, key)

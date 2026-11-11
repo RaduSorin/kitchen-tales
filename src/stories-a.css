@@ -1521,6 +1521,17 @@
 .home-idea-add { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgb(242 200 121 / .45); background: rgb(242 200 121 / .1);
   color: var(--accent); font: inherit; font-size: var(--fs-sm); font-weight: 800; cursor: pointer; }
 .home-idea-add:active { transform: scale(.95); }
+/* Why each idea is suggested: one small coloured line above the name. */
+.home-ideas-sub { margin: -6px 0 0; color: var(--muted); font-size: var(--fs-sm); }
+.home-why { font-style: normal; font-size: var(--fs-xxs); font-weight: 800; letter-spacing: .1em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-why-demult { color: #f0a08e; }
+.home-why-favorita { color: var(--accent); }
+.home-why-rapida { color: #9dbfe6; }
+.home-why-noua { color: #9fc6a0; }
+.home-ideas-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.home-ideas-more { min-height: 44px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: var(--fs-sm); font-weight: 800; cursor: pointer; }
+.home-ideas-more:active { opacity: .7; }
+.home-ideas-foot .home-note b { margin-left: 4px; }
 /* ---------- Acasă › Săptămâna, "Cercuri + ziua aleasă": the plates pick a day shown below ---------- */
 .wd .vt-day { border: 0; background: none; padding: 0; font: inherit; font-size: var(--fs-xs); font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .wd .vt-day.today:not(.picked) .vt-plate { border: 1.5px solid rgb(255 255 255 / .12); box-shadow: none; }

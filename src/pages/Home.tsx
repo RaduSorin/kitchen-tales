@@ -20,6 +20,7 @@ import WeekDayPanel from '../components/WeekDayPanel'
 import { useSyncedList } from '../lib/synced'
 import { dayKey, mondayOf, planRecipe, planStore, today, weekDays } from '../lib/plan'
 import { useRecipeLogs } from '../lib/recipeLog'
+import { todayIdeas } from '../lib/todayIdeas'
 import { showToast } from '../lib/toast'
 import { LoadError, Loading } from '../components/LoadState'
 
@@ -178,7 +179,9 @@ export default function Home() {
     .map((r) => ({ r, last: logs.get(r.id)?.cooked.at(-1) ?? '' }))
     .sort((a, b) => a.last.localeCompare(b.last) || a.r.title.localeCompare(b.r.title, 'ro'))
     .slice(0, 3)
-  const ideas = menu.length ? [] : suggest()
+  // Azi with nothing planned: three dishes, each with its reason; "Alte idei" moves to the next round.
+  const [ideaRound, setIdeaRound] = useState(0)
+  const ideas = menu.length ? [] : todayIdeas(recipes ?? [], logs, planned, new Date(), ideaRound)
   const categories = useMemo(() => {
     const m = new Map<string, Recipe[]>()
     for (const r of recipes ?? []) if (r.category) m.set(r.category, [...(m.get(r.category) ?? []), r])
@@ -232,19 +235,24 @@ export default function Home() {
             </ul>
           ) : ideas.length > 0 ? (
             <section className="home-sec">
-              <Sec title="Ce gătim azi?" link="Planifică" to="/saptamana/planifica" />
+              <Sec title="Nimic în plan azi" link="Planifică" to="/saptamana/planifica" />
+              <p className="home-ideas-sub">Dar am {['', 'o idee', 'două idei', 'trei idei'][ideas.length]} din caietul tău:</p>
               <ul className="home-rows">
-                {ideas.map(({ r, last }) => (
+                {ideas.map(({ r, kind, why, meta: line }) => (
                   <li key={r.id} className="home-idea">
                     <Link to={`/retete/${r.id}`}>
                       <span className="home-row-img"><Thumb r={r} /></span>
-                      <span className="home-row-text"><b>{r.title}</b><small>{[last ? `gătită ultima dată ${new Date(last).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' })}` : 'încă negătită', r.minutes && formatMinutes(r.minutes)].filter(Boolean).join(' · ')}</small></span>
+                      <span className="home-row-text"><i className={`home-why home-why-${kind}`}>{why}</i><b>{r.title}</b>{line && <small>{line}</small>}</span>
                     </Link>
                     <button type="button" className="home-idea-add" aria-label={`Pune ${r.title} în meniul de azi`}
                       onClick={() => { planRecipe(r, todayKey); showToast(`${r.title} e în meniul de azi`) }}>+ Azi</button>
                   </li>
                 ))}
               </ul>
+              <div className="home-ideas-foot">
+                <button type="button" className="home-ideas-more" onClick={() => setIdeaRound((n) => n + 1)}>↻ Alte idei</button>
+                <Link to="/retete" className="home-note">sau alege din <b>Rețete</b></Link>
+              </div>
             </section>
           ) : (
             <Link to="/saptamana" className="home-note">Nimic în plan azi. <b>Săptămâna</b></Link>

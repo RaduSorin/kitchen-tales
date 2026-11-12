@@ -12,30 +12,20 @@ struct StoriesTabs: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            Tab("Acasă", systemImage: "house.fill", value: StoryTab.home) {
-                StoriesHomeView(openLibrary: { tab = .library })
-                    .miniPlayerInset()
+            Tab("Acasă", systemImage: "circle", value: StoryTab.home) {
+                StoriesHomeView(openLibrary: { tab = .library }).miniPlayerInset().toolbar(.hidden, for: .tabBar)
             }
-            Tab("Favorite", systemImage: "heart", value: StoryTab.favorites) {
-                FavoritesView()
-                    .miniPlayerInset()
-            }
-            Tab("Bibliotecă", systemImage: "books.vertical", value: StoryTab.library) {
-                LibraryView()
-                    .miniPlayerInset()
-            }
+            Tab("Favorite", systemImage: "circle", value: StoryTab.favorites) { FavoritesView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
+            Tab("Bibliotecă", systemImage: "circle", value: StoryTab.library) { LibraryView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
             // In kid mode the child sees only listening: no Adaugă, no Profil.
             if !kid.active {
-                Tab("Adaugă", systemImage: "plus", value: StoryTab.add) {
-                    AddStoryView(onAdded: { tab = .home })
-                    .miniPlayerInset()
+                Tab("Adaugă", systemImage: "circle", value: StoryTab.add) {
+                    AddStoryView(onAdded: { tab = .home }).miniPlayerInset().toolbar(.hidden, for: .tabBar)
                 }
-                Tab("Profil", systemImage: "person.crop.circle", value: StoryTab.profile) {
-                    ProfileView(night: true)
-                        .miniPlayerInset()
-                }
+                Tab("Profil", systemImage: "circle", value: StoryTab.profile) { ProfileView(night: true).miniPlayerInset().toolbar(.hidden, for: .tabBar) }
             }
         }
+        .appTabBar(tabItems, selection: $tab, night: true)
         .onChange(of: tab) { Haptics.select() }
         .onChange(of: kid.active) { if kid.active, [.add, .profile].contains(tab) { tab = .home } }
         .kidModeChrome()
@@ -54,6 +44,19 @@ struct StoriesTabs: View {
             }
             await store.refresh()
         }
+    }
+}
+
+extension StoriesTabs {
+    private var tabItems: [KTTabItem<StoryTab>] {
+        var items = [KTTabItem(value: StoryTab.home, label: "Acasă", glyph: .home),
+                     KTTabItem(value: StoryTab.favorites, label: "Favorite", glyph: .favorites),
+                     KTTabItem(value: StoryTab.library, label: "Bibliotecă", glyph: .library)]
+        if !kid.active {
+            items += [KTTabItem(value: StoryTab.add, label: "Adaugă", glyph: .add),
+                      KTTabItem(value: StoryTab.profile, label: "Profil", glyph: .profile)]
+        }
+        return items
     }
 }
 
@@ -80,6 +83,7 @@ private struct MiniPlayerInset: ViewModifier {
             }
         }
         .animation(.snappy, value: player.current?.id)
+        .tabBarRoom()
     }
 }
 

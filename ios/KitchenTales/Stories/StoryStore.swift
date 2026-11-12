@@ -313,20 +313,21 @@ final class StoryStore {
     }
 }
 
-/// Made-up stories for `-demo` screenshots (no server).
+/// Made-up stories for `-demo` screenshots (no server). Some have painted covers bundled in
+/// Resources/Demo (`demo:` keys), the rest the drawn ones, so both kinds show up.
 enum DemoLibrary {
     static let text = "A fost odată un ursuleț care nu putea să adoarmă. În fiecare seară se uita pe fereastră la lună și o întreba unde merge noaptea.\n\nÎntr-o seară, luna i-a răspuns: „Vino cu mine și îți arăt.” Și ursulețul a pornit, pas cu pas, pe o rază de lumină…"
 
     static let stories: [Story] = [
-        Story(id: "d1", title: "Aladdin", emoji: "🧞", collection: "Povești Disney", durationSec: 600, favorite: true, createdAt: "2026-11-10"),
-        Story(id: "d2", title: "Regele Leu", emoji: "🦁", collection: "Povești Disney", durationSec: 540, favorite: true, createdAt: "2026-11-09"),
-        Story(id: "d3", title: "În căutarea lui Nemo", emoji: "🐠", collection: "Povești Disney", durationSec: 480, createdAt: "2026-11-08"),
-        Story(id: "d4", title: "Albă ca Zăpada", emoji: "🍎", collection: "Povești Disney", durationSec: 720, createdAt: "2026-11-07"),
+        Story(id: "d1", title: "Aladdin", emoji: "🧞", coverKey: "demo:cover-lamp", collection: "Povești Disney", durationSec: 600, favorite: true, createdAt: "2026-11-10"),
+        Story(id: "d2", title: "Regele Leu", emoji: "🦁", coverKey: "demo:cover-sun", collection: "Povești Disney", durationSec: 540, favorite: true, createdAt: "2026-11-09"),
+        Story(id: "d3", title: "În căutarea lui Nemo", emoji: "🐠", coverKey: "demo:cover-sea", collection: "Povești Disney", durationSec: 480, createdAt: "2026-11-08"),
+        Story(id: "d4", title: "Albă ca Zăpada", emoji: "🍎", coverKey: "demo:cover-forest", collection: "Povești Disney", durationSec: 720, createdAt: "2026-11-07"),
         Story(id: "d5", title: "Ursulețul și luna", emoji: "🐻", source: .generated, durationSec: 360, favorite: true, createdAt: "2026-11-06"),
-        Story(id: "d6", title: "Steaua căzătoare", emoji: "⭐", collection: "Povești de seară", durationSec: 420, createdAt: "2026-11-05"),
+        Story(id: "d6", title: "Steaua căzătoare", emoji: "⭐", coverKey: "demo:cover-stars", collection: "Povești de seară", durationSec: 420, createdAt: "2026-11-05"),
         Story(id: "d7", title: "Trenulețul curajos", emoji: "🚂", collection: "Povești de seară", durationSec: 300, createdAt: "2026-11-04", shared: false),
         Story(id: "d8", title: "Cântec de leagăn", emoji: "🌙", source: .recording, durationSec: 180, createdAt: "2026-11-03"),
-        Story(id: "d9", title: "Șoricelul de la bibliotecă", emoji: "🐭", collection: "Povești Hachette", durationSec: 510, createdAt: "2026-11-02"),
+        Story(id: "d9", title: "Șoricelul de la bibliotecă", emoji: "🐭", coverKey: "demo:cover-room", collection: "Povești Hachette", durationSec: 510, createdAt: "2026-11-02"),
         Story(id: "d10", title: "Dragonul care strănuta", emoji: "🐉", collection: "Basme", durationSec: 400,
               createdAt: "2026-11-01", mine: false, spaceName: "Ana"),
     ]

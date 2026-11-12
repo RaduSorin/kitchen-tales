@@ -70,6 +70,7 @@ final class StoryPlayer {
             return
         }
         savePosition()
+        PlaybackMemory.markPlayed(story.id)
         current = story
         position = PlaybackMemory.position(story.id)
         duration = story.durationSec ?? 0

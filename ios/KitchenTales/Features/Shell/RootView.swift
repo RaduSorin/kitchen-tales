@@ -116,27 +116,19 @@ struct RecipesTabs: View {
     var body: some View {
         @Bindable var kitchen = kitchen
         TabView(selection: $kitchen.tab) {
-            Tab("Acasă", systemImage: "house.fill", value: AppTab.home) {
-                RecipesHomeView()
-                    .miniPlayerInset()
-            }
-            Tab("Săptămâna", systemImage: "calendar", value: AppTab.week) {
-                WeekView()
-                    .miniPlayerInset()
-            }
-            Tab("Rețete", systemImage: "book.closed.fill", value: AppTab.recipes) {
-                RecipesTabRoot()
-                    .miniPlayerInset()
-            }
-            Tab("Listă", systemImage: "cart", value: AppTab.list) {
-                ShoppingView()
-                    .miniPlayerInset()
-            }
-            Tab("Profil", systemImage: "person.crop.circle.fill", value: AppTab.profile) {
-                ProfileView()
-                    .miniPlayerInset()
-            }
+            Tab("Acasă", systemImage: "circle", value: AppTab.home) { RecipesHomeView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
+            Tab("Săptămâna", systemImage: "circle", value: AppTab.week) { WeekView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
+            Tab("Rețete", systemImage: "circle", value: AppTab.recipes) { RecipesTabRoot().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
+            Tab("Listă", systemImage: "circle", value: AppTab.list) { ShoppingView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
+            Tab("Profil", systemImage: "circle", value: AppTab.profile) { ProfileView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
         }
+        .appTabBar([
+            KTTabItem(value: AppTab.home, label: "Acasă", glyph: .home),
+            KTTabItem(value: AppTab.week, label: "Săptămâna", glyph: .week),
+            KTTabItem(value: AppTab.recipes, label: "Rețete", glyph: .recipes),
+            KTTabItem(value: AppTab.list, label: "Listă", glyph: .list, badge: store.toBuyCount),
+            KTTabItem(value: AppTab.profile, label: "Profil", glyph: .profile),
+        ], selection: $kitchen.tab)
         .onChange(of: kitchen.tab) { Haptics.select() }
         .kitchenToast()
         .storyPlayerSheet()

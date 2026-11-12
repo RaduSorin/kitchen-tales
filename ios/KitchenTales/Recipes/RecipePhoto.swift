@@ -57,6 +57,11 @@ struct RecipePhoto: View {
         loaded[name] = image
         return image
     }
+
+    /// A bundled story cover for a `demo:` key (screenshots only).
+    static func cover(_ key: String) -> UIImage? {
+        key.hasPrefix("demo:") ? image(String(key.dropFirst(5))) : nil
+    }
 }
 
 /// A recipe without a photo (PlatePlaceholder.tsx): a small gold steaming plate on a dark card

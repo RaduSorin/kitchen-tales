@@ -63,6 +63,19 @@ final class RecipeStore {
 
     var today: [Recipe] { entries(on: Date()).compactMap { recipe($0.recipeId) } }
 
+    /// The recipes on the plan this week (Monday to Sunday), so ideas don't suggest them again.
+    var plannedThisWeek: Set<String> {
+        let keys = Set(RecipeText.weekDays(of: Date()).map { RecipeText.dayKey($0) })
+        return Set(plan.filter { keys.contains($0.day) }.map(\.recipeId))
+    }
+
+    /// The cook logs by recipe, merged like `log(_:)`.
+    var logsById: [String: RecipeLog] {
+        var out: [String: RecipeLog] = [:]
+        for id in Set(logs.map(\.recipeId)) { out[id] = log(id) }
+        return out
+    }
+
     /// The categories with their recipes, biggest first ("Fără categorie" last).
     var categories: [(name: String, recipes: [Recipe])] {
         let groups = Dictionary(grouping: recipes) { $0.category.isEmpty ? "Fără categorie" : $0.category }
@@ -137,6 +150,12 @@ final class RecipeStore {
         await changeLog(recipeId) { $0.notes.append(note) }
     }
 
+    func removeNote(_ recipeId: String, _ note: CookNote) async {
+        await changeLog(recipeId) { log in
+            if let i = log.notes.firstIndex(of: note) { log.notes.remove(at: i) }
+        }
+    }
+
     private func changeLog(_ recipeId: String, _ edit: (inout RecipeLog) -> Void) async {
         var next = log(recipeId) ?? RecipeLog(id: UUID().uuidString.lowercased(), recipeId: recipeId)
         let isNewRow = !logs.contains { $0.id == next.id }
@@ -171,6 +190,9 @@ final class RecipeStore {
     }
 
     // MARK: Week plan and shopping list
+
+    /// Lines still to buy: the red count on the Listă tab.
+    var toBuyCount: Int { shopping.filter { !$0.checked }.count }
 
     /// Puts the recipe on a day of the week (servings only when they differ from the recipe's).
     func planRecipe(_ recipe: Recipe, on day: Date, servings: Int? = nil, leftovers: Bool = false) async -> Bool {
@@ -280,6 +302,44 @@ final class RecipeStore {
         }
         recipes.removeAll { $0.id == id }
         save()
+    }
+
+    // MARK: Values and allergens
+
+    /// The recipe's values and allergens: from its row, or worked out on this phone for a recipe
+    /// of another space (we can't write on its row).
+    func facts(_ r: Recipe) -> (nutrition: Nutrition?, allergens: [AllergenHit]?) {
+        let row = recipe(r.id) ?? r
+        if let n = Nutrition.parse(row.nutrition) { return (n, AllergenHit.parse(row.allergens)) }
+        if let local = localFacts[r.id], let n = Nutrition.parse(local.nutrition) { return (n, AllergenHit.parse(local.allergens)) }
+        return (nil, nil)
+    }
+
+    /// Asks the AI for the values and allergens once (analyzeRecipe), and keeps them.
+    func analyze(_ r: Recipe) async {
+        guard facts(r).nutrition == nil, !demo, let client else { return }
+        guard let body = try? await client.run(
+            "query A($title: String!, $servings: Int, $ingredients: [String]!) { analyzeRecipe(title: $title, servings: $servings, ingredients: $ingredients) { nutrition allergens } }",
+            variables: ["title": r.title, "servings": r.servings.map { $0 as Any } ?? NSNull(), "ingredients": r.ingredients]),
+              let out = body["analyzeRecipe"] as? [String: Any], let nutrition = out["nutrition"] as? String,
+              Nutrition.parse(nutrition) != nil else { return }
+        let allergens = out["allergens"] as? String ?? "[]"
+        if r.mine, let i = recipes.firstIndex(where: { $0.id == r.id }) {
+            recipes[i].nutrition = nutrition
+            recipes[i].allergens = allergens
+            save()
+            try? await mutate("updateRecipe", "UpdateRecipeInput", ["id": r.id, "nutrition": nutrition, "allergens": allergens])
+        } else {
+            localFacts[r.id] = LocalFacts(nutrition: nutrition, allergens: allergens)
+            UserDefaults.standard.set(try? JSONEncoder().encode(localFacts), forKey: Self.localFactsKey)
+        }
+    }
+
+    private struct LocalFacts: Codable { var nutrition: String; var allergens: String }
+    private static let localFactsKey = "recipes/local-facts"
+    private var localFacts: [String: LocalFacts] = RecipeStore.loadLocalFacts()
+    private static func loadLocalFacts() -> [String: LocalFacts] {
+        UserDefaults.standard.data(forKey: localFactsKey).flatMap { try? JSONDecoder().decode([String: LocalFacts].self, from: $0) } ?? [:]
     }
 
     // MARK: Sharing (Profil → Ce partajez)
@@ -481,7 +541,7 @@ struct HeroSlide: Identifiable, Hashable {
     var eyebrow: String {
         let time = recipe.minutes.map { " · " + RecipeText.formatMinutes($0) } ?? ""
         switch kind {
-        case .cooking(let step): return "Ați rămas la pasul \(step + 1)"
+        case .cooking(let step): return "Continuă · pasul \(step + 1)"
         case .planned: return "Azi în plan" + time
         case .newest: return "Adăugată recent" + time
         case .fromBook: return "Din caietul tău" + time
@@ -534,7 +594,9 @@ enum DemoKitchen {
                steps: ["Toacă ceapa și morcovul mărunt.", "Amestecă carnea cu orezul, oul și jumătate din ceapă, apoi formează perișoare mici.",
                        "Pune perișoarele în ciorba care fierbe și lasă-le 15 minute la foc mic.", "Adaugă legumele și mai fierbe 20 de minute.",
                        "Acrește cu borș și potrivește de sare.", "Presară leuștean tocat și servește."],
-               notes: "Merge și cu smântână.", createdAt: "2026-11-10T10:00:00.000Z", shared: true, demoPhoto: "ciorba"),
+               notes: "Merge și cu smântână.", createdAt: "2026-11-10T10:00:00.000Z", shared: true, demoPhoto: "ciorba",
+               nutrition: #"{"kcal":410,"protein":26,"carbs":38,"fat":16,"fiber":3,"sugar":5,"salt":1.8}"#,
+               allergens: #"[{"key":"oua","from":["ou"]},{"key":"telina","from":["leuștean"]}]"#),
         Recipe(id: "r2", title: "Cartofi cu ardei la tigaie", category: "Feluri principale", servings: 2, minutes: 35,
                ingredients: ["4 cartofi", "1 ardei roșu", "1 ceapă", "2 linguri ulei"], steps: ["Taie cartofii cuburi.", "Prăjește-i 20 de minute."],
                createdAt: "2026-11-09T10:00:00.000Z", demoPhoto: "ardei"),

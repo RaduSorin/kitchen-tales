@@ -135,3 +135,46 @@ struct EmptyStateView: View {
     static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
     static func warning() { UINotificationFeedbackGenerator().notificationOccurred(.warning) }
 }
+
+/// The web's round back button (`.back-btn` on a sub-page): a gold chevron in a faint glass circle.
+struct KTBackButton: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        Button { dismiss() } label: {
+            Image(systemName: "chevron.left")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(Theme.accent)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(.white.opacity(0.06)))
+                .overlay(Circle().strokeBorder(.white.opacity(0.1)))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Înapoi")
+    }
+}
+
+/// The top of a sub-page on the web: the back button, then the big serif title on the left.
+struct KTPageHeader: View {
+    let title: String
+    var subtitle: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            KTBackButton()
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.custom(AppFont.displaySemibold, size: 32, relativeTo: .largeTitle))
+                    .foregroundStyle(Theme.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                if let subtitle {
+                    Text(subtitle).font(.ktCallout).foregroundStyle(Theme.muted)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 2)
+    }
+}

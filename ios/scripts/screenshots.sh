@@ -31,8 +31,12 @@ shot 0c-login-code -screen login-code
 # Signed in with a made-up account (-demo, debug builds only).
 shot 1-home -demo YES -tab home
 shot 1b-home-week -demo YES -tab home -screen home-week
+shot 1c-home-caiet -demo YES -tab home -screen home-caiet
 shot 2-recipes -demo YES -tab recipes
 shot 2b-recipe -demo YES -tab home -screen recipe
+shot 2b2-recipe-steps -demo YES -tab home -screen recipe-steps
+shot 2b3-recipe-notes -demo YES -tab home -screen recipe-notes
+shot 2b4-recipe-facts -demo YES -tab home -screen recipe-facts
 shot 2c-cook -demo YES -tab home -screen cook
 shot 2d-week -demo YES -tab week
 shot 2e-week-add -demo YES -tab week -screen week-add
@@ -54,10 +58,12 @@ shot 3f-kid-mode -demo YES -area stories -tab home -screen kid
 shot 4-catalog -demo YES -tab profile -screen catalog
 # Stories side (made-up library, drawn covers).
 shot 5-stories-home -demo YES -area stories -tab home
+shot 5b-stories-colectii -demo YES -area stories -tab home -screen stories-colectii
+shot 5c-stories-favorite -demo YES -area stories -tab home -screen stories-favorite
 shot 6a-stories-library -demo YES -area stories -tab library
-shot 6b-stories-shelf -demo YES -area stories -tab library -library-mode Raft
-shot 6c-stories-cover-flow -demo YES -area stories -tab library -library-mode "Cover Flow"
-shot 6d-stories-folder -demo YES -area stories -tab library -screen folder
+shot 6b-stories-shelf -demo YES -area stories -tab library -screen folder -folder-look Raft
+shot 6c-stories-cover-flow -demo YES -area stories -tab library -screen folder -folder-look "Cover Flow"
+shot 6d-stories-folder -demo YES -area stories -tab library -screen folder -folder-look "Listă"
 shot 7-stories-favorites -demo YES -area stories -tab favorites
 shot 8-stories-mini-player -demo YES -area stories -tab library -screen mini-player
 shot 9-stories-player -demo YES -area stories -tab home -screen player

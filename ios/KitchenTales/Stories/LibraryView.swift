@@ -1,16 +1,12 @@
 import SwiftUI
 
-/// Bibliotecă: large title, search, and three ways to look at the folders: Dosare (coloured
-/// cards), Raft (a shelf of covers per folder) and Cover Flow.
+/// Bibliotecă like the web: the large title, "Caută în N povești", the folders as wide collection
+/// cards (tinted from their covers) and a dashed "Folder nou" card at the end. How a folder's
+/// stories look (Pătrate, Listă, Raft, Cover Flow) is chosen inside the folder.
 struct LibraryView: View {
-    enum Mode: String, CaseIterable, Hashable {
-        case folders = "Dosare", shelf = "Raft", coverFlow = "Cover Flow"
-    }
-
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
     @Environment(KidMode.self) private var kid
-    @AppStorage("library-mode") private var mode: Mode = .folders
     @State private var query = ""
     @State private var creating = LaunchOptions.screen == "folder-new"
     @State private var path: [StoryFolder] = []
@@ -19,12 +15,6 @@ struct LibraryView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Picker("Vizualizare", selection: $mode) {
-                        ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 16)
-
                     if store.showingCopy {
                         Label("Fără internet: se vede copia de pe telefon.", systemImage: "icloud.slash")
                             .font(.ktFootnote).foregroundStyle(Theme.Night.muted)
@@ -38,82 +28,42 @@ struct LibraryView: View {
                                        message: "Poveștile adăugate în aplicația web apar aici.")
                             .padding(.top, 60)
                     } else {
-                        switch mode {
-                        case .folders: folderGrid
-                        case .shelf: shelves
-                        case .coverFlow: CoverFlow(stories: store.stories)
-                        }
+                        folderList
                     }
                 }
                 .padding(.bottom, 24)
-                .animation(.snappy, value: mode)
             }
             .scrollIndicators(.hidden)
             .ktNightBackground()
             .refreshable { await store.refresh() }
             .navigationTitle("Bibliotecă")
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Caută povești")
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always),
+                        prompt: "Caută în \(store.stories.count == 1 ? "o poveste" : "\(store.stories.count) povești")")
             .navigationDestination(for: StoryFolder.self) { FolderView(folderName: $0.name) }
         }
         .onAppear {
             // Screenshots: `-screen folder` opens the first folder.
-            if ["folder", "folder-menu", "folder-edit", "folder-delete", "folder-share"].contains(LaunchOptions.screen ?? ""), path.isEmpty, let first = store.folders.first(where: { !$0.items.isEmpty }) {
+            if ["folder", "folder-menu", "folder-edit", "folder-delete", "folder-share", "folder-shelf", "folder-list", "folder-flow"].contains(LaunchOptions.screen ?? ""), path.isEmpty, let first = store.folders.first(where: { $0.items.count > 1 }) ?? store.folders.first(where: { !$0.items.isEmpty }) {
                 path = [first]
             }
         }
     }
 
-    private var folderGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+    private var folderList: some View {
+        LazyVStack(spacing: 12) {
             ForEach(store.folders) { folder in
-                NavigationLink(value: folder) {
-                    FolderCard(folder: folder).aspectRatio(1, contentMode: .fit)
-                }
-                .buttonStyle(PressableStyle())
-                .contextMenu { FolderActions(folder: folder) }
+                NavigationLink(value: folder) { CollectionCard(folder: folder) }
+                    .buttonStyle(PressableStyle())
+                    .contextMenu { FolderActions(folder: folder) }
             }
             if !kid.active {
-                Button { creating = true } label: { NewFolderCard().aspectRatio(1, contentMode: .fit) }
+                Button { creating = true } label: { NewFolderCard() }
                     .buttonStyle(PressableStyle())
                     .accessibilityLabel("Folder nou")
             }
         }
         .padding(.horizontal, 16)
         .sheet(isPresented: $creating) { FolderSheet(folder: nil) }
-    }
-
-    private var shelves: some View {
-        LazyVStack(alignment: .leading, spacing: 22) {
-            ForEach(store.folders.filter { !$0.items.isEmpty }) { folder in
-                VStack(alignment: .leading, spacing: 10) {
-                    NavigationLink(value: folder) {
-                        HStack(spacing: 6) {
-                            Text(folder.name).font(.ktKidsHeadline).foregroundStyle(Theme.text)
-                            Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Theme.Night.muted)
-                            Spacer()
-                            Text(folder.subtitle).font(.ktCaption).foregroundStyle(Theme.Night.muted)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
-                    ScrollView(.horizontal) {
-                        LazyHStack(alignment: .top, spacing: 12) {
-                            ForEach(folder.items) { story in
-                                Button { Task { await player.play(story, queue: folder.items, store: store) } } label: {
-                                    CoverTile(story: story, width: 112)
-                                }
-                                .buttonStyle(PressableStyle())
-                                .storyContextMenu(story)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                    }
-                    .scrollIndicators(.hidden)
-                    // The wooden shelf the covers stand on.
-                    Capsule().fill(Color.white.opacity(0.08)).frame(height: 3).padding(.horizontal, 16)
-                }
-            }
-        }
     }
 
     private var results: some View {
@@ -130,66 +80,6 @@ struct LibraryView: View {
             }
         }
         .padding(.horizontal, 16)
-    }
-}
-
-/// A folder as a coloured card: the first cover tints it and up to three covers fan out on top.
-struct FolderCard: View {
-    let folder: StoryFolder
-
-    var body: some View {
-        let art = folder.items.filter { $0.coverKey != nil } + folder.items.filter { $0.coverKey == nil }
-        let scene = art.first.map { CoverScene.of($0) } ?? CoverScene.of(title: folder.name, scene: nil)
-        ZStack(alignment: .bottomLeading) {
-            LinearGradient(colors: [Color(hex: scene.top).opacity(0.85), Color(hex: scene.bottom).opacity(0.95)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-            GeometryReader { geo in
-                let side = min(geo.size.width * 0.36, 64)
-                ZStack {
-                    if art.isEmpty {
-                        Text(folder.icon ?? "📁").font(.system(size: side * 0.6))
-                    }
-                    ForEach(Array(art.prefix(3).enumerated().reversed()), id: \.element.id) { pair in
-                        FannedCover(story: pair.element, index: pair.offset, side: side)
-                    }
-                }
-                .frame(width: geo.size.width - 14, height: side + 20, alignment: .trailing)
-                .padding(.top, 12)
-            }
-            VStack(alignment: .leading, spacing: 3) {
-                Text([folder.icon, folder.name].compactMap { $0 }.joined(separator: " "))
-                    .font(.custom(AppFont.storyDisplay, size: 18, relativeTo: .headline))
-                    .foregroundStyle(Theme.text)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                Text(folder.items.isEmpty ? "gol" : folder.subtitle)
-                    .font(.ktCaption)
-                    .foregroundStyle(Theme.text.opacity(0.75))
-            }
-            .padding(12)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).strokeBorder(.white.opacity(0.1)))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(folder.name), \(folder.subtitle)")
-    }
-}
-
-/// One of the covers fanned out on a folder card (0 is in front).
-private struct FannedCover: View {
-    let story: Story
-    let index: Int
-    let side: CGFloat
-
-    var body: some View {
-        let step = CGFloat(index)
-        let angle: Angle = .degrees(Double(index) * -7)
-        StoryCover(story: story, cornerRadius: 8)
-            .frame(width: side, height: side)
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.7), lineWidth: 1.5))
-            .rotationEffect(angle)
-            .offset(x: step * side * -0.42, y: step * 2)
-            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
     }
 }
 
@@ -226,6 +116,8 @@ private struct FolderActions: View {
 struct StoryRow: View {
     let story: Story
     let queue: [Story]
+    /// The web's Listă: a download button on each row.
+    var showsDownload = false
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
 
@@ -255,6 +147,7 @@ struct StoryRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            if showsDownload { DownloadButton(story: story) }
             FavoriteButton(story: story, size: 36)
         }
         .padding(.vertical, 8)
@@ -281,7 +174,8 @@ struct FolderView: View {
     @State private var adding: AddMode?
     @State private var editing = LaunchOptions.screen == "folder-edit" || LaunchOptions.screen == "folder-delete"
     @State private var askShare = LaunchOptions.screen == "folder-share"
-    @AppStorage("folder-look") private var look: Look = .list
+    @AppStorage("folder-look") private var look: Look = .squares
+    @State private var search = ""
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
     @Environment(KitchenModel.self) private var kitchen
@@ -297,46 +191,33 @@ struct FolderView: View {
 
     var body: some View {
         let folder = store.folders.first { $0.name == name }
-        let items = folder?.items ?? []
+        let all = folder?.items ?? []
+        let q = search.trimmingCharacters(in: .whitespaces)
+        let items = q.isEmpty ? all : all.filter { StoryStore.fold($0.title).contains(StoryStore.fold(q)) }
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                if let folder {
-                    Text(folder.items.isEmpty ? "Niciun fișier încă." : folder.subtitle)
+                header(folder, all)
+                if !all.isEmpty {
+                    searchBar
+                }
+                if all.isEmpty {
+                    Text("Niciun fișier încă.")
                         .font(.ktFootnote).foregroundStyle(Theme.Night.muted)
                         .padding(.horizontal, 16)
-                }
-                if !items.isEmpty {
-                    HStack(spacing: 12) {
-                        Button { play(items) } label: { Label("Redă tot", systemImage: "play.fill") }
-                            .buttonStyle(.ktPrimaryWide)
-                        Button { play(items.shuffled()) } label: { Label("Amestecă", systemImage: "shuffle") }
-                            .buttonStyle(.ktSecondaryWide)
-                    }
-                    .padding(.horizontal, 16)
+                } else if items.isEmpty {
+                    Text("Nimic găsit pentru „\(q)”.")
+                        .font(.ktCallout).foregroundStyle(Theme.Night.muted)
+                        .padding(.horizontal, 16)
+                } else {
                     stories(items)
                 }
             }
             .padding(.bottom, 24)
             .animation(.snappy, value: look)
         }
+        .scrollIndicators(.hidden)
         .ktNightBackground()
-        .navigationTitle([folder?.icon, name].compactMap { $0 }.joined(separator: " "))
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            if let folder, folder.mine, !folder.builtin, !kid.active {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        ForEach(AddMode.allCases) { mode in
-                            Button { adding = mode } label: { Label(mode.title, systemImage: mode.symbol) }
-                        }
-                    } label: {
-                        Image(systemName: "plus.circle.fill").foregroundStyle(Theme.accent)
-                    }
-                    .accessibilityLabel("Adaugă o poveste în folder")
-                }
-            }
-            ToolbarItem(placement: .topBarTrailing) { moreMenu(folder, items) }
-        }
+        .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(item: $adding) { mode in
             AddFlow(mode: mode, folder: name)
         }
@@ -350,6 +231,82 @@ struct FolderView: View {
         } message: {
             if let folder { Text(Self.shareText(folder)) }
         }
+    }
+
+    /// The web's folder head: round back, the name with its icon in big serif, "4 povești" and a
+    /// "Partajat" chip under it, the gold + and the ⋯ on the right.
+    private func header(_ folder: StoryFolder?, _ items: [Story]) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            KTBackButton()
+            VStack(alignment: .leading, spacing: 6) {
+                Text([folder?.icon, name].compactMap { $0 }.joined(separator: " "))
+                    .font(.custom(AppFont.storyDisplay, size: 28, relativeTo: .largeTitle))
+                    .foregroundStyle(Theme.text)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                HStack(spacing: 8) {
+                    Text(items.count == 1 ? "1 poveste" : "\(items.count) povești")
+                        .font(.custom(AppFont.bodySemibold, size: 13, relativeTo: .footnote))
+                        .foregroundStyle(Theme.Night.muted)
+                    if let folder, folder.mine, folder.shared, !folder.builtin {
+                        Label("Partajat", systemImage: "person.2")
+                            .font(.custom(AppFont.bodyBold, size: 12, relativeTo: .caption))
+                            .foregroundStyle(Theme.Night.moon)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(Theme.Night.moon.opacity(0.15)))
+                    }
+                }
+            }
+            .padding(.top, 2)
+            Spacer(minLength: 0)
+            if let folder, folder.mine, !folder.builtin, !kid.active {
+                Menu {
+                    ForEach(AddMode.allCases) { mode in
+                        Button { adding = mode } label: { Label(mode.title, systemImage: mode.symbol) }
+                    }
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(Theme.Night.ink)
+                        .frame(width: 44, height: 44)
+                        .background(Circle().fill(Theme.accent))
+                }
+                .accessibilityLabel("Adaugă o poveste în folder")
+            }
+            moreMenu(folder, items)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+    }
+
+    /// "Caută în Povești Disney" with the view button next to it.
+    private var searchBar: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.Night.muted)
+                TextField("", text: $search, prompt: Text("Caută în \(name)").foregroundStyle(Theme.Night.muted))
+                    .font(.custom(AppFont.body, size: 15, relativeTo: .body))
+                    .foregroundStyle(Theme.text)
+                    .submitLabel(.search)
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 40)
+            .background(Capsule().fill(.white.opacity(0.08)))
+            Menu {
+                Picker("Vizualizare", selection: $look) {
+                    ForEach(Look.allCases, id: \.self) { l in Label(l.rawValue, systemImage: l.symbol).tag(l) }
+                }
+            } label: {
+                Image(systemName: look.symbol)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.text)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(.white.opacity(0.08)))
+            }
+            .accessibilityLabel("Vizualizare: \(look.rawValue)")
+        }
+        .padding(.horizontal, 16)
     }
 
     @ViewBuilder private func stories(_ items: [Story]) -> some View {
@@ -366,29 +323,13 @@ struct FolderView: View {
         case .list:
             LazyVStack(spacing: 0) {
                 ForEach(items) { story in
-                    StoryRow(story: story, queue: items)
+                    StoryRow(story: story, queue: items, showsDownload: !kid.active)
                     Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 74)
                 }
             }
             .padding(.horizontal, 16)
         case .shelf:
-            // Rows of three covers, each standing on its shelf.
-            let rows = stride(from: 0, to: items.count, by: 3).map { Array(items[$0..<min($0 + 3, items.count)]) }
-            LazyVStack(alignment: .leading, spacing: 18) {
-                ForEach(rows, id: \.first!.id) { row in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .top, spacing: 12) {
-                            ForEach(row) { story in
-                                Button { play(items, from: story) } label: { CoverTile(story: story, width: 104) }
-                                    .buttonStyle(PressableStyle())
-                                    .storyContextMenu(story)
-                            }
-                        }
-                        Capsule().fill(Color.white.opacity(0.08)).frame(height: 3)
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
+            BookShelfView(stories: items, folderName: name)
         case .coverFlow:
             CoverFlow(stories: items)
         }
@@ -404,12 +345,6 @@ struct FolderView: View {
                             Label(l.rawValue, systemImage: l == look ? "checkmark.circle.fill" : l.symbol)
                         }
                     }
-                }
-            }
-            if !items.isEmpty {
-                Section {
-                    Button { play(items) } label: { Label("Redă tot", systemImage: "play.fill") }
-                    Button { play(items.shuffled()) } label: { Label("Amestecă", systemImage: "shuffle") }
                 }
             }
             if let folder, !kid.active {
@@ -432,7 +367,11 @@ struct FolderView: View {
                 }
             }
         } label: {
-            Image(systemName: "ellipsis.circle")
+            Image(systemName: "ellipsis")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(Theme.text)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(.white.opacity(0.08)))
         }
         .accessibilityLabel("Mai multe")
     }
@@ -488,20 +427,70 @@ struct FolderView: View {
     }
 }
 
-/// A story as a square cover with its title and length under it ("Pătrate").
+/// A story as a square cover with its title and length under it ("Pătrate"): a heart on the
+/// cover for a favourite and the length in its corner, like the web.
 private struct SquareTile: View {
     let story: Story
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             StoryCover(story: story, cornerRadius: 16)
                 .aspectRatio(1, contentMode: .fit)
-            Text(story.title).font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.text).lineLimit(1)
+                .overlay(alignment: .topLeading) {
+                    if story.favorite {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color(hex: 0xFF6F91))
+                            .frame(width: 26, height: 26)
+                            .background(Circle().fill(.white.opacity(0.92)))
+                            .padding(8)
+                    }
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    if let time = story.minutesLabel {
+                        Text(time)
+                            .font(.custom(AppFont.bodyBold, size: 11.5, relativeTo: .caption2))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7).padding(.vertical, 2)
+                            .background(Capsule().fill(.black.opacity(0.5)))
+                            .padding(7)
+                    }
+                }
+                .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+            Text(story.title).font(.custom(AppFont.bodyBold, size: 15, relativeTo: .subheadline)).foregroundStyle(Theme.text).lineLimit(1)
+                .padding(.top, 4)
             if let time = story.minutesLabel {
-                Text(time).font(.system(size: 12)).foregroundStyle(Theme.Night.muted)
+                Text(time).font(.custom(AppFont.body, size: 13, relativeTo: .footnote)).foregroundStyle(Theme.Night.muted)
             }
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Listă: save the story on the phone, or take it off (a spinner while it downloads).
+private struct DownloadButton: View {
+    let story: Story
+    @Environment(StoryStore.self) private var store
+
+    var body: some View {
+        let saved = store.offline.saved.contains(story.id)
+        Button {
+            Haptics.tap()
+            if saved { store.offline.remove([story.id]) } else { Task { await store.offline.download(story, links: store.links) } }
+        } label: {
+            Group {
+                if store.offline.downloading.contains(story.id) {
+                    ProgressView().controlSize(.small).tint(Theme.Night.moon)
+                } else {
+                    Image(systemName: saved ? "checkmark.circle.fill" : "arrow.down.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(saved ? Theme.Night.moon : Theme.text.opacity(0.8))
+                }
+            }
+            .frame(width: 36, height: 36)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(saved ? "Șterge de pe telefon" : "Salvează pentru offline")
     }
 }
 

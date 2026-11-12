@@ -484,7 +484,7 @@ private struct FlowChips: View {
 }
 
 /// Lays its children out in rows, wrapping to the next row when one is full.
-private struct WrapLayout: Layout {
+struct WrapLayout: Layout {
     var spacing: CGFloat = 6
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

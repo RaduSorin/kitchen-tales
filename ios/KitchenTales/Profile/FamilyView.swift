@@ -15,68 +15,23 @@ struct FamilyView: View {
 
     var body: some View {
         let admin = auth.account?.isAdmin ?? false
-        let me = auth.account?.email?.lowercased()
-        ProfilePage(title: "Familie și partajare") {
-            if admin {
-                Section {
-                    ForEach(profile.members) { member in
-                        HStack(spacing: 12) {
-                            Text(String(member.name.prefix(1)))
-                                .font(.custom(AppFont.display, size: 16, relativeTo: .body))
-                                .foregroundStyle(member.sameSpace ? Theme.onAccent : Theme.text)
-                                .frame(width: 34, height: 34)
-                                .background(Circle().fill(member.sameSpace
-                                    ? AnyShapeStyle(LinearGradient(colors: [Theme.accent, Color(hex: 0xBE7A3E)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                                    : AnyShapeStyle(LinearGradient(colors: [Color(hex: 0x8A6BB0), Color(hex: 0x5B4A7A)], startPoint: .topLeading, endPoint: .bottomTrailing))))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(member.name).font(.ktBody).foregroundStyle(Theme.text)
-                                Text(detail(member, me: me)).font(.ktFootnote).foregroundStyle(Theme.muted)
-                            }
-                            Spacer()
-                        }
-                        .swipeActions {
-                            if member.pending {
-                                Button("Retrimite") { resend(member) }.tint(Theme.accent)
-                            }
-                        }
-                    }
-                    Button { inviting = true } label: {
-                        Label("Invită pe cineva", systemImage: "plus").font(.ktBody).foregroundStyle(Theme.accent)
-                    }
-                } header: {
-                    header("Persoane · \(profile.members.count)")
-                } footer: {
-                    Text("Cine e în spațiul vostru vede tot. Ceilalți văd doar ce partajezi.")
-                }
-                .profileRows(night)
-            }
+        let shared = recipes.recipes.filter { $0.mine && $0.shared }.count + stories.allStories.filter { $0.mine && $0.shared }.count
+        // Like the web: one row each for the people, inviting, the space's name and what is shared.
+        ProfilePage(title: admin ? "Familie și partajare" : "Partajare") {
             Section {
+                if admin {
+                    NavigationLink(value: ProfileRoute.people) { row("person.2", "Persoane", value: "\(profile.members.count)") }
+                    Button { inviting = true } label: { row("envelope", "Invită pe cineva", value: nil) }
+                        .buttonStyle(.plain)
+                }
                 Button {
                     spaceName = profile.settings.spaceName ?? ""
                     renaming = true
-                } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Numele spațiului").font(.ktBody).foregroundStyle(Theme.text)
-                            Text("ceilalți văd „De la \(profile.settings.spaceName ?? auth.account?.displayName ?? "")”")
-                                .font(.ktFootnote).foregroundStyle(Theme.muted)
-                        }
-                        Spacer()
-                        Text(profile.settings.spaceName ?? "").font(.ktBody).foregroundStyle(Theme.muted)
-                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.muted.opacity(0.6))
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                NavigationLink(value: ProfileRoute.sharing) {
-                    LabeledContent("Ce partajez") {
-                        let count = recipes.recipes.filter { $0.mine && $0.shared }.count + stories.allStories.filter { $0.mine && $0.shared }.count
-                        Text(count == 0 ? "nimic" : "\(count)")
-                    }
-                    .font(.ktBody)
-                }
-            } header: {
-                header("Spațiul tău")
+                } label: { row("house", "Numele spațiului", value: profile.settings.spaceName ?? "", chevron: true) }
+                    .buttonStyle(.plain)
+                NavigationLink(value: ProfileRoute.sharing) { row("square.and.arrow.up", "Ce partajez", value: shared == 0 ? "nimic" : "\(shared)") }
+            } footer: {
+                Text("Ce partajezi apare la ceilalți ca „De la \(profile.settings.spaceName ?? auth.account?.displayName ?? "")”.")
             }
             .profileRows(night)
         }
@@ -93,21 +48,94 @@ struct FamilyView: View {
         }
     }
 
-    private func detail(_ member: FamilyMember, me: String?) -> String {
-        if member.email.lowercased() == me { return "tu · administrator" }
-        let base = member.sameSpace ? "același spațiu · vede tot" : "alt spațiu · vede ce partajezi"
-        return member.pending ? "\(base) · n-a intrat încă" : base
+    private func row(_ symbol: String, _ title: String, value: String?, chevron: Bool = false) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.accent)
+                .frame(width: 34, height: 34)
+                .background(Circle().fill(Theme.accent.opacity(0.12)))
+                .overlay(Circle().strokeBorder(Theme.accent.opacity(0.3)))
+            Text(title).font(.ktBody).foregroundStyle(Theme.text)
+            Spacer()
+            if let value { Text(value).font(.ktBody).foregroundStyle(Theme.muted) }
+            if chevron { Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.muted.opacity(0.6)) }
+        }
+        .contentShape(Rectangle())
+    }
+}
+
+/// "Persoane", like the web: who is in our space, who has a separate account, resending an
+/// invitation that was not used yet, and "Invită pe cineva".
+struct PeopleView: View {
+    @Environment(AuthModel.self) private var auth
+    @Environment(ProfileStore.self) private var profile
+    @Environment(KitchenModel.self) private var kitchen
+    @Environment(\.profileNight) private var night
+    @State private var inviting = false
+
+    var body: some View {
+        let me = auth.account?.email?.lowercased()
+        ProfilePage(title: "Persoane") {
+            group("Spațiul tău", profile.members.filter { $0.sameSpace || $0.email.lowercased() == me }, me: me,
+                  hint: "Cei din spațiul tău văd și modifică toate rețetele, poveștile, săptămâna și lista de cumpărături.")
+            group("Conturi separate", profile.members.filter { !$0.sameSpace && $0.email.lowercased() != me }, me: me,
+                  hint: "Au rețetele și poveștile lor și văd doar ce partajezi tu.")
+            Section {
+                Button("Invită pe cineva") { inviting = true }
+                    .buttonStyle(.ktPrimaryWide)
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+        }
+        .sheet(isPresented: $inviting) { InviteSheet() }
     }
 
-    private func header(_ text: String) -> some View {
-        Text(text.uppercased(with: Locale(identifier: "ro"))).font(.ktLabel).tracking(1.1).foregroundStyle(Theme.accent)
+    @ViewBuilder private func group(_ title: String, _ people: [FamilyMember], me: String?, hint: String) -> some View {
+        if !people.isEmpty {
+            Section {
+                ForEach(people) { m in
+                    HStack(spacing: 12) {
+                        Text(String(m.email.prefix(1)).uppercased())
+                            .font(.custom(AppFont.bodySemibold, size: 15, relativeTo: .body))
+                            .foregroundStyle(.white)
+                            .frame(width: 34, height: 34)
+                            .background(Circle().fill(LinearGradient(colors: [Color(hex: 0xE7A26B), Color(hex: 0xC4664A)], startPoint: .topLeading, endPoint: .bottomTrailing)))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(m.email).font(.ktBody).foregroundStyle(Theme.text).lineLimit(1).truncationMode(.middle)
+                            Text(note(m, me: me)).font(.ktFootnote).foregroundStyle(Theme.muted)
+                        }
+                        Spacer()
+                        if m.pending && m.email.lowercased() != me {
+                            Button("Retrimite") { resend(m) }
+                                .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .footnote))
+                                .foregroundStyle(Theme.text)
+                                .padding(.horizontal, 12).frame(height: 32)
+                                .background(Capsule().fill(.white.opacity(0.1)))
+                                .buttonStyle(.plain)
+                        }
+                    }
+                }
+            } header: {
+                Text(title.uppercased(with: Locale(identifier: "ro"))).font(.ktLabel).tracking(1.1).foregroundStyle(Theme.accent)
+            } footer: {
+                Text(hint)
+            }
+            .profileRows(night)
+        }
+    }
+
+    private func note(_ m: FamilyMember, me: String?) -> String {
+        if m.email.lowercased() == me { return "Tu · administrator" }
+        if m.pending { return "Invitat, încă nu s-a conectat" }
+        return m.sameSpace ? "Vede și modifică tot" : "Vede doar ce partajezi"
     }
 
     private func resend(_ member: FamilyMember) {
         Task {
             do {
                 try await profile.resendInvite(member)
-                kitchen.say("Am retrimis invitația")
+                kitchen.say("Am retrimis invitația la \(member.email).")
             } catch {
                 kitchen.say(error.localizedDescription)
             }

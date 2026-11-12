@@ -62,7 +62,7 @@ struct RecipesHomeView: View {
             if LaunchOptions.tab != nil { tab = Self.launchTab }
         }
         .task {
-            if ["recipe", "cook", "recipe-delete", "recipe-steps", "recipe-notes", "recipe-facts"].contains(LaunchOptions.screen), let first = store.recipes.first, path.isEmpty {
+            if ["recipe", "cook", "cook-ingredients", "recipe-delete", "recipe-steps", "recipe-notes", "recipe-facts"].contains(LaunchOptions.screen), let first = store.recipes.first, path.isEmpty {
                 path = [.recipe(first.id)]
             }
         }

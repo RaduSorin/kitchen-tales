@@ -78,7 +78,7 @@ struct RecipeDetailView: View {
         }
         .task {
             if servings == nil { servings = r.servings }
-            if LaunchOptions.screen == "cook", kitchen.cooking == nil { kitchen.cook(r) }
+            if ["cook", "cook-ingredients"].contains(LaunchOptions.screen), kitchen.cooking == nil { kitchen.cook(r) }
             if LaunchOptions.screen == "recipe-steps" { tab = .steps }
             if LaunchOptions.screen == "recipe-notes" { tab = .notes }
         }

@@ -38,6 +38,7 @@ shot 2b2-recipe-steps -demo YES -tab home -screen recipe-steps
 shot 2b3-recipe-notes -demo YES -tab home -screen recipe-notes
 shot 2b4-recipe-facts -demo YES -tab home -screen recipe-facts
 shot 2c-cook -demo YES -tab home -screen cook
+shot 2c2-cook-ingredients -demo YES -tab home -screen cook-ingredients
 shot 2d-week -demo YES -tab week
 shot 2e-week-add -demo YES -tab week -screen week-add
 shot 2f-list -demo YES -tab list

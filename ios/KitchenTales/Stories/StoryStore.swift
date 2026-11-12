@@ -28,7 +28,7 @@ final class StoryStore {
     private let demo: Bool
 
     private struct Saved: Codable { var stories: [Story]; var folders: [StoryFolderRow] }
-    private static let cacheKey = "stories/library"
+    private nonisolated static let cacheKey = "stories/library"
 
     init(auth: AuthModel, config: BackendConfig? = .fromBundle(), cache: DeviceCache = .shared) {
         demo = LaunchOptions.demoAccount != nil
@@ -408,4 +408,11 @@ enum DemoLibrary {
         StoryFolderRow(id: "f1", name: "Povești de seară", icon: "🌙", mine: true, shared: true, spaceName: "Sorin"),
         StoryFolderRow(id: "f2", name: "Cântece", icon: "🎵", mine: true, shared: false, spaceName: "Sorin"),
     ]
+}
+
+extension StoryStore {
+    /// The stories saved on this phone, for Siri, Shortcuts and Spotlight when the app is not open.
+    nonisolated static func savedStories(cache: DeviceCache = .shared) -> [Story] {
+        cache.read(Saved.self, key: cacheKey)?.stories ?? []
+    }
 }

@@ -26,7 +26,7 @@ final class RecipeStore {
     private struct Saved: Codable {
         var recipes: [Recipe]; var plan: [PlanEntry]; var shopping: [ShoppingLine]; var logs: [RecipeLog]
     }
-    private static let cacheKey = "recipes/library"
+    private nonisolated static let cacheKey = "recipes/library"
 
     init(auth: AuthModel, config: BackendConfig? = .fromBundle(), cache: DeviceCache = .shared) {
         demo = LaunchOptions.demoAccount != nil
@@ -670,4 +670,13 @@ enum DemoKitchen {
         RecipeLog(id: "l1", recipeId: "r1", favorite: true, cooked: ["2026-10-20"],
                   notes: [CookNote(day: "2026-10-20", text: "Data viitoare mai mult leuștean.", by: "Loredana")]),
     ]
+}
+
+extension RecipeStore {
+    /// The recipes, the plan and the shopping list saved on this phone, for Siri, Shortcuts and
+    /// Spotlight when the app is not open.
+    nonisolated static func savedKitchen(cache: DeviceCache = .shared) -> (recipes: [Recipe], plan: [PlanEntry], shopping: [ShoppingLine]) {
+        guard let saved = cache.read(Saved.self, key: cacheKey) else { return ([], [], []) }
+        return (saved.recipes, saved.plan, saved.shopping)
+    }
 }

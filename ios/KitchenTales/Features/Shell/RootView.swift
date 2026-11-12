@@ -31,6 +31,7 @@ private struct SignedInRoot: View {
     @State private var kid = KidMode()
     @State private var kitchen = KitchenModel()
     @State private var area = AreaModel()
+    private let commands = AppCommands.shared
 
     init(auth: AuthModel) {
         _stories = State(initialValue: StoryStore(auth: auth))
@@ -71,6 +72,40 @@ private struct SignedInRoot: View {
         }
         .onChange(of: kid.active) { if !kid.active { stories.kidFolders = [] } }
         .task { await badges.start() }
+        // Siri, Shortcuts and Spotlight.
+        .onAppear { commands.recipes = recipes }
+        .onChange(of: commands.pending, initial: true) { Task { await runCommand() } }
+        .task(id: stories.allStories.count &+ recipes.recipes.count &* 7919) {
+            guard LaunchOptions.demoAccount == nil else { return }
+            await SpotlightIndex.update(stories: stories.allStories, recipes: recipes.recipes)
+        }
+        .onDisappear { Task { await SpotlightIndex.clear() } }
+    }
+
+    /// Carries out what Siri, a Shortcut or a Spotlight result asked for.
+    private func runCommand() async {
+        guard let command = commands.pending else { return }
+        commands.pending = nil
+        switch command {
+        case .playStory(let id):
+            area.current = .stories
+            if stories.allStories.isEmpty { await stories.refresh() }
+            let pool = stories.stories
+            guard let story = ShortcutText.storyToPlay(id, last: PlaybackMemory.lastStoryId, stories: pool) else { return }
+            let folder = StoryLibrary.folderOf(story)
+            let queue = pool.filter { StoryLibrary.folderOf($0) == folder }
+            StoryPlayer.shared.showsPlayer = true
+            await StoryPlayer.shared.play(story, queue: queue, store: stories)
+        case .openRecipe(let id):
+            guard !kid.active else { return }
+            area.current = .recipes
+            kitchen.tab = .recipes
+            kitchen.openRecipe = id
+        case .openList, .openWeek:
+            guard !kid.active else { return }
+            area.current = .recipes
+            kitchen.tab = command == .openList ? .list : .week
+        }
     }
 }
 

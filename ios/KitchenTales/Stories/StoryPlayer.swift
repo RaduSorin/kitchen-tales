@@ -40,6 +40,8 @@ final class StoryPlayer {
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var endObserver: NSObjectProtocol?
     @ObservationIgnored private var played = 0
+    /// Paused by a call or an alarm (not by a tap), so it may go on by itself afterwards.
+    @ObservationIgnored private var wasInterrupted = false
     @ObservationIgnored private var heard: Set<String> = []
     private var shufflePick: Story?
     @ObservationIgnored private var artwork: MPMediaItemArtwork?
@@ -56,6 +58,7 @@ final class StoryPlayer {
             MainActor.assumeIsolated { self?.tick(time.seconds) }
         }
         setUpRemoteCommands()
+        watchAudioSession()
     }
 
     var remaining: Double { max(0, duration - position) }
@@ -271,6 +274,54 @@ final class StoryPlayer {
               current?.id == story.id else { return }
         artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
         updateNowPlaying()
+    }
+
+    // MARK: Calls, alarms and headphones
+
+    /// iOS pauses the player by itself for a phone call or an alarm, and when headphones or the
+    /// car are disconnected. Keep the buttons in step with that, and go on after a short
+    /// interruption when iOS says so (not after a call the child might have answered).
+    private func watchAudioSession() {
+        let center = NotificationCenter.default
+        let session = AVAudioSession.sharedInstance()
+        center.addObserver(forName: AVAudioSession.interruptionNotification, object: session, queue: .main) { [weak self] note in
+            let action = StoryPlayer.interruptionAction(note.userInfo)
+            MainActor.assumeIsolated { self?.interrupted(action) }
+        }
+        center.addObserver(forName: AVAudioSession.routeChangeNotification, object: session, queue: .main) { [weak self] note in
+            let unplugged = StoryPlayer.deviceRemoved(note.userInfo)
+            MainActor.assumeIsolated { if unplugged, self?.isPlaying == true { self?.pause() } }
+        }
+    }
+
+    enum InterruptionAction: Equatable { case pause, resume, none }
+
+    private func interrupted(_ action: InterruptionAction) {
+        switch action {
+        case .pause:
+            guard isPlaying else { return }
+            wasInterrupted = true
+            pause()
+        case .resume:
+            guard wasInterrupted else { return }
+            wasInterrupted = false
+            resume()
+        case .none:
+            wasInterrupted = false
+        }
+    }
+
+    nonisolated static func interruptionAction(_ info: [AnyHashable: Any]?) -> InterruptionAction {
+        guard let raw = info?[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: raw) else { return .none }
+        if type == .began { return .pause }
+        let options = AVAudioSession.InterruptionOptions(rawValue: info?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0)
+        return options.contains(.shouldResume) ? .resume : .none
+    }
+
+    nonisolated static func deviceRemoved(_ info: [AnyHashable: Any]?) -> Bool {
+        guard let raw = info?[AVAudioSessionRouteChangeReasonKey] as? UInt else { return false }
+        return AVAudioSession.RouteChangeReason(rawValue: raw) == .oldDeviceUnavailable
     }
 
     // MARK: Lock Screen and Control Center

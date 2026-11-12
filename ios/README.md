@@ -93,3 +93,13 @@ They point at the family user pool (`eu-central-1_mH3Vk6Rfm`) and its single app
 
 The SRP unit tests use vectors from `scripts/srp-vectors.py`, a Python reference checked
 against pycognito.
+
+## Siri, Shortcuts and Spotlight
+
+`Features/Shortcuts/` holds App Intents: play a story (by name or the one started last), add to
+the shopping list, read the list, "ce gătim azi", open the list. They show in the Shortcuts app
+under Bucătăria and can go on the Action button or the Lock Screen. Siri has no Romanian voice,
+so each phrase also exists in English; a Shortcut you name yourself ("Poveste de seară") works
+with any Siri language. Stories and recipes are indexed in Spotlight after each refresh and the
+index is cleared on sign-out. Actions that open a screen go through `AppCommands`, handled in
+`SignedInRoot`.

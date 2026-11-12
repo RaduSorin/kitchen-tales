@@ -1,0 +1,168 @@
+# QA of the native iOS app: runs the XCUITest flows in ios/KitchenTalesUITests (a tester's walk
+# through every screen with the -demo account) on the newest iPhone Pro simulator, then the key
+# screens on the smallest iPhone and on an iPad. Screenshots, the QA log (qa-log.txt: one line
+# per check, FAIL lines for problems, A11Y lines from Apple's accessibility audit) and the
+# accessibility trees go to the artifact `ios-qa` and to the ios-screenshots branch under
+# qa-<run number>/. Failing checks do not fail the job: the log is the result.
+name: iOS QA
+
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['ios/KitchenTalesUITests/**', '.github/workflows/ios-qa.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: ios-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    runs-on: macos-15
+    timeout-minutes: 75
+    permissions:
+      contents: write   # only to publish the results to the ios-screenshots branch
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use the newest Xcode on the runner
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Pick simulators
+        id: sim
+        run: |
+          UDID=$(bash scripts/pick-simulator.sh)
+          echo "pro=$UDID" >> "$GITHUB_OUTPUT"
+          # The smallest iPhone and an iPad on the same runtime, if there are any.
+          xcrun simctl list devices available -j | python3 -c '
+          import json, re, sys
+          data = json.load(sys.stdin)["devices"]
+          def version(r):
+              m = re.search(r"iOS-(\d+)-(\d+)", r)
+              return (int(m.group(1)), int(m.group(2))) if m else (0, 0)
+          runtimes = sorted((r for r in data if "iOS" in r), key=version)
+          devs = data[runtimes[-1]] if runtimes else []
+          small = [d for d in devs if d["name"].startswith("iPhone") and ("SE" in d["name"] or "16e" in d["name"] or "mini" in d["name"])]
+          small = small or [d for d in devs if d["name"].startswith("iPhone") and "Pro" not in d["name"] and "Plus" not in d["name"]]
+          ipad = [d for d in devs if d["name"].startswith("iPad") and "Pro" not in d["name"]] or [d for d in devs if d["name"].startswith("iPad")]
+          print("small=" + (small[0]["udid"] if small else ""))
+          print("smallname=" + (small[0]["name"] if small else ""))
+          print("ipad=" + (ipad[0]["udid"] if ipad else ""))
+          print("ipadname=" + (ipad[0]["name"] if ipad else ""))
+          ' >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
+          xcrun simctl boot "$UDID" || true
+
+      - name: Build the app and the QA tests
+        run: |
+          set -o pipefail
+          mkdir -p build/qa
+          xcodebuild build-for-testing \
+            -project KitchenTales.xcodeproj -scheme KitchenTalesQA \
+            -destination "id=${{ steps.sim.outputs.pro }},arch=arm64" \
+            -derivedDataPath build/DerivedData \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build/qa/build.log | grep -E "error:|warning: .*UITests.*\.swift|\*\* (TEST|BUILD)" || true
+          grep -q "\*\* TEST BUILD SUCCEEDED \*\*" build/qa/build.log
+
+      - name: Run the QA flows (iPhone Pro)
+        timeout-minutes: 50
+        run: |
+          UDID=${{ steps.sim.outputs.pro }}
+          xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+          # Microphone for "Citește tu" (the simulator has no real microphone; this only skips the alert).
+          xcrun simctl privacy "$UDID" grant microphone app.kitchentales.ios || true
+          mkdir -p build/qa/pro
+          TEST_RUNNER_QA_OUT="$PWD/build/qa/pro" xcodebuild test-without-building \
+            -project KitchenTales.xcodeproj -scheme KitchenTalesQA \
+            -destination "id=$UDID,arch=arm64" \
+            -derivedDataPath build/DerivedData \
+            -resultBundlePath build/QA-pro.xcresult \
+            -parallel-testing-enabled NO \
+            > build/qa/pro/xcodebuild.log 2>&1 || true
+          grep -E "^QA |Test Case .*(passed|failed)|error:|crash|Crash" build/qa/pro/xcodebuild.log > build/qa/pro/summary.txt || true
+          tail -5 build/qa/pro/xcodebuild.log
+          grep -c "FAIL" build/qa/pro/qa-log.txt || true
+
+      - name: Key screens on a small iPhone and an iPad
+        timeout-minutes: 20
+        run: |
+          for kind in small ipad; do
+            if [ "$kind" = small ]; then UDID="${{ steps.sim.outputs.small }}"; NAME="${{ steps.sim.outputs.smallname }}"; else UDID="${{ steps.sim.outputs.ipad }}"; NAME="${{ steps.sim.outputs.ipadname }}"; fi
+            [ -z "$UDID" ] && { echo "no $kind simulator"; continue; }
+            echo "== $kind: $NAME"
+            xcrun simctl boot "$UDID" || true
+            xcrun simctl bootstatus "$UDID" -b >/dev/null || true
+            xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+            mkdir -p "build/qa/$kind"
+            echo "$NAME" > "build/qa/$kind/device.txt"
+            TEST_RUNNER_QA_OUT="$PWD/build/qa/$kind" xcodebuild test-without-building \
+              -project KitchenTales.xcodeproj -scheme KitchenTalesQA \
+              -destination "id=$UDID" \
+              -derivedDataPath build/DerivedData \
+              -resultBundlePath "build/QA-$kind.xcresult" \
+              -only-testing:KitchenTalesUITests/SystemQATests/testX07_KeyScreens \
+              > "build/qa/$kind/xcodebuild.log" 2>&1 || true
+            tail -3 "build/qa/$kind/xcodebuild.log"
+          done
+
+      - name: Screenshots from the result bundle (if the runner could not write files)
+        if: always()
+        run: |
+          for kind in pro small ipad; do
+            [ -d "build/QA-$kind.xcresult" ] || continue
+            if ! ls build/qa/$kind/*.png >/dev/null 2>&1; then
+              mkdir -p "build/qa/$kind/attachments"
+              xcrun xcresulttool export attachments --path "build/QA-$kind.xcresult" --output-path "build/qa/$kind/attachments" || true
+            fi
+          done
+          du -sh build/qa || true
+
+      - name: Upload the QA results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ios-qa
+          path: |
+            ios/build/qa
+            ios/build/QA-*.xcresult
+          if-no-files-found: ignore
+
+      - name: Publish to the ios-screenshots branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEST: qa-${{ github.run_number }}
+        run: |
+          SRC="$PWD/build/qa"
+          cd "$RUNNER_TEMP" && git init -q qa && cd qa
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          if git fetch -q --depth 1 origin ios-screenshots; then git checkout -q FETCH_HEAD; fi
+          git checkout -q -B ios-screenshots
+          rm -rf "$DEST" && mkdir -p "$DEST"
+          # Everything but the full build logs, which are large.
+          rsync -a --exclude 'build.log' --exclude 'xcodebuild.log' "$SRC/" "$DEST/"
+          # The end of each test log, for test errors.
+          for kind in pro small ipad; do
+            if [ -f "$SRC/$kind/xcodebuild.log" ]; then mkdir -p "$DEST/$kind"; tail -400 "$SRC/$kind/xcodebuild.log" > "$DEST/$kind/xcodebuild-tail.txt"; fi
+          done
+          [ -f "$SRC/build.log" ] && grep -E "error:|warning:" "$SRC/build.log" | head -200 > "$DEST/build-errors.txt" || true
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -qm "QA results $DEST at ${{ github.sha }}"
+          git push -q origin ios-screenshots
+          echo "QA results: https://github.com/${{ github.repository }}/tree/ios-screenshots/$DEST"

@@ -164,6 +164,23 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.kitchentales.ios.tests
         GENERATE_INFOPLIST_FILE: YES
+  # QA flows (XCUITest): drive the app in the simulator like a tester, with the -demo account.
+  # Not part of the KitchenTales scheme, so the normal CI run does not build or run them; they
+  # run in .github/workflows/ios-qa.yml through the KitchenTalesQA scheme.
+  KitchenTalesUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: KitchenTalesUITests
+    dependencies:
+      - target: KitchenTales
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.kitchentales.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: KitchenTales
+        SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
 schemes:
   KitchenTales:
     build:
@@ -178,3 +195,13 @@ schemes:
       config: Debug
     archive:
       config: Release
+  KitchenTalesQA:
+    build:
+      targets:
+        KitchenTales: all
+        KitchenTalesUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - KitchenTalesUITests
+      gatherCoverageData: false

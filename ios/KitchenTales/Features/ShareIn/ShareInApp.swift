@@ -27,7 +27,8 @@ struct ShareCardDemo: View {
         ZStack {
             Color.black.ignoresSafeArea()
             if let photo = DemoPhotos.image("cartofi") {
-                Image(uiImage: photo).resizable().scaledToFill().ignoresSafeArea()
+                // In an overlay, so the filled photo can't widen the card past the screen.
+                Color.clear.overlay { Image(uiImage: photo).resizable().scaledToFill() }.clipped().ignoresSafeArea()
             }
             ShareCardView(model: model, onClose: {}, onOpenRecipe: { _ in })
         }

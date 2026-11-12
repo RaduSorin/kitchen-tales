@@ -88,7 +88,12 @@ private struct SignedInRoot: View {
             if scenePhase == .active { Task { await collectShared() } } else { bedtime.dim(false) }
         }
         // "Ora de culcare": from the reminder, a Shortcut or Profil.
-        .fullScreenCover(isPresented: $bedtime.showsNight) { BedtimeNightView() }
+        .fullScreenCover(isPresented: $bedtime.showsNight) {
+            // Attached outside the .environment(...) chain above, so it gets the stores itself.
+            BedtimeNightView()
+                .environment(stories).environment(recipes).environment(profile).environment(badges)
+                .environment(kid).environment(kitchen).environment(StoryPlayer.shared).environment(area)
+        }
         .task {
             if LaunchOptions.screen == "bedtime-night" { area.current = .stories; bedtime.open() }
             await bedtime.schedule()

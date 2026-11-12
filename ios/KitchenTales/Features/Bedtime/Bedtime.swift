@@ -171,7 +171,7 @@ final class Bedtime {
     /// The brightness before the night screen dimmed it. Kept on the phone too: if the app is
     /// closed while dim, the next launch puts the light back (iOS keeps an app's brightness).
     private var savedBrightness: CGFloat? {
-        get { defaults.object(forKey: Self.brightnessKey) as? Double }
+        get { (defaults.object(forKey: Self.brightnessKey) as? Double).map { CGFloat($0) } }
         set { if let newValue { defaults.set(Double(newValue), forKey: Self.brightnessKey) } else { defaults.removeObject(forKey: Self.brightnessKey) } }
     }
     private static let brightnessKey = "kt-bedtime-brightness"

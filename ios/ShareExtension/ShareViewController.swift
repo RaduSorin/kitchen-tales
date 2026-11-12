@@ -78,9 +78,10 @@ private enum Loaded: Sendable {
 }
 
 private extension NSItemProvider {
-    func ktLoad(_ type: UTType) async -> Loaded? {
+    /// Main-actor so the provider never crosses actors; the completion runs on any thread, hence @Sendable.
+    @MainActor func ktLoad(_ type: UTType) async -> Loaded? {
         await withCheckedContinuation { done in
-            loadItem(forTypeIdentifier: type.identifier, options: nil) { item, _ in
+            loadItem(forTypeIdentifier: type.identifier, options: nil) { @Sendable item, _ in
                 let value: Loaded?
                 if let url = item as? URL {
                     // A photo comes as a file that may only be read here.

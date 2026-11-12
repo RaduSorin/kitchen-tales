@@ -28,6 +28,14 @@ cfnUserPool.adminCreateUserConfig = {
   allowAdminCreateUserOnly: true,
 }
 
+// The Fallow iPhone app signs in with the same email and password (USER_PASSWORD_AUTH over TLS,
+// then refresh tokens) to reach Răgaz's Claude (mindCoach). The web app keeps using SRP.
+const cfnUserPoolClient = backend.auth.resources.cfnResources.cfnUserPoolClient
+cfnUserPoolClient.explicitAuthFlows = [...new Set([
+  ...(cfnUserPoolClient.explicitAuthFlows ?? []),
+  'ALLOW_USER_SRP_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH', 'ALLOW_USER_PASSWORD_AUTH',
+])]
+
 // Both AI functions call Claude on Amazon Bedrock through the EU
 // cross-region inference profile, which routes to the model in EU regions.
 const modelName = MODEL_ID.replace(/^eu\./, '')

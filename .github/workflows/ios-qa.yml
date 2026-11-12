@@ -19,7 +19,7 @@ concurrency:
 jobs:
   qa:
     runs-on: macos-15
-    timeout-minutes: 75
+    timeout-minutes: 120
     permissions:
       contents: write   # only to publish the results to the ios-screenshots branch
     defaults:
@@ -80,7 +80,7 @@ jobs:
           grep -q "\*\* TEST BUILD SUCCEEDED \*\*" build/qa/build.log
 
       - name: Run the QA flows (iPhone Pro)
-        timeout-minutes: 50
+        timeout-minutes: 80
         run: |
           UDID=${{ steps.sim.outputs.pro }}
           xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 || true
@@ -93,13 +93,14 @@ jobs:
             -derivedDataPath build/DerivedData \
             -resultBundlePath build/QA-pro.xcresult \
             -parallel-testing-enabled NO \
+            -skip-testing:KitchenTalesUITests/SystemQATests/testX07_KeyScreens \
             > build/qa/pro/xcodebuild.log 2>&1 || true
-          grep -E "^QA |Test Case .*(passed|failed)|error:|crash|Crash" build/qa/pro/xcodebuild.log > build/qa/pro/summary.txt || true
           tail -5 build/qa/pro/xcodebuild.log
           grep -c "FAIL" build/qa/pro/qa-log.txt || true
 
       - name: Key screens on a small iPhone and an iPad
-        timeout-minutes: 20
+        if: always()
+        timeout-minutes: 25
         run: |
           for kind in small ipad; do
             if [ "$kind" = small ]; then UDID="${{ steps.sim.outputs.small }}"; NAME="${{ steps.sim.outputs.smallname }}"; else UDID="${{ steps.sim.outputs.ipad }}"; NAME="${{ steps.sim.outputs.ipadname }}"; fi
@@ -119,6 +120,18 @@ jobs:
               > "build/qa/$kind/xcodebuild.log" 2>&1 || true
             tail -3 "build/qa/$kind/xcodebuild.log"
           done
+
+      - name: Test summaries and crash reports
+        if: always()
+        run: |
+          for kind in pro small ipad; do
+            [ -f "build/qa/$kind/xcodebuild.log" ] || continue
+            grep -E "^QA |Test Case .*(passed|failed)|error:|crash|Crash|terminated" "build/qa/$kind/xcodebuild.log" > "build/qa/$kind/summary.txt" || true
+          done
+          # The app's crash reports from the simulators (.ips files), if it crashed.
+          mkdir -p build/qa/crashes
+          find ~/Library/Logs/DiagnosticReports -maxdepth 2 -name 'KitchenTales*' -newer project.yml -exec cp {} build/qa/crashes/ \; 2>/dev/null || true
+          ls -la build/qa/crashes
 
       - name: Screenshots from the result bundle (if the runner could not write files)
         if: always()

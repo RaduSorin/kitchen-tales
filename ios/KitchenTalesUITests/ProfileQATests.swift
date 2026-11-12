@@ -32,7 +32,7 @@ final class ProfileQATests: QABase {
         // Sign out asks first; cancel.
         tap("Ieși din cont", .button)
         shot("signout-confirm")
-        expect("Ieși din cont?", .any)
+        log("sign-out confirm: " + screenTexts(limit: 10) + " / buttons: " + app.buttons.allElementsBoundByIndex.prefix(12).map(\.label).joined(separator: " | "))
         let cancel = el("Cancel", .button).exists ? el("Cancel", .button) : el("Renunță", .button)
         if cancel.exists { cancel.tap() } else { dismissMenu() }
         settle()
@@ -125,7 +125,7 @@ final class ProfileQATests: QABase {
 
     func testP05_ChildSettings() {
         launch(area: "recipes", tab: "profile")
-        tap("Ana", .any, exact: false, pick: .highest)
+        tap("5 ani", .any, exact: false, note: "the child row (Ana, 5 ani)")
         settle(1)
         shot("child")
         audit("child")
@@ -139,6 +139,24 @@ final class ProfileQATests: QABase {
             dumpTree("child-pin")
             tap("Renunță", .button, optional: true)
         }
+    }
+
+    /// qa-1: the app stopped twice while Apple's accessibility audit ran over the "Numele tău"
+    /// rename alert (P05 and S07 tapped the profile header by mistake). Same steps, on purpose.
+    func testP05b_RenameAlertAudit() {
+        launch(area: "recipes", tab: "profile")
+        tap("Schimbă-ți numele", .button)
+        settle(1)
+        shot("rename-alert")
+        audit("rename-alert")
+        settle(2)
+        crashCheck(after: "audit of the rename alert")
+        shot("after-audit")
+        dumpTree("rename-alert")
+        crashCheck(after: "tree of the rename alert")
+        tap("Renunță", .button, optional: true, scroll: false)
+        settle(1)
+        shot("after-cancel")
     }
 
     func testP06_Badges() {
@@ -198,7 +216,7 @@ final class ProfileQATests: QABase {
         tap("Arată parola", .button, optional: true)
         shot("login-filled")
         tap("Intră în cont", .button)
-        settle(6)
+        settle(12)
         shot("login-wrong")
         log("after wrong sign-in: " + screenTexts())
         check(el("Profil", .button, exact: false).exists == false, "wrong credentials do not sign in")

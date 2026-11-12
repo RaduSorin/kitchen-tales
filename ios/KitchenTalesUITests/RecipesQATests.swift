@@ -116,6 +116,13 @@ final class RecipesQATests: QABase {
         shot("recipe-put-on-list")
         log("toast after Pune în listă: " + screenTexts(limit: 8))
         check(added3, "ticked ingredient is left out: expected 'Am pus 3 ingrediente' (3 new of 4, one ticked), got \(added4 ? "'Am pus 4'" : "other")")
+        // The real proof: is the ticked "3 linguri orez" on the shopping list?
+        tab("Listă")
+        settle(1)
+        shot("list-after-ticked-put")
+        check(!el("orez", .any, exact: false).exists, "the ticked '3 linguri orez' is not on the shopping list")
+        log("list after Pune în listă: " + screenTexts(limit: 30))
+        openRecipe("Ciorbă de perișoare")
 
         // Pași
         app.swipeDown()
@@ -132,14 +139,23 @@ final class RecipesQATests: QABase {
         tap("Adaugă o notă", .button)
         enter("Nota QA de test")
         shot("recipe-note-typing")
+        // The note's Salvează sits low on the screen, near the "Gătește pas cu pas" bar.
+        let save = el("Salvează", .button)
+        log("note Salvează hittable with the keyboard up: \(save.exists && save.isHittable), frame \(save.frame)")
         tap("Salvează", .button)
+        settle(1)
+        if el("Închide modul de gătit", .button).exists {
+            fail("tapping the note's 'Salvează' opened cook mode (the bottom bar covers it)")
+            shot("recipe-note-save-opened-cook")
+            tap("Închide modul de gătit", .button)
+        }
         expect("Nota QA de test", .staticText, exact: false, "new note shows")
         shot("recipe-note-added")
-        tap("Șterge nota", .button, pick: .highest)
+        tap("Șterge nota", .button, pick: .highest, optional: true)
         expectGone("Nota QA de test", .staticText, exact: false, timeout: 3, "note deleted")
 
-        // Favorite (r1 is a favourite)
-        app.swipeDown()
+        // Favorite (r1 is a favourite). Start again so a stuck step above does not hide these.
+        openRecipe("Ciorbă de perișoare")
         tap("Scoate din favorite", .button)
         check(toast(containing: "Scoasă din favorite"), "toast 'Scoasă din favorite'")
         expect("Pune la favorite", .button, "heart switches to 'Pune la favorite'")
@@ -211,7 +227,7 @@ final class RecipesQATests: QABase {
         tap("Ingrediente", .any, exact: false)
         settle(1)
         shot("cook-ingredients")
-        expect("Toată rețeta", .any, exact: false)
+        expect("TOATĂ REȚETA", .any, exact: false)
         swipeDownToClose()
         tap("Pasul anterior", .any)
         expect("2 din 6", .staticText, exact: false, "previous step works")
@@ -271,14 +287,20 @@ final class RecipesQATests: QABase {
             tap("Mută în altă zi", .button, exact: false)
             shot("week-move-menu")
             dismissMenu()
+            launch(area: "recipes", tab: "week")
             tap("Opțiuni pentru Suc de portocale", .button, exact: false)
+            shot("week-entry-menu-2")
+            dumpTree("week-entry-menu")
             tap("Scoate din ziua asta", .button, exact: false)
             settle(1)
             shot("week-removed")
+            check(!el("Suc de portocale", .staticText).exists, "Suc de portocale removed from the day")
         }
 
+        launch(area: "recipes", tab: "week")
         tap("Lista de cumpărături", .button)
         shot("week-list-menu")
+        dumpTree("week-list-menu")
         tap("Pune în listă ce gătești în 7 zile", .button, exact: false)
         check(toast(containing: "în listă"), "toast after putting the week on the list")
         shot("week-put-week-on-list")
@@ -324,7 +346,9 @@ final class RecipesQATests: QABase {
         settle()
         shot("list-empty-line")
 
-        tap("Detergent de vase", .any, exact: false)
+        hideKeyboard()
+        shot("list-keyboard-hidden")
+        tap("Detergent de vase", .button, exact: false)
         settle(1)
         shot("list-ticked")
         expect("ÎN COȘ · 3", .any, exact: false, "basket shows 3 after ticking one")
@@ -346,7 +370,7 @@ final class RecipesQATests: QABase {
         }
 
         // Basket
-        tap("ÎN COȘ", .any, exact: false)
+        tap("ÎN COȘ", .button, exact: false)
         shot("list-basket-open")
         tap("Golește coșul", .button, pick: .lowest)
         shot("list-empty-basket-confirm")
@@ -410,10 +434,11 @@ final class RecipesQATests: QABase {
             shot("recipes-view-switch")
             dumpTree("recipes-view-switch")
             for mode in ["Listă", "Revistă", "Categorii", "Grilă"] {
-                if tap("Vizualizare: \(mode)", .button, optional: true) || tap(mode, .button, pick: .highest) {
+                // Scrolling would close the menu: look without scrolling.
+                if tap("Vizualizare: \(mode)", .button, optional: true, scroll: false) || tap(mode, .button, scroll: false, pick: .highest) {
                     settle(1)
                     shot("recipes-view-\(mode)")
-                    tap("Vizualizare", .button, exact: false, optional: true)
+                    tap("Vizualizare", .button, exact: false, optional: true, scroll: false)
                 }
             }
         }
@@ -468,11 +493,18 @@ final class RecipesQATests: QABase {
         if tap("Pași", .button, pick: .highest) {
             shot("editor-steps-tab")
             dumpTree("editor-steps")
-            enter("Bate ouăle 2 minute.", into: "Ce faci la acest pas?")
             tap("Adaugă un pas", .any, exact: false)
             settle()
-            let steps = app.textFields.matching(NSPredicate(format: "placeholderValue == %@", "Ce faci la acest pas?"))
-            log("step fields after 'Adaugă un pas': \(steps.count)")
+            dumpTree("editor-steps-one")
+            let first = app.textViews.firstMatch.exists ? app.textViews.firstMatch : app.textFields.firstMatch
+            if check(first.waitForExistence(timeout: 2), "a step field after 'Adaugă un pas'") {
+                first.tap(); first.typeText("Bate ouăle 2 minute.")
+            }
+            hideKeyboard()
+            tap("Adaugă un pas", .any, exact: false)
+            settle()
+            let steps = app.textViews.count > 0 ? app.textViews : app.textFields
+            log("step fields after the second 'Adaugă un pas': \(steps.count)")
             let last = steps.element(boundBy: max(0, steps.count - 1))
             if last.exists { last.tap(); last.typeText("Coace 5 minute la foc mic.") }
             shot("editor-steps-typed")

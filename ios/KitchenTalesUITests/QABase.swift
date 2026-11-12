@@ -30,7 +30,7 @@ class QABase: XCTestCase {
 
     /// Starts the app signed in with the made-up demo account (debug builds only).
     func launch(area: String? = nil, tab: String? = nil, screen: String? = nil, demo: Bool = true,
-                extra: [String] = [], file: StaticString = #filePath, line: UInt = #line) {
+                kid: String = "none", extra: [String] = [], file: StaticString = #filePath, line: UInt = #line) {
         continueAfterFailure = true
         app = XCUIApplication()
         var args: [String] = []
@@ -40,7 +40,7 @@ class QABase: XCTestCase {
         if let screen { args += ["-screen", screen] }
         // Kid mode is saved on the phone: a flow that stopped half-way must not leave the next
         // one in kid mode. (Values passed this way only win for this launch.)
-        args += ["-kt-kid", "none"]
+        args += ["-kt-kid", kid]
         args += extra
         app.launchArguments = args
         app.launch()
@@ -216,10 +216,23 @@ class QABase: XCTestCase {
         }
         _ = el(label, type, exact: exact).waitForExistence(timeout: timeout)
         target = find()
+        // The keyboard (and the tab bar riding on it) covers most of the screen: put it away first.
+        if (target == nil || !(target!.isHittable)) && keyboardShown {
+            hideKeyboard()
+            target = find()
+        }
         if scroll {
             var tries = 0
             while (target == nil || !(target!.isHittable)) && tries < 4 {
                 app.swipeUp(velocity: .slow)
+                settle(0.5)
+                target = find()
+                tries += 1
+            }
+            // Not further down: it may be above (a header scrolled away).
+            tries = 0
+            while (target == nil || !(target!.isHittable)) && tries < 3 {
+                app.swipeDown(velocity: .slow)
                 settle(0.5)
                 target = find()
                 tries += 1
@@ -242,6 +255,30 @@ class QABase: XCTestCase {
     }
 
     enum Pick { case first, lowest, highest }
+
+    var keyboardShown: Bool { app.keyboards.firstMatch.exists }
+
+    /// Puts the keyboard away: its Done / Return key for a one-line field, else a tap on the
+    /// screen's title area, else a drag down on the content.
+    func hideKeyboard() {
+        guard keyboardShown else { return }
+        let kb = app.keyboards.firstMatch
+        let multiLine = app.textViews.allElementsBoundByIndex.contains { ($0.value(forKey: "hasKeyboardFocus") as? Bool) == true }
+        if !multiLine {
+            for key in ["Done", "done", "Gata", "Return", "return", "Go", "Search"] {
+                let b = kb.buttons[key]
+                if b.exists && b.isHittable { b.tap(); settle(0.6); if !keyboardShown { log("keyboard hidden with '\(key)'"); return } }
+            }
+        }
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.13)).tap()
+        settle(0.6)
+        if !keyboardShown { log("keyboard hidden by tapping the title area"); return }
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
+            .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.62)))
+        settle(0.6)
+        if keyboardShown { observe("the keyboard cannot be put away on this screen (no Done key, tap and drag do nothing)") }
+        else { log("keyboard hidden by dragging the content down") }
+    }
 
     /// A tab of the app's own tab bar (the lowest button with that label).
     @discardableResult

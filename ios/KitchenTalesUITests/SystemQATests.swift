@@ -109,8 +109,9 @@ final class SystemQATests: QABase {
     /// Home button and back: the open recipe and the player state are kept.
     func testX04_BackgroundAndBack() {
         launch(area: "stories", tab: "library")
-        tap("Povești Disney", .any, exact: false)
-        tap("Aladdin", .any, exact: false)
+        let field = app.searchFields.firstMatch
+        if field.waitForExistence(timeout: 3) { field.tap(); field.typeText("Aladd"); settle(1) }
+        tap("Aladdin", .any, exact: false, pick: .lowest)
         settle(1.5)
         shot("before-background")
         XCUIDevice.shared.press(.home)
@@ -136,7 +137,7 @@ final class SystemQATests: QABase {
 
     /// The main screens with the biggest accessibility text (Dynamic Type AX3).
     func testX05_LargeText() {
-        let big = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"]
+        let big = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         let screens: [(String, String, String?, String)] = [
             ("recipes", "home", nil, "home"),
             ("recipes", "home", "recipe", "recipe"),
@@ -186,6 +187,38 @@ final class SystemQATests: QABase {
         }
         launch(demo: false)
         shot("key-login")
+    }
+
+    /// Kid mode whose time runs out while the child is on the player page: the story must stop
+    /// and the "Gata pentru azi" lock must show, and Play must not start it again.
+    func testX08_KidTimeRunsOutInPlayer() {
+        // Kid mode saved on the phone, ending in 40 s (KidMode.State as JSON, passed as plist data).
+        let ends = Date().addingTimeInterval(40).timeIntervalSinceReferenceDate
+        let json = "{\"active\":true,\"endsAt\":\(ends),\"total\":60,\"locked\":false,\"wrong\":0}"
+        let hex = json.utf8.map { String(format: "%02x", $0) }.joined()
+        launch(area: "stories", tab: "library", kid: "<\(hex)>")
+        shot("kid-start")
+        check(el("Surpriză", .button, exact: false).exists, "kid mode is on from the saved state")
+        tap("Povești de seară", .any, exact: false)
+        tap("Steaua căzătoare", .any, exact: false)
+        settle(1)
+        tap("Pornește", .button, optional: true)
+        shot("kid-player")
+        settle(45)
+        shot("kid-time-up-in-player")
+        log("after the time ran out: " + screenTexts(limit: 15))
+        check(el("Gata pentru azi", .staticText).exists, "the 'Gata pentru azi' lock shows when time runs out while the player page is open")
+        let play = el("Pornește", .button)
+        if play.exists && play.isHittable {
+            play.tap()
+            settle(1)
+            shot("kid-play-after-time-up")
+            check(!el("Pauză", .button).exists, "Play does not start a story again after the kid time ran out")
+        }
+        swipeDownToClose()
+        settle(1)
+        shot("kid-after-closing-player")
+        check(el("Gata pentru azi", .staticText).exists, "lock shows after closing the player")
     }
 
     /// Small checks of launch speed.

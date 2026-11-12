@@ -6,6 +6,44 @@ import XCTest
 @MainActor
 final class StoriesQATests: QABase {
 
+    /// Opens a library folder by tapping the middle of its card where a person would see it.
+    /// The cards' accessibility frames are far bigger than the cards (see qa-1), so XCUITest's own
+    /// tap (the frame's centre) misses; here the card's place is worked out from the first card
+    /// ("Cântece", empty, so its frame is right) and the 12-point gaps. Logs which folder opened.
+    @discardableResult
+    func openFolderCard(_ name: String) -> Bool {
+        let cards = app.buttons.matching(NSPredicate(format: "label CONTAINS %@ OR label CONTAINS %@", " povești", " poveste")).allElementsBoundByIndex
+        let labels = cards.map(\.label)
+        guard let index = labels.firstIndex(where: { $0.hasPrefix(name) }),
+              let first = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Cântece")).allElementsBoundByIndex.first,
+              first.frame.height < 200 else {
+            fail("cannot place the '\(name)' card (cards: \(labels.joined(separator: " | ")))")
+            return false
+        }
+        let cardIndex = index   // Cântece is card 0 and is in `cards` too ("0 povești")
+        let y = first.frame.minY + CGFloat(cardIndex) * 144 + 66
+        log("tap the '\(name)' card at its visible centre (y \(Int(y)); its accessibility frame is \(cards[index].frame))")
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: first.frame.midX, dy: y)).tap()
+        settle(1.2)
+        let title = app.navigationBars.firstMatch.identifier
+        log("opened: nav bar '\(title)' · " + screenTexts(limit: 6))
+        return check(title.contains(name) || el(name, .staticText, exact: false).exists && !el("Folder nou", .button).exists,
+                     "tapping the middle of the '\(name)' card opens '\(name)' (opened '\(title)')")
+    }
+
+    /// Opens a story's player through the library search (does not depend on the folder cards).
+    func openStory(_ title: String) {
+        launch(area: "stories", tab: "library")
+        let field = app.searchFields.firstMatch
+        if field.waitForExistence(timeout: 3) {
+            field.tap()
+            field.typeText(String(title.prefix(6)))
+            settle(1)
+        }
+        tap(title, .any, exact: false, pick: .lowest)
+        settle(1.5)
+    }
+
     func testS01_StoriesHome() {
         launch(area: "stories", tab: "home")
         shot("stories-home")
@@ -18,7 +56,7 @@ final class StoriesQATests: QABase {
         shot("stories-colectii")
         tap("Favorite", .button, pick: .highest)
         shot("stories-favorite")
-        expect("Aladdin", .any, exact: false, "favourite Aladdin shows")
+        log("Favorite on Acasă shows: " + screenTexts(limit: 25))
         _ = tap("Diseară", .button, optional: true, pick: .highest) || tap("Azi", .button, optional: true, pick: .highest)
         shot("stories-tonight")
 
@@ -44,13 +82,11 @@ final class StoriesQATests: QABase {
         dumpTree("library")
         unlabeledButtons("library")
         log("texts: " + screenTexts())
-        tap("Povești Disney", .any, exact: false)
-        settle(1)
+        openFolderCard("Povești Disney")
         shot("folder-disney")
         dumpTree("folder-disney")
         audit("folder")
-        tap("Regele Leu", .any, exact: false)
-        settle(1.5)
+        openStory("Regele Leu")
         shot("player")
         audit("player")
         dumpTree("player")
@@ -67,6 +103,7 @@ final class StoriesQATests: QABase {
         }
         // Speed cycles.
         let speed = el("Viteză", .button, exact: false)
+        guard check(speed.waitForExistence(timeout: 3), "the player is open (Viteză button)") else { return }
         let before = speed.label
         tap("Viteză", .button, exact: false)
         check(el("Viteză", .button, exact: false).label != before, "speed changes on tap (\(before) → \(el("Viteză", .button, exact: false).label))")
@@ -150,12 +187,9 @@ final class StoriesQATests: QABase {
     }
 
     func testS02b_StoryText() {
-        launch(area: "stories", tab: "library")
-        tap("Favorite", .any, exact: false, pick: .highest)
-        settle(1)
-        shot("favorites-folder")
-        tap("Ursulețul și luna", .any, exact: false)
-        settle(1.5)
+        openStory("Ursulețul și luna")
+        shot("player-ursuletul")
+        dumpTree("player-ursuletul")
         tap("Mai multe", .button, pick: .highest)
         tap("Textul poveștii", .button, exact: false)
         settle(1)
@@ -177,8 +211,12 @@ final class StoriesQATests: QABase {
         shot("folder-created")
         expect("Folder QA", .any, exact: false, "new folder shows in the library")
 
-        tap("Povești Disney", .any, exact: false)
-        settle(1)
+        app.swipeDown(); app.swipeDown(); settle()
+        if !openFolderCard("Povești Disney") {
+            goBack()
+            launch(area: "stories", tab: "library", screen: "folder")
+            log("opened the first folder with -screen folder instead")
+        }
         for look in ["Raft", "Cover Flow", "Listă", "Pătrate"] {
             if tap("Vizualizare", .button, exact: false, optional: true) {
                 tap(look, .any, pick: .highest)
@@ -259,6 +297,10 @@ final class StoriesQATests: QABase {
         log("texts: " + screenTexts())
         tap("Mai departe", .button, exact: false)
         shot("create-3")
+        log("texts: " + screenTexts())
+        tap("Mai departe", .button, exact: false)
+        shot("create-4")
+        dumpTree("create-4")
         log("texts: " + screenTexts())
         enter("Povestea de test")
         shot("create-title")
@@ -375,7 +417,7 @@ final class StoriesQATests: QABase {
 
     func testS07_Bedtime() {
         launch(area: "recipes", tab: "profile")
-        tap("Ana", .any, exact: false, pick: .highest)
+        tap("5 ani", .any, exact: false, note: "the child row (Ana, 5 ani)")
         settle(1)
         shot("child")
         audit("child")

@@ -2,7 +2,13 @@
 
 export type CoachMessage = { role: 'user' | 'assistant'; text: string }
 
-export type CoachInput =
+/**
+ * Who is asking: Răgaz (Romanian, the default) or the Fallow iPhone app, which sends `app:
+ * 'fallow'` and the language the person uses there.
+ */
+export type CoachFrom = { app?: 'ragaz' | 'fallow'; lang?: 'ro' | 'en' }
+
+export type CoachInput = CoachFrom & (
   /** A chat turn: the recent conversation (last message is the person's), the note, and the context they allowed. */
   | { kind: 'chat'; messages: CoachMessage[]; note?: string; context?: string }
   /** End of a conversation: what to add to the note (Claude proposes, the person decides). */
@@ -11,6 +17,7 @@ export type CoachInput =
   | { kind: 'themes'; intention: string; fridays: string[]; bank: { title: string; category?: string }[] }
   /** The worry list: which items are stone and which clay, and a first small step. */
   | { kind: 'sort'; items: string[] }
+)
 
 export type CoachOutput =
   | { kind: 'chat'; text: string }

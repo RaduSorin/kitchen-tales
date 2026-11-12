@@ -176,7 +176,7 @@ struct RecipesHomeView: View {
                 Button("Încearcă din nou") { Task { await store.refresh() } }.buttonStyle(.ktPrimary)
             case .loaded:
                 EmptyStateView(symbol: "fork.knife", title: "Nicio rețetă încă",
-                               message: "Adaugă prima rețetă din aplicația web și apare aici.")
+                               message: "Adaugă prima rețetă din Rețete, cu +: o scrii, o iei dintr-un link sau o faci cu AI.")
             }
         }
         .frame(maxWidth: .infinity)

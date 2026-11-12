@@ -25,7 +25,7 @@ struct LibraryView: View {
                         results
                     } else if store.stories.isEmpty && store.folderRows.isEmpty {
                         EmptyStateView(symbol: "books.vertical", title: store.phase == .loading ? "Se încarcă…" : "Biblioteca e goală",
-                                       message: "Poveștile adăugate în aplicația web apar aici.")
+                                       message: "Poveștile pe care le adaugi din Adaugă apar aici.")
                             .padding(.top, 60)
                     } else {
                         folderList

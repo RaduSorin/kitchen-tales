@@ -16,7 +16,13 @@ final class KidMode {
         var waitUntil: Date?
     }
 
-    private var state: State { didSet { persist() } }
+    private var state: State {
+        didSet {
+            persist()
+            // Play (the player page, the lock screen, headphones) must not start a story while locked.
+            StoryPlayer.shared.lockedByKidMode = locked
+        }
+    }
     private var timer: Task<Void, Never>?
     private let defaults: UserDefaults
     private static let key = "kt-kid"
@@ -35,6 +41,7 @@ final class KidMode {
         } else {
             state = State()
         }
+        StoryPlayer.shared.lockedByKidMode = locked
         schedule()
     }
 
@@ -98,6 +105,8 @@ final class KidMode {
             guard !Task.isCancelled, let self else { return }
             self.state.locked = true
             StoryPlayer.shared.pause()
+            // The lock is a full-screen page: it cannot show over the open player page.
+            StoryPlayer.shared.showsPlayer = false
         }
     }
 

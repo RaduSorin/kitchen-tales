@@ -43,6 +43,8 @@ struct RecipeTests {
         #expect(RecipeText.matches("2 cepe, 1 morcov", query: "ceapa"))
         #expect(RecipeText.matches("Ciorbă de perișoare", query: "ciorba"))
         #expect(!RecipeText.matches("Suc de portocale", query: "carne"))
+        #expect(!RecipeText.matches("Dragonul care strănuta", query: "cartofi"))
+        #expect(RecipeText.matches("Cartofi țărănești", query: "cart"))
         #expect(RecipeText.matches("orice", query: "  "))
     }
 

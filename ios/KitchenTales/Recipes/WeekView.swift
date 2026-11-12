@@ -324,7 +324,8 @@ private struct PlannedCard: View {
             }
         } label: { Label("Porții: \(store.servings(of: entry).map(String.init) ?? "–")", systemImage: "person.2") }
         Menu {
-            ForEach(PlanDayMenu<EmptyView>.days(), id: \.self) { day in
+            // Not the day it is already on.
+            ForEach(PlanDayMenu<EmptyView>.days().filter { RecipeText.dayKey($0) != entry.day }, id: \.self) { day in
                 Button(PlanDayMenu<EmptyView>.label(day)) {
                     Task {
                         if await store.movePlan(entry.id, to: day) { kitchen.say("Mutată: \(PlanDayMenu<EmptyView>.label(day).lowercased())") }

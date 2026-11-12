@@ -168,7 +168,13 @@ final class Bedtime {
 
     // MARK: Light
 
-    @ObservationIgnored private var savedBrightness: CGFloat?
+    /// The brightness before the night screen dimmed it. Kept on the phone too: if the app is
+    /// closed while dim, the next launch puts the light back (iOS keeps an app's brightness).
+    private var savedBrightness: CGFloat? {
+        get { defaults.object(forKey: Self.brightnessKey) as? Double }
+        set { if let newValue { defaults.set(Double(newValue), forKey: Self.brightnessKey) } else { defaults.removeObject(forKey: Self.brightnessKey) } }
+    }
+    private static let brightnessKey = "kt-bedtime-brightness"
 
     /// The screen goes dim while the night screen and the stories play, and back after.
     func dim(_ on: Bool, screen: UIScreen? = nil) {
@@ -180,6 +186,11 @@ final class Bedtime {
             screen.brightness = saved
             savedBrightness = nil
         }
+    }
+
+    /// On launch: the app was closed while the night screen had dimmed the phone.
+    func restoreBrightnessIfLeftDim() {
+        if savedBrightness != nil, !showsNight { dim(false) }
     }
 }
 

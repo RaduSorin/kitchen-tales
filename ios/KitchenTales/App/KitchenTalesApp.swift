@@ -15,6 +15,9 @@ struct KitchenTalesApp: App {
                 .environment(auth)
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
+                // The largest accessibility sizes (AX3–AX5) cut most titles to "C…" on the cards
+                // and buttons; AX2 is still very big text and the layouts hold.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .environment(\.locale, Locale(identifier: "ro_RO"))
                 .onOpenURL { url in
                     if let command = AppCommands.command(for: url) { AppCommands.shared.pending = command }

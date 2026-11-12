@@ -74,6 +74,7 @@ private struct SignedInRoot: View {
         }
         .onChange(of: kid.active) { if !kid.active { stories.kidFolders = [] } }
         .task { await badges.start() }
+        .onAppear { Bedtime.shared.restoreBrightnessIfLeftDim() }
         // Siri, Shortcuts and Spotlight.
         .onAppear { commands.recipes = recipes }
         .onChange(of: commands.pending, initial: true) { Task { await runCommand() } }

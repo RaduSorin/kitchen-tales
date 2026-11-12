@@ -88,3 +88,4 @@ shot 11a-add -demo YES -area stories -tab add
 shot 11b-add-create -demo YES -area stories -tab add -screen add-create
 shot 11c-add-record -demo YES -area stories -tab add -screen add-record
 shot 11d-add-finish -demo YES -area stories -tab add -screen add-finish
+shot 11e-add-upload -demo YES -area stories -tab add -screen add-upload

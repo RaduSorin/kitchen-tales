@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// "Creează o poveste": one question per screen (for whom, about what, how long, its name), then
-/// the app writes and reads it; or "Am deja textul" to have a text read.
+/// "Creează o poveste", like the web: one question per screen (for whom, only when the Profile
+/// doesn't say; about what; how long; its name), then the app writes and reads it; or "Am deja
+/// textul" to have a text read.
 struct CreateStoryFlow: View {
     enum Step: Int, CaseIterable { case who, topic, length, title }
 
@@ -36,7 +37,8 @@ struct CreateStoryFlow: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
-                        Text(question).font(.custom(AppFont.storyDisplay, size: 30, relativeTo: .largeTitle))
+                        StoryQuestion(kicker: "Poveste nouă", title: question,
+                                      text: step == .who ? "Completează în Profil și nu te mai întrebăm." : nil)
                         stepContent
                         if let error {
                             Text(error).font(.ktFootnote).foregroundStyle(Theme.Night.danger)
@@ -46,10 +48,24 @@ struct CreateStoryFlow: View {
                     .padding(.top, 8)
                 }
                 .scrollDismissesKeyboard(.interactively)
-                Button(action: next) { Text(step == .title ? "Creează povestea" : "Mai departe") }
+                VStack(spacing: 8) {
+                    Button(action: next) {
+                        HStack(spacing: 6) {
+                            Text(step == .title ? "Creează povestea" : "Mai departe")
+                            if step != .title { Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)) }
+                        }
+                    }
                     .buttonStyle(.ktPrimaryWide)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 12)
+                    if step == .topic {
+                        Button("Am deja textul poveștii ›") { ownText = "" }
+                            .font(.ktButton).foregroundStyle(Theme.accent)
+                    } else if step != .title {
+                        Text("Urmează: \(step == .who ? "tema" : "titlul (opțional)")")
+                            .font(.ktCaption).foregroundStyle(Theme.Night.muted)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 12)
             }
         }
         .foregroundStyle(Theme.text)
@@ -57,14 +73,11 @@ struct CreateStoryFlow: View {
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                CloseButton(symbol: step == .who && ownText == nil ? "xmark" : "chevron.left", action: back)
+                CloseButton(symbol: "chevron.left", action: back)
                     .disabled(generating)
             }
             ToolbarItem(placement: .principal) {
-                if ownText == nil && !generating { StepDots(count: Step.allCases.count, current: step.rawValue) }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                if !generating { VoicePill(name: family.narratorName) }
+                if ownText == nil && !generating { StepDots(count: steps.count, current: steps.firstIndex(of: step) ?? 0) }
             }
         }
         .task {
@@ -74,6 +87,8 @@ struct CreateStoryFlow: View {
             if brief.age == nil, let year = family.childBirthYear {
                 brief.age = Calendar.current.component(.year, from: Date()) - year
             }
+            // The Profile already says who the story is for: start with the topic.
+            if step == .who, !needsWho { step = .topic }
         }
     }
 
@@ -95,19 +110,29 @@ struct CreateStoryFlow: View {
         }
     }
 
+    /// Only what the Profile doesn't say (the web's needsWho).
+    private var needsWho: Bool { family.childName.isEmpty || family.childBirthYear == nil || family.childGender == nil }
+    private var steps: [Step] { needsWho ? Step.allCases : [.topic, .length, .title] }
+
     private var whoStep: some View {
         VStack(alignment: .leading, spacing: 22) {
-            NightField(label: "Eroul poveștii", text: $brief.childName, placeholder: "Ana")
-            VStack(alignment: .leading, spacing: 8) {
-                FieldLabel("Este")
-                ChipRow(items: [(id: "girl", label: "fetiță"), (id: "boy", label: "băiețel")], selected: brief.gender) { brief.gender = brief.gender == $0 ? nil : $0 }
+            if family.childName.isEmpty {
+                NightField(label: "Eroul poveștii", text: $brief.childName, placeholder: "Ana")
             }
+            if family.childGender == nil {
+                VStack(alignment: .leading, spacing: 8) {
+                    FieldLabel("Este")
+                    ChipRow(items: [(id: "girl", label: "fetiță"), (id: "boy", label: "băiețel")], selected: brief.gender) { brief.gender = brief.gender == $0 ? nil : $0 }
+                }
+            }
+            if family.childBirthYear == nil {
             VStack(alignment: .leading, spacing: 8) {
-                FieldLabel("Are")
+                FieldLabel("Vârsta")
                 ChipRow(items: Self.ages.map { (id: "\($0)", label: "\($0) ani") }, selected: brief.age.map { String($0) }) { value in
                     let age = Int(value)
                     brief.age = brief.age == age ? nil : age
                 }
+            }
             }
         }
     }
@@ -118,16 +143,6 @@ struct CreateStoryFlow: View {
                 if let i = brief.topics.firstIndex(of: topic) { brief.topics.remove(at: i) } else { brief.topics.append(topic) }
             }
             NightField(label: "Altceva?", text: $brief.prompt, placeholder: "Ex.: prima zi de grădiniță")
-            Button { ownText = "" } label: {
-                HStack {
-                    Text("Am deja textul poveștii")
-                    Spacer()
-                    Image(systemName: "chevron.right").foregroundStyle(Theme.Night.muted)
-                }
-                .padding(14)
-                .background(Theme.Night.surface, in: RoundedRectangle(cornerRadius: 14))
-            }
-            .buttonStyle(.plain)
         }
     }
 
@@ -155,12 +170,23 @@ struct CreateStoryFlow: View {
     }
 
     private var titleStep: some View {
-        NightField(label: "Titlul", text: $title, placeholder: brief.topics.first.map { "O poveste despre \($0)" } ?? "Ursulețul curajos")
+        VStack(alignment: .leading, spacing: 16) {
+            NightField(label: "Titlul", text: $title, placeholder: brief.topics.first.map { "O poveste despre \($0)" } ?? "Ursulețul curajos")
+            voiceLine
+        }
+    }
+
+    /// "Citită de Carmen" (the voice is chosen in Profil › Vocea poveștilor).
+    private var voiceLine: some View {
+        let name = family.narratorName.isEmpty ? "Carmen" : String(family.narratorName.split(separator: " - ").first ?? "")
+        return (Text("Citită de ").foregroundStyle(Theme.Night.muted) + Text(name).bold().foregroundStyle(Theme.text))
+            .font(.ktCallout)
     }
 
     private var ownTextStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Am deja textul").font(.custom(AppFont.storyDisplay, size: 30, relativeTo: .largeTitle))
+            StoryQuestion(kicker: brief.childName.isEmpty ? "Poveste nouă" : "Poveste nouă pentru \(brief.childName)",
+                          title: "Am deja textul", text: "Lipește povestea, iar aplicația o citește cu voce tare.")
             TextEditor(text: Binding(get: { ownText ?? "" }, set: { ownText = $0 }))
                 .scrollContentBackground(.hidden)
                 .font(.ktBody)
@@ -168,6 +194,7 @@ struct CreateStoryFlow: View {
                 .frame(minHeight: 220)
                 .background(Theme.Night.surface2, in: RoundedRectangle(cornerRadius: 14))
             NightField(label: "Titlul (opțional)", text: $title, placeholder: "Vulpița Fifi")
+            voiceLine
             if let error {
                 Text(error).font(.ktFootnote).foregroundStyle(Theme.Night.danger)
             }
@@ -184,12 +211,15 @@ struct CreateStoryFlow: View {
 
     private func back() {
         if ownText != nil { ownText = nil; return }
-        if let previous = Step(rawValue: step.rawValue - 1) { withAnimation(.snappy) { step = previous } } else { onClose() }
+        let i = steps.firstIndex(of: step) ?? 0
+        if i > 0 { withAnimation(.snappy) { step = steps[i - 1] } } else { onClose() }
     }
 
     private func next() {
         Haptics.tap()
-        if let following = Step(rawValue: step.rawValue + 1) {
+        let i = steps.firstIndex(of: step) ?? 0
+        if i + 1 < steps.count {
+            let following = steps[i + 1]
             withAnimation(.snappy) { step = following }
         } else {
             Task { await generate(useOwnText: false) }
@@ -266,20 +296,25 @@ private struct GeneratingView: View {
     }
 }
 
-/// The narrator voice, as a pill in the corner (set in the web Profile for now).
-private struct VoicePill: View {
-    let name: String
+/// The kicker, the big question and a line under it (the web's cs-q).
+struct StoryQuestion: View {
+    let kicker: String
+    let title: String
+    var text: String?
+
     var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "headphones")
-            Text(name.isEmpty ? "Carmen" : String(name.split(separator: " - ").first ?? ""))
+        VStack(alignment: .leading, spacing: 8) {
+            Text(kicker.uppercased(with: Locale(identifier: "ro")))
+                .font(.custom(AppFont.bodyBold, size: 12, relativeTo: .caption)).tracking(1.4)
+                .foregroundStyle(Theme.accent)
+            Text(title)
+                .font(.custom(AppFont.storyDisplay, size: 30, relativeTo: .largeTitle))
+                .foregroundStyle(Theme.text)
+                .fixedSize(horizontal: false, vertical: true)
+            if let text {
+                Text(text).font(.ktCallout).foregroundStyle(Theme.Night.muted).fixedSize(horizontal: false, vertical: true)
+            }
         }
-            .font(.custom(AppFont.bodySemibold, size: 13, relativeTo: .footnote))
-            .foregroundStyle(Theme.text)
-            .padding(.horizontal, 12)
-            .frame(height: 34)
-            .background(.ultraThinMaterial, in: Capsule())
-            .accessibilityLabel("Vocea naratorului: \(name.isEmpty ? "Carmen" : name)")
     }
 }
 

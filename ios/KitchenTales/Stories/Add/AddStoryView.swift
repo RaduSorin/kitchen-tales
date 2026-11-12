@@ -18,7 +18,7 @@ enum AddMode: String, Identifiable, CaseIterable {
         switch self {
         case .create: "Spui eroul și tema, aplicația o scrie și o citește"
         case .record: "Înregistrează-ți vocea citind o carte"
-        case .upload: "MP3 sau M4A din Fișiere, iCloud sau AirDrop"
+        case .upload: "MP3 sau M4A de pe telefon, iCloud sau AirDrop"
         }
     }
 
@@ -75,7 +75,8 @@ final class StoryDraft {
     }
 }
 
-/// The Adaugă tab: three large cards.
+/// The Adaugă tab, like the web: "MOD PĂRINTE", "Poveste nouă", and three plain rows with the
+/// small gold line drawings.
 struct AddStoryView: View {
     var folder: String?
     var onAdded: () -> Void = {}
@@ -86,21 +87,33 @@ struct AddStoryView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("Cum vrei să adaugi povestea de diseară?")
-                        .font(.ktCallout)
-                        .foregroundStyle(Theme.Night.muted)
-                        .padding(.bottom, 10)
-                    ForEach(AddMode.allCases) { item in
-                        Button { mode = item } label: { AddOptionCard(mode: item) }
+                VStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("MOD PĂRINTE")
+                            .font(.custom(AppFont.bodyBold, size: 11, relativeTo: .caption2)).tracking(1.6)
+                            .foregroundStyle(Theme.accent)
+                        Text("Poveste nouă")
+                            .font(.custom(AppFont.storyDisplay, size: 32, relativeTo: .largeTitle))
+                            .foregroundStyle(Theme.text)
+                            .accessibilityAddTraits(.isHeader)
+                        Text("Apare pe raftul copilului imediat ce o salvezi.")
+                            .font(.ktCallout)
+                            .foregroundStyle(Theme.Night.muted)
+                            .padding(.top, 4)
+                    }
+                    .padding(.top, 8)
+                    .padding(.bottom, 18)
+                    ForEach(Array(AddMode.allCases.enumerated()), id: \.element) { i, item in
+                        if i > 0 { Rectangle().fill(.white.opacity(0.08)).frame(height: 0.5) }
+                        Button { mode = item } label: { AddOptionRow(mode: item) }
                             .buttonStyle(PressableStyle())
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 20)
                 .padding(.bottom, 24)
             }
             .ktNightBackground()
-            .navigationTitle("Poveste nouă")
+            .toolbar(.hidden, for: .navigationBar)
         }
         .fullScreenCover(item: $mode) { item in
             AddFlow(mode: item, folder: folder, onAdded: onAdded)
@@ -108,36 +121,30 @@ struct AddStoryView: View {
     }
 }
 
-struct AddOptionCard: View {
+/// One way to add: the drawing, the title in serif and what it does, a chevron.
+struct AddOptionRow: View {
     let mode: AddMode
 
     var body: some View {
-        let c = mode.colors
         HStack(spacing: 16) {
-            Text(mode.emoji)
-                .font(.system(size: 38))
-                .frame(width: 74, height: 74)
-                .background(Circle().fill(RadialGradient(colors: [Color(hex: c.glow), Color(hex: c.rim)], center: .center,
-                                                         startRadius: 4, endRadius: 40)))
-            VStack(alignment: .leading, spacing: 4) {
+            AddArt(mode: mode).frame(width: 58, height: 58)
+            VStack(alignment: .leading, spacing: 3) {
                 Text(mode.title)
-                    .font(.custom(AppFont.storyDisplay, size: 22, relativeTo: .title3))
+                    .font(.custom(AppFont.storyDisplay, size: 21, relativeTo: .title3))
                     .foregroundStyle(Theme.text)
                 Text(mode.detail)
                     .font(.custom(AppFont.body, size: 14, relativeTo: .subheadline))
-                    .foregroundStyle(Theme.text.opacity(0.78))
+                    .foregroundStyle(Theme.Night.muted)
                     .multilineTextAlignment(.leading)
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Theme.text.opacity(0.6))
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Theme.text.opacity(0.45))
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 150, alignment: .leading)
-        .background(LinearGradient(colors: [Color(hex: c.top), Color(hex: c.bottom)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 22))
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 }
 
@@ -185,31 +192,41 @@ struct AddFlow: View {
         }
     }
 
+    /// The web's "Încarcă un fișier": the question, then a dashed box to pick the file.
     private var uploadStart: some View {
-        VStack(spacing: 18) {
-            Spacer()
-            Text("📁").font(.system(size: 64))
-            Text("Adaugă o poveste de pe telefon")
-                .font(.custom(AppFont.storyDisplay, size: 28, relativeTo: .title))
-                .multilineTextAlignment(.center)
-            Text("Alege un fișier MP3 sau M4A din Fișiere, iCloud Drive sau ce ai primit pe AirDrop.")
-                .font(.ktCallout).foregroundStyle(Theme.Night.muted).multilineTextAlignment(.center)
+        VStack(alignment: .leading, spacing: 22) {
+            StoryQuestion(kicker: "Încarcă un fișier", title: "Adaugă o poveste de pe telefon", text: nil)
+            Button { picking = true } label: {
+                VStack(spacing: 8) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(Theme.Night.ink)
+                        .frame(width: 52, height: 52)
+                        .background(RoundedRectangle(cornerRadius: 16).fill(Color(hex: 0x74E0D0)))
+                    Text("Alege un fișier audio").font(.ktBodyEmphasis).foregroundStyle(Theme.text)
+                    Text("MP3, M4A sau WAV, din Fișiere, iCloud sau AirDrop")
+                        .font(.ktFootnote).foregroundStyle(Theme.Night.muted).multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 34).padding(.horizontal, 16)
+                .background(RoundedRectangle(cornerRadius: 24).fill(Theme.Night.surface))
+                .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(.white.opacity(0.18), style: StrokeStyle(lineWidth: 2, dash: [7, 5])))
+            }
+            .buttonStyle(PressableStyle())
             if let pickError {
                 Text(pickError).font(.ktFootnote).foregroundStyle(Theme.Night.danger)
             }
             Spacer()
-            Button { picking = true } label: { Text("Alege fișierul") }
-                .buttonStyle(.ktPrimaryWide)
         }
         .foregroundStyle(Theme.text)
-        .padding(.horizontal, 24)
-        .padding(.bottom, 20)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .ktNightBackground()
-        .toolbar { ToolbarItem(placement: .topBarLeading) { CloseButton { dismiss() } } }
-        .fileImporter(isPresented: $picking, allowedContentTypes: [.audio, .mp3, .mpeg4Audio]) { result in
+        .toolbar { ToolbarItem(placement: .topBarLeading) { CloseButton(symbol: "chevron.left") { dismiss() } } }
+        .fileImporter(isPresented: $picking, allowedContentTypes: [.audio, .mp3, .mpeg4Audio, .wav]) { result in
             Task { await picked(result) }
         }
-        .onAppear { if draft == nil, LaunchOptions.screen != "add-finish" { picking = true } }
     }
 
     private func picked(_ result: Result<URL, Error>) async {

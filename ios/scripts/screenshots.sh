@@ -41,6 +41,8 @@ shot 2c-cook -demo YES -tab home -screen cook
 shot 2c2-cook-ingredients -demo YES -tab home -screen cook-ingredients
 shot 2d-week -demo YES -tab week
 shot 2e-week-add -demo YES -tab week -screen week-add
+shot 2e2-week-plan -demo YES -tab week -screen plan-week
+shot 2e3-week-plan-result -demo YES -tab week -screen plan-week-result
 shot 2f-list -demo YES -tab list
 shot 2f2-list-recipes -demo YES -tab list -kt-shopping-by-recipe YES
 shot 2g-editor-new -demo YES -tab recipes -screen editor-new

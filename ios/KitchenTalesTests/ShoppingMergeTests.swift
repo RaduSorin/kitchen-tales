@@ -26,3 +26,13 @@ struct ShoppingMergeTests {
         #expect(rows.count == 2)
     }
 }
+
+struct PlanWeekTests {
+    @Test func whatIsAtHomeIsLeftOffTheList() {
+        let home = PlanPrefs.atHome("2 dovlecei, piept de pui, smântână")
+        #expect(home("1 dovlecel mare"))
+        #expect(home("500 g piept de pui"))
+        #expect(home("200 ml smântână"))
+        #expect(!home("1 kg cartofi"))
+    }
+}

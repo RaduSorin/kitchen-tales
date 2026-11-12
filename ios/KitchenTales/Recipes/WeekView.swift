@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// "Săptămâna mea" as on the web: one column per day, side by side, that you swipe through;
-/// each column scrolls on its own. Today is ringed in gold, past days are dimmed, "← Azi" brings
-/// today back, the month title jumps to another day and the cart puts the next 7 days on the list.
+/// "Săptămâna mea" as on the web: one column per day, three side by side from today, that you
+/// swipe through; each column scrolls on its own. Today is ringed in gold, past days are dimmed,
+/// "← Azi" brings today back, the month title jumps to another day, the cart menu puts the next
+/// 7 days on the list, and the gold ✦ proposes the week's dinners.
 struct WeekView: View {
     @Environment(RecipeStore.self) private var store
     @Environment(KitchenModel.self) private var kitchen
@@ -11,6 +12,7 @@ struct WeekView: View {
     @State private var adding: DayPick?
     @State private var picksDate = false
     @State private var jumpDate = Date()
+    @State private var planning = LaunchOptions.screen?.hasPrefix("plan-week") == true
 
     /// From a week back to eight weeks ahead.
     private let days: [Date] = {
@@ -18,9 +20,7 @@ struct WeekView: View {
         return (-7...56).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: today) }
     }()
 
-    private var startKey: String {
-        RecipeText.dayKey(Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date())
-    }
+    private var startKey: String { RecipeText.dayKey(Date()) }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -31,6 +31,7 @@ struct WeekView: View {
             .ktKitchenBackground()
             .toolbar(.hidden, for: .navigationBar)
             .overlay(alignment: .bottom) { todayPill }
+            .overlay(alignment: .bottomTrailing) { planButton }
             .recipeDestinations()
             .sheet(item: $adding) { pick in
                 PickRecipeSheet(day: pick.day)
@@ -38,6 +39,9 @@ struct WeekView: View {
                     .environment(kitchen)
             }
             .sheet(isPresented: $picksDate) { datePicker }
+            .fullScreenCover(isPresented: $planning) {
+                PlanWeekView(startStep: LaunchOptions.screen == "plan-week-result" ? 2 : 0)
+            }
         }
         .onAppear {
             if visible == nil { visible = startKey }
@@ -63,19 +67,47 @@ struct WeekView: View {
                 .accessibilityHint("Alege o zi din calendar")
             }
             Spacer()
-            Button { addWeekToList() } label: {
+            Menu {
+                Button { addWeekToList() } label: { Label("Pune în listă ce gătești în 7 zile", systemImage: "cart.badge.plus") }
+                Button { kitchen.tab = .list } label: { Label("Vezi lista de cumpărături", systemImage: "list.bullet") }
+                Button { planning = true } label: { Label("Propune cinele săptămânii", systemImage: "sparkles") }
+            } label: {
                 Image(systemName: "cart")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Theme.accent)
-                    .frame(width: 46, height: 46)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay(Circle().strokeBorder(.white.opacity(0.12)))
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(.black.opacity(0.22)))
             }
-            .accessibilityLabel("Pune în listă ce gătești în 7 zile")
+            .accessibilityLabel("Lista de cumpărături")
         }
         .padding(.horizontal, 20)
         .padding(.top, 8)
+        .padding(.bottom, 4)
+        .background(alignment: .top) {
+            // The web's gold-tinted head, fading into the page.
+            LinearGradient(colors: [Color(hex: 0x8A6A2E).opacity(0.75), Color(hex: 0x5A4421).opacity(0.35), .clear],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: 260)
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+        }
         .environment(\.colorScheme, .dark)
+    }
+
+    /// The gold ✦: "Propune cinele săptămânii".
+    private var planButton: some View {
+        Button { Haptics.tap(); planning = true } label: {
+            Image(systemName: "sparkles")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Theme.onAccent)
+                .frame(width: 58, height: 58)
+                .background(Circle().fill(Theme.accent))
+                .shadow(color: .black.opacity(0.35), radius: 12, y: 6)
+        }
+        .buttonStyle(PressableStyle())
+        .padding(.trailing, 18)
+        .padding(.bottom, 20)
+        .accessibilityLabel("Propune cinele săptămânii")
     }
 
     private var shownDate: Date {
@@ -94,7 +126,7 @@ struct WeekView: View {
 
     private var columns: some View {
         GeometryReader { geo in
-            let width = (geo.size.width / 2.5).rounded()
+            let width = (geo.size.width / 3).rounded(.down)
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 0) {
                     ForEach(days, id: \.self) { day in
@@ -112,7 +144,7 @@ struct WeekView: View {
     }
 
     @ViewBuilder private var todayPill: some View {
-        if let visible, visible != startKey, visible != RecipeText.dayKey(Date()) {
+        if let visible, visible != startKey {
             Button {
                 withAnimation(.snappy) { self.visible = startKey }
             } label: {
@@ -230,25 +262,43 @@ private struct PlannedCard: View {
     @Environment(KitchenModel.self) private var kitchen
 
     var body: some View {
-        Button(action: open) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: open) {
                 RecipePhoto(recipe: recipe)
                     .frame(height: 132)
                     .frame(maxWidth: .infinity)
-                Text(recipe.title)
-                    .font(.custom(AppFont.display, size: 16, relativeTo: .headline))
-                    .foregroundStyle(Theme.text)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
-                Text(detail)
-                    .font(.ktCaption)
-                    .foregroundStyle(entry.leftovers ? Theme.accent : Theme.muted)
-                    .lineLimit(1)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .opacity(past ? 0.55 : 1)
+            .buttonStyle(PressableStyle())
+            HStack(alignment: .top, spacing: 2) {
+                Button(action: open) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(recipe.title)
+                            .font(.custom(AppFont.display, size: 16, relativeTo: .headline))
+                            .foregroundStyle(Theme.text)
+                            .lineLimit(3)
+                            .multilineTextAlignment(.leading)
+                        Text(detail)
+                            .font(.ktCaption)
+                            .foregroundStyle(entry.leftovers ? Theme.accent : Theme.muted)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                // The web's ⋮ on every card (a long press opens the same menu).
+                Menu { menu } label: {
+                    Image(systemName: "ellipsis")
+                        .rotationEffect(.degrees(90))
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Theme.text.opacity(0.75))
+                        .frame(width: 24, height: 30)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Opțiuni pentru \(recipe.title)")
+            }
         }
-        .buttonStyle(PressableStyle())
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .opacity(past ? 0.55 : 1)
         .contextMenu { menu } preview: {
             RecipePhoto(recipe: recipe, cornerRadius: 0).frame(width: 300, height: 220).environment(store)
         }

@@ -227,10 +227,11 @@ final class RecipeStore {
     /// Puts the ingredients on the list, scaled to the servings; skips lines already there and
     /// not bought; the same recipe at other servings replaces its amounts. Returns lines added,
     /// or nil when the server refused.
-    func addToShopping(_ recipe: Recipe, servings: Int? = nil) async -> Int? {
+    /// `skip`: lines already at home ("Ce ai deja acasă?" in the week plan).
+    func addToShopping(_ recipe: Recipe, servings: Int? = nil, skip: ((String) -> Bool)? = nil) async -> Int? {
         let factor = recipe.servings.flatMap { base in servings.map { Double($0) / Double(base) } } ?? 1
         let lines = recipe.ingredients.map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty && !RecipeText.isHeading($0) }
+            .filter { !$0.isEmpty && !RecipeText.isHeading($0) && !(skip?($0) ?? false) }
             .map { RecipeText.scaleIngredient($0, factor: factor) }
         var mine = shopping.filter { !$0.checked && $0.recipeId == recipe.id }
         var toRemove: [ShoppingLine] = []

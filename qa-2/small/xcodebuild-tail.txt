@@ -1,0 +1,22 @@
+Command line invocation:
+    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild test-without-building -project KitchenTales.xcodeproj -scheme KitchenTalesQA -destination id=F2D2FAF0-3DC7-43F6-8E67-CFF6C774105B -derivedDataPath build/DerivedData -resultBundlePath build/QA-small.xcresult "-only-testing:KitchenTalesUITests/SystemQATests/testX07_KeyScreens"
+
+Writing result bundle at path:
+	/Users/runner/work/kitchen-tales/kitchen-tales/ios/build/QA-small.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:F2D2FAF0-3DC7-43F6-8E67-CFF6C774105B, OS:26.2, name:iPhone 16e }
+{ platform:iOS Simulator, arch:x86_64, id:F2D2FAF0-3DC7-43F6-8E67-CFF6C774105B, OS:26.2, name:iPhone 16e }
+2026-11-12 14:20:29.616 xcodebuild[12852:40670] [MT] IDETestOperationsObserverDebug: 59.297 elapsed -- Testing started completed.
+2026-11-12 14:20:29.619 xcodebuild[12852:40670] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-12 14:20:29.619 xcodebuild[12852:40670] [MT] IDETestOperationsObserverDebug: 59.298 sec, +59.298 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/runner/work/kitchen-tales/kitchen-tales/ios/build/QA-small.xcresult
+
+Testing failed:
+	Test target KitchenTalesUITests encountered an error (The bundle identifier for KitchenTales.app couldn’t be read. The application may be damaged or incomplete: “/Users/runner/work/kitchen-tales/kitchen-tales/ios/build/DerivedData/Build/Products/Debug-iphonesimulator/KitchenTales.app”.)
+
+** TEST EXECUTE FAILED **
+
+Testing started

@@ -133,7 +133,8 @@ struct ShoppingView: View {
         .background(Capsule().fill(Color(hex: 0x241B16)))
         .overlay(Capsule().strokeBorder(.white.opacity(0.06)))
         .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        // Above the app's tab bar, which floats over the tab.
+        .padding(.bottom, KTTabBarMetrics.height + 8)
         .animation(.snappy, value: newText.isEmpty)
     }
 

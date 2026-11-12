@@ -106,7 +106,8 @@ struct WeekView: View {
         }
         .buttonStyle(PressableStyle())
         .padding(.trailing, 18)
-        .padding(.bottom, 20)
+        // Above the app's tab bar (it floats over the tab, like the "Azi" pill).
+        .padding(.bottom, 92)
         .accessibilityLabel("Propune cinele săptămânii")
     }
 

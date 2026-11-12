@@ -9,6 +9,8 @@ import {
 } from '../../lib/mind/vault'
 import { backupNow, cloudBackupInfo, deleteCloudBackup, exportBackup, parseBackup, restoreBackup, type Backup } from '../../lib/mind/backup'
 import { CodeInput, UnlockHeader, UnlockPanel } from './Unlock'
+import { exportForFallow } from '../../lib/mind/fallowExport'
+import { MIN_PASSPHRASE, passphraseOk } from '../../lib/mind/fallow'
 import Reminders from './Reminders'
 import { remindersOff, removeThisPhone } from '../../lib/mind/push'
 import '../../ragaz.css'
@@ -85,6 +87,57 @@ function ChangeCode({ onDone }: { onDone: () => void }) {
         <button type="button" className="btn small" onClick={onDone}>Renunță</button>
       </div>
     </form>
+  )
+}
+
+/**
+ * "Mută în Fallow": everything in Răgaz as one .fallow file for the Fallow iPhone app, locked with
+ * a passphrase chosen here and typed again in Fallow.
+ */
+function FallowExport() {
+  const [open, setOpen] = useState(false)
+  const [pass, setPass] = useState('')
+  const [again, setAgain] = useState('')
+  const [busy, setBusy] = useState(false)
+  const ok = passphraseOk(pass) && pass === again
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!ok) return
+    setBusy(true)
+    try {
+      await exportForFallow(pass)
+      showToast('Fișierul e gata. În Fallow: Eu → Backup și transfer → Deschide un fișier.')
+      setOpen(false); setPass(''); setAgain('')
+    } catch (err) { showToast((err as Error).message) } finally { setBusy(false) }
+  }
+  return (
+    <div className="set-group">
+      <h2 className="set-label">Mută în Fallow</h2>
+      <div className="set-box">
+        {!open ? (
+          <div className="set-row">
+            <span>Exportă pentru Fallow<small className="set-sub">Tot ce ai în Răgaz, într-un fișier pentru aplicația Fallow de pe iPhone</small></span>
+            <button type="button" className="btn small" onClick={() => setOpen(true)}>Exportă</button>
+          </div>
+        ) : (
+          <form className="rg-form" onSubmit={submit}>
+            <label className="night-field">Alege o parolă pentru fișier
+              <input type="password" autoComplete="new-password" value={pass} onChange={(e) => setPass(e.target.value)} autoFocus />
+            </label>
+            <label className="night-field">Scrie-o din nou
+              <input type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} />
+            </label>
+            {!!again && again !== pass && <p className="error">Parolele nu se potrivesc.</p>}
+            <p className="set-hint">Cel puțin {MIN_PASSPHRASE} caractere; o propoziție scurtă e ușor de ținut minte. O scrii în Fallow când deschizi fișierul. Fără ea, fișierul nu se poate deschide.</p>
+            <div className="rg-row-btns">
+              <button type="submit" className="btn primary small" disabled={busy || !ok}>{busy ? 'Se pregătește…' : 'Creează fișierul'}</button>
+              <button type="button" className="btn small" onClick={() => setOpen(false)}>Renunță</button>
+            </div>
+          </form>
+        )}
+      </div>
+      <p className="set-hint">Fișierul conține lunile, notele, exercițiile și ierbarul. Discuțiile cu Claude nu se mută.</p>
+    </div>
   )
 }
 
@@ -177,6 +230,8 @@ export default function RagazSettings() {
         </div>
         <p className="set-hint">Copia și fișierul sunt criptate pe telefon. Se deschid doar cu Face ID-ul tău sau cu codul de rezervă.</p>
       </div>
+
+      <FallowExport />
 
       <div className="set-group">
         <div className="set-box">

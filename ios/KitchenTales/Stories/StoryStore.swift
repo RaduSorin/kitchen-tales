@@ -189,6 +189,75 @@ final class StoryStore {
         persist()
     }
 
+    // MARK: Coperta and another voice (the player's ⋯, like the web)
+
+    struct CoverCandidate: Identifiable, Hashable {
+        let url: String
+        let source: String
+        let label: String?
+        var id: String { url }
+    }
+
+    /// Covers found by title in the iTunes catalog and on Wikipedia (findCovers).
+    func findCovers(_ title: String) async throws -> [CoverCandidate] {
+        guard !demo, let client else { return [] }
+        let body = try await client.run("query F($title: String!) { findCovers(title: $title) { url source label } }", variables: ["title": title])
+        return (body["findCovers"] as? [Any] ?? []).compactMap { item in
+            guard let row = item as? [String: Any], let url = row["url"] as? String, !url.isEmpty else { return nil }
+            return CoverCandidate(url: url, source: row["source"] as? String ?? "", label: row["label"] as? String)
+        }
+    }
+
+    /// Copies a found cover into our storage (saveCover) and returns its path.
+    func saveFoundCover(_ url: String) async throws -> String {
+        guard let client else { throw BackendError.notConfigured }
+        let body = try await client.run("mutation C($url: String!) { saveCover(url: $url) }", variables: ["url": url])
+        guard let path = body["saveCover"] as? String, !path.isEmpty else { throw BackendError.server("Nu am putut salva coperta.") }
+        return path
+    }
+
+    /// Puts a picture cover on our story; the old picture file goes.
+    func setCover(_ id: String, coverKey: String) async throws {
+        guard let story = story(id) else { return }
+        try await updateStory(["id": id, "coverKey": coverKey])
+        if let old = story.coverKey, old != coverKey { await removeFiles([old], ref: story.fileRef) }
+        if let i = allStories.firstIndex(where: { $0.id == id }) { allStories[i].coverKey = coverKey }
+        persist()
+    }
+
+    /// The drawn cover (emoji and colours); with `dropPicture` the picture goes so the drawing shows.
+    func setDrawing(_ id: String, emoji: String, scene: Int, dropPicture: Bool) async throws {
+        guard let story = story(id) else { return }
+        var input: [String: Any] = ["id": id, "emoji": emoji, "scene": scene]
+        if dropPicture { input["coverKey"] = NSNull() }
+        try await updateStory(input)
+        if dropPicture, let old = story.coverKey { await removeFiles([old], ref: story.fileRef) }
+        if let i = allStories.firstIndex(where: { $0.id == id }) {
+            allStories[i].emoji = emoji
+            allStories[i].scene = scene
+            if dropPicture { allStories[i].coverKey = nil }
+        }
+        persist()
+    }
+
+    /// After "Recitește cu altă voce": the new audio on the story, the old file and offline copy gone.
+    func replaceAudio(_ id: String, audioKey: String, durationSec: Double?) async throws {
+        guard let story = story(id) else { return }
+        try await updateStory(["id": id, "audioKey": audioKey, "durationSec": durationSec.map { Int($0.rounded()) as Any } ?? NSNull()])
+        offline.remove([id])
+        if story.audioKey != audioKey { await removeFiles([story.audioKey], ref: story.fileRef) }
+        if let i = allStories.firstIndex(where: { $0.id == id }) {
+            allStories[i].audioKey = audioKey
+            allStories[i].durationSec = durationSec
+        }
+        persist()
+    }
+
+    private func removeFiles(_ paths: [String], ref: String) async {
+        guard !demo, let client else { return }
+        _ = try? await client.run("mutation Del($paths: [String]!) { deleteFiles(paths: $paths) }", variables: ["paths": paths])
+    }
+
     /// The story's text (read when asked: the list leaves it out, it can be long).
     func text(of id: String) async -> String? {
         if let t = story(id)?.text, !t.isEmpty { return t }

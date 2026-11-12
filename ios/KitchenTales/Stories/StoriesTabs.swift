@@ -38,7 +38,7 @@ struct StoriesTabs: View {
             Text(store.offline.lastError ?? "")
         }
         .task {
-            if let first = (LaunchOptions.screen == "story-text" ? store.story("d5") : nil) ?? store.stories.first, ["player", "mini-player", "story-move", "story-move-new", "story-text", "story-delete"].contains(LaunchOptions.screen) {
+            if let first = (LaunchOptions.screen == "story-text" ? store.story("d5") : nil) ?? store.stories.first, ["player", "mini-player", "story-move", "story-move-new", "story-text", "story-delete", "story-cover", "story-voice", "player-goodnight"].contains(LaunchOptions.screen) {
                 await StoryPlayer.shared.play(first, queue: store.stories, store: store)
                 StoryPlayer.shared.showsPlayer = LaunchOptions.screen != "mini-player"
             }
@@ -66,7 +66,7 @@ extension View {
     /// The mini-player above the tab bar while a story is open (on both sides of the app).
     func miniPlayerInset() -> some View { modifier(MiniPlayerInset()) }
 
-    /// The full-screen player sheet.
+    /// The full-page player.
     func storyPlayerSheet() -> some View { modifier(PlayerSheet()) }
 }
 
@@ -92,10 +92,10 @@ private struct PlayerSheet: ViewModifier {
 
     func body(content: Content) -> some View {
         @Bindable var player = player
-        content.sheet(isPresented: $player.showsPlayer) {
+        // A full page, like the web; the page itself handles drag-down to close.
+        content.fullScreenCover(isPresented: $player.showsPlayer) {
             PlayerView()
-                .presentationDragIndicator(.visible)
-                .presentationCornerRadius(Theme.Radius.sheet)
+                .presentationBackground(.clear)
         }
     }
 }

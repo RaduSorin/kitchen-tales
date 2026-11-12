@@ -8,17 +8,10 @@ import UIKit
 /// 15 seconds and, at bedtime, lowers the volume before it stops.
 @MainActor @Observable
 final class StoryPlayer {
-    enum Sleep: Hashable, CaseIterable {
-        case off, afterStory, minutes15, minutes30
-        var label: String {
-            switch self {
-            case .off: "Oprit"
-            case .afterStory: "După 1 poveste"
-            case .minutes15: "15 min"
-            case .minutes30: "30 min"
-            }
-        }
-    }
+    /// "După N povești" (the web's cycle): the player stops by itself after this many stories.
+    nonisolated static let stopChoices = [1, 2, 3, 5]
+    private static let stopKey = "kt-stop-after"
+    private static let shuffleKey = "kt-shuffle"
 
     private(set) var current: Story?
     private(set) var queue: [Story] = []
@@ -28,14 +21,25 @@ final class StoryPlayer {
     private(set) var duration: Double = 0
     private(set) var failure: String?
     var rate: Float = 1 { didSet { if isPlaying { player.rate = rate }; updateNowPlaying() } }
-    var sleep: Sleep = .off { didSet { sleepDeadline = sleep.deadline(from: Date()) } }
-    /// The full-screen player sheet.
+    /// Stop after this many stories in a row (1, 2, 3 or 5), remembered like on the web.
+    var stopAfter: Int = StoryPlayer.savedStopAfter() {
+        didSet { played = 0; UserDefaults.standard.set(stopAfter, forKey: Self.stopKey) }
+    }
+    /// "Amestecat": the next story is a random one from the folder not heard yet in this run.
+    var shuffle: Bool = UserDefaults.standard.bool(forKey: StoryPlayer.shuffleKey) {
+        didSet { UserDefaults.standard.set(shuffle, forKey: Self.shuffleKey); pickShuffle() }
+    }
+    /// The player stopped by itself (the chosen number of stories ended): "Noapte bună".
+    private(set) var ended = false
+    /// The full-screen player.
     var showsPlayer = false
 
     @ObservationIgnored private let player = AVPlayer()
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var endObserver: NSObjectProtocol?
-    @ObservationIgnored private var sleepDeadline: Date?
+    @ObservationIgnored private var played = 0
+    @ObservationIgnored private var heard: Set<String> = []
+    private var shufflePick: Story?
     @ObservationIgnored private var artwork: MPMediaItemArtwork?
     @ObservationIgnored private weak var store: StoryStore?
     /// The volume is lowered over this many seconds before a sleep stop.
@@ -53,25 +57,54 @@ final class StoryPlayer {
     }
 
     var remaining: Double { max(0, duration - position) }
-    var hasNext: Bool { nextIndex != nil }
-    private var nextIndex: Int? {
+    var hasNext: Bool { following != nil }
+    /// What plays after this story: the next one in the folder, or the shuffle pick.
+    var following: Story? {
+        if shuffle { return shufflePick }
         guard let current, let i = queue.firstIndex(where: { $0.id == current.id }), i + 1 < queue.count else { return nil }
-        return i + 1
+        return queue[i + 1]
+    }
+
+    nonisolated static func cycled(_ n: Int) -> Int {
+        let i = stopChoices.firstIndex(of: n) ?? 0
+        return stopChoices[(i + 1) % stopChoices.count]
+    }
+
+    private static func savedStopAfter() -> Int {
+        let n = UserDefaults.standard.integer(forKey: stopKey)
+        return stopChoices.contains(n) ? n : 1
+    }
+
+    private func pickShuffle() {
+        guard shuffle, let current else { shufflePick = nil; return }
+        let pool = queue.filter { $0.id != current.id && !heard.contains($0.id) }
+        shufflePick = pool.randomElement()
+    }
+
+    /// The speed button: 1× → 1,25× → 1,5× → 0,75× → 1×.
+    func cycleRate() {
+        let all: [Float] = [1, 1.25, 1.5, 0.75]
+        rate = all[((all.firstIndex(of: rate) ?? 0) + 1) % all.count]
     }
 
     // MARK: Playing
 
     /// Starts `story` (from where it was paused), with `queue` to continue through.
-    func play(_ story: Story, queue: [Story]? = nil, store: StoryStore) async {
+    /// `continued` is true when the previous story just ended, so "După N povești" keeps counting.
+    func play(_ story: Story, queue: [Story]? = nil, store: StoryStore, continued: Bool = false) async {
         self.store = store
         self.queue = queue ?? [story]
+        ended = false
         if current?.id == story.id {
             resume()
             return
         }
         savePosition()
+        if !continued { played = 0; heard = [] }
+        heard.insert(story.id)
         PlaybackMemory.markPlayed(story.id)
         current = story
+        pickShuffle()
         position = PlaybackMemory.position(story.id)
         duration = story.durationSec ?? 0
         failure = nil
@@ -82,6 +115,7 @@ final class StoryPlayer {
             // Screenshots: no server, so show the story a third of the way in, paused.
             position = duration * 0.34
             isLoading = false
+            ended = LaunchOptions.screen == "player-goodnight"
             return
         }
         let local = store.offline.localFile(story.id)
@@ -110,6 +144,7 @@ final class StoryPlayer {
 
     func resume() {
         guard current != nil else { return }
+        if ended { ended = false; seek(to: 0) }
         activateSession()
         player.playImmediately(atRate: rate)
         isPlaying = true
@@ -135,9 +170,12 @@ final class StoryPlayer {
     }
 
     func next() async {
-        guard let i = nextIndex, let store else { return }
-        await play(queue[i], queue: queue, store: store)
+        guard let story = following, let store else { return }
+        await play(story, queue: queue, store: store)
     }
+
+    /// "Ascultă din nou" on the goodnight screen.
+    func restart() { resume() }
 
     func previous() async {
         guard let current, let store else { return }
@@ -156,6 +194,7 @@ final class StoryPlayer {
         player.replaceCurrentItem(with: nil)
         current = nil
         isPlaying = false
+        ended = false
         showsPlayer = false
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
@@ -169,20 +208,11 @@ final class StoryPlayer {
         applySleepFade()
     }
 
+    /// Lowers the volume over the last seconds of the story the player will stop after.
     private func applySleepFade() {
-        guard isPlaying else { return }
-        let left: Double
-        switch sleep {
-        case .off: return
-        case .afterStory:
-            guard duration > 0 else { return }
-            left = remaining
-        case .minutes15, .minutes30:
-            guard let sleepDeadline else { return }
-            left = sleepDeadline.timeIntervalSinceNow
-        }
-        player.volume = Float(StoryPlayer.fadeVolume(secondsLeft: left))
-        if left <= 0, sleep != .afterStory { sleepStop() }
+        guard isPlaying, duration > 0 else { return }
+        let last = played + 1 >= stopAfter || following == nil
+        player.volume = last ? Float(StoryPlayer.fadeVolume(secondsLeft: remaining)) : 1
     }
 
     /// 1 until the last `fadeSeconds`, then down to 0, eased so the drop is gentle.
@@ -192,12 +222,6 @@ final class StoryPlayer {
         return t * t
     }
 
-    private func sleepStop() {
-        pause()
-        player.volume = 1
-        sleep = .off
-    }
-
     private func observeEnd(of item: AVPlayerItem) {
         if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
         endObserver = NotificationCenter.default.addObserver(forName: AVPlayerItem.didPlayToEndTimeNotification, object: item, queue: .main) { [weak self] _ in
@@ -205,18 +229,19 @@ final class StoryPlayer {
         }
     }
 
+    /// When a story ends: the next one plays until the chosen number of stories is reached.
     private func didFinish() {
         guard let finished = current else { return }
         PlaybackMemory.setPosition(finished.id, nil)
         position = 0
-        if sleep == .afterStory {
-            sleepStop()
-            return
-        }
-        if nextIndex != nil {
-            Task { await next() }
+        played += 1
+        if let next = following, played < stopAfter, let store {
+            Task { await play(next, queue: queue, store: store, continued: true) }
         } else {
             isPlaying = false
+            player.volume = 1
+            played = 0
+            ended = true
             updateNowPlaying()
         }
     }
@@ -284,16 +309,6 @@ final class StoryPlayer {
             return .success
         }
         c.previousTrackCommand.isEnabled = false
-    }
-}
-
-extension StoryPlayer.Sleep {
-    func deadline(from now: Date) -> Date? {
-        switch self {
-        case .minutes15: now.addingTimeInterval(15 * 60)
-        case .minutes30: now.addingTimeInterval(30 * 60)
-        case .off, .afterStory: nil
-        }
     }
 }
 

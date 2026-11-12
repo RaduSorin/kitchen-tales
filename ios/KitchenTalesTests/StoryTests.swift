@@ -96,6 +96,13 @@ struct StoryTests {
         #expect(StoryPlayer.fadeVolume(secondsLeft: -3) == 0)
     }
 
+    @Test func stopAfterCyclesLikeTheWeb() {
+        #expect(StoryPlayer.cycled(1) == 2)
+        #expect(StoryPlayer.cycled(3) == 5)
+        #expect(StoryPlayer.cycled(5) == 1)
+        #expect(StoryPlayer.cycled(4) == 2)
+    }
+
     @Test func clockTimes() {
         #expect(clockTime(0) == "0:00")
         #expect(clockTime(184.7) == "3:04")

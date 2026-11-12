@@ -199,7 +199,7 @@ struct FinishStoryView: View {
     }
 }
 
-private struct SceneTile: View {
+struct SceneTile: View {
     let scene: CoverScene
     let emoji: String
     let selected: Bool

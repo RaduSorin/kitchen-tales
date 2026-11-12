@@ -71,6 +71,9 @@ shot 9b-story-move -demo YES -area stories -tab home -screen story-move
 shot 9c-story-move-new -demo YES -area stories -tab home -screen story-move-new
 shot 9d-story-text -demo YES -area stories -tab home -screen story-text
 shot 9e-story-delete -demo YES -area stories -tab home -screen story-delete
+shot 9f-story-cover -demo YES -area stories -tab home -screen story-cover
+shot 9g-story-voice -demo YES -area stories -tab home -screen story-voice
+shot 9h-player-goodnight -demo YES -area stories -tab home -screen player-goodnight
 shot 6e-folder-new -demo YES -area stories -tab library -screen folder-new
 shot 6f-folder-squares -demo YES -area stories -tab library -screen folder -folder-look "Pătrate"
 shot 6g-folder-share -demo YES -area stories -tab library -screen folder-share

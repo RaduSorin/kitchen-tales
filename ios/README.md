@@ -113,3 +113,11 @@ The sign-in is shared through the Keychain group `$(AppIdentifierPrefix)app.kitc
 (both targets' entitlements). "Gata, lucrează în fundal" leaves the job in `PendingImports`; the
 app saves it the next time it becomes active. A link with no recipe can be kept as a recipe in the
 category "De încercat", and the server gives that AI use back (`refundAi`).
+
+## Ora de culcare
+
+`Features/Bedtime/`: settings per phone (Profil › Copilul › Ora de culcare), weekly local
+notifications with "Începe acum" / "Peste 10 min" (`NotificationRouter`), the night screen
+(`BedtimeNightView`: steps, tonight's stories, kid mode, dimmed screen), the Siri intent and a
+Sleep Focus filter (`BedtimeFocusFilter`). Story jobs ask for background time and post "Povestea
+e gata" when they finish while the app is in the background.

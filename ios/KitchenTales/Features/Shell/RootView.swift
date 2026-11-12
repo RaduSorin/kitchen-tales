@@ -32,6 +32,7 @@ private struct SignedInRoot: View {
     @State private var kitchen = KitchenModel()
     @State private var area = AreaModel()
     private let commands = AppCommands.shared
+    @Bindable private var bedtime = Bedtime.shared
     @Environment(\.scenePhase) private var scenePhase
 
     init(auth: AuthModel) {
@@ -83,7 +84,15 @@ private struct SignedInRoot: View {
         .onDisappear { Task { await SpotlightIndex.clear() } }
         // Recipes the Share card left importing in the background.
         .task { await collectShared() }
-        .onChange(of: scenePhase) { if scenePhase == .active { Task { await collectShared() } } }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active { Task { await collectShared() } } else { bedtime.dim(false) }
+        }
+        // "Ora de culcare": from the reminder, a Shortcut or Profil.
+        .fullScreenCover(isPresented: $bedtime.showsNight) { BedtimeNightView() }
+        .task {
+            if LaunchOptions.screen == "bedtime-night" { area.current = .stories; bedtime.open() }
+            await bedtime.schedule()
+        }
     }
 
     private func collectShared() async {
@@ -113,6 +122,9 @@ private struct SignedInRoot: View {
             area.current = .recipes
             kitchen.tab = .recipes
             kitchen.openRecipe = id
+        case .bedtime:
+            area.current = .stories
+            Bedtime.shared.open()
         case .openList, .openWeek:
             guard !kid.active else { return }
             area.current = .recipes

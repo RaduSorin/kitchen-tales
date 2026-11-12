@@ -98,3 +98,6 @@ shot 12a-share-working -demo YES -screen share-working
 shot 12b-share-saved -demo YES -screen share-saved
 shot 12c-share-days -demo YES -screen share-days
 shot 12d-share-not-recipe -demo YES -screen share-not-recipe
+# Ora de culcare: the settings in Profil › Copilul and the night screen.
+shot 13a-bedtime-settings -demo YES -tab profile -screen bedtime-settings
+shot 13b-bedtime-night -demo YES -area stories -tab home -screen bedtime-night

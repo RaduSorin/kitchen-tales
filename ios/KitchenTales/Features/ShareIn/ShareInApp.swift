@@ -10,6 +10,7 @@ extension AppCommands {
         case "list": return .openList
         case "week": return .openWeek
         case "story": return .playStory(parts.first)
+        case "bedtime": return .bedtime
         default: return nil
         }
     }

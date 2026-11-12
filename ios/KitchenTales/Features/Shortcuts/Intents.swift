@@ -166,6 +166,10 @@ struct KitchenShortcuts: AppShortcutsProvider {
             "Ce gătim azi în \(.applicationName)",
             "What's for dinner in \(.applicationName)",
         ], shortTitle: "Ce gătim azi", systemImageName: "fork.knife")
+        AppShortcut(intent: BedtimeIntent(), phrases: [
+            "Ora de culcare în \(.applicationName)",
+            "Bedtime in \(.applicationName)",
+        ], shortTitle: "Ora de culcare", systemImageName: "moon.zzz.fill")
         AppShortcut(intent: OpenShoppingListIntent(), phrases: [
             "Deschide lista din \(.applicationName)",
             "Open my \(.applicationName) list",

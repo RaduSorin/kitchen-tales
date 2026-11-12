@@ -75,6 +75,18 @@ struct ChildView: View {
             .profileRows(night)
 
             Section {
+                NavigationLink(value: ProfileRoute.bedtime) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Ora de culcare").font(.ktBody)
+                        Text(bedtimeSummary).font(.ktFootnote).foregroundStyle(Theme.muted).lineLimit(1)
+                    }
+                }
+            } header: {
+                header("Seara")
+            }
+            .profileRows(night)
+
+            Section {
                 Button { showsGuide = true } label: {
                     Label("Sfat: Acces ghidat ține copilul în aplicație", systemImage: "lightbulb")
                         .font(.ktFootnote).foregroundStyle(Theme.muted)
@@ -91,6 +103,11 @@ struct ChildView: View {
         .onAppear { name = profile.settings.childName }
         .sheet(isPresented: $settingPin) { NewPinSheet { profile.setPin($0) } }
         .sheet(isPresented: $showsGuide) { GuidedAccessGuide() }
+    }
+
+    private var bedtimeSummary: String {
+        let s = Bedtime.shared.settings
+        return s.enabled ? "\(Bedtime.timeLabel(s)) · \(Bedtime.daysLabel(s.days))" : "oprită"
     }
 
     @AppStorage(PhoneSettings.shelfClickKey) private var shelfClickStored = true

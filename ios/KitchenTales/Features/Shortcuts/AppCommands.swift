@@ -11,6 +11,8 @@ final class AppCommands {
         case openRecipe(String)
         case openList
         case openWeek
+        /// "Ora de culcare": the night screen.
+        case bedtime
     }
 
     static let shared = AppCommands()

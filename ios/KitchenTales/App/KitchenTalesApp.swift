@@ -6,6 +6,7 @@ struct KitchenTalesApp: App {
 
     init() {
         Theme.applyAppearance()
+        NotificationRouter.shared.install()
     }
 
     var body: some Scene {

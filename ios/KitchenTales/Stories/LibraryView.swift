@@ -588,25 +588,49 @@ private struct CoverCaption: View {
 struct FavoritesView: View {
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
+    @Environment(ProfileStore.self) private var profile
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 let favorites = store.favorites
+                let child = profile.settings.childName
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Favorite")
+                        .font(.custom(AppFont.displaySemibold, size: 34, relativeTo: .largeTitle))
+                        .foregroundStyle(Theme.text)
+                        .accessibilityAddTraits(.isHeader)
+                    Text("Poveștile preferate\(child.isEmpty ? "" : " ale lui \(child)")")
+                        .font(.ktCallout).foregroundStyle(Theme.Night.muted)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 14)
                 if favorites.isEmpty {
                     EmptyStateView(symbol: "heart", title: "Nicio poveste favorită",
                                    message: "Apasă inima de pe o poveste și o găsești aici.")
-                        .padding(.top, 80)
+                        .padding(.top, 60)
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 14)], spacing: 18) {
                         ForEach(favorites) { story in
                             Button { Task { await player.play(story, queue: favorites, store: store) } } label: {
                                 VStack(alignment: .leading, spacing: 6) {
                                     StoryCover(story: story).aspectRatio(1, contentMode: .fit)
+                                        .overlay(alignment: .bottomTrailing) {
+                                            if let m = story.minutesLabel {
+                                                Text(m)
+                                                    .font(.custom(AppFont.bodyBold, size: 12, relativeTo: .caption))
+                                                    .foregroundStyle(.white)
+                                                    .padding(.horizontal, 7).padding(.vertical, 3)
+                                                    .background(Capsule().fill(.black.opacity(0.55)))
+                                                    .padding(8)
+                                            }
+                                        }
                                         .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
                                     Text(story.title).font(.custom(AppFont.bodySemibold, size: 15, relativeTo: .subheadline))
                                         .foregroundStyle(Theme.text).lineLimit(1)
-                                    Text(story.detailLine)
+                                    Text(StoryLibrary.folderOf(story))
                                         .font(.ktCaption).foregroundStyle(Theme.Night.muted).lineLimit(1)
                                 }
                             }
@@ -615,13 +639,13 @@ struct FavoritesView: View {
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, KTTabBarMetrics.height + 24)
                 }
             }
             .scrollIndicators(.hidden)
             .ktNightBackground()
             .refreshable { await store.refresh() }
-            .navigationTitle("Favorite")
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 }

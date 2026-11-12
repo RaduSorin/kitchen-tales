@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The pages Profil opens.
 enum ProfileRoute: Hashable {
-    case child, family, sharing, prefs, phone, catalog, passport, album
+    case child, family, people, sharing, prefs, phone, catalog, passport, album
 }
 
 /// Profil, as on the web: you at the top, small cards of what the family made, then the child
@@ -27,6 +27,7 @@ struct ProfileView: View {
         case "catalog": [.catalog]
         case "profile-child": [.child]
         case "profile-family", "profile-invite": [.family]
+        case "profile-people": [.family, .people]
         case "profile-prefs": [.prefs]
         case "passport": [.passport]
         case "album": [.album]
@@ -58,6 +59,7 @@ struct ProfileView: View {
                     switch route {
                     case .child: ChildView()
                     case .family: FamilyView()
+                    case .people: PeopleView()
                     case .sharing: SharingView()
                     case .prefs: PrefsView()
                     case .phone: PhoneView()

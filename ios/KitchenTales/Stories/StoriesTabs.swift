@@ -3,6 +3,8 @@ import SwiftUI
 /// The stories-side tabs from the concept: Acasă, Favorite, Bibliotecă, Adaugă, Profil.
 enum StoryTab: String, CaseIterable, Hashable {
     case home, favorites, library, add, profile
+    /// Kid mode, in place of Adaugă and Profil: a random story, and search.
+    case surprise, search
 }
 
 struct StoriesTabs: View {
@@ -17,8 +19,10 @@ struct StoriesTabs: View {
             }
             Tab("Favorite", systemImage: "circle", value: StoryTab.favorites) { FavoritesView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
             Tab("Bibliotecă", systemImage: "circle", value: StoryTab.library) { LibraryView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
-            // In kid mode the child sees only listening: no Adaugă, no Profil.
-            if !kid.active {
+            // In kid mode the child sees only listening: Surpriză and Caută instead of Adaugă and Profil.
+            if kid.active {
+                Tab("Caută", systemImage: "circle", value: StoryTab.search) { KidSearchView().miniPlayerInset().toolbar(.hidden, for: .tabBar) }
+            } else {
                 Tab("Adaugă", systemImage: "circle", value: StoryTab.add) {
                     AddStoryView(onAdded: { tab = .home }).miniPlayerInset().toolbar(.hidden, for: .tabBar)
                 }
@@ -26,8 +30,18 @@ struct StoriesTabs: View {
             }
         }
         .appTabBar(tabItems, selection: $tab, night: true)
-        .onChange(of: tab) { Haptics.select() }
-        .onChange(of: kid.active) { if kid.active, [.add, .profile].contains(tab) { tab = .home } }
+        .onChange(of: tab) { old, new in
+            Haptics.select()
+            // Surpriză is a button, not a page: a random story (not the last one) starts.
+            if new == .surprise {
+                tab = old
+                surprise()
+            }
+        }
+        .onChange(of: kid.active) {
+            if kid.active, [.add, .profile].contains(tab) { tab = .home }
+            if !kid.active, tab == .search { tab = .home }
+        }
         .kidModeChrome()
         .kitchenToast()
         .storyPlayerSheet()
@@ -52,11 +66,74 @@ extension StoriesTabs {
         var items = [KTTabItem(value: StoryTab.home, label: "Acasă", glyph: .home),
                      KTTabItem(value: StoryTab.favorites, label: "Favorite", glyph: .favorites),
                      KTTabItem(value: StoryTab.library, label: "Bibliotecă", glyph: .library)]
-        if !kid.active {
+        if kid.active {
+            items += [KTTabItem(value: StoryTab.surprise, label: "Surpriză", glyph: .surprise),
+                      KTTabItem(value: StoryTab.search, label: "Caută", glyph: .search)]
+        } else {
             items += [KTTabItem(value: StoryTab.add, label: "Adaugă", glyph: .add),
                       KTTabItem(value: StoryTab.profile, label: "Profil", glyph: .profile)]
         }
         return items
+    }
+
+    private func surprise() {
+        let all = store.stories
+        let pool = all.count > 1 ? all.filter { $0.id != PlaybackMemory.lastStoryId } : all
+        guard let pick = pool.randomElement() else { return }
+        Haptics.success()
+        Task {
+            await StoryPlayer.shared.play(pick, queue: [pick], store: store)
+            StoryPlayer.shared.showsPlayer = true
+        }
+    }
+}
+
+/// Kid mode's Caută: a big search box and the covers that match (every story while it is empty).
+struct KidSearchView: View {
+    @Environment(StoryStore.self) private var store
+    @Environment(StoryPlayer.self) private var player
+    @State private var query = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        let found = query.trimmingCharacters(in: .whitespaces).isEmpty ? store.stories : store.search(query)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Caută")
+                    .font(.custom(AppFont.displaySemibold, size: 34, relativeTo: .largeTitle))
+                    .foregroundStyle(Theme.text)
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.Night.muted)
+                    TextField("", text: $query, prompt: Text("Caută o poveste").foregroundStyle(Theme.Night.muted))
+                        .font(.custom(AppFont.kidsSemibold, size: 18, relativeTo: .body)).foregroundStyle(Theme.text)
+                        .focused($focused)
+                }
+                .padding(.horizontal, 14).frame(height: 52)
+                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.white.opacity(0.08)))
+                if found.isEmpty {
+                    Text("Nicio poveste găsită pentru „\(query)”.").font(.ktCallout).foregroundStyle(Theme.Night.muted)
+                        .frame(maxWidth: .infinity).padding(.top, 30)
+                }
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 18) {
+                    ForEach(found) { s in
+                        Button { Task { await player.play(s, queue: found, store: store); player.showsPlayer = true } } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                StoryCover(story: s, cornerRadius: 18).aspectRatio(1, contentMode: .fit)
+                                    .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+                                Text(s.title).font(.custom(AppFont.kidsSemibold, size: 16, relativeTo: .callout))
+                                    .foregroundStyle(Theme.text).lineLimit(2).multilineTextAlignment(.leading)
+                            }
+                        }
+                        .buttonStyle(PressableStyle())
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, KTTabBarMetrics.height + 24)
+        }
+        .scrollDismissesKeyboard(.immediately)
+        .ktNightBackground()
     }
 }
 

@@ -1,4 +1,20 @@
 import SwiftUI
+import UIKit
+
+extension Image {
+    /// A picture from Resources/Badges. They are plain PNG files in the bundle, which SwiftUI's
+    /// `Image(_ name:)` does not look for (it reads only the asset catalog), so they go through UIImage.
+    @MainActor static func badgeArt(_ name: String) -> Image {
+        if let cached = BadgeArtCache.images[name] { return Image(uiImage: cached) }
+        guard let image = UIImage(named: name) else { return Image(systemName: "questionmark") }
+        BadgeArtCache.images[name] = image
+        return Image(uiImage: image)
+    }
+}
+
+@MainActor private enum BadgeArtCache {
+    static var images: [String: UIImage] = [:]
+}
 
 /// A small, steady tilt per badge (the web's tiltOf), so the album looks stuck by hand.
 func badgeTilt(_ id: String, range: Int = 4) -> Double {
@@ -20,15 +36,16 @@ struct BadgeArt: View {
 
     var body: some View {
         if badge.kind == .sticker {
-            Image(badge.image(earned: earned != nil))
+            Image.badgeArt(badge.image(earned: earned != nil))
                 .resizable().scaledToFit()
         } else if plain {
-            Image(badge.image(earned: true))
+            Image.badgeArt(badge.image(earned: true))
                 .resizable().aspectRatio(120 / 124, contentMode: .fit)
         } else {
+            let picture = Image.badgeArt(badge.image(earned: earned != nil, onPaper: onPaper))
             Canvas { ctx, size in
                 let s = size.width / 150
-                let stamp = ctx.resolve(Image(badge.image(earned: earned != nil, onPaper: onPaper)))
+                let stamp = ctx.resolve(picture)
                 if let earned {
                     Postmark.draw(&ctx, scale: s, tilt: badgeTilt(badge.id), date: earned, color: Color(red: 242 / 255, green: 200 / 255, blue: 121 / 255).opacity(0.75), clip: false)
                     ctx.draw(stamp, in: CGRect(x: 0, y: 0, width: 120 * s, height: 124 * s))

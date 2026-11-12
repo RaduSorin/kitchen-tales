@@ -103,7 +103,7 @@ struct PassportView: View {
                                startPoint: .leading, endPoint: .trailing)
                 RadialGradient(colors: [.white.opacity(0.1), .clear], center: UnitPoint(x: 0.45, y: 0.25), startRadius: 0, endRadius: 70 * u)
                 VStack(spacing: 5 * u) {
-                    Image("emblem").resizable().renderingMode(.template).scaledToFit().frame(width: 37 * u).foregroundStyle(Self.foil)
+                    Image.badgeArt("emblem").resizable().renderingMode(.template).scaledToFit().frame(width: 37 * u).foregroundStyle(Self.foil)
                     Text("PAȘAPORT\nCULINAR")
                         .font(.custom(AppFont.displaySemibold, fixedSize: 7.4 * u)).tracking(1.8 * u)
                         .multilineTextAlignment(.center).lineSpacing(2 * u)
@@ -144,7 +144,7 @@ struct PassportView: View {
                 VisaHead(title: "Pașaport culinar", number: "RO", ink: ink, u: u)
                 RoundedRectangle(cornerRadius: 1.4 * u).fill(.white.opacity(0.35))
                     .overlay(RoundedRectangle(cornerRadius: 1.4 * u).strokeBorder(ink, lineWidth: 1))
-                    .overlay(Image("emblem").resizable().renderingMode(.template).scaledToFit().frame(width: 26 * u).foregroundStyle(ink))
+                    .overlay(Image.badgeArt("emblem").resizable().renderingMode(.template).scaledToFit().frame(width: 26 * u).foregroundStyle(ink))
                     .frame(width: 34 * u, height: 42.5 * u)
                     .offset(x: 7.8 * u, y: 20.6 * u)
                 VStack(alignment: .leading, spacing: 2.5 * u) {
@@ -337,9 +337,9 @@ private struct VisaPaper: View {
         GeometryReader { geo in
             ZStack {
                 Color(hex: 0xF0EADB)
-                Image("guilloche").resizable().renderingMode(.template).foregroundStyle(ink)
+                Image.badgeArt("guilloche").resizable().renderingMode(.template).foregroundStyle(ink)
                 if watermark {
-                    Image("emblem").resizable().renderingMode(.template).scaledToFit()
+                    Image.badgeArt("emblem").resizable().renderingMode(.template).scaledToFit()
                         .frame(width: geo.size.width * 0.74)
                         .foregroundStyle(ink.opacity(0.09))
                         .position(x: geo.size.width / 2, y: geo.size.height * 0.52)

@@ -23,7 +23,7 @@ struct BadgeCelebration: View {
     var body: some View {
         ZStack {
             if let b = shown, placing == nil {
-                Color.black.opacity(0.62).ignoresSafeArea()
+                Color.black.opacity(b.kind == .sticker ? 0.85 : 0.62).ignoresSafeArea()
                     .transition(.opacity)
                 Group {
                     if b.kind == .stamp { stamp(b) } else { sticker(b) }

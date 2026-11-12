@@ -35,6 +35,7 @@ struct CookSession: Identifiable, Hashable {
 enum RecipeRoute: Hashable {
     case recipe(String)
     case category(String)
+    case search
 }
 
 extension View {
@@ -44,6 +45,7 @@ extension View {
             switch route {
             case .recipe(let id): RecipeDetailView(recipeId: id)
             case .category(let name): RecipeListView(category: name)
+            case .search: SearchView()
             }
         }
     }

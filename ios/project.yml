@@ -22,6 +22,17 @@ targets:
     platform: iOS
     sources:
       - path: KitchenTales
+        excludes:
+          - KitchenTales.entitlements
+    dependencies:
+      # "Salvează în Bucătăria" in the Share sheet.
+      - target: KitchenTalesShare
+    entitlements:
+      path: KitchenTales/KitchenTales.entitlements
+      properties:
+        # The sign-in is shared with the Share extension through this Keychain group.
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)app.kitchentales.shared
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.kitchentales.ios
@@ -39,6 +50,11 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
+        # kitchentales://recipe/<id>: the Share card's "Deschide rețeta".
+        CFBundleURLTypes:
+          - CFBundleURLName: app.kitchentales.ios
+            CFBundleURLSchemes:
+              - kitchentales
         ITSAppUsesNonExemptEncryption: false
         # The app is always dark ("Seară de lux"), like the web app.
         UIUserInterfaceStyle: Dark
@@ -72,6 +88,69 @@ targets:
           - Baloo2-800.ttf
           - YoungSerif-400.ttf
           - Caveat-700.ttf
+  # The Share extension: imports a recipe from a link, text or photo shared from another app.
+  # It reuses the sign-in, backend and design files of the app and the shared Features/ShareIn.
+  KitchenTalesShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShareExtension
+        excludes:
+          - Share.entitlements
+      - path: KitchenTales/Features/ShareIn
+      - path: KitchenTales/Auth/Account.swift
+      - path: KitchenTales/Auth/CognitoClient.swift
+      - path: KitchenTales/Auth/CognitoSRP.swift
+      - path: KitchenTales/Auth/BigUInt.swift
+      - path: KitchenTales/Data/Backend.swift
+      - path: KitchenTales/Design/Theme.swift
+      - path: KitchenTales/Design/AppFont.swift
+      - path: KitchenTales/Resources/AuthConfig.json
+        buildPhase: resources
+      - path: KitchenTales/Resources/Fonts/Figtree-400.ttf
+        buildPhase: resources
+      - path: KitchenTales/Resources/Fonts/Figtree-600.ttf
+        buildPhase: resources
+      - path: KitchenTales/Resources/Fonts/Figtree-700.ttf
+        buildPhase: resources
+      - path: KitchenTales/Resources/Fonts/YoungSerif-400.ttf
+        buildPhase: resources
+      - path: KitchenTales/Resources/Fonts/Fraunces-400.ttf
+        buildPhase: resources
+    entitlements:
+      path: ShareExtension/Share.entitlements
+      properties:
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)app.kitchentales.shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.kitchentales.ios.share
+        PRODUCT_NAME: KitchenTalesShare
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: ShareExtension/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        APPLICATION_EXTENSION_API_ONLY: YES
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: Bucătăria
+        CFBundleDevelopmentRegion: ro
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts:
+          - Figtree-400.ttf
+          - Figtree-600.ttf
+          - Figtree-700.ttf
+          - YoungSerif-400.ttf
+          - Fraunces-400.ttf
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsImageWithMaxCount: 1
   KitchenTalesTests:
     type: bundle.unit-test
     platform: iOS

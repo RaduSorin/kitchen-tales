@@ -93,3 +93,8 @@ shot 11b-add-create -demo YES -area stories -tab add -screen add-create
 shot 11c-add-record -demo YES -area stories -tab add -screen add-record
 shot 11d-add-finish -demo YES -area stories -tab add -screen add-finish
 shot 11e-add-upload -demo YES -area stories -tab add -screen add-upload
+# The Share card ("Salvează în Bucătăria"), drawn in the app over a photo.
+shot 12a-share-working -demo YES -screen share-working
+shot 12b-share-saved -demo YES -screen share-saved
+shot 12c-share-days -demo YES -screen share-days
+shot 12d-share-not-recipe -demo YES -screen share-not-recipe

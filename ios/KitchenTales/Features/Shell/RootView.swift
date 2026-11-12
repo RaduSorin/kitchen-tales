@@ -32,6 +32,7 @@ private struct SignedInRoot: View {
     @State private var kitchen = KitchenModel()
     @State private var area = AreaModel()
     private let commands = AppCommands.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     init(auth: AuthModel) {
         _stories = State(initialValue: StoryStore(auth: auth))
@@ -80,6 +81,17 @@ private struct SignedInRoot: View {
             await SpotlightIndex.update(stories: stories.allStories, recipes: recipes.recipes)
         }
         .onDisappear { Task { await SpotlightIndex.clear() } }
+        // Recipes the Share card left importing in the background.
+        .task { await collectShared() }
+        .onChange(of: scenePhase) { if scenePhase == .active { Task { await collectShared() } } }
+    }
+
+    private func collectShared() async {
+        guard LaunchOptions.demoAccount == nil, !PendingImports().load().isEmpty, let share = ShareKitchen.open() else { return }
+        let titles = await share.collectPending()
+        guard !titles.isEmpty else { return }
+        await recipes.refresh()
+        kitchen.say(titles.count == 1 ? "Am salvat „\(titles[0])”" : "Am salvat \(titles.count) rețete trimise cu Share")
     }
 
     /// Carries out what Siri, a Shortcut or a Spotlight result asked for.

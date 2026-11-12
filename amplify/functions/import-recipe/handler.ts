@@ -6,7 +6,7 @@ import { fileSpace, newFilePath } from '../../shared/files'
 import { spaceOf } from '../../shared/spaces'
 import { VIDEO_RULES, videoSource, videoText } from './video'
 import { runJob } from '../../shared/jobResult'
-import { countAi } from '../../shared/aiUsage'
+import { countAi, isNoRecipe, refundAi } from '../../shared/aiUsage'
 
 const bedrock = new BedrockRuntimeClient({})
 const s3 = new S3Client({})
@@ -614,9 +614,15 @@ async function background(field: string, e: JobEvent) {
   await runJob(s3, BUCKET, e, async () => {
     await countAi(s3, BUCKET, callerSpace, 'recipe')
     if (field === 'startImportRecipe') {
-      const r = await importFrom(args as unknown as ImportArgs)
-      if (!r.title) throw new Error('Nu am găsit o rețetă aici.')
-      return r
+      try {
+        const r = await importFrom(args as unknown as ImportArgs)
+        if (!r.title) throw new Error('Nu am găsit o rețetă aici.')
+        return r
+      } catch (err) {
+        // A link or video with no recipe in it does not count against the month.
+        if (isNoRecipe(err)) await refundAi(s3, BUCKET, callerSpace, 'recipe').catch(() => undefined)
+        throw err
+      }
     }
     if (field === 'startSuggestRecipes') return suggestFrom(args as unknown as SuggestEvent['arguments'])
     return planWeek(args as unknown as PlanArgs)

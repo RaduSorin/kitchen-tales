@@ -15,6 +15,9 @@ struct KitchenTalesApp: App {
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
                 .environment(\.locale, Locale(identifier: "ro_RO"))
+                .onOpenURL { url in
+                    if let command = AppCommands.command(for: url) { AppCommands.shared.pending = command }
+                }
         }
     }
 }
@@ -32,8 +35,12 @@ struct AppRoot: View {
                 LoginView()
                     .transition(.opacity)
             case .signedIn:
-                RootView()
-                    .transition(.opacity)
+                if let screen = LaunchOptions.screen, screen.hasPrefix("share-") {
+                    ShareCardDemo(screen: screen)
+                } else {
+                    RootView()
+                        .transition(.opacity)
+                }
             }
         }
         .animation(.easeInOut(duration: 0.35), value: auth.state)

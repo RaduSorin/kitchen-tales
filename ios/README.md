@@ -103,3 +103,13 @@ so each phrase also exists in English; a Shortcut you name yourself ("Poveste de
 with any Siri language. Stories and recipes are indexed in Spotlight after each refresh and the
 index is cleared on sign-out. Actions that open a screen go through `AppCommands`, handled in
 `SignedInRoot`.
+
+## Share extension
+
+`ShareExtension/` is "Salvează în Bucătăria" in the Share sheet (target `KitchenTalesShare`). It
+reads a link, text or photo, runs the same `startImportRecipe` job as the editor and shows the card
+from `Features/ShareIn/ShareCard.swift`, which the app also compiles (screens `-screen share-*`).
+The sign-in is shared through the Keychain group `$(AppIdentifierPrefix)app.kitchentales.shared`
+(both targets' entitlements). "Gata, lucrează în fundal" leaves the job in `PendingImports`; the
+app saves it the next time it becomes active. A link with no recipe can be kept as a recipe in the
+category "De încercat", and the server gives that AI use back (`refundAi`).

@@ -1,4 +1,6 @@
+import Combine
 import SwiftUI
+import UIKit
 
 /// The web app's phone tab bar (src/components/TabBar.tsx and the "Seară de lux" CSS): a dark
 /// floating capsule, muted outline icons, and a gold bubble that slides to the open tab, where the
@@ -95,7 +97,10 @@ private struct TabPressStyle: ButtonStyle {
 @MainActor @Observable
 final class TabBarModel {
     private(set) var hiders = 0
-    var hidden: Bool { hiders > 0 }
+    /// The on-screen keyboard is up: the bar steps aside instead of riding on top of it (it took
+    /// most of the screen above the keyboard and covered the buttons under a text field).
+    var keyboardUp = false
+    var hidden: Bool { hiders > 0 || keyboardUp }
     func hide() { hiders += 1 }
     func show() { hiders = max(0, hiders - 1) }
 }
@@ -136,6 +141,12 @@ private struct AppTabBarHost<Value: Hashable>: ViewModifier {
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: bar.hidden)
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+                bar.keyboardUp = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                bar.keyboardUp = false
+            }
     }
 }
 

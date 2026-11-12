@@ -60,7 +60,8 @@ struct RecipeDetailView: View {
         .scrollIndicators(.hidden)
         .background(Theme.background.ignoresSafeArea())
         .overlay(alignment: .top) { topButtons(r) }
-        .safeAreaInset(edge: .bottom, spacing: 0) { foot(r) }
+        .safeAreaInset(edge: .bottom, spacing: 0) { foot(r).hiddenWhileTyping() }
+        .keyboardDoneButton()
         .hidesAppTabBar()
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog("Ștergi rețeta? Nu se mai poate recupera.", isPresented: $confirmDelete, titleVisibility: .visible) {
@@ -342,8 +343,11 @@ struct RecipeDetailView: View {
     }
 
     private func addToList(_ r: Recipe) {
+        // Ticked ingredients are the ones already in the kitchen: they stay off the list (like the web).
+        let have = Set(r.ingredients.enumerated().filter { ticked.contains($0.offset) }
+            .map { $0.element.trimmingCharacters(in: .whitespaces) })
         Task {
-            if let added = await store.addToShopping(r, servings: servings) {
+            if let added = await store.addToShopping(r, servings: servings, skip: { have.contains($0) }) {
                 Haptics.success()
                 kitchen.say(added == 0 ? "Sunt deja în listă" : "Am pus \(added) ingrediente în listă")
             } else {

@@ -8,7 +8,8 @@ name: iOS
 
 on:
   push:
-    branches: ['claude/**']
+    # main too, so its build cache is there for every new claude/** branch to start from.
+    branches: ['claude/**', main]
     paths: ['ios/**', '.github/workflows/ios.yml']
   pull_request:
     paths: ['ios/**', '.github/workflows/ios.yml']
@@ -42,6 +43,32 @@ jobs:
         working-directory: ios
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # for the file dates below
+
+      # The build cache: Xcode only recompiles what changed since the last run on this branch (or
+      # on main). A checkout gives every file today's date, which would look like a change to all
+      # of them, so the dates are set back to each file's last commit first.
+      - name: Keep file dates from git
+        working-directory: .
+        run: |
+          python3 - <<'PY'
+          import os, subprocess
+          out = subprocess.run(["git", "log", "--name-only", "--format=@%ct", "--", "ios"], capture_output=True, text=True).stdout
+          seen, when = set(), 0
+          for line in out.splitlines():
+              if line.startswith("@"): when = int(line[1:]); continue
+              if line and line not in seen and os.path.exists(line):
+                  seen.add(line); os.utime(line, (when, when))
+          print(f"dates set on {len(seen)} files")
+          PY
+
+      - name: Restore the build cache
+        uses: actions/cache@v4
+        with:
+          path: ios/build/DerivedData
+          key: ios-dd-${{ runner.os }}-${{ hashFiles('ios/**/*.swift', 'ios/project.yml') }}
+          restore-keys: ios-dd-${{ runner.os }}-
 
       - name: Use the newest Xcode on the runner
         run: |
@@ -74,8 +101,9 @@ jobs:
             -parallel-testing-enabled NO \
             -derivedDataPath build/DerivedData \
             -resultBundlePath build/Tests.xcresult \
-            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CURRENT_PROJECT_VERSION=1 \
             CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
             | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|Test (Case|Suite|run)|✔|✘|\*\* (TEST|BUILD)" || true
           grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild.log
 

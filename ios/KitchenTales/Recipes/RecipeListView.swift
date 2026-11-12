@@ -101,7 +101,7 @@ struct RecipeListView: View {
                                 ForEach(list) { r in RecipeMagazineCard(recipe: r) { opened = r.id } }
                             }
                         default:
-                            RecipeMasonry(recipes: list) { r in link(r) { RecipeTile(recipe: r, height: RecipeMasonry.height(r)) } }
+                            RecipeMasonry(recipes: list) { r in link(r) { RecipeTile(recipe: r, height: recipeTileHeight(r)) } }
                         }
                     }
                 }
@@ -318,13 +318,14 @@ struct RecipeListView: View {
 }
 
 /// The web's photo grid: two columns of tiles of three heights, each tile going to the shorter column.
+/// The masonry tile height for a recipe: one of three, fixed by its id.
+func recipeTileHeight(_ r: Recipe) -> CGFloat {
+    [200, 170, 230][r.id.unicodeScalars.reduce(0) { $0 + Int($1.value) } % 3]
+}
+
 struct RecipeMasonry<Tile: View>: View {
     let recipes: [Recipe]
     @ViewBuilder let tile: (Recipe) -> Tile
-
-    static func height(_ r: Recipe) -> CGFloat {
-        [200, 170, 230][r.id.unicodeScalars.reduce(0) { $0 + Int($1.value) } % 3]
-    }
 
     var body: some View {
         var cols: [[Recipe]] = [[], []]
@@ -332,7 +333,7 @@ struct RecipeMasonry<Tile: View>: View {
         for r in recipes {
             let c = tall[0] <= tall[1] ? 0 : 1
             cols[c].append(r)
-            tall[c] += Self.height(r)
+            tall[c] += recipeTileHeight(r)
         }
         return HStack(alignment: .top, spacing: 10) {
             ForEach(0..<2, id: \.self) { i in

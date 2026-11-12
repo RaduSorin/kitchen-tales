@@ -17,6 +17,8 @@ struct StoryMoreMenu: View {
     @State private var moving = ["story-move", "story-move-new"].contains(LaunchOptions.screen)
     @State private var reading = LaunchOptions.screen == "story-text"
     @State private var confirmDelete = LaunchOptions.screen == "story-delete"
+    @State private var covering = LaunchOptions.screen == "story-cover"
+    @State private var revoicing = LaunchOptions.screen == "story-voice"
     @State private var busy = false
     @State private var message: String?
 
@@ -40,12 +42,12 @@ struct StoryMoreMenu: View {
                     Button { Task { await store.offline.download(s, links: store.links) } } label: { Label("Salvează offline", systemImage: "arrow.down.circle") }
                 }
                 if s.mine {
-                    Button {} label: { Label("Coperta", systemImage: "photo") }.disabled(true)
+                    Button { covering = true } label: { Label("Coperta", systemImage: "photo") }
                     Button { moving = true } label: { Label("Mută în folder", systemImage: "folder") }
                 }
                 Button { reading = true } label: { Label("Textul poveștii", systemImage: "text.alignleft") }
-                if s.mine {
-                    Button {} label: { Label("Recitește cu altă voce", systemImage: "waveform") }.disabled(true)
+                if s.mine && (s.source == .generated || !(s.text ?? "").isEmpty) {
+                    Button { revoicing = true } label: { Label("Recitește cu altă voce", systemImage: "waveform") }
                 }
             }
             if s.mine {
@@ -68,6 +70,8 @@ struct StoryMoreMenu: View {
         }
         .sheet(isPresented: $moving) { MoveToFolderSheet(story: s) }
         .sheet(isPresented: $reading) { StoryTextSheet(story: s) }
+        .sheet(isPresented: $covering) { StoryCoverSheet(story: s) }
+        .sheet(isPresented: $revoicing) { RenarrateSheet(story: s) }
         .alert("Nu a mers", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("OK", role: .cancel) {}
         } message: { Text(message ?? "") }

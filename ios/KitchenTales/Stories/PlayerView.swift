@@ -249,12 +249,11 @@ struct PlayerView: View {
         let name = profile.settings.childName
         return VStack(spacing: 18) {
             Spacer()
-            ZStack {
-                Circle().fill(Theme.Night.moon).frame(width: 88, height: 88)
-                Circle().fill(Color(hex: 0x2B2433)).frame(width: 79, height: 79).offset(x: 18, y: -14)
-            }
-            .frame(width: 120, height: 120)
-            .clipped()
+            Image(systemName: "moon.fill")
+                .font(.system(size: 92))
+                .foregroundStyle(Theme.Night.moon)
+                .frame(width: 120, height: 120)
+                .accessibilityHidden(true)
             Text(name.isEmpty ? "Noapte bună" : "Noapte bună, \(name)")
                 .font(.custom(AppFont.storyDisplay, size: 34, relativeTo: .largeTitle))
                 .multilineTextAlignment(.center)

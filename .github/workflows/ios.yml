@@ -1,5 +1,5 @@
 # Native iOS app (ios/): generates the Xcode project, builds it, runs the unit tests on an iPhone
-# simulator and saves screenshots of the main screens as a downloadable artifact.
+# simulator. A run started by hand also saves screenshots of the main screens.
 # Runs when something under ios/ (or this file) changes: on every push to a claude/** branch, so
 # a Claude thread sees the result before it opens or announces a pull request, and on pull
 # requests from any other branch. macOS minutes cost 10x Linux ones, so a claude/** branch is not
@@ -107,13 +107,16 @@ jobs:
             | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|Test (Case|Suite|run)|✔|✘|\*\* (TEST|BUILD)" || true
           grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild.log
 
+      # Screenshots take about 10 minutes, so only a run started by hand makes them
+      # (Actions > iOS > Run workflow).
       - name: Screenshots
+        if: github.event_name == 'workflow_dispatch'
         run: |
           APP=$(find build/DerivedData/Build/Products/Debug-iphonesimulator -maxdepth 1 -name 'KitchenTales.app' | head -1)
           bash scripts/screenshots.sh "$APP" "${{ steps.sim.outputs.udid }}"
 
       - name: Upload screenshots
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v6
         with:
           name: ios-screenshots
@@ -124,7 +127,7 @@ jobs:
       # a push run or a run started by hand), so they can be viewed on GitHub and compared before/after
       # without downloading the artifact.
       - name: Publish screenshots to the ios-screenshots branch
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
           # pr-<number>, or the branch name for a push run or a run started by hand.

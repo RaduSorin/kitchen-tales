@@ -71,6 +71,7 @@ targets:
           - Baloo2-600.ttf
           - Baloo2-800.ttf
           - YoungSerif-400.ttf
+          - Caveat-700.ttf
   KitchenTalesTests:
     type: bundle.unit-test
     platform: iOS

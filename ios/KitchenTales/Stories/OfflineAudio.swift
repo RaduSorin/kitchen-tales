@@ -65,6 +65,7 @@ final class OfflineAudio {
             files[story.id] = name
             saved.insert(story.id)
             lastError = nil
+            trackBadge(.offlineSaved)
         } catch {
             lastError = "Nu am putut descărca „\(story.title)”."
         }

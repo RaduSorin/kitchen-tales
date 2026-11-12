@@ -58,6 +58,10 @@ shot 3b-profile-child -demo YES -tab profile -screen profile-child
 shot 3c-profile-family -demo YES -tab profile -screen profile-family
 shot 3d-profile-invite -demo YES -tab profile -screen profile-invite
 shot 3e-profile-prefs -demo YES -tab profile -screen profile-prefs
+shot 3h-passport -demo YES -tab profile -screen passport
+shot 3i-album -demo YES -tab profile -screen album
+shot 3j-badge-stamp -demo YES -tab profile -screen badge-stamp
+shot 3k-badge-sticker -demo YES -area stories -tab home -screen badge-sticker
 shot 3f-kid-mode -demo YES -area stories -tab home -screen kid
 shot 4-catalog -demo YES -tab profile -screen catalog
 # Stories side (made-up library, drawn covers).

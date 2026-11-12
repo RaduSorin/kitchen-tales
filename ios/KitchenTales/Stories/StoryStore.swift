@@ -222,6 +222,7 @@ final class StoryStore {
         try await updateStory(["id": id, "coverKey": coverKey])
         if let old = story.coverKey, old != coverKey { await removeFiles([old], ref: story.fileRef) }
         if let i = allStories.firstIndex(where: { $0.id == id }) { allStories[i].coverKey = coverKey }
+        trackBadge(.storyCover)
         persist()
     }
 
@@ -296,6 +297,7 @@ final class StoryStore {
         var input: [String: Any] = ["name": name, "icon": icon ?? NSNull(), "spaceGroups": [space], "readerGroups": shared ? ["everyone"] : [String]()]
         if let spaceName { input["spaceName"] = spaceName }
         let body = try await folderMutation("createStoryFolder", "CreateStoryFolderInput", input)
+        trackBadge(.folderMade)
         let row = (body["createStoryFolder"] as? [String: Any]).flatMap { StoryFolderRow(row: $0, mySpace: space) }
             ?? StoryFolderRow(id: UUID().uuidString.lowercased(), name: name, icon: icon, mine: true, shared: shared, spaceName: spaceName)
         folderRows.append(row)
@@ -358,6 +360,7 @@ final class StoryStore {
     func toggleFavorite(_ id: String) async {
         guard let i = allStories.firstIndex(where: { $0.id == id }) else { return }
         allStories[i].favorite.toggle()
+        if allStories[i].favorite { trackBadge(.favorite) }
         let story = allStories[i]
         cache.write(Saved(stories: allStories, folders: folderRows), key: Self.cacheKey)
         guard !demo, let client else { return }

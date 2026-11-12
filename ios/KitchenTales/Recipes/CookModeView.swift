@@ -49,6 +49,7 @@ struct CookModeView: View {
         .sheet(isPresented: $showsIngredients) { ingredientsSheet }
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
+            trackBadge(.cookOpened)
             if LaunchOptions.screen == "cook" { timers.startDemo(step: step) }
             handsFree.onCommand = { command($0) }
         }
@@ -341,6 +342,7 @@ struct CookModeView: View {
             CookProgress.set(recipe.id, step: nil)
             timers.cancelAll()
             await store.markCooked(recipe.id)
+            trackBadge(.cookFinished)
         }
     }
 
@@ -383,7 +385,9 @@ struct CookModeView: View {
 
     private func command(_ c: CookCommand) {
         switch c {
-        case .next: go(1)
+        case .next:
+            go(1)
+            trackBadge(.handsFree)
         case .prev:
             if finished { withAnimation(.snappy) { finished = false } } else { go(-1) }
         case .repeatStep: handsFree.say(finished ? "Poftă bună!" : stepSpeech(step))
@@ -540,6 +544,7 @@ final class CookTimers {
         let left = timers[step].map { $0.endsAt == nil && $0.left > 0 ? $0.left : total } ?? total
         let end = Date().addingTimeInterval(TimeInterval(left))
         timers[step] = Running(total: total, left: left, endsAt: end)
+        trackBadge(.timers(running: timers.values.filter { $0.endsAt != nil }.count))
         tick()
         schedule(step, at: end)
         Haptics.tap()

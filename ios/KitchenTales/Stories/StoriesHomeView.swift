@@ -371,6 +371,11 @@ struct CollectionCard: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
+            // The cover is drawn 1.6× and blurred: clipping only hides the overflow, it still
+            // takes touches and widens the card for VoiceOver, so it would steal taps from the
+            // card above (the library cards did not open on tap).
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text([folder.icon, folder.name].compactMap { $0 }.joined(separator: " "))
@@ -414,6 +419,7 @@ struct CollectionCard: View {
         .frame(height: 132)
         .background(Color.white.opacity(0.06))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: .black.opacity(0.4), radius: 14, y: 12)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(folder.name), \(folder.subtitle)")

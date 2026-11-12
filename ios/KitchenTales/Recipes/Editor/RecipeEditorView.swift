@@ -50,7 +50,8 @@ struct RecipeEditorView: View {
         .ignoresSafeArea(edges: .top)
         .background(Theme.background.ignoresSafeArea())
         .overlay(alignment: .top) { topBar }
-        .safeAreaInset(edge: .bottom) { footer }
+        .safeAreaInset(edge: .bottom) { footer.hiddenWhileTyping() }
+        .keyboardDoneButton()
         .recipePhotoSource(isPresented: $pickingPhoto, title: photoLabel) { images in
             if let image = images.first { draft.pickPhoto(image) }
         }

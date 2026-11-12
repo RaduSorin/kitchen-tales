@@ -141,7 +141,8 @@ final class RecipesQATests: QABase {
         shot("recipe-note-typing")
         // The note's Salvează sits low on the screen, near the "Gătește pas cu pas" bar.
         let save = el("Salvează", .button)
-        log("note Salvează hittable with the keyboard up: \(save.exists && save.isHittable), frame \(save.frame)")
+        check(save.exists && save.isHittable, "the note's Salvează can be tapped with the keyboard up (frame \(save.frame))")
+        check(el("Gata", .button).exists, "a 'Gata' button above the keyboard for the multi-line note")
         tap("Salvează", .button)
         settle(1)
         if el("Închide modul de gătit", .button).exists {
@@ -335,6 +336,9 @@ final class RecipesQATests: QABase {
         expect("Listă, ", .button, exact: false, "Listă tab shows a count")
 
         enter("1 l lapte", into: "Adaugă ceva, ex. 1 l lapte")
+        settle(0.6)
+        shot("list-typing")
+        check(!(lowest("Profil", .button, exact: false)?.isHittable ?? false), "the tab bar steps aside while the keyboard is up")
         tap("Adaugă", .button, pick: .lowest)
         settle(1)
         shot("list-added-milk")

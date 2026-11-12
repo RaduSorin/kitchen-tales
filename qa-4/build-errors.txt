@@ -1,0 +1,9 @@
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTales/Features/ShareIn/ShareKitchen.swift:105:60: warning: expression implicitly coerced from 'Any?' to 'Any'
+2026-11-12 16:24:33.596 appintentsmetadataprocessor[6429:23780] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTales/Recipes/Editor/EditorText.swift:97:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type '[(NSRegularExpression, String?)]', consider removing it
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTales/Recipes/RecipeText.swift:32:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'NSRegularExpression', consider removing it
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTales/Recipes/RecipeText.swift:34:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'NSRegularExpression', consider removing it
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTales/Recipes/RecipeText.swift:35:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'NSRegularExpression', consider removing it
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTales/Recipes/RecipeText.swift:36:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'NSRegularExpression', consider removing it
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTales/Recipes/RecipeText.swift:142:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'NSRegularExpression', consider removing it
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTales/Recipes/TodayIdeas.swift:104:5: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'DateFormatter', consider removing it

@@ -44,11 +44,16 @@ struct ProfileView: View {
                     BadgeCards { path.append($0) }
                         .padding(.top, 22)
                     rows
-                    Button("Ieși din cont") { confirmSignOut = true }
-                        .font(.custom(AppFont.bodyBold, size: 16, relativeTo: .body))
-                        .foregroundStyle(Color(hex: 0xFF8F7A))
-                        .frame(maxWidth: .infinity, minHeight: 48)
-                        .padding(.top, 22)
+                    // The whole row takes the tap, not only the words.
+                    Button { confirmSignOut = true } label: {
+                        Text("Ieși din cont")
+                            .font(.custom(AppFont.bodyBold, size: 16, relativeTo: .body))
+                            .foregroundStyle(Color(hex: 0xFF8F7A))
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 22)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, KTTabBarMetrics.height + 28)

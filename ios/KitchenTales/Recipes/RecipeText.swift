@@ -179,10 +179,10 @@ enum RecipeText {
         return s.replacingOccurrences(of: "ea", with: "e").replacingOccurrences(of: "oa", with: "o").replacingOccurrences(of: "a", with: "e")
     }
 
-    private static func sameWord(_ a: String, _ b: String) -> Bool {
-        if a == b { return true }
-        let (short, long) = a.count <= b.count ? (a, b) : (b, a)
-        return short.count >= 3 && long.hasPrefix(short)
+    /// The text's word is the query's word, or starts with it ("cart" finds "cartofi"). Not the
+    /// other way round: then the short "care" (stem "cer") matched the query "cartofi" ("certof").
+    private static func sameWord(text: String, query: String) -> Bool {
+        text == query || (query.count >= 3 && text.hasPrefix(query))
     }
 
     /// True when every word of the query is in the text, as typed or as another form of it.
@@ -191,7 +191,7 @@ enum RecipeText {
         guard !words.isEmpty else { return true }
         let t = norm(text)
         let stems = t.split { !$0.isLetter && !$0.isNumber }.map { stem(String($0)) }
-        return words.allSatisfy { w in t.contains(w) || stems.contains { sameWord($0, stem(w)) } }
+        return words.allSatisfy { w in t.contains(w) || stems.contains { sameWord(text: $0, query: stem(w)) } }
     }
 
     // MARK: Days

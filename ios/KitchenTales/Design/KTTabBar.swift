@@ -38,6 +38,9 @@ struct KTTabBar<Value: Hashable>: View {
         .padding(.horizontal, 12)
         .padding(.bottom, 4)
         .environment(\.colorScheme, .dark)
+        // The bar has a fixed height (KTTabBarMetrics) and five labels side by side: like the
+        // system tab bar it keeps its size with big text, and a long press shows the label large.
+        .dynamicTypeSize(...DynamicTypeSize.large)
     }
 
     private func tab(_ item: KTTabItem<Value>) -> some View {
@@ -81,6 +84,10 @@ struct KTTabBar<Value: Hashable>: View {
         .buttonStyle(TabPressStyle())
         .accessibilityLabel(item.badge > 0 ? "\(item.label), \(item.badge) de luat" : item.label)
         .accessibilityAddTraits(on ? .isSelected : [])
+        .accessibilityShowsLargeContentViewer {
+            TabIcon(glyph: item.glyph, solid: on)
+            Text(item.label)
+        }
     }
 }
 

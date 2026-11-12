@@ -97,6 +97,7 @@ final class StoryPlayer {
     /// Starts `story` (from where it was paused), with `queue` to continue through.
     /// `continued` is true when the previous story just ended, so "După N povești" keeps counting.
     func play(_ story: Story, queue: [Story]? = nil, store: StoryStore, continued: Bool = false) async {
+        guard !lockedByKidMode else { return }
         self.store = store
         self.queue = queue ?? [story]
         ended = false
@@ -148,8 +149,11 @@ final class StoryPlayer {
         Task { [weak self] in await self?.loadDetails(item: item, story: story) }
     }
 
+    /// Kid mode's time ran out: nothing plays until a parent unlocks.
+    var lockedByKidMode = false
+
     func resume() {
-        guard current != nil else { return }
+        guard current != nil, !lockedByKidMode else { return }
         if ended { ended = false; seek(to: 0) }
         activateSession()
         player.playImmediately(atRate: rate)

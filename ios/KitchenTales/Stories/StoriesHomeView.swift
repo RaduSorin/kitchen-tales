@@ -173,7 +173,7 @@ struct StoriesHomeView: View {
                 Button("Încearcă din nou") { Task { await store.refresh() } }.buttonStyle(.ktPrimary)
             case .loaded:
                 EmptyStateView(symbol: "moon.stars", title: "Nicio poveste încă",
-                               message: "Adaugă prima poveste din aplicația web și apare aici.")
+                               message: "Din Adaugă poți crea o poveste, o citești tu sau încarci un fișier audio.")
             }
         }
         .frame(maxWidth: .infinity)
@@ -352,6 +352,8 @@ private struct FromTheKitchen: View {
 /// icon, "4 povești · 36 min", the Nou / în curs tags, and three covers fanned on the right.
 struct CollectionCard: View {
     let folder: StoryFolder
+    /// 132 points at the default text size, taller with bigger text so the title fits.
+    @ScaledMetric(relativeTo: .headline) private var height: CGFloat = 132
 
     var body: some View {
         let art = folder.items.filter { $0.coverKey != nil } + folder.items.filter { $0.coverKey == nil }
@@ -416,7 +418,7 @@ struct CollectionCard: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
             .padding(.trailing, 14)
         }
-        .frame(height: 132)
+        .frame(height: height)
         .background(Color.white.opacity(0.06))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))

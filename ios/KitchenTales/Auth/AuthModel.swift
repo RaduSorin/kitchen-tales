@@ -48,20 +48,42 @@ final class AuthModel {
 
     /// Tokens for a server call, refreshed when they are about to expire.
     func validTokens() async throws -> Tokens {
-        guard let current = tokens, let client else { throw AuthError.sessionExpired }
+        guard let current = tokens, client != nil else { throw AuthError.sessionExpired }
         if current.isFresh { return current }
+        // Several stores ask at once on launch: they share one refresh.
+        if let running = refreshing { return try await running.value }
+        let task = Task { try await refresh(current) }
+        refreshing = task
+        defer { refreshing = nil }
+        return try await task.value
+    }
+
+    private var refreshing: Task<Tokens, Error>?
+
+    private func refresh(_ current: Tokens) async throws -> Tokens {
+        guard let client else { throw AuthError.sessionExpired }
         do {
             let next = try await client.refresh(current)
             accept(next)
             isOffline = false
             return next
-        } catch AuthError.network {
-            isOffline = true
-            throw AuthError.network
-        } catch {
-            // Revoked or expired: sign in again.
+        } catch let error as AuthError where Self.endsSession(error) {
+            // The refresh token was revoked or has expired: sign in again.
             signOutLocally()
             throw AuthError.sessionExpired
+        } catch {
+            // No internet, a bad Wi-Fi portal, throttling, a server error: keep the session and
+            // carry on with what is saved, like when offline. Only Cognito saying no signs out.
+            isOffline = true
+            throw AuthError.network
+        }
+    }
+
+    /// Whether a refresh error means the session is over (rather than "try again later").
+    nonisolated static func endsSession(_ error: AuthError) -> Bool {
+        switch error {
+        case .sessionExpired, .wrongCredentials, .userNotFound: true
+        default: false
         }
     }
 

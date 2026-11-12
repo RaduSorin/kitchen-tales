@@ -81,11 +81,22 @@ enum ShoppingMerge {
         return words.joined(separator: " ")
     }
 
+    /// 1.5 → "1 ½" (an exact half or quarter reads well), 1.3 → "1,3", 2.0 → "2". Rounding to
+    /// the nearest fraction would turn 1300 ml into "1 ⅓ l", a different amount.
+    private static func metric(_ n: Double) -> String {
+        let r = (n * 100).rounded() / 100
+        let frac = r - r.rounded(.down)
+        if [0, 0.25, 0.5, 0.75].contains(where: { abs(frac - $0) < 0.001 }) { return RecipeText.formatQuantity(r) }
+        var text = String(format: "%.2f", r)
+        while text.hasSuffix("0") { text.removeLast() }
+        return text.replacingOccurrences(of: ".", with: ",")
+    }
+
     private static func amountText(_ total: Double, _ unit: Unit?) -> String {
         guard let unit else { return RecipeText.formatQuantity(total) }
         if unit.base == "g" || unit.base == "ml" {
             let big = unit.base == "g" ? "kg" : "l"
-            return total >= 1000 ? "\(RecipeText.formatQuantity(total / 1000)) \(big)" : "\(RecipeText.formatQuantity(total)) \(unit.base)"
+            return total >= 1000 ? "\(metric(total / 1000)) \(big)" : "\(Int(total.rounded())) \(unit.base)"
         }
         return "\(RecipeText.formatQuantity(total)) \(total > 1 ? unit.many : unit.one)"
     }

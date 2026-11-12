@@ -61,6 +61,15 @@ struct AuthTests {
         #expect(AuthError.wrongCredentials.errorDescription == "E-mailul sau parola nu sunt corecte.")
     }
 
+    @Test func onlyCognitoSayingNoEndsTheSession() {
+        #expect(AuthModel.endsSession(.sessionExpired))
+        #expect(AuthModel.endsSession(.wrongCredentials))
+        #expect(AuthModel.endsSession(.userNotFound))
+        #expect(!AuthModel.endsSession(.network))
+        #expect(!AuthModel.endsSession(.tooManyAttempts))
+        #expect(!AuthModel.endsSession(.other("HTTP 503")))
+    }
+
     @Test func tokensFreshness() {
         let soon = Tokens(accessToken: "a", idToken: "i", refreshToken: "r", expiresAt: Date().addingTimeInterval(60))
         let later = Tokens(accessToken: "a", idToken: "i", refreshToken: "r", expiresAt: Date().addingTimeInterval(3600))

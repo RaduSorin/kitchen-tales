@@ -54,14 +54,21 @@ cd ios && xcodegen generate && open KitchenTales.xcodeproj
 
 ## CI
 
-The workflow runs on every push to a `claude/**` branch that changes `ios/`, and on pull
-requests from other branches. It first runs `scripts/precheck.py` on Linux (about 15 seconds),
-then on macOS builds the app, runs the unit tests on the newest iPhone simulator and takes
-screenshots of the main screens: they are uploaded as the artifact `ios-screenshots` and
-committed to the `ios-screenshots` branch under `pr-<number>/` (or the branch name for a push
-run). A `claude/**` branch is not built again for its pull request: the push run's result shows
-on the PR. The `testflight-readiness` job reports which App Store Connect secrets are set
-(`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`), never their values.
+The workflow runs on every push to a `claude/**` branch (and to `main`) that changes `ios/`, and
+on pull requests from other branches. It first runs `scripts/precheck.py` on Linux (about 15
+seconds), then on macOS builds the app and runs the unit tests on the newest iPhone simulator.
+DerivedData is cached between runs (file dates are restored from git), so a warm build and test
+takes about 5 minutes instead of 14. A `claude/**` branch is not built again for its pull request:
+the push run's result shows on the PR. The `testflight-readiness` job reports which App Store
+Connect secrets are set (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`), never
+their values.
+
+On demand only (Actions > Run workflow):
+- **iOS** started by hand also takes screenshots of the main screens (about 10 minutes). They are
+  uploaded as the artifact `ios-screenshots` and committed to the `ios-screenshots` branch under
+  the branch name.
+- **iOS QA** (`ios-qa.yml`) runs the XCUITest walk in `KitchenTalesUITests` over every screen
+  (over an hour). Results go to `ios-screenshots/qa-<run>/`.
 
 ## Before pushing Swift without a Mac
 

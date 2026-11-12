@@ -21,6 +21,14 @@ struct ShoppingMergeTests {
         #expect(rows[0].text == "1 ½ kg cartofi")
     }
 
+    @Test func metricSumsKeepTheirAmount() {
+        let milk = ShoppingMerge.rows([line("1", "300 ml lapte", "A"), line("2", "1 l lapte", "B")])
+        #expect(milk.count == 1)
+        #expect(milk[0].text == "1,3 l lapte")
+        let flour = ShoppingMerge.rows([line("1", "250 g făină", "A"), line("2", "1 kg făină", "B")])
+        #expect(flour[0].text == "1 ¼ kg făină")
+    }
+
     @Test func rangesStayOnTheirOwn() {
         let rows = ShoppingMerge.rows([line("1", "2-3 căței usturoi", "A"), line("2", "2 căței usturoi", "B")])
         #expect(rows.count == 2)

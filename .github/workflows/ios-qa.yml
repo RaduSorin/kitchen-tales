@@ -3,13 +3,12 @@
 # screens on the smallest iPhone and on an iPad. Screenshots, the QA log (qa-log.txt: one line
 # per check, FAIL lines for problems, A11Y lines from Apple's accessibility audit) and the
 # accessibility trees go to the artifact `ios-qa` and to the ios-screenshots branch under
-# qa-<run number>/. Failing checks do not fail the job: the log is the result.
+# qa-<run number>/. Failing checks do not fail the job: the log is the result. Run it by hand.
 name: iOS QA
 
+# Only on demand (Actions > iOS QA > Run workflow): the full walk takes over an hour, so it is
+# not part of the normal build.
 on:
-  push:
-    branches: ['claude/**']
-    paths: ['ios/KitchenTalesUITests/**', '.github/workflows/ios-qa.yml']
   workflow_dispatch:
 
 concurrency:

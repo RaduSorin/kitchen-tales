@@ -32,6 +32,8 @@ shot 0c-login-code -screen login-code
 shot 1-home -demo YES -tab home
 shot 1b-home-week -demo YES -tab home -screen home-week
 shot 1c-home-caiet -demo YES -tab home -screen home-caiet
+shot 1d-search -demo YES -tab home -screen search
+shot 1e-search-results -demo YES -tab home -screen search-results
 shot 2-recipes -demo YES -tab recipes
 shot 2b-recipe -demo YES -tab home -screen recipe
 shot 2b2-recipe-steps -demo YES -tab home -screen recipe-steps
@@ -52,10 +54,14 @@ shot 2j-editor-ideas -demo YES -tab recipes -screen editor-ideas
 shot 2k-editor-details -demo YES -tab recipes -screen editor-edit
 shot 2l-editor-ingredients -demo YES -tab recipes -screen editor-ingredients
 shot 2m-editor-steps -demo YES -tab recipes -screen editor-steps
+shot 2q-recipes-magazine -demo YES -tab recipes -kt-recipes-view magazine
+shot 2r-recipes-rows -demo YES -tab recipes -kt-recipes-view rows
+shot 2s-recipes-list -demo YES -tab recipes -kt-recipes-view list
 shot 2n-recipe-delete -demo YES -tab home -screen recipe-delete
 shot 3-profile -demo YES -tab profile
 shot 3b-profile-child -demo YES -tab profile -screen profile-child
 shot 3c-profile-family -demo YES -tab profile -screen profile-family
+shot 3c2-profile-people -demo YES -tab profile -screen profile-people
 shot 3d-profile-invite -demo YES -tab profile -screen profile-invite
 shot 3e-profile-prefs -demo YES -tab profile -screen profile-prefs
 shot 3h-passport -demo YES -tab profile -screen passport

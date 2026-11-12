@@ -65,6 +65,7 @@ struct RecipesHomeView: View {
             if ["recipe", "cook", "cook-ingredients", "recipe-delete", "recipe-steps", "recipe-notes", "recipe-facts"].contains(LaunchOptions.screen), let first = store.recipes.first, path.isEmpty {
                 path = [.recipe(first.id)]
             }
+            if ["search", "search-results"].contains(LaunchOptions.screen), path.isEmpty { path = [.search] }
         }
     }
 
@@ -72,7 +73,7 @@ struct RecipesHomeView: View {
         HStack {
             AreaPicker(current: .recipes)
             Spacer()
-            Button { kitchen.tab = .recipes } label: {
+            Button { path.append(.search) } label: {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Theme.text)

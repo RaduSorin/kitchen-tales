@@ -238,3 +238,32 @@ enum RecipeText {
         return s.prefix(1).uppercased() + s.dropFirst()
     }
 }
+
+// MARK: Cooking mode
+
+extension RecipeText {
+    private static let stopWords: Set<String> = ["de", "cu", "si", "la", "din", "pentru", "sau", "mare", "mic", "mica", "mari", "proaspat", "proaspata",
+        "tocat", "tocata", "buc", "bucati", "bucata", "g", "gr", "kg", "ml", "l", "lingura", "linguri", "lingurita", "lingurite", "lg", "lgt",
+        "cana", "cani", "praf", "varf", "catel", "catei", "felie", "felii", "pachet", "plic", "dupa", "gust"]
+
+    private static func letterWords(_ s: String) -> [String] {
+        norm(s).split { !("a"..."z").contains($0) }.map(String.init)
+    }
+
+    /// The main word of an ingredient line: "500 g carne tocată" → "carne".
+    static func keyword(_ line: String) -> String? {
+        let rest = parseQuantity(line)?.rest ?? line
+        return letterWords(rest).first { $0.count >= 3 && !stopWords.contains($0) }
+    }
+
+    /// Ingredient lines a step seems to mention, on a 4-letter stem so "ceapa" finds "ceapă mare"
+    /// (the web's ingredientsForStep).
+    static func ingredientsForStep(_ step: String, _ ingredients: [String]) -> [String] {
+        let words = letterWords(step)
+        return ingredients.filter { line in
+            guard !isHeading(line), let k = keyword(line) else { return false }
+            let stem = String(k.prefix(4))
+            return words.contains { $0.hasPrefix(stem) }
+        }
+    }
+}

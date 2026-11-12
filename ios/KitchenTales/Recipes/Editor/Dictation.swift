@@ -24,7 +24,7 @@ final class Dictation {
 
     var busy: Bool { state != .idle }
 
-    func start(onText: @escaping (_ phrases: [String], _ partial: String) -> Void) async {
+    func start(mode: AVAudioSession.Mode = .measurement, onText: @escaping (_ phrases: [String], _ partial: String) -> Void) async {
         guard state == .idle else { return }
         error = nil
         seconds = 0
@@ -40,7 +40,7 @@ final class Dictation {
         }
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
+            try session.setCategory(.playAndRecord, mode: mode, options: [.duckOthers, .defaultToSpeaker])
             try session.setActive(true, options: .notifyOthersOnDeactivation)
             let engine = AVAudioEngine()
             let request = SFSpeechAudioBufferRecognitionRequest()

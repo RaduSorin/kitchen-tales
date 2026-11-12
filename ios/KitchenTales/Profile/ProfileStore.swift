@@ -143,6 +143,7 @@ final class ProfileStore {
         guard let client else { throw BackendError.offline }
         let body = try await client.run("mutation I($email: String!, $separate: Boolean) { inviteFamilyMember(email: $email, separate: $separate) { \(FamilyMember.fields) } }",
                                         variables: ["email": clean, "separate": separate])
+        trackBadge(.invited)
         if let row = body["inviteFamilyMember"] as? [String: Any], let member = FamilyMember(row: row) {
             members.removeAll { $0.email == member.email }
             members.append(member)

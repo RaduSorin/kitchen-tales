@@ -78,7 +78,7 @@ struct RecipeDetailView: View {
         }
         .task {
             if servings == nil { servings = r.servings }
-            if LaunchOptions.screen == "cook", kitchen.cooking == nil { kitchen.cook(r) }
+            if ["cook", "cook-ingredients"].contains(LaunchOptions.screen), kitchen.cooking == nil { kitchen.cook(r) }
             if LaunchOptions.screen == "recipe-steps" { tab = .steps }
             if LaunchOptions.screen == "recipe-notes" { tab = .notes }
         }
@@ -228,8 +228,8 @@ struct RecipeDetailView: View {
             if r.servings != nil, let s = servings {
                 HStack(spacing: 6) {
                     Text(s == 1 ? "1 porție" : "\(s) porții").contentTransition(.numericText()).monospacedDigit()
-                    servingsButton("−", label: "Mai puține porții", enabled: s > 1) { servings = s - 1 }
-                    servingsButton("+", label: "Mai multe porții", enabled: s < 50) { servings = s + 1 }
+                    servingsButton("−", label: "Mai puține porții", enabled: s > 1) { servings = s - 1; trackBadge(.servings) }
+                    servingsButton("+", label: "Mai multe porții", enabled: s < 50) { servings = s + 1; trackBadge(.servings) }
                 }
             }
             if !r.steps.isEmpty { Text(r.steps.count == 1 ? "1 pas" : "\(r.steps.count) pași") }

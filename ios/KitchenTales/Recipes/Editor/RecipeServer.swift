@@ -121,6 +121,24 @@ struct RecipeServer {
         return (data as? [Any] ?? []).compactMap(RecipeIdea.init(json:))
     }
 
+    /// "Propune cinele săptămânii": the evenings' dinners, from our recipes and a few new ones when
+    /// allowed (the web's planWeek). `swapDay` asks again for that evening only.
+    func planWeek(days: String, recipes: String, recent: [String], fridge: String?, diet: String?, tools: [String],
+                  allowNew: Bool, swapDay: String? = nil, keep: [String]? = nil) async throws -> [PlannedDinner] {
+        let mutation = """
+        mutation Plan($jobId: String!, $days: String!, $recipes: String, $recent: [String], $fridge: String, $diet: String, $tools: [String], $allowNew: Boolean, $swapDay: String, $keep: [String]) {
+          startPlanWeek(jobId: $jobId, days: $days, recipes: $recipes, recent: $recent, fridge: $fridge, diet: $diet, tools: $tools, allowNew: $allowNew, swapDay: $swapDay, keep: $keep) { success }
+        }
+        """
+        var v: [String: Any] = ["days": days, "recipes": recipes, "recent": recent, "tools": tools, "allowNew": allowNew]
+        v["fridge"] = fridge ?? NSNull()
+        v["diet"] = diet ?? NSNull()
+        v["swapDay"] = swapDay ?? NSNull()
+        v["keep"] = keep ?? NSNull()
+        guard let data = try await runJob(mutation, v) as? [Any] else { throw BackendError.server("Nu am putut citi planul.") }
+        return data.compactMap { PlannedDinner(json: $0 as? [String: Any]) }
+    }
+
     /// Draws a photo for the recipe with AI; returns its path.
     func generatePhoto(title: String, ingredients: [String]) async throws -> String {
         let body = try await client.run("mutation Pic($title: String!, $ingredients: [String]) { generateRecipePhoto(title: $title, ingredients: $ingredients) }",

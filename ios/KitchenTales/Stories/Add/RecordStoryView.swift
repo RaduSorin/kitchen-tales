@@ -101,6 +101,92 @@ struct RecordStoryView: View {
     @State private var confirmLeave = false
 
     var body: some View {
+        Group {
+            if recorder.state == .recording || recorder.state == .paused || recorder.hasAudio {
+                recording
+            } else {
+                idle
+            }
+        }
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                CloseButton(symbol: "chevron.left") { if recorder.hasAudio { confirmLeave = true } else { recorder.discard(); onClose() } }
+            }
+        }
+        .confirmationDialog("Pleci fără să salvezi?", isPresented: $confirmLeave, titleVisibility: .visible) {
+            Button("Pleacă și renunță", role: .destructive) { recorder.discard(); onClose() }
+            Button("Rămân să o salvez", role: .cancel) {}
+        } message: {
+            Text("Înregistrarea ta nu e salvată încă. Dacă pleci acum, se pierde.")
+        }
+        .interactiveDismissDisabled(recorder.hasAudio)
+    }
+
+    /// Before the first word, like the web: the question, three tips, a quiet 0:00 and the gold mic.
+    private var idle: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            StoryQuestion(kicker: "Citește tu", title: "Ia cartea și citește cu glas tare", text: nil)
+            VStack(alignment: .leading, spacing: 14) {
+                tip("mic", "Ține telefonul la o palmă de gură")
+                tip("pause", "Poți face pauză oricând și continui")
+                tip("text.alignleft", "Titlul și coperta le alegi la final")
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 20).fill(Theme.Night.surface))
+            .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.white.opacity(0.08)))
+            Spacer(minLength: 12)
+            VStack(spacing: 14) {
+                Text(clockTime(0))
+                    .font(.custom(AppFont.storyDisplay, size: 54, relativeTo: .largeTitle).monospacedDigit())
+                    .foregroundStyle(Theme.Night.muted)
+                Button {
+                    Haptics.tap()
+                    Task { await recorder.start() }
+                } label: {
+                    ZStack {
+                        Circle().strokeBorder(Theme.accent.opacity(0.35), lineWidth: 2)
+                        Circle().fill(Theme.accent.opacity(0.12)).padding(12)
+                        Circle().fill(Theme.accent).frame(width: 64, height: 64)
+                            .shadow(color: Theme.accent.opacity(0.5), radius: 18)
+                        Image(systemName: "mic.fill")
+                            .font(.system(size: 26, weight: .semibold))
+                            .foregroundStyle(Theme.Night.ink)
+                    }
+                    .frame(width: 116, height: 116)
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel("Începe înregistrarea")
+                Text("Începe")
+                    .font(.custom(AppFont.bodyBold, size: 15, relativeTo: .callout))
+                    .foregroundStyle(Theme.accent)
+                    .accessibilityHidden(true)
+                if recorder.state == .denied || recorder.state == .failed {
+                    Text(status).font(.ktFootnote).foregroundStyle(Theme.Night.danger).multilineTextAlignment(.center)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            Spacer(minLength: 24)
+        }
+        .foregroundStyle(Theme.text)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .ktNightBackground()
+    }
+
+    private func tip(_ symbol: String, _ text: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.accent)
+                .frame(width: 22)
+            Text(text).font(.ktCallout).foregroundStyle(Theme.text.opacity(0.85))
+        }
+    }
+
+    private var recording: some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Ia cartea și citește cu glas tare")
@@ -134,19 +220,6 @@ struct RecordStoryView: View {
             .ignoresSafeArea()
         }
         .animation(.easeInOut(duration: 0.4), value: recorder.state)
-        .navigationBarBackButtonHidden()
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                CloseButton { if recorder.hasAudio { confirmLeave = true } else { recorder.discard(); onClose() } }
-            }
-        }
-        .confirmationDialog("Pleci fără să salvezi?", isPresented: $confirmLeave, titleVisibility: .visible) {
-            Button("Pleacă și renunță", role: .destructive) { recorder.discard(); onClose() }
-            Button("Rămân să o salvez", role: .cancel) {}
-        } message: {
-            Text("Înregistrarea ta nu e salvată încă. Dacă pleci acum, se pierde.")
-        }
-        .interactiveDismissDisabled(recorder.hasAudio)
     }
 
     private var status: String {

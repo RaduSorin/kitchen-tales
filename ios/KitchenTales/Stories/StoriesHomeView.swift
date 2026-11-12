@@ -72,6 +72,7 @@ struct StoriesHomeView: View {
         HStack {
             AreaPicker(current: .stories)
             Spacer()
+            AlbumButton()
             Button(action: openLibrary) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 16, weight: .semibold))

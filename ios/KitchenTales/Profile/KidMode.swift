@@ -43,6 +43,7 @@ final class KidMode {
         state = State(active: true, endsAt: minutes > 0 ? Date().addingTimeInterval(Double(minutes) * 60) : nil,
                       total: Double(minutes) * 60, locked: false, wrong: state.wrong, waitUntil: state.waitUntil)
         schedule()
+        trackBadge(.kidMode)
     }
 
     /// More time: from now when the time ran out, otherwise added to what is left.

@@ -141,6 +141,7 @@ final class RecipeStore {
         let day = RecipeText.dayKey(Date())
         guard !(log(recipeId)?.cooked.contains(day) ?? false) else { return }
         await changeLog(recipeId) { $0.cooked = ($0.cooked + [day]).sorted() }
+        trackBadge(.cooked(recipeId: recipeId))
     }
 
     func addNote(_ recipeId: String, text: String) async {
@@ -148,6 +149,7 @@ final class RecipeStore {
         guard !trimmed.isEmpty else { return }
         let note = CookNote(day: RecipeText.dayKey(Date()), text: trimmed, by: myName())
         await changeLog(recipeId) { $0.notes.append(note) }
+        trackBadge(.cookNote)
     }
 
     func removeNote(_ recipeId: String, _ note: CookNote) async {
@@ -201,6 +203,12 @@ final class RecipeStore {
         entry.leftovers = leftovers
         plan.append(entry)
         save()
+        // Every day of that week now has something planned: a stamp.
+        var cal = Calendar.current
+        cal.firstWeekday = 2
+        let monday = cal.dateInterval(of: .weekOfYear, for: day)?.start ?? day
+        let week = Set((0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: monday).map { RecipeText.dayKey($0) } })
+        if Set(plan.map(\.day).filter(week.contains)).count == 7 { trackBadge(.weekFull) }
         guard !demo, let client else { return true }
         do {
             guard let space = mySpace() else { throw BackendError.notConfigured }
@@ -227,10 +235,11 @@ final class RecipeStore {
     /// Puts the ingredients on the list, scaled to the servings; skips lines already there and
     /// not bought; the same recipe at other servings replaces its amounts. Returns lines added,
     /// or nil when the server refused.
-    func addToShopping(_ recipe: Recipe, servings: Int? = nil) async -> Int? {
+    /// `skip`: lines already at home ("Ce ai deja acasă?" in the week plan).
+    func addToShopping(_ recipe: Recipe, servings: Int? = nil, skip: ((String) -> Bool)? = nil) async -> Int? {
         let factor = recipe.servings.flatMap { base in servings.map { Double($0) / Double(base) } } ?? 1
         let lines = recipe.ingredients.map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty && !RecipeText.isHeading($0) }
+            .filter { !$0.isEmpty && !RecipeText.isHeading($0) && !(skip?($0) ?? false) }
             .map { RecipeText.scaleIngredient($0, factor: factor) }
         var mine = shopping.filter { !$0.checked && $0.recipeId == recipe.id }
         var toRemove: [ShoppingLine] = []
@@ -347,6 +356,7 @@ final class RecipeStore {
     /// Shares a recipe of ours with every account ("everyone"), or makes it private again.
     func setShared(_ id: String, _ shared: Bool, spaceName: String?) async -> Bool {
         guard let i = recipes.firstIndex(where: { $0.id == id }) else { return false }
+        if shared { trackBadge(.shared) }
         recipes[i].shared = shared
         save()
         do {
@@ -483,8 +493,22 @@ final class RecipeStore {
     func toggleChecked(_ lineId: String) async -> Bool {
         guard let line = shopping.first(where: { $0.id == lineId }) else { return false }
         let checked = !line.checked
+        defer { if checked, shopping.allSatisfy(\.checked) { trackBadge(.shoppingDone) } }
         return await change({ if let i = shopping.firstIndex(where: { $0.id == lineId }) { shopping[i].checked = checked } }) {
             try await mutate("updateShoppingItem", "UpdateShoppingItemInput", ["id": lineId, "text": line.text, "checked": checked])
+        }
+    }
+
+    /// Ticks (or unticks) every stored line of a merged row.
+    @discardableResult
+    func setChecked(_ ids: [String], _ checked: Bool) async -> Bool {
+        let lines = shopping.filter { ids.contains($0.id) && $0.checked != checked }
+        guard !lines.isEmpty else { return true }
+        defer { if checked, shopping.allSatisfy(\.checked) { trackBadge(.shoppingDone) } }
+        return await change({ for i in shopping.indices where ids.contains(shopping[i].id) { shopping[i].checked = checked } }) {
+            for line in lines {
+                try await mutate("updateShoppingItem", "UpdateShoppingItemInput", ["id": line.id, "text": line.text, "checked": checked])
+            }
         }
     }
 

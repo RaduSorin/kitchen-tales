@@ -27,6 +27,7 @@ private struct SignedInRoot: View {
     @State private var stories: StoryStore
     @State private var recipes: RecipeStore
     @State private var profile: ProfileStore
+    @State private var badges: BadgeStore
     @State private var kid = KidMode()
     @State private var kitchen = KitchenModel()
     @State private var area = AreaModel()
@@ -35,6 +36,7 @@ private struct SignedInRoot: View {
         _stories = State(initialValue: StoryStore(auth: auth))
         _recipes = State(initialValue: RecipeStore(auth: auth))
         _profile = State(initialValue: ProfileStore(auth: auth))
+        _badges = State(initialValue: BadgeStore(auth: auth))
     }
 
     var body: some View {
@@ -45,9 +47,11 @@ private struct SignedInRoot: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: area.current)
+        .overlay { BadgeCelebration() }
         .environment(stories)
         .environment(recipes)
         .environment(profile)
+        .environment(badges)
         .environment(kid)
         .environment(kitchen)
         .environment(StoryPlayer.shared)
@@ -66,6 +70,7 @@ private struct SignedInRoot: View {
             Haptics.select()
         }
         .onChange(of: kid.active) { if !kid.active { stories.kidFolders = [] } }
+        .task { await badges.start() }
     }
 }
 

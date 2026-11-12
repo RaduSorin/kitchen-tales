@@ -190,6 +190,8 @@ struct FinishStoryView: View {
             if let file = draft.audioFile { store.offline.adopt(file, for: story) }
             if let cover = draft.cover, let key = coverKey { CoverImages.shared.keep(cover, key) }
             store.added(story)
+            if let source = BadgeEvent.Source(rawValue: story.source.rawValue) { trackBadge(.storyAdded(source)) }
+            if coverKey != nil { trackBadge(.storyCover) }
             Haptics.success()
             onDone()
         } catch {

@@ -17,9 +17,11 @@ enum AppFont {
     static let kidsSemibold = "Baloo2-SemiBold"
     static let kidsHeavy = "Baloo2-ExtraBold"
     static let storyDisplay = "YoungSerif-Regular"
+    /// Handwriting, for the passport and the sticker album (as on the web).
+    static let hand = "Caveat-Bold"
 
     static let all = [display, displaySemibold, displayItalic, body, bodySemibold, bodyBold, bodyHeavy,
-                      kids, kidsSemibold, kidsHeavy, storyDisplay]
+                      kids, kidsSemibold, kidsHeavy, storyDisplay, hand]
 
     /// A UIKit font that follows Dynamic Type, falling back to the system font if the file is missing.
     static func uiFont(_ name: String, size: CGFloat, textStyle: UIFont.TextStyle) -> UIFont {

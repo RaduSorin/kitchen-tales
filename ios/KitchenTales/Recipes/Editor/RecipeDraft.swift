@@ -55,6 +55,8 @@ final class RecipeDraft {
     var error = ""
     var saving = false
     var aiBusy = false
+    /// How the recipe came in, for its stamp (the web's `way`).
+    @ObservationIgnored var way: BadgeEvent.Way = .written
 
     @ObservationIgnored private let server: RecipeServer?
     @ObservationIgnored private var aiJob: Task<String?, Never>?
@@ -127,7 +129,7 @@ final class RecipeDraft {
         factsFor = "\(x.ingredients.joined(separator: "\n"))|\(x.servings.map(String.init) ?? "")"
     }
 
-    private func run(_ label: String, _ work: @escaping @MainActor (RecipeServer) async throws -> ImportedRecipe) {
+    private func run(_ label: String, _ how: BadgeEvent.Way, _ work: @escaping @MainActor (RecipeServer) async throws -> ImportedRecipe) {
         guard let server else { error = "Importul nu a reușit: \(BackendError.notConfigured.localizedDescription)"; return }
         importing = label
         error = ""
@@ -135,6 +137,7 @@ final class RecipeDraft {
             do {
                 let x = try await work(server)
                 apply(x)
+                way = how
                 Haptics.success()
                 // No photo from the source: draw one with AI in the background.
                 if x.photoKey == nil && original?.photoKey == nil && photo == nil { makeAiPhoto() }
@@ -157,7 +160,7 @@ final class RecipeDraft {
         guard !text.isEmpty else { return }
         if let link = EditorText.asLink(text) {
             let site = EditorText.videoSite(link)
-            run(site.map { "Citesc rețeta din videoclipul de pe \($0)…" } ?? "Citesc rețeta de pe site…") {
+            run(site.map { "Citesc rețeta din videoclipul de pe \($0)…" } ?? "Citesc rețeta de pe site…", site == nil ? .link : .video) {
                 try await $0.importRecipe(.init(url: link))
             }
             return
@@ -166,8 +169,9 @@ final class RecipeDraft {
         // Clear "Ingrediente / Mod de preparare" text is split on the phone; anything looser is read by the AI.
         if !dictated && !p.ingredients.isEmpty && !p.steps.isEmpty {
             fill(p.title, p.ingredients, p.steps)
+            way = .text
         } else {
-            run("Citesc rețeta…") { try await $0.importRecipe(.init(text: text)) }
+            run("Citesc rețeta…", dictated ? .dictation : .text) { try await $0.importRecipe(.init(text: text)) }
         }
     }
 
@@ -180,7 +184,7 @@ final class RecipeDraft {
     func importPhotos() {
         guard !pages.isEmpty else { return }
         let pages = self.pages
-        run(pages.count > 1 ? "Citesc rețeta din \(pages.count) poze…" : "Citesc rețeta din poză…") { try await $0.importPhotos(pages) }
+        run(pages.count > 1 ? "Citesc rețeta din \(pages.count) poze…" : "Citesc rețeta din poză…", .photo) { try await $0.importPhotos(pages) }
     }
 
     func tools(_ all: [String]) -> [String] { all.filter { !skipTools.contains($0) } }
@@ -189,7 +193,7 @@ final class RecipeDraft {
         let text = idea.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         let servings = genServings
-        run("Scriu rețeta…") { try await $0.importRecipe(.init(idea: text, tools: tools, servings: servings, diet: diet)) }
+        run("Scriu rețeta…", .ai) { try await $0.importRecipe(.init(idea: text, tools: tools, servings: servings, diet: diet)) }
     }
 
     func suggest(tools: [String], diet: String?) {
@@ -213,7 +217,7 @@ final class RecipeDraft {
     func pick(_ x: RecipeIdea, tools: [String], diet: String?) {
         let brief = EditorText.ideaBrief(x, fridge: fridge)
         let servings = genServings
-        run("Scriu rețeta „\(x.title)”…") { try await $0.importRecipe(.init(idea: brief, tools: tools, servings: servings, diet: diet)) }
+        run("Scriu rețeta „\(x.title)”…", .fridge) { try await $0.importRecipe(.init(idea: brief, tools: tools, servings: servings, diet: diet)) }
     }
 
     // MARK: Photos
@@ -327,6 +331,7 @@ final class RecipeDraft {
             gone += (original?.stepPhotoKeys ?? []).filter { !$0.isEmpty && !stepKeys.contains($0) }
             await server.deleteFiles(gone)
             store.saved(saved)
+            if isNew { trackBadge(.recipeAdded(way: way, category: saved.category, photo: saved.photoKey != nil)) }
             Haptics.success()
             return saved
         } catch {

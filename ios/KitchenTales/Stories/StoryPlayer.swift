@@ -15,6 +15,8 @@ final class StoryPlayer {
 
     private(set) var current: Story?
     private(set) var queue: [Story] = []
+    /// The story playing comes from the phone's copy (for the offline sticker).
+    @ObservationIgnored private var fromDevice = false
     private(set) var isPlaying = false
     private(set) var isLoading = false
     private(set) var position: Double = 0
@@ -119,6 +121,7 @@ final class StoryPlayer {
             return
         }
         let local = store.offline.localFile(story.id)
+        fromDevice = local != nil
         var remote: URL?
         if local == nil, let links = store.links { remote = await links.url(for: story.audioKey, ref: story.fileRef) }
         guard let url = local ?? remote else {
@@ -235,11 +238,17 @@ final class StoryPlayer {
         PlaybackMemory.setPosition(finished.id, nil)
         position = 0
         played += 1
+        let folders = (store?.allStories ?? []).map(StoryLibrary.folderOf)
+        trackBadge(.storyFinished(storyId: finished.id, folder: StoryLibrary.folderOf(finished), folders: Array(NSOrderedSet(array: folders)) as? [String] ?? [],
+                                  secs: finished.durationSec, source: BadgeEvent.Source(rawValue: finished.source.rawValue),
+                                  offline: fromDevice, kid: !(store?.kidFolders.isEmpty ?? true)))
         if let next = following, played < stopAfter, let store {
             Task { await play(next, queue: queue, store: store, continued: true) }
         } else {
             isPlaying = false
             player.volume = 1
+            // Several stories in a row, then the player stopped by itself: the little cloud.
+            if stopAfter > 1 && played >= stopAfter { trackBadge(.sleepStop) }
             played = 0
             ended = true
             updateNowPlaying()

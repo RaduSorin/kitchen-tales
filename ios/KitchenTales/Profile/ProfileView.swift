@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The pages Profil opens.
 enum ProfileRoute: Hashable {
-    case child, family, sharing, prefs, phone, catalog
+    case child, family, sharing, prefs, phone, catalog, passport, album
 }
 
 /// Profil, as on the web: you at the top, small cards of what the family made, then the child
@@ -28,32 +28,31 @@ struct ProfileView: View {
         case "profile-child": [.child]
         case "profile-family", "profile-invite": [.family]
         case "profile-prefs": [.prefs]
+        case "passport": [.passport]
+        case "album": [.album]
         default: []
         }
     }
 
     var body: some View {
         NavigationStack(path: $path) {
-            List {
-                hero
-                stats
-                childSection
-                Section {
-                    groupRow(.family, "person.2", "Familie și partajare", familyLine)
-                    groupRow(.prefs, "frying.pan", "Bucătărie și povești", prefsLine)
-                    groupRow(.phone, "iphone", "Pe acest telefon", phoneLine)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    hero
+                    BadgeCards { path.append($0) }
+                        .padding(.top, 22)
+                    rows
+                    Button("Ieși din cont") { confirmSignOut = true }
+                        .font(.custom(AppFont.bodyBold, size: 16, relativeTo: .body))
+                        .foregroundStyle(Color(hex: 0xFF8F7A))
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .padding(.top, 22)
                 }
-                .listRowBackground(rowBackground)
-                Section {
-                    Button("Ieși din cont", role: .destructive) { confirmSignOut = true }
-                        .font(.ktBody)
-                        .foregroundStyle(Theme.danger)
-                        .frame(maxWidth: .infinity)
-                }
-                .listRowBackground(Color.clear)
+                .padding(.horizontal, 20)
+                .padding(.bottom, KTTabBarMetrics.height + 28)
             }
-            .ktProfileList(night: night)
-            .navigationTitle("Profil")
+            .background { if night { NightBackdrop() } else { ProfileBackdrop() } }
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ProfileRoute.self) { route in
                 Group {
                     switch route {
@@ -63,6 +62,8 @@ struct ProfileView: View {
                     case .prefs: PrefsView()
                     case .phone: PhoneView()
                     case .catalog: DesignCatalogView()
+                    case .passport: PassportView()
+                    case .album: AlbumView()
                     }
                 }
                 .environment(\.profileNight, night)
@@ -85,96 +86,89 @@ struct ProfileView: View {
         .task { await profile.refresh(isAdmin: auth.account?.isAdmin ?? false) }
     }
 
-    private var rowBackground: Color { night ? Theme.Night.surface : Theme.surface }
-
     // MARK: Parts
 
+    /// You, centred: the terracotta initial, your name in serif (tap to change it), e-mail · space.
     @ViewBuilder private var hero: some View {
         if let account = auth.account {
-            Section {
-                Button {
-                    newName = account.name ?? ""
-                    renaming = true
-                } label: {
-                    VStack(spacing: 6) {
-                        Text(String(account.displayName.prefix(1)).uppercased())
-                            .font(.custom(AppFont.display, size: 40, relativeTo: .largeTitle))
-                            .foregroundStyle(Theme.onAccent)
-                            .frame(width: 88, height: 88)
-                            .background(Circle().fill(LinearGradient(colors: [Theme.accent, Color(hex: 0xBE7A3E)], startPoint: .topLeading, endPoint: .bottomTrailing)))
-                            .shadow(color: Theme.accent.opacity(0.25), radius: 20)
-                        Text(account.name?.isEmpty == false ? account.displayName : "Adaugă numele tău")
-                            .font(.ktTitle).foregroundStyle(Theme.text)
-                            .padding(.top, 4)
-                        Text([account.email, spaceLine].compactMap { $0 }.joined(separator: " · "))
-                            .font(.ktFootnote).foregroundStyle(Theme.muted)
-                            .multilineTextAlignment(.center)
-                        if auth.isOffline {
-                            Label("Fără internet: folosești copia de pe telefon.", systemImage: "wifi.slash")
-                                .font(.ktFootnote).foregroundStyle(Theme.muted).padding(.top, 4)
-                        }
-                        if account.space == nil {
-                            Label("Contul nu are încă un spațiu. Ieși din cont și intră din nou.", systemImage: "exclamationmark.triangle")
-                                .font(.ktFootnote).foregroundStyle(Theme.danger).padding(.top, 4)
-                        }
+            Button {
+                newName = account.name ?? ""
+                renaming = true
+            } label: {
+                VStack(spacing: 4) {
+                    Text(String(account.displayName.prefix(1)).uppercased())
+                        .font(.custom(AppFont.bodySemibold, size: 34, relativeTo: .largeTitle))
+                        .foregroundStyle(.white)
+                        .frame(width: 84, height: 84)
+                        .background(Circle().fill(LinearGradient(colors: [Color(hex: 0xE7A26B), Color(hex: 0xC4664A)], startPoint: .topLeading, endPoint: .bottomTrailing)))
+                        .shadow(color: Color(hex: 0xF2A05A).opacity(0.35), radius: 25)
+                        .padding(.bottom, 8)
+                    Text(account.name?.isEmpty == false ? account.displayName : "Adaugă numele tău")
+                        .font(.custom(AppFont.displaySemibold, size: 28, relativeTo: .title))
+                        .foregroundStyle(Theme.text)
+                    Text([account.email, spaceLine].compactMap { $0 }.joined(separator: " · "))
+                        .font(.custom(AppFont.body, size: 13, relativeTo: .footnote))
+                        .foregroundStyle(Theme.muted)
+                        .lineLimit(1).truncationMode(.tail)
+                    if auth.isOffline {
+                        Label("Fără internet: folosești copia de pe telefon.", systemImage: "wifi.slash")
+                            .font(.ktFootnote).foregroundStyle(Theme.muted).padding(.top, 4)
                     }
-                    .frame(maxWidth: .infinity)
+                    if account.space == nil {
+                        Label("Contul nu are încă un spațiu. Ieși din cont și intră din nou.", systemImage: "exclamationmark.triangle")
+                            .font(.ktFootnote).foregroundStyle(Theme.danger).padding(.top, 4)
+                    }
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Schimbă-ți numele")
+                .frame(maxWidth: .infinity)
+                .padding(.top, 28)
             }
-            .listRowBackground(Color.clear)
+            .buttonStyle(.plain)
+            .accessibilityLabel("Schimbă-ți numele")
         }
     }
 
-    /// Three small cards of what the family made (the web's stamps and stickers stay on the web).
-    private var stats: some View {
-        let mineRecipes = recipes.recipes.filter(\.mine).count
-        let mineStories = stories.allStories.filter(\.mine).count
-        let cooked = recipes.logs.reduce(0) { $0 + $1.cooked.count }
-        return Section {
-            HStack(spacing: 10) {
-                StatCard(symbol: "fork.knife", title: "Bucătar", value: mineRecipes.ro("rețetă", "rețete"))
-                StatCard(symbol: "moon.stars", title: "Povestitor", value: mineStories.ro("poveste", "povești"))
-                StatCard(symbol: "flame", title: "La masă", value: cooked.ro("dată gătit", "ori gătit"))
-            }
-        }
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-    }
-
-    @ViewBuilder private var childSection: some View {
+    /// The web's plain rows: a title, one line of what is inside, a chevron, thin dividers.
+    private var rows: some View {
         let s = profile.settings
-        Section {
-            groupRow(.child, "figure.child", s.childName.isEmpty ? "Adaugă copilul" : s.childName, childLine)
-        }
-        .listRowBackground(rowBackground)
-        if s.hasPin {
-            Section {
+        return VStack(spacing: 0) {
+            groupRow(.child, s.childName.isEmpty ? "Adaugă copilul" : s.childName, childLine)
+            if s.hasPin {
                 Button { giveToChild() } label: {
-                    Label(s.childName.isEmpty ? "Dă-i telefonul copilului" : "Dă-i telefonul copilului", systemImage: "lock.fill")
+                    Label("Dă-i telefonul copilului", systemImage: "lock.fill")
                 }
                 .buttonStyle(.ktPrimaryWide)
+                .padding(.top, 4).padding(.bottom, 12)
             }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+            groupRow(.family, auth.account?.isAdmin == true ? "Familie și partajare" : "Partajare", familyLine)
+            groupRow(.prefs, "Bucătărie și povești", prefsLine)
+            groupRow(.phone, "Pe acest telefon", phoneLine)
         }
+        .padding(.top, 14)
     }
 
-    private func groupRow(_ route: ProfileRoute, _ symbol: String, _ title: String, _ line: String) -> some View {
-        NavigationLink(value: route) {
-            HStack(spacing: 14) {
-                Image(systemName: symbol)
-                    .font(.system(size: 19, weight: .medium))
-                    .foregroundStyle(Theme.accent)
-                    .frame(width: 26)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.ktBody).foregroundStyle(Theme.text)
-                    if !line.isEmpty { Text(line).font(.ktFootnote).foregroundStyle(Theme.muted) }
+    private func groupRow(_ route: ProfileRoute, _ title: String, _ line: String) -> some View {
+        Button { path.append(route) } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.custom(AppFont.bodySemibold, size: 17, relativeTo: .body))
+                        .foregroundStyle(Theme.text)
+                    if !line.isEmpty {
+                        Text(line).font(.custom(AppFont.body, size: 13, relativeTo: .footnote))
+                            .foregroundStyle(Theme.muted).lineLimit(1)
+                    }
                 }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.muted)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 16)
+            .frame(minHeight: 64)
+            .contentShape(Rectangle())
+            .overlay(alignment: .bottom) { Rectangle().fill(.white.opacity(0.08)).frame(height: 0.5) }
         }
+        .buttonStyle(PressableStyle())
     }
 
     // MARK: Lines
@@ -227,25 +221,6 @@ struct ProfileView: View {
         stories.kidFolders = profile.settings.kidFolders
         kid.start(minutes: profile.settings.kidMinutes)
         area.current = .stories
-    }
-}
-
-private struct StatCard: View {
-    let symbol: String
-    let title: String
-    let value: String
-    @Environment(\.profileNight) private var night
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: symbol).font(.system(size: 20)).foregroundStyle(Theme.accent)
-            Text(title).font(.system(.footnote, weight: .semibold)).foregroundStyle(Theme.text)
-            Text(value).font(.ktCaption).foregroundStyle(Theme.muted).lineLimit(1).minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(night ? Theme.Night.surface : Theme.surface))
-        .accessibilityElement(children: .combine)
     }
 }
 

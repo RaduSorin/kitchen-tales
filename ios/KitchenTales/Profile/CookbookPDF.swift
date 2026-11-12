@@ -95,6 +95,7 @@ struct CookbookSheet: View {
             let book = Cookbook(recipes: recipes, images: images, authors: authors, evening: evening, a4: a4)
             do {
                 file = try book.write()
+                trackBadge(.cookbook(a4: a4, recipes: recipes.count))
                 Haptics.success()
             } catch {
                 self.error = "Nu am putut face PDF-ul: \(error.localizedDescription)"

@@ -38,9 +38,13 @@ shot 2b2-recipe-steps -demo YES -tab home -screen recipe-steps
 shot 2b3-recipe-notes -demo YES -tab home -screen recipe-notes
 shot 2b4-recipe-facts -demo YES -tab home -screen recipe-facts
 shot 2c-cook -demo YES -tab home -screen cook
+shot 2c2-cook-ingredients -demo YES -tab home -screen cook-ingredients
 shot 2d-week -demo YES -tab week
 shot 2e-week-add -demo YES -tab week -screen week-add
+shot 2e2-week-plan -demo YES -tab week -screen plan-week
+shot 2e3-week-plan-result -demo YES -tab week -screen plan-week-result
 shot 2f-list -demo YES -tab list
+shot 2f2-list-recipes -demo YES -tab list -kt-shopping-by-recipe YES
 shot 2g-editor-new -demo YES -tab recipes -screen editor-new
 shot 2h-editor-paste -demo YES -tab recipes -screen editor-paste
 shot 2i-editor-ai -demo YES -tab recipes -screen editor-ai
@@ -54,6 +58,10 @@ shot 3b-profile-child -demo YES -tab profile -screen profile-child
 shot 3c-profile-family -demo YES -tab profile -screen profile-family
 shot 3d-profile-invite -demo YES -tab profile -screen profile-invite
 shot 3e-profile-prefs -demo YES -tab profile -screen profile-prefs
+shot 3h-passport -demo YES -tab profile -screen passport
+shot 3i-album -demo YES -tab profile -screen album
+shot 3j-badge-stamp -demo YES -tab profile -screen badge-stamp
+shot 3k-badge-sticker -demo YES -area stories -tab home -screen badge-sticker
 shot 3f-kid-mode -demo YES -area stories -tab home -screen kid
 shot 4-catalog -demo YES -tab profile -screen catalog
 # Stories side (made-up library, drawn covers).
@@ -84,3 +92,4 @@ shot 11a-add -demo YES -area stories -tab add
 shot 11b-add-create -demo YES -area stories -tab add -screen add-create
 shot 11c-add-record -demo YES -area stories -tab add -screen add-record
 shot 11d-add-finish -demo YES -area stories -tab add -screen add-finish
+shot 11e-add-upload -demo YES -area stories -tab add -screen add-upload

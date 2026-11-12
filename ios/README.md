@@ -32,7 +32,7 @@ The native iPhone app, built next to the web app in the same repo and on the sam
 | `KitchenTales/Features` | Screens, one folder per area |
 | `KitchenTales/Resources` | Asset catalog (icon, accent color) and the bundled fonts |
 | `KitchenTalesTests` | Unit tests (Swift Testing) |
-| `scripts` | Simulator picking and screenshots for CI |
+| `scripts` | Simulator picking, screenshots and the Linux precheck for CI |
 
 ## Style A "Seară iOS"
 
@@ -54,10 +54,40 @@ cd ios && xcodegen generate && open KitchenTales.xcodeproj
 
 ## CI
 
-Each pull request that changes `ios/` builds the app, runs the unit tests on the newest iPhone
-simulator and takes screenshots of the main screens: they are uploaded as the artifact
-`ios-screenshots` and committed to the `ios-screenshots` branch under `pr-<number>/`. The `testflight-readiness` job reports which App Store Connect secrets are set
+The workflow runs on every push to a `claude/**` branch that changes `ios/`, and on pull
+requests from other branches. It first runs `scripts/precheck.py` on Linux (about 15 seconds),
+then on macOS builds the app, runs the unit tests on the newest iPhone simulator and takes
+screenshots of the main screens: they are uploaded as the artifact `ios-screenshots` and
+committed to the `ios-screenshots` branch under `pr-<number>/` (or the branch name for a push
+run). A `claude/**` branch is not built again for its pull request: the push run's result shows
+on the PR. The `testflight-readiness` job reports which App Store Connect secrets are set
 (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`), never their values.
+
+## Before pushing Swift without a Mac
+
+Nobody here has a Mac, so the macOS job is the first compiler that sees the code. On
+2026-11-10..12 almost every first run of a push failed, always on a real compile or test error.
+Run `python3 ios/scripts/precheck.py` before every push (it catches 1 and 2 below), then go
+through the rest by hand:
+
+1. **Unique names.** Every non-private top-level type and every `.swift` file name must be unique
+   in its target. Search before naming a new view (`grep -rn "struct StoryRow" ios/`), or make
+   helper views `private`.
+2. **Target membership.** A file listed for the Share extension in `project.yml` may only use
+   types from files the extension also compiles, and never `UIApplication.shared`.
+3. **Small expressions in views.** Keep string building out of view builders: no ternaries or
+   nested interpolations inside `Text("…\(…)…")`, no `[a, b].compactMap{}.joined()` inline in an
+   initializer argument. Move them into a `static func … -> String`. Split a view body over ~60
+   lines into subviews. Give closures and generic views explicit types when they return
+   different views (`AnyView`, `@ViewBuilder`, or a stored height) so nothing has to be inferred.
+4. **Swift 6 concurrency.** `SWIFT_VERSION` is 6.0 with strict checking. Types that touch UI
+   or shared state are `@MainActor`. A `static let` used off the main actor must be `Sendable`
+   and outside a `@MainActor` type. Do not send non-Sendable values (`NSItemProvider`, closures)
+   into a `Task` or across actors: do the work on the main actor or copy the value first.
+5. **Tests.** When a change alters user-visible text or rules, update the expected values in
+   `KitchenTalesTests` in the same commit, and check them against the web app's logic.
+6. **Wait for green.** Push, wait for the iOS run on the branch to pass, and only then open the
+   pull request or report the work as done.
 
 ## TestFlight
 

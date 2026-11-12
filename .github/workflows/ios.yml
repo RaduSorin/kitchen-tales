@@ -1,10 +1,15 @@
 # Native iOS app (ios/): generates the Xcode project, builds it, runs the unit tests on an iPhone
 # simulator and saves screenshots of the main screens as a downloadable artifact.
-# Runs only on pull requests that change something under ios/ (or this file): macOS minutes cost
-# 10x Linux ones, so there is no second run on push.
+# Runs when something under ios/ (or this file) changes: on every push to a claude/** branch, so
+# a Claude thread sees the result before it opens or announces a pull request, and on pull
+# requests from any other branch. macOS minutes cost 10x Linux ones, so a claude/** branch is not
+# built a second time for its pull request: the push run's result shows on the PR anyway.
 name: iOS
 
 on:
+  push:
+    branches: ['claude/**']
+    paths: ['ios/**', '.github/workflows/ios.yml']
   pull_request:
     paths: ['ios/**', '.github/workflows/ios.yml']
   workflow_dispatch:
@@ -14,7 +19,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Linux, about 15 seconds: duplicate type or file names in a target and app-extension files
+  # that use app-only types (ios/scripts/precheck.py). These broke the macOS build most often, so
+  # they are caught here before a macOS runner is started.
+  precheck:
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'claude/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
+      - run: python3 ios/scripts/precheck.py
+
   build-and-test:
+    needs: precheck
     runs-on: macos-15
     timeout-minutes: 30
     permissions:
@@ -75,13 +93,13 @@ jobs:
           if-no-files-found: ignore
 
       # Also commit them to the ios-screenshots branch (folder pr-<number>, or the branch name for
-      # a run started by hand), so they can be viewed on GitHub and compared before/after
+      # a push run or a run started by hand), so they can be viewed on GitHub and compared before/after
       # without downloading the artifact.
       - name: Publish screenshots to the ios-screenshots branch
-        if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
-          # pr-<number>, or the branch name for a run started by hand.
+          # pr-<number>, or the branch name for a push run or a run started by hand.
           DEST: ${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
@@ -109,6 +127,7 @@ jobs:
   # Tells whether the App Store Connect secrets needed for TestFlight are set (never their values).
   # The TestFlight upload itself comes in the next PR.
   testflight-readiness:
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'claude/')
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:

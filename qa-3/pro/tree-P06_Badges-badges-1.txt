@@ -1,0 +1,59 @@
+Optional(Attributes: Application, 0x103795400, pid: 23882, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x103795400, pid: 23882, label: 'Bucătăria'
+    Window (Main), 0x1037912c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x10378b270, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x10378ea10, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x10378d120, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x103786990, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x103797560, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x103798ca0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x103799570, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x103799690, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1037997b0, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x1037998d0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1037999f0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x103799b10, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x103799c30, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x103799d50, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x103799e70, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Button, 0x103799f90, {{20.0, 64.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Înapoi'
+                                    StaticText, 0x10379a0b0, {{20.0, 122.0}, {288.7, 39.7}}, label: 'Pașaportul culinar'
+                                    Other, 0x10379a1d0, {{34.7, 173.7}, {332.7, 554.7}}
+                                      Other, 0x10379a2f0, {{34.7, 173.7}, {332.7, 554.7}}
+                                        Other, 0x10379a410, {{34.7, 173.7}, {332.7, 554.7}}
+                                          Image, 0x10379a530, {{139.3, 302.3}, {123.3, 123.3}}, label: 'Pașaportul culinar, coperta'
+                                          StaticText, 0x10379a650, {{107.2, 442.3}, {187.7, 67.7}}, label: 'Pașaportul culinar, coperta'
+                                          StaticText, 0x10379a770, {{131.5, 526.6}, {139.0, 14.0}}, label: 'Pașaportul culinar, coperta'
+                                          Image, 0x10379b080, {{191.7, 579.0}, {19.0, 19.0}}, identifier: 'cpu', label: 'Pașaportul culinar, coperta'
+                                          StaticText, 0x10379b1a0, {{134.3, 691.4}, {133.3, 15.7}}, label: 'Pașaportul culinar, coperta'
+                                    StaticText, 0x10379b2c0, {{41.8, 740.3}, {318.3, 15.7}}, label: 'Glisează sau atinge marginea paginii ca să răsfoiești.'
+                            Other, 0x10379b6f0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x10379b810, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x10379b930, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x10379ba50, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x10379bb70, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x10379bf60, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x10379c080, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10379c1a0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x10379c2c0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+                Other, 0x10379c3e0, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10379c500, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+              Button, 0x10379c620, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+                Other, 0x10379c740, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10379cb80, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+              Button, 0x10379cca0, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Listă, 7 de luat'
+                Other, 0x10379cdc0, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10379cee0, {{286.0, 781.2}, {6.3, 13.3}}, label: '7'
+                StaticText, 0x10379d000, {{262.2, 811.8}, {24.0, 13.3}}, label: 'Listă'
+              Button, 0x10379d120, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil', Selected
+                Other, 0x10379d240, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10379d360, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+Path to element:
+ →Application, 0x103795400, pid: 23882, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1037bd4b0, pid: 23882, label: 'Bucătăria'
+  }
+)

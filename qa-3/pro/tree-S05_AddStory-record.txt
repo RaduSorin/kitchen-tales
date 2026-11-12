@@ -1,0 +1,98 @@
+Optional(Attributes: Application, 0x108d84aa0, pid: 4359, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x108d84aa0, pid: 4359, label: 'Bucătăria'
+    Window (Main), 0x108d3cca0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x108d45d00, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x108d415a0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x108d3dd20, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x108d46120, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x108d46760, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x108d41180, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x108d40d60, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x108d3e1d0, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x108d3d6c0, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x108d3d2a0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x108d3ad00, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x108d3b340, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x108d3dae0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x108d3dc00, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x108d46b80, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x108d46ca0, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x108d46dc0, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x108d46ee0, {{0.0, 62.0}, {402.0, 439.7}}
+                                        StaticText, 0x108d47000, {{20.0, 70.0}, {92.3, 13.3}}, label: 'MOD PĂRINTE'
+                                        StaticText, 0x108d47120, {{20.0, 87.3}, {205.3, 45.3}}, label: 'Poveste nouă'
+                                        StaticText, 0x108d47240, {{20.0, 140.7}, {317.3, 19.3}}, label: 'Apare pe raftul copilului imediat ce o salvezi.'
+                                        Button, 0x108d47360, {{20.0, 178.0}, {362.0, 102.3}}, label: 'Creează o poveste, Spui eroul și tema, aplicația o scrie și o citește'
+                                          Other, 0x108d47480, {{20.0, 200.3}, {58.0, 58.0}}
+                                          StaticText, 0x108d475a0, {{94.0, 196.0}, {185.0, 29.7}}, label: 'Creează o poveste'
+                                          StaticText, 0x108d476c0, {{94.0, 228.7}, {232.0, 33.7}}, label: 'Spui eroul și tema, aplicația o scrie și o citește'
+                                          Image, 0x108d477e0, {{374.0, 223.0}, {7.3, 12.3}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x108d47900, {{20.0, 281.0}, {362.0, 94.0}}, label: 'Citește tu, Înregistrează-ți vocea citind o carte'
+                                          Other, 0x108d47a20, {{20.0, 299.0}, {58.0, 58.0}}
+                                          StaticText, 0x108d47b40, {{94.0, 303.2}, {100.7, 29.7}}, label: 'Citește tu'
+                                          StaticText, 0x108d47c60, {{94.0, 335.8}, {222.7, 17.0}}, label: 'Înregistrează-ți vocea citind o carte'
+                                          Image, 0x108d47d80, {{374.0, 322.0}, {7.3, 12.3}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x108d47ea0, {{20.0, 375.3}, {362.0, 102.3}}, label: 'Încarcă un fișier, MP3 sau M4A de pe telefon, iCloud sau AirDrop'
+                                          Other, 0x108d47fc0, {{20.0, 397.7}, {58.0, 58.0}}
+                                          StaticText, 0x108d480e0, {{94.0, 393.3}, {173.7, 29.7}}, label: 'Încarcă un fișier'
+                                          StaticText, 0x108d48200, {{94.0, 426.0}, {223.7, 33.7}}, label: 'MP3 sau M4A de pe telefon, iCloud sau AirDrop'
+                                          Image, 0x108d48320, {{374.0, 420.3}, {7.3, 12.3}}, identifier: 'chevron.right', label: 'Înainte'
+                                      Other, 0x108d48440, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 1 pagină', value: 0 %
+                                        Other, 0x108d48560, {{396.0, 403.3}, {3.0, 405.7}}
+                                      Other, 0x108d48680, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 1 pagină', value: 0 %
+                                        Other, 0x108d487a0, {{396.0, 403.3}, {3.0, 405.7}}
+                            Other, 0x108d488c0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x108d44a60, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x108d44b80, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x108d44ca0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x108d44dc0, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x108d44ee0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x108d41d00, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d41e20, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x108d41f40, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Favorite'
+                Other, 0x108d42060, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d42180, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Favorite'
+              Button, 0x108d422a0, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Bibliotecă'
+                Other, 0x108d423c0, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d424e0, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Bibliotecă'
+              Button, 0x108d42600, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Adaugă', Selected
+                Other, 0x108d42720, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d42840, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Adaugă'
+              Button, 0x108d42960, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+                Other, 0x108d42a80, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d42ba0, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+      Other, 0x108d42cc0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x108d42de0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x108d42f00, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x108d43020, {{0.0, 0.0}, {402.0, 874.0}}
+              NavigationBar, 0x108d43140, {{0.0, 62.0}, {402.0, 54.0}}, identifier: '_TtGC7SwiftUI32NavigationStackHosting'
+                Other, 0x108d43260, {{20.0, 66.0}, {40.0, 36.0}}, identifier: 'chevron.left', label: 'Înapoi'
+                  Other, 0x108d43380, {{20.0, 66.0}, {40.0, 36.0}}
+                    Button, 0x108d434a0, {{20.0, 66.0}, {40.0, 36.0}}, identifier: 'chevron.left', label: 'Înapoi'
+              Other, 0x108d435c0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x108d436e0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x108d43800, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x108d43920, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x108d43a40, {{0.0, 0.0}, {402.0, 874.0}}
+                      StaticText, 0x108d43b60, {{20.0, 124.0}, {80.0, 14.7}}, label: 'CITEȘTE TU'
+                      StaticText, 0x108d43c80, {{20.0, 146.7}, {320.3, 85.0}}, label: 'Ia cartea și citește cu glas tare'
+                      Image, 0x108d43da0, {{43.0, 273.0}, {11.7, 16.7}}, identifier: 'mic', label: 'Microfon'
+                      StaticText, 0x108d43ec0, {{72.0, 271.7}, {231.3, 19.3}}, label: 'Ține telefonul la o palmă de gură'
+                      Image, 0x108d43fe0, {{45.7, 308.0}, {7.0, 13.0}}, identifier: 'pause', label: 'Suspendare'
+                      StaticText, 0x108d44100, {{72.0, 305.0}, {245.0, 19.3}}, label: 'Poți face pauză oricând și continui'
+                      Image, 0x108d44220, {{41.3, 341.3}, {15.7, 13.3}}, identifier: 'text.alignleft', label: 'Aliniere La Stânga'
+                      StaticText, 0x108d44340, {{72.0, 338.3}, {213.0, 19.3}}, label: 'Titlul și coperta le alegi la final'
+                      StaticText, 0x108d44460, {{142.2, 499.7}, {117.7, 76.3}}, label: '0:00'
+                      Button, 0x108d44580, {{143.0, 590.0}, {116.0, 116.0}}, identifier: 'mic.fill', label: 'Începe înregistrarea'
+                      StaticText, 0x108d446a0, {{177.5, 720.0}, {47.0, 18.0}}, label: 'Începe'
+              Other, 0x108d3fc10, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x108d3fd30, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x108d84aa0, pid: 4359, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1148f09a0, pid: 4359, label: 'Bucătăria'
+  }
+)

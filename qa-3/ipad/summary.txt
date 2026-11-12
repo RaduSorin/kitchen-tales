@@ -1,0 +1,9 @@
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-01-key-home
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen recipe -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-02-key-recipe
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen cook -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-03-key-cook
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-04-key-recipes
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab week -kt-kid none

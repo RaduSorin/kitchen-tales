@@ -1,0 +1,400 @@
+    t =   136.05s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4323098528.18)
+    t =   136.09s                                         Find the "Acasă" StaticText
+    t =   136.13s                                         Find the "Acasă" StaticText
+    t =   136.18s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4323101152.29)
+    t =   136.22s                                         Find the "Favorite" StaticText
+    t =   136.26s                                         Find the "Favorite" StaticText
+    t =   136.31s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4323106080.16)
+    t =   136.34s                                         Find the "Adaugă" StaticText
+    t =   136.38s                                         Find the "Adaugă" StaticText
+    t =   136.42s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4323108544.15)
+    t =   136.45s                                         Find the "Profil" StaticText
+    t =   136.49s                                         Find the "Profil" StaticText
+    t =   136.54s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320962672.19)
+    t =   136.59s                                         Find the "🎵" StaticText
+    t =   136.63s                                         Find the "🎵" StaticText
+    t =   136.69s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320965696.25)
+    t =   136.73s                                         Find the "1 nouă" StaticText
+    t =   136.76s                                         Find the "1 nouă" StaticText
+    t =   136.80s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320966480.24)
+    t =   136.84s                                         Find the "🚂" StaticText
+    t =   136.87s                                         Find the "🚂" StaticText
+    t =   136.91s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320967936.30)
+    t =   136.95s                                         Find the "⭐" StaticText
+    t =   137.00s                                         Find the "⭐" StaticText
+    t =   137.05s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320973760.22)
+    t =   137.10s                                         Find the "1 nouă" StaticText
+    t =   137.14s                                         Find the "1 nouă" StaticText
+    t =   137.18s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320974544.23)
+    t =   137.23s                                         Find the "1 în curs" StaticText
+    t =   137.27s                                         Find the "1 în curs" StaticText
+    t =   137.31s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320975328.20)
+    t =   137.35s                                         Find the "🐠" StaticText
+    t =   137.40s                                         Find the "🐠" StaticText
+    t =   137.44s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320978240.28)
+    t =   137.50s                                         Find the "🦁" StaticText
+    t =   137.54s                                         Find the "🦁" StaticText
+    t =   137.57s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320980448.26)
+    t =   137.61s                                         Find the "🧞" StaticText
+    t =   137.65s                                         Find the "🧞" StaticText
+    t =   137.68s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320984432.36)
+    t =   137.72s                                         Find the "Povești Hachette" StaticText
+    t =   137.77s                                         Find the "Povești Hachette" StaticText
+    t =   137.80s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320984864.32)
+    t =   137.84s                                         Find the "1 poveste · 9 min" StaticText
+    t =   137.87s                                         Find the "1 poveste · 9 min" StaticText
+    t =   137.90s                                         Find the Any (Descendant with identity binding to AX element pid: 37341, elementOrHash.elementID: 4320986080.27)
+    t =   137.94s                                         Find the "🐭" StaticText
+    t =   137.98s                                         Find the "🐭" StaticText
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 în curs'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🐭'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '⭐'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 45 'Caută în 10 povești'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '2 povești · 12 min'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '1 în curs'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🌙 Povești de seară'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🐭'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🎵 Cântece'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '4 povești · 39 min'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Povești Hachette'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Povești Disney'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '⭐'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 în curs'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Povești Hachette'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 poveste · 9 min'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐭'
+    t =   138.01s                                         Open app.kitchentales.ios
+    t =   138.01s                                             Launch app.kitchentales.ios
+    t =   138.01s                                                 Terminate app.kitchentales.ios:37341
+    t =   139.48s                                                 Setting up automation session
+    t =   141.22s                                                 Wait for app.kitchentales.ios to idle
+QA [X05_LargeText] LAUNCH -demo YES -area stories -tab home -screen player -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+    t =   143.92s                                         Wait for app.kitchentales.ios to become Running Foreground
+    t =   146.74s Added attachment named 'X05_LargeText-10-ax3-player'
+QA [X05_LargeText] shot X05_LargeText-10-ax3-player
+    t =   150.63s                                         Find the Any (Descendant with identity binding to AX element pid: 38270, elementOrHash.elementID: 4382966160.24)
+    t =   150.91s                                         Find the "🧞" StaticText
+    t =   151.00s                                         Find the "🧞" StaticText
+    t =   151.07s                                         Find the Any (Descendant with identity binding to AX element pid: 38270, elementOrHash.elementID: 4382071840.25)
+    t =   151.16s                                         Find the "DIN POVEȘTI DISNEY" StaticText
+    t =   151.27s                                         Find the "DIN POVEȘTI DISNEY" StaticText
+    t =   151.33s                                         Find the Any (Descendant with identity binding to AX element pid: 38270, elementOrHash.elementID: 4382966160.24)
+    t =   151.48s                                         Find the "🧞" StaticText
+    t =   151.57s                                         Find the "🧞" StaticText
+    t =   151.65s                                         Find the Any (Descendant with identity binding to AX element pid: 38270, elementOrHash.elementID: 4382071840.25)
+    t =   151.73s                                         Find the "DIN POVEȘTI DISNEY" StaticText
+    t =   151.80s                                         Find the "DIN POVEȘTI DISNEY" StaticText
+    t =   151.86s                                         Find the Any (Descendant with identity binding to AX element pid: 38270, elementOrHash.elementID: 4382955984.21)
+    t =   151.92s                                         Find the "🧞" StaticText
+    t =   151.98s                                         Find the "🧞" StaticText
+    t =   152.09s                                         Find the Any (Descendant with identity binding to AX element pid: 38270, elementOrHash.elementID: 4382966160.24)
+    t =   152.15s                                         Find the "🧞" StaticText
+    t =   152.21s                                         Find the "🧞" StaticText
+    t =   152.27s                                         Find the Any (Descendant with identity binding to AX element pid: 38270, elementOrHash.elementID: 4382974352.8)
+    t =   152.36s                                         Find the "Povești Disney" StaticText
+    t =   152.49s                                         Find the "Povești Disney" StaticText
+    t =   152.55s                                         Find the Any (Descendant with identity binding to AX element pid: 38270, elementOrHash.elementID: 4382976464.10)
+    t =   152.62s                                         Find the "3:24" StaticText
+    t =   152.70s                                         Find the "3:24" StaticText
+QA [X05_LargeText] A11Y ax3-player: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Dynamic Type font sizes are partially unsupported · 48 'DIN POVEȘTI DISNEY'
+QA [X05_LargeText] A11Y ax3-player: Text clipped · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Text clipped · 48 'DIN POVEȘTI DISNEY'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 'Povești Disney'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '3:24'
+    t =   152.77s                                         Open app.kitchentales.ios
+    t =   152.77s                                             Launch app.kitchentales.ios
+    t =   152.77s                                                 Terminate app.kitchentales.ios:38270
+    t =   154.34s                                                 Setting up automation session
+    t =   155.82s                                                 Wait for app.kitchentales.ios to idle
+QA [X05_LargeText] LAUNCH -demo YES -area stories -tab add -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+    t =   157.88s                                         Wait for app.kitchentales.ios to become Running Foreground
+    t =   160.58s Added attachment named 'X05_LargeText-11-ax3-add'
+QA [X05_LargeText] shot X05_LargeText-11-ax3-add
+    t =   163.17s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355383984.19)
+    t =   163.23s                                         Find the "Spui eroul și tema, aplicația o scrie și o citește" StaticText
+    t =   163.26s                                         Find the "Spui eroul și tema, aplicația o scrie și o citește" StaticText
+    t =   163.28s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355315920.15)
+    t =   163.30s                                         Find the "Bibliotecă" StaticText
+    t =   163.32s                                         Find the "Bibliotecă" StaticText
+    t =   163.35s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355310144.13)
+    t =   163.39s                                         Find the "Acasă" StaticText
+    t =   163.44s                                         Find the "Acasă" StaticText
+    t =   163.46s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355379744.9)
+    t =   163.51s                                         Find the "MOD PĂRINTE" StaticText
+    t =   163.54s                                         Find the "MOD PĂRINTE" StaticText
+    t =   163.56s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355318736.16)
+    t =   163.58s                                         Find the "Adaugă" StaticText
+    t =   163.62s                                         Find the "Adaugă" StaticText
+    t =   163.64s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355321552.17)
+    t =   163.67s                                         Find the "Profil" StaticText
+    t =   163.70s                                         Find the "Profil" StaticText
+    t =   163.73s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355313104.14)
+    t =   163.76s                                         Find the "Favorite" StaticText
+    t =   163.78s                                         Find the "Favorite" StaticText
+    t =   163.83s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355383200.18)
+    t =   163.87s                                         Find the "Creează o poveste" StaticText
+    t =   163.91s                                         Find the "Creează o poveste" StaticText
+    t =   163.93s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355310144.13)
+    t =   163.99s                                         Find the "Acasă" StaticText
+    t =   164.02s                                         Find the "Acasă" StaticText
+    t =   164.04s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355318736.16)
+    t =   164.07s                                         Find the "Adaugă" StaticText
+    t =   164.10s                                         Find the "Adaugă" StaticText
+    t =   164.12s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355315920.15)
+    t =   164.14s                                         Find the "Bibliotecă" StaticText
+    t =   164.18s                                         Find the "Bibliotecă" StaticText
+    t =   164.20s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355321552.17)
+    t =   164.22s                                         Find the "Profil" StaticText
+    t =   164.25s                                         Find the "Profil" StaticText
+    t =   164.29s                                         Find the Any (Descendant with identity binding to AX element pid: 39011, elementOrHash.elementID: 4355313104.14)
+    t =   164.32s                                         Find the "Favorite" StaticText
+    t =   164.35s                                         Find the "Favorite" StaticText
+QA [X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Spui eroul și tema, aplicația o scrie și o citește'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'MOD PĂRINTE'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Creează o poveste'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Favorite'
+    t =   164.39s                                         Open app.kitchentales.ios
+    t =   164.39s                                             Launch app.kitchentales.ios
+    t =   164.39s                                                 Terminate app.kitchentales.ios:39011
+    t =   165.96s                                                 Setting up automation session
+    t =   167.26s                                                 Wait for app.kitchentales.ios to idle
+QA [X05_LargeText] LAUNCH -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+    t =   168.71s                                         Wait for app.kitchentales.ios to become Running Foreground
+    t =   170.39s Added attachment named 'X05_LargeText-12-ax3-login'
+QA [X05_LargeText] shot X05_LargeText-12-ax3-login
+    t =   170.44s Tear Down
+Test Case '-[KitchenTalesUITests.SystemQATests testX05_LargeText]' passed (170.944 seconds).
+Test Case '-[KitchenTalesUITests.SystemQATests testX06_LaunchTime]' started.
+    t =     0.00s Start Test at 2026-11-12 15:26:51.837
+    t =     0.07s Set Up
+    t =     0.08s                                         Open app.kitchentales.ios
+    t =     0.08s                                             Launch app.kitchentales.ios
+    t =     0.08s                                                 Terminate app.kitchentales.ios:39829
+    t =     1.72s                                                 Setting up automation session
+    t =     3.34s                                                 Wait for app.kitchentales.ios to idle
+QA [X06_LaunchTime] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+    t =     5.42s                                         Wait for app.kitchentales.ios to become Running Foreground
+    t =     6.93s                                         Waiting 20.0s for Button (First Match) to exist
+    t =     7.93s                                             Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =     7.93s                                                 Checking existence of `Button (First Match)`
+QA [X06_LaunchTime] launch to Acasă ready: 8.0 s (demo data, simulator)
+QA [X06_LaunchTime] ok   Acasă is ready after launch
+    t =     8.05s Tear Down
+Test Case '-[KitchenTalesUITests.SystemQATests testX06_LaunchTime]' passed (8.345 seconds).
+Test Case '-[KitchenTalesUITests.SystemQATests testX08_KidTimeRunsOutInPlayer]' started.
+    t =     0.00s Start Test at 2026-11-12 15:27:00.181
+    t =     0.03s Set Up
+    t =     0.03s                                         Open app.kitchentales.ios
+    t =     0.03s                                             Launch app.kitchentales.ios
+    t =     0.03s                                                 Terminate app.kitchentales.ios:40141
+    t =     1.59s                                                 Setting up automation session
+    t =     3.19s                                                 Wait for app.kitchentales.ios to idle
+QA [X08_KidTimeRunsOutInPlayer] LAUNCH -demo YES -area stories -tab library -kt-kid <7b22616374697665223a747275652c22656e64734174223a3831363139303036302e3230393236332c22746f74616c223a36302c226c6f636b6564223a66616c73652c2277726f6e67223a307d>
+    t =     5.29s                                         Wait for app.kitchentales.ios to become Running Foreground
+    t =     7.02s Added attachment named 'X08_KidTimeRunsOutInPlayer-01-kid-start'
+QA [X08_KidTimeRunsOutInPlayer] shot X08_KidTimeRunsOutInPlayer-01-kid-start
+    t =     7.02s                                         Checking existence of `Button (First Match)`
+QA [X08_KidTimeRunsOutInPlayer] ok   kid mode is on from the saved state
+    t =     7.09s                                         Waiting 4.0s for Any (First Match) to exist
+    t =     8.14s                                             Checking `Expect predicate `existsNoRetry == 1` for object Any (First Match)`
+    t =     8.14s                                                 Checking existence of `Any (First Match)`
+    t =     8.27s                                         Checking existence of `Any (First Match)`
+    t =     8.38s                                         Find the Any (First Match)
+    t =     8.46s                                         Find the "Povești de seară, 2 povești · 12 min" Button
+    t =     8.55s                                         Find the "Povești de seară, 2 povești · 12 min" Button
+    t =     8.68s                                         Checking existence of `"Povești de seară, 2 povești · 12 min" Button`
+    t =     8.74s                                         Find the "Povești de seară, 2 povești · 12 min" Button
+    t =     8.85s                                         Tap "Povești de seară, 2 povești · 12 min" Button
+    t =     8.86s                                             Wait for app.kitchentales.ios to idle
+    t =     8.86s                                             Find the "Povești de seară, 2 povești · 12 min" Button
+    t =     8.95s                                             Check for interrupting elements affecting "Povești de seară, 2 povești · 12 min" Button
+    t =     9.04s                                             Synthesize event
+    t =     9.35s                                             Wait for app.kitchentales.ios to idle
+QA [X08_KidTimeRunsOutInPlayer] tap  'Povești de seară'
+    t =    10.27s                                         Waiting 4.0s for Any (First Match) to exist
+    t =    11.32s                                             Checking `Expect predicate `existsNoRetry == 1` for object Any (First Match)`
+    t =    11.32s                                                 Checking existence of `Any (First Match)`
+    t =    11.44s                                         Checking existence of `Any (First Match)`
+    t =    11.53s                                         Find the Any (First Match)
+    t =    11.63s                                         Find the "7 min, Steaua căzătoare, 7 min" Button
+    t =    11.76s                                         Find the "7 min, Steaua căzătoare, 7 min" Button
+    t =    11.91s                                         Checking existence of `"7 min, Steaua căzătoare, 7 min" Button`
+    t =    12.02s                                         Find the "7 min, Steaua căzătoare, 7 min" Button
+    t =    12.17s                                         Tap "7 min, Steaua căzătoare, 7 min" Button
+    t =    12.17s                                             Wait for app.kitchentales.ios to idle
+    t =    12.17s                                             Find the "7 min, Steaua căzătoare, 7 min" Button
+    t =    12.25s                                             Check for interrupting elements affecting "7 min, Steaua căzătoare, 7 min" Button
+    t =    12.37s                                             Synthesize event
+    t =    12.68s                                             Wait for app.kitchentales.ios to idle
+QA [X08_KidTimeRunsOutInPlayer] tap  'Steaua căzătoare'
+    t =    14.50s                                         Waiting 4.0s for Button (First Match) to exist
+    t =    15.51s                                             Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =    15.51s                                                 Checking existence of `Button (First Match)`
+    t =    15.63s                                                 Capturing element debug description
+    t =    16.58s                                             Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =    16.58s                                                 Checking existence of `Button (First Match)`
+    t =    16.67s                                                 Capturing element debug description
+    t =    17.52s                                             Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =    17.52s                                                 Checking existence of `Button (First Match)`
+    t =    17.58s                                                 Capturing element debug description
+    t =    18.51s                                             Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =    18.51s                                                 Checking existence of `Button (First Match)`
+    t =    18.60s                                                 Capturing element debug description
+    t =    18.60s                                             Checking existence of `Button (First Match)`
+    t =    18.67s                                         Collecting debug information to assist test failure triage
+    t =    18.67s                                             Requesting snapshot of accessibility hierarchy for app with pid 41096
+    t =    18.74s                                         Checking existence of `Button (First Match)`
+    t =    18.85s                                         Checking existence of `Keyboard (First Match)`
+    t =    18.94s                                         Swipe up Target Application 'app.kitchentales.ios'
+    t =    18.94s                                             Wait for app.kitchentales.ios to idle
+    t =    18.94s                                             Find the Target Application 'app.kitchentales.ios'
+    t =    18.98s                                             Check for interrupting elements affecting "Bucătăria" Application
+    t =    19.01s                                             Synthesize event
+    t =    19.51s                                             Wait for app.kitchentales.ios to idle
+    t =    20.46s                                         Checking existence of `Button (First Match)`
+    t =    20.55s                                         Swipe up Target Application 'app.kitchentales.ios'
+    t =    20.55s                                             Wait for app.kitchentales.ios to idle
+    t =    20.55s                                             Find the Target Application 'app.kitchentales.ios'
+    t =    20.57s                                             Check for interrupting elements affecting "Bucătăria" Application
+    t =    20.61s                                             Synthesize event
+    t =    21.10s                                             Wait for app.kitchentales.ios to idle
+    t =    22.06s                                         Checking existence of `Button (First Match)`
+    t =    22.18s                                         Swipe up Target Application 'app.kitchentales.ios'
+    t =    22.18s                                             Wait for app.kitchentales.ios to idle
+    t =    22.18s                                             Find the Target Application 'app.kitchentales.ios'
+    t =    22.20s                                             Check for interrupting elements affecting "Bucătăria" Application
+    t =    22.23s                                             Synthesize event
+    t =    22.72s                                             Wait for app.kitchentales.ios to idle
+    t =    23.68s                                         Checking existence of `Button (First Match)`
+    t =    23.77s                                         Swipe up Target Application 'app.kitchentales.ios'
+    t =    23.77s                                             Wait for app.kitchentales.ios to idle
+    t =    23.77s                                             Find the Target Application 'app.kitchentales.ios'
+    t =    23.79s                                             Check for interrupting elements affecting "Bucătăria" Application
+    t =    23.83s                                             Synthesize event
+    t =    24.32s                                             Wait for app.kitchentales.ios to idle
+    t =    25.28s                                         Checking existence of `Button (First Match)`
+    t =    25.37s                                         Swipe down Target Application 'app.kitchentales.ios'
+    t =    25.37s                                             Wait for app.kitchentales.ios to idle
+    t =    25.38s                                             Find the Target Application 'app.kitchentales.ios'
+    t =    25.41s                                             Check for interrupting elements affecting "Bucătăria" Application
+    t =    25.45s                                             Synthesize event
+    t =    25.95s                                             Wait for app.kitchentales.ios to idle
+    t =    26.90s                                         Checking existence of `Button (First Match)`
+    t =    27.00s                                         Swipe down Target Application 'app.kitchentales.ios'
+    t =    27.00s                                             Wait for app.kitchentales.ios to idle
+    t =    27.00s                                             Find the Target Application 'app.kitchentales.ios'
+    t =    27.03s                                             Check for interrupting elements affecting "Bucătăria" Application
+    t =    27.07s                                             Synthesize event
+    t =    27.56s                                             Wait for app.kitchentales.ios to idle
+    t =    28.52s                                         Checking existence of `Button (First Match)`
+    t =    28.62s                                         Swipe down Target Application 'app.kitchentales.ios'
+    t =    28.62s                                             Wait for app.kitchentales.ios to idle
+    t =    28.62s                                             Find the Target Application 'app.kitchentales.ios'
+    t =    28.66s                                             Check for interrupting elements affecting "Bucătăria" Application
+    t =    28.68s                                             Synthesize event
+    t =    29.18s                                             Wait for app.kitchentales.ios to idle
+    t =    30.13s                                         Checking existence of `Button (First Match)`
+QA [X08_KidTimeRunsOutInPlayer] skip 'Pornește' not found
+    t =    30.45s Added attachment named 'X08_KidTimeRunsOutInPlayer-02-kid-player'
+QA [X08_KidTimeRunsOutInPlayer] shot X08_KidTimeRunsOutInPlayer-02-kid-player
+    t =    75.75s Added attachment named 'X08_KidTimeRunsOutInPlayer-03-kid-time-up-in-player'
+QA [X08_KidTimeRunsOutInPlayer] shot X08_KidTimeRunsOutInPlayer-03-kid-time-up-in-player
+    t =    75.75s                                         Get all elements bound by index for: Descendants matching type StaticText
+    t =    75.85s                                         Find the StaticText (Element at index 0)
+    t =    75.90s                                         Find the StaticText (Element at index 1)
+    t =    75.96s                                         Find the StaticText (Element at index 2)
+    t =    76.00s                                         Find the StaticText (Element at index 3)
+    t =    76.06s                                         Find the StaticText (Element at index 4)
+    t =    76.10s                                         Find the StaticText (Element at index 5)
+    t =    76.16s                                         Find the StaticText (Element at index 6)
+    t =    76.21s                                         Find the StaticText (Element at index 7)
+    t =    76.27s                                         Find the StaticText (Element at index 8)
+    t =    76.31s                                         Find the StaticText (Element at index 9)
+    t =    76.36s                                         Find the StaticText (Element at index 10)
+    t =    76.40s                                         Find the StaticText (Element at index 11)
+    t =    76.47s                                         Find the StaticText (Element at index 12)
+    t =    76.52s                                         Find the StaticText (Element at index 13)
+    t =    76.57s                                         Find the StaticText (Element at index 14)
+QA [X08_KidTimeRunsOutInPlayer] after the time ran out: 🌙 | Gata pentru azi | Poveștile se odihnesc acum. Cheamă un părinte. | PIN-ul de părinte |   | Acasă | Favorite | Bibliotecă | Surpriză | Caută | 0 min | ⭐ | Steaua căzătoare | 4:37 rămase | 🌙 Povești de seară
+    t =    76.62s                                         Checking existence of `StaticText (First Match)`
+QA [X08_KidTimeRunsOutInPlayer] ok   the 'Gata pentru azi' lock shows when time runs out while the player page is open
+    t =    76.66s                                         Checking existence of `Button (First Match)`
+    t =    76.87s                                         Press Target Application 'app.kitchentales.ios'[0.50, 0.12] for 0.1 seconds, then drag to Target Application 'app.kitchentales.ios'[0.50, 0.95] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    76.87s                                             Wait for app.kitchentales.ios to idle
+    t =    76.88s                                             Find the Target Application 'app.kitchentales.ios'
+    t =    76.93s                                             Check for interrupting elements affecting "Bucătăria" Application
+    t =    77.02s                                             Synthesize event
+    t =    77.02s                                                 Find the Target Application 'app.kitchentales.ios'
+    t =    77.06s                                                 Find the Target Application 'app.kitchentales.ios'
+    t =    77.11s                                                 Find the Target Application 'app.kitchentales.ios'
+    t =    77.16s                                                 Find the Target Application 'app.kitchentales.ios'
+    t =    77.21s                                                 Find the Target Application 'app.kitchentales.ios'
+    t =    79.04s                                             Wait for app.kitchentales.ios to idle
+    t =    81.27s Added attachment named 'X08_KidTimeRunsOutInPlayer-04-kid-after-closing-player'
+QA [X08_KidTimeRunsOutInPlayer] shot X08_KidTimeRunsOutInPlayer-04-kid-after-closing-player
+    t =    81.27s                                         Checking existence of `StaticText (First Match)`
+QA [X08_KidTimeRunsOutInPlayer] ok   lock shows after closing the player
+    t =    81.29s Tear Down
+Test Case '-[KitchenTalesUITests.SystemQATests testX08_KidTimeRunsOutInPlayer]' passed (81.637 seconds).
+Test Suite 'SystemQATests' failed at 2026-11-12 15:28:21.819.
+	 Executed 7 tests, with 1 failure (0 unexpected) in 489.649 (489.660) seconds
+Test Suite 'KitchenTalesUITests.xctest' failed at 2026-11-12 15:28:21.823.
+	 Executed 31 tests, with 17 failures (0 unexpected) in 2702.120 (2702.220) seconds
+Test Suite 'Selected tests' failed at 2026-11-12 15:28:21.824.
+	 Executed 31 tests, with 17 failures (0 unexpected) in 2702.120 (2702.223) seconds
+2026-11-12 15:28:56.227 xcodebuild[14340:42496] [MT] IDETestOperationsObserverDebug: 2774.912 elapsed -- Testing started completed.
+2026-11-12 15:28:56.228 xcodebuild[14340:42496] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-12 15:28:56.228 xcodebuild[14340:42496] [MT] IDETestOperationsObserverDebug: 2774.912 sec, +2774.912 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/runner/work/kitchen-tales/kitchen-tales/ios/build/QA-pro.xcresult
+
+** TEST EXECUTE FAILED **
+
+Testing started

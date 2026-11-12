@@ -1,0 +1,33 @@
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-01-key-home
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen recipe -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-02-key-recipe
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen cook -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-03-key-cook
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-04-key-recipes
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab week -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-05-key-week
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab list -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-06-key-list
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -screen editor-edit -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-07-key-editor
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-08-key-profile
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-09-key-stories-home
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab library -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-10-key-library
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab library -screen folder -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-11-key-folder
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen player -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-12-key-player
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab add -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-13-key-add
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen kid -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-14-key-kid
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen bedtime-night -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-15-key-bedtime-night
+QA [X07_KeyScreens] LAUNCH -kt-kid none
+QA [X07_KeyScreens] shot X07_KeyScreens-16-key-login
+Test Case '-[KitchenTalesUITests.SystemQATests testX07_KeyScreens]' passed (193.572 seconds).

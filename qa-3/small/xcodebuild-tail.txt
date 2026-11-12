@@ -1,0 +1,178 @@
+Command line invocation:
+    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild test-without-building -project KitchenTales.xcodeproj -scheme KitchenTalesQA -destination id=F2D2FAF0-3DC7-43F6-8E67-CFF6C774105B -derivedDataPath build/DerivedData -resultBundlePath build/QA-small.xcresult "-only-testing:KitchenTalesUITests/SystemQATests/testX07_KeyScreens"
+
+Writing result bundle at path:
+	/Users/runner/work/kitchen-tales/kitchen-tales/ios/build/QA-small.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:F2D2FAF0-3DC7-43F6-8E67-CFF6C774105B, OS:26.2, name:iPhone 16e }
+{ platform:iOS Simulator, arch:x86_64, id:F2D2FAF0-3DC7-43F6-8E67-CFF6C774105B, OS:26.2, name:iPhone 16e }
+2026-11-12 15:35:13.580909+0000 KitchenTalesUITests-Runner[59246:394320] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-12 15:35:25.851.
+Test Suite 'KitchenTalesUITests.xctest' started at 2026-11-12 15:35:25.854.
+Test Suite 'SystemQATests' started at 2026-11-12 15:35:25.854.
+Test Case '-[KitchenTalesUITests.SystemQATests testX07_KeyScreens]' started.
+    t =     0.00s Start Test at 2026-11-12 15:35:25.857
+    t =     1.61s Set Up
+    t =     1.66s Open app.kitchentales.ios
+    t =     1.66s     Launch app.kitchentales.ios
+    t =    27.91s         Setting up automation session
+    t =    28.48s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+    t =    32.58s Wait for app.kitchentales.ios to become Running Foreground
+    t =    35.58s Added attachment named 'X07_KeyScreens-01-key-home'
+QA [X07_KeyScreens] shot X07_KeyScreens-01-key-home
+    t =    35.59s Open app.kitchentales.ios
+    t =    35.59s     Launch app.kitchentales.ios
+    t =    35.59s         Terminate app.kitchentales.ios:60545
+    t =    42.08s         Setting up automation session
+    t =    43.95s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen recipe -kt-kid none
+    t =    47.08s Wait for app.kitchentales.ios to become Running Foreground
+    t =    49.86s Added attachment named 'X07_KeyScreens-02-key-recipe'
+QA [X07_KeyScreens] shot X07_KeyScreens-02-key-recipe
+    t =    49.87s Open app.kitchentales.ios
+    t =    49.87s     Launch app.kitchentales.ios
+    t =    49.87s         Terminate app.kitchentales.ios:61090
+    t =    54.00s         Setting up automation session
+    t =    54.72s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen cook -kt-kid none
+    t =    57.42s Wait for app.kitchentales.ios to become Running Foreground
+    t =    60.17s Added attachment named 'X07_KeyScreens-03-key-cook'
+QA [X07_KeyScreens] shot X07_KeyScreens-03-key-cook
+    t =    60.18s Open app.kitchentales.ios
+    t =    60.18s     Launch app.kitchentales.ios
+    t =    60.18s         Terminate app.kitchentales.ios:61357
+    t =    68.60s         Setting up automation session
+    t =    70.92s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+    t =    74.74s Wait for app.kitchentales.ios to become Running Foreground
+    t =    77.56s Added attachment named 'X07_KeyScreens-04-key-recipes'
+QA [X07_KeyScreens] shot X07_KeyScreens-04-key-recipes
+    t =    77.56s Open app.kitchentales.ios
+    t =    77.57s     Launch app.kitchentales.ios
+    t =    77.57s         Terminate app.kitchentales.ios:61511
+    t =    79.77s         Setting up automation session
+    t =    81.00s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab week -kt-kid none
+    t =    83.39s Wait for app.kitchentales.ios to become Running Foreground
+    t =    86.07s Added attachment named 'X07_KeyScreens-05-key-week'
+QA [X07_KeyScreens] shot X07_KeyScreens-05-key-week
+    t =    86.07s Open app.kitchentales.ios
+    t =    86.08s     Launch app.kitchentales.ios
+    t =    86.08s         Terminate app.kitchentales.ios:62005
+    t =    87.73s         Setting up automation session
+    t =    89.47s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab list -kt-kid none
+    t =    92.69s Wait for app.kitchentales.ios to become Running Foreground
+    t =    95.42s Added attachment named 'X07_KeyScreens-06-key-list'
+QA [X07_KeyScreens] shot X07_KeyScreens-06-key-list
+    t =    95.43s Open app.kitchentales.ios
+    t =    95.43s     Launch app.kitchentales.ios
+    t =    95.43s         Terminate app.kitchentales.ios:62429
+    t =    97.67s         Setting up automation session
+    t =    99.61s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -screen editor-edit -kt-kid none
+    t =   102.71s Wait for app.kitchentales.ios to become Running Foreground
+    t =   105.47s Added attachment named 'X07_KeyScreens-07-key-editor'
+QA [X07_KeyScreens] shot X07_KeyScreens-07-key-editor
+    t =   105.47s Open app.kitchentales.ios
+    t =   105.47s     Launch app.kitchentales.ios
+    t =   105.47s         Terminate app.kitchentales.ios:62691
+    t =   107.32s         Setting up automation session
+    t =   108.93s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+    t =   114.38s Wait for app.kitchentales.ios to become Running Foreground
+    t =   117.08s Added attachment named 'X07_KeyScreens-08-key-profile'
+QA [X07_KeyScreens] shot X07_KeyScreens-08-key-profile
+    t =   117.09s Open app.kitchentales.ios
+    t =   117.09s     Launch app.kitchentales.ios
+    t =   117.09s         Terminate app.kitchentales.ios:62901
+    t =   119.46s         Setting up automation session
+    t =   123.17s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -kt-kid none
+    t =   125.48s Wait for app.kitchentales.ios to become Running Foreground
+    t =   128.22s Added attachment named 'X07_KeyScreens-09-key-stories-home'
+QA [X07_KeyScreens] shot X07_KeyScreens-09-key-stories-home
+    t =   128.22s Open app.kitchentales.ios
+    t =   128.22s     Launch app.kitchentales.ios
+    t =   128.22s         Terminate app.kitchentales.ios:63615
+    t =   130.46s         Setting up automation session
+    t =   132.11s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab library -kt-kid none
+    t =   134.64s Wait for app.kitchentales.ios to become Running Foreground
+    t =   137.39s Added attachment named 'X07_KeyScreens-10-key-library'
+QA [X07_KeyScreens] shot X07_KeyScreens-10-key-library
+    t =   137.39s Open app.kitchentales.ios
+    t =   137.39s     Launch app.kitchentales.ios
+    t =   137.39s         Terminate app.kitchentales.ios:64426
+    t =   139.32s         Setting up automation session
+    t =   141.14s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab library -screen folder -kt-kid none
+    t =   143.34s Wait for app.kitchentales.ios to become Running Foreground
+    t =   146.06s Added attachment named 'X07_KeyScreens-11-key-folder'
+QA [X07_KeyScreens] shot X07_KeyScreens-11-key-folder
+    t =   146.09s Open app.kitchentales.ios
+    t =   146.09s     Launch app.kitchentales.ios
+    t =   146.10s         Terminate app.kitchentales.ios:64738
+    t =   149.32s         Setting up automation session
+    t =   150.32s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen player -kt-kid none
+    t =   153.81s Wait for app.kitchentales.ios to become Running Foreground
+    t =   156.80s Added attachment named 'X07_KeyScreens-12-key-player'
+QA [X07_KeyScreens] shot X07_KeyScreens-12-key-player
+    t =   156.81s Open app.kitchentales.ios
+    t =   156.81s     Launch app.kitchentales.ios
+    t =   156.81s         Terminate app.kitchentales.ios:65131
+    t =   158.77s         Setting up automation session
+    t =   160.59s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab add -kt-kid none
+    t =   164.32s Wait for app.kitchentales.ios to become Running Foreground
+    t =   166.99s Added attachment named 'X07_KeyScreens-13-key-add'
+QA [X07_KeyScreens] shot X07_KeyScreens-13-key-add
+    t =   166.99s Open app.kitchentales.ios
+    t =   167.00s     Launch app.kitchentales.ios
+    t =   167.00s         Terminate app.kitchentales.ios:65714
+    t =   169.31s         Setting up automation session
+    t =   171.07s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen kid -kt-kid none
+    t =   173.41s Wait for app.kitchentales.ios to become Running Foreground
+    t =   176.11s Added attachment named 'X07_KeyScreens-14-key-kid'
+QA [X07_KeyScreens] shot X07_KeyScreens-14-key-kid
+    t =   176.12s Open app.kitchentales.ios
+    t =   176.12s     Launch app.kitchentales.ios
+    t =   176.12s         Terminate app.kitchentales.ios:66059
+    t =   178.05s         Setting up automation session
+    t =   180.22s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen bedtime-night -kt-kid none
+    t =   182.88s Wait for app.kitchentales.ios to become Running Foreground
+    t =   185.61s Added attachment named 'X07_KeyScreens-15-key-bedtime-night'
+QA [X07_KeyScreens] shot X07_KeyScreens-15-key-bedtime-night
+    t =   185.61s Open app.kitchentales.ios
+    t =   185.61s     Launch app.kitchentales.ios
+    t =   185.61s         Terminate app.kitchentales.ios:66624
+    t =   187.75s         Setting up automation session
+    t =   189.39s         Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -kt-kid none
+    t =   190.95s Wait for app.kitchentales.ios to become Running Foreground
+    t =   192.68s Added attachment named 'X07_KeyScreens-16-key-login'
+QA [X07_KeyScreens] shot X07_KeyScreens-16-key-login
+    t =   192.70s Tear Down
+Test Case '-[KitchenTalesUITests.SystemQATests testX07_KeyScreens]' passed (193.572 seconds).
+Test Suite 'SystemQATests' passed at 2026-11-12 15:38:39.430.
+	 Executed 1 test, with 0 failures (0 unexpected) in 193.572 (193.576) seconds
+Test Suite 'KitchenTalesUITests.xctest' passed at 2026-11-12 15:38:39.430.
+	 Executed 1 test, with 0 failures (0 unexpected) in 193.572 (193.577) seconds
+Test Suite 'Selected tests' passed at 2026-11-12 15:38:39.431.
+	 Executed 1 test, with 0 failures (0 unexpected) in 193.572 (193.580) seconds
+2026-11-12 15:39:15.248 xcodebuild[50045:371407] [MT] IDETestOperationsObserverDebug: 417.259 elapsed -- Testing started completed.
+2026-11-12 15:39:15.249 xcodebuild[50045:371407] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-12 15:39:15.249 xcodebuild[50045:371407] [MT] IDETestOperationsObserverDebug: 417.259 sec, +417.259 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/runner/work/kitchen-tales/kitchen-tales/ios/build/QA-small.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

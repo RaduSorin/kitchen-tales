@@ -1,0 +1,93 @@
+Optional(Attributes: Application, 0x1037cd730, pid: 29759, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x1037cd730, pid: 29759, label: 'Bucătăria'
+    Window (Main), 0x103763410, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1037ce200, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1037d0d30, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1037d09b0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1037d0500, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1037ce8f0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1037cea10, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1037ceb30, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1037cec50, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1037ced70, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x1037cee90, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1037cefb0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1037cf0d0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1037cf1f0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1037cf310, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1037cf430, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x1037cf550, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x1037cf670, {{0.0, 0.0}, {402.0, 968.3}}
+                                        CollectionView, 0x1037cf790, {{0.0, 0.0}, {402.0, 540.0}}
+                                          Cell, 0x1037cf8b0, {{0.0, 0.0}, {402.0, 540.0}}
+                                            Other, 0x1037d1880, {{0.0, 0.0}, {402.0, 540.0}}
+                                              Other, 0x1037d19a0, {{0.0, 0.0}, {402.0, 540.0}}
+                                                Other, 0x1037d1ac0, {{0.0, 0.0}, {402.0, 540.0}}
+                                                  Other, 0x1037d1be0, {{0.0, 0.0}, {402.0, 540.0}}
+                                                    Image, 0x1037d1d00, {{-189.7, 0.0}, {781.3, 540.0}}
+                                                    StaticText, 0x1037d1e20, {{20.0, 358.3}, {145.7, 14.3}}, label: 'AZI ÎN PLAN · 1 H 30'
+                                                    StaticText, 0x1037d1f40, {{20.0, 378.7}, {322.0, 42.0}}, label: 'Ciorbă de perișoare'
+                                                    StaticText, 0x1037d2060, {{20.0, 426.7}, {165.3, 19.3}}, label: 'Ciorbe și supe · 4 porții'
+                                                    Button, 0x1037d2180, {{20.0, 462.0}, {213.0, 48.0}}, label: 'Gătește pas cu pas'
+                                                    Button, 0x1037d22a0, {{243.0, 462.0}, {91.7, 48.0}}, label: 'Rețeta'
+                                          Other, 0x1037d23c0, {{369.0, 62.0}, {30.0, 478.0}}, label: 'Bară de derulare verticală, 3 pagini', value: 0 %
+                                            Other, 0x1037d24e0, {{396.0, 530.0}, {3.0, 7.0}}
+                                          Other, 0x1037d2600, {{369.0, 62.0}, {30.0, 478.0}}, label: 'Bară de derulare verticală, 3 pagini', value: 0 %
+                                            Other, 0x1037d2720, {{396.0, 530.0}, {3.0, 7.0}}
+                                        Button, 0x1037d2840, {{23.0, 549.0}, {118.7, 38.0}}, label: 'Azi', Selected
+                                        Button, 0x1037d2960, {{141.7, 549.0}, {118.7, 38.0}}, label: 'Săptămâna'
+                                        Button, 0x1037d2a80, {{260.3, 549.0}, {118.7, 38.0}}, label: 'Caiet'
+                                        Button, 0x1037d2ba0, {{20.0, 606.0}, {362.0, 72.0}}, label: 'Ciorbă de perișoare, Azi în meniu · 1 h 30 · Ciorbe și supe'
+                                          Image, 0x1037d2cc0, {{8.3, 616.0}, {75.3, 52.0}}
+                                          StaticText, 0x1037d2de0, {{86.0, 623.5}, {144.3, 19.3}}, label: 'Ciorbă de perișoare'
+                                          StaticText, 0x1037d2f00, {{86.0, 644.8}, {209.7, 15.7}}, label: 'Azi în meniu · 1 h 30 · Ciorbe și supe'
+                                          Image, 0x1037d3020, {{373.7, 635.7}, {7.7, 12.7}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x1037d3140, {{20.0, 679.0}, {362.0, 72.0}}, label: 'Chifle de casă, Azi în meniu · 40 min · Patiserie'
+                                          Image, 0x1037d3260, {{-0.7, 689.0}, {93.3, 52.0}}
+                                          StaticText, 0x1037d3380, {{86.0, 696.5}, {103.3, 19.3}}, label: 'Chifle de casă'
+                                          StaticText, 0x1037d34a0, {{86.0, 717.8}, {183.7, 15.7}}, label: 'Azi în meniu · 40 min · Patiserie'
+                                          Image, 0x1037d35c0, {{373.7, 708.7}, {7.7, 12.7}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x1037d36e0, {{20.0, 752.0}, {362.0, 72.0}}, label: 'Suc de portocale, Azi în meniu · 5 min · Băuturi'
+                                          Image, 0x1037d3800, {{20.0, 759.7}, {52.0, 56.7}}
+                                          StaticText, 0x1037d3920, {{86.0, 769.5}, {124.3, 19.3}}, label: 'Suc de portocale'
+                                          StaticText, 0x1037d3a40, {{86.0, 790.8}, {166.0, 15.7}}, label: 'Azi în meniu · 5 min · Băuturi'
+                                          Image, 0x1037d3b60, {{373.7, 781.7}, {7.7, 12.7}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x1037d3c80, {{9.7, 838.0}, {372.3, 106.3}}, label: 'PENTRU ANA, LA CULCARE, Dragonul care strănuta, Ascultă · 7 min'
+                                          StaticText, 0x1037d3da0, {{9.7, 859.3}, {115.0, 78.7}}, label: '🐉'
+                                          StaticText, 0x1037d3ec0, {{110.0, 850.0}, {191.0, 14.3}}, label: 'PENTRU ANA, LA CULCARE'
+                                          StaticText, 0x1037d3fe0, {{110.0, 866.3}, {122.7, 47.0}}, label: 'Dragonul care strănuta'
+                                          StaticText, 0x1037d4100, {{110.0, 915.3}, {93.0, 17.0}}, label: 'Ascultă · 7 min'
+                                          Image, 0x1037d4220, {{343.3, 885.0}, {11.0, 12.3}}, identifier: 'play.fill', label: 'Redare'
+                                    Button, 0x1037d4340, {{19.0, 69.0}, {71.0, 32.0}}, label: 'Rețete', Selected
+                                    Button, 0x1037d4460, {{106.0, 76.5}, {47.0, 17.0}}, label: 'Povești'
+                                    Button, 0x1037d4580, {{348.0, 66.0}, {38.0, 38.0}}, identifier: 'magnifyingglass', label: 'Caută rețete'
+                            Other, 0x1037d46a0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1037d47c0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1037d48e0, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x1037d4a00, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1037d4b20, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x1037d4c40, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă', Selected
+                Other, 0x1037d4d60, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037d4e80, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x1037d4fa0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+                Other, 0x1037d50c0, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037d51e0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+              Button, 0x1037d5300, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+                Other, 0x1037d5420, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037d5540, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+              Button, 0x1037d5660, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Listă, 7 de luat'
+                Other, 0x1037d5780, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037d58a0, {{286.0, 781.2}, {6.3, 13.3}}, label: '7'
+                StaticText, 0x1037d59c0, {{262.2, 811.8}, {24.0, 13.3}}, label: 'Listă'
+              Button, 0x1037d5ae0, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+                Other, 0x1037d5c00, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037d5d20, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+Path to element:
+ →Application, 0x1037cd730, pid: 29759, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1048c11e0, pid: 29759, label: 'Bucătăria'
+  }
+)

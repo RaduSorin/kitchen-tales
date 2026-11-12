@@ -1,0 +1,86 @@
+Optional(Attributes: Application, 0x1048bcff0, pid: 12978, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x1048bcff0, pid: 12978, label: 'Bucătăria'
+    Window (Main), 0x1048aff80, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x104859830, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x10488e000, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1048b1b80, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x10486f5f0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x10485f950, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x10487ce20, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x10486f250, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1048ad160, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x10488a900, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x104872970, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x104897a60, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x10487b980, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1048801e0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1048744e0, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x10488f150, {{0.0, 0.0}, {402.0, 874.0}}
+                                    CollectionView, 0x1048bef20, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x1048c29b0, {{-16.0, -1686.0}, {434.0, 1904.3}}
+                                      Cell, 0x108a50540, {{16.0, 97.0}, {370.0, 103.7}}
+                                        Other, 0x10483d4a0, {{16.0, 97.0}, {370.0, 103.7}}
+                                          Other, 0x108a63c80, {{16.0, 97.0}, {370.0, 103.7}}
+                                            Other, 0x108dd2960, {{16.0, 97.0}, {370.0, 103.7}}
+                                        Other, 0x108ae5ff0, {{16.0, 97.0}, {370.0, 103.7}}
+                                          Other, 0x108add680, {{16.0, 97.0}, {370.0, 103.7}}
+                                            Other, 0x108ae8610, {{16.0, 97.0}, {370.0, 103.7}}
+                                              Button, 0x108ae8730, {{32.0, 99.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Înapoi'
+                                              StaticText, 0x108ae8850, {{32.0, 157.0}, {223.7, 39.7}}, label: 'Ora de culcare'
+                                      Other, 0x108ae8970, {{-16.0, 218.3}, {434.0, 1880.0}}
+                                      Cell, 0x108ae8a90, {{16.0, 218.3}, {370.0, 34.3}}
+                                        Other, 0x108ae8bb0, {{16.0, 218.3}, {370.0, 34.3}}
+                                        Other, 0x108ae8cd0, {{16.0, 218.3}, {370.0, 34.3}}
+                                          Other, 0x108ae8df0, {{16.0, 218.3}, {370.0, 34.3}}
+                                            Other, 0x108ae8f10, {{16.0, 218.3}, {370.0, 34.3}}
+                                              StaticText, 0x108ae9030, {{16.0, 218.3}, {370.0, 34.3}}, label: 'RUTINA'
+                                      Cell, 0x108ae9150, {{16.0, 252.7}, {370.0, 52.0}}
+                                        Other, 0x108ae9270, {{16.0, 252.7}, {370.0, 52.0}}
+                                          Other, 0x108ae9390, {{16.0, 252.7}, {370.0, 52.0}}
+                                            Other, 0x108ae94b0, {{16.0, 252.7}, {370.0, 52.0}}
+                                        Other, 0x108ae95d0, {{16.0, 252.7}, {370.0, 52.0}}
+                                          Other, 0x108ae96f0, {{16.0, 252.7}, {370.0, 52.0}}
+                                            Other, 0x108ae9810, {{16.0, 252.7}, {370.0, 52.0}}
+                                              Switch, 0x108ae9930, {{16.0, 252.7}, {370.0, 52.0}}, label: 'Rutina de seară', value: 0
+                                                StaticText, 0x108ae9a50, {{32.0, 268.5}, {118.0, 20.3}}, label: 'Rutina de seară'
+                                                Switch, 0x108ae9b70, {{309.0, 264.7}, {63.0, 28.0}}, value: 0
+                                      Cell, 0x108ae9c90, {{16.0, 304.7}, {370.0, 45.7}}
+                                        Other, 0x108ae9db0, {{16.0, 304.7}, {370.0, 45.7}}
+                                        Other, 0x108ae9ed0, {{16.0, 304.7}, {370.0, 45.7}}
+                                          Other, 0x108ae9ff0, {{16.0, 304.7}, {370.0, 45.7}}
+                                            Other, 0x108aea110, {{16.0, 304.7}, {370.0, 45.7}}
+                                              StaticText, 0x108aea230, {{16.0, 304.7}, {370.0, 45.7}}, label: 'Ana primește un memento pe ecranul blocat, apoi ecranul de noapte cu poveștile la rând.'
+                                      Other, 0x108aea350, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 1 pagină', value: 0 %
+                                        Other, 0x108aea470, {{396.0, 808.0}, {3.0, 7.0}}
+                                      Other, 0x108aea590, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 1 pagină', value: 0 %
+                                        Other, 0x108aea6b0, {{396.0, 808.0}, {3.0, 7.0}}
+                            Other, 0x108aea7d0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x108aea8f0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x108aeaa10, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x108aeab30, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x108aeac50, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x108aead70, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x108aeae90, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108aeafb0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x108aeb0d0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+                Other, 0x108aeb1f0, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108aeb310, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+              Button, 0x108aeb430, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+                Other, 0x108aeb550, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108aeb670, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+              Button, 0x108a52d90, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Listă, 7 de luat'
+                Other, 0x108a52eb0, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108a52fd0, {{286.0, 781.2}, {6.3, 13.3}}, label: '7'
+                StaticText, 0x108a530f0, {{262.2, 811.8}, {24.0, 13.3}}, label: 'Listă'
+              Button, 0x108a53210, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil', Selected
+                Other, 0x108a53330, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108a53450, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+Path to element:
+ →Application, 0x1048bcff0, pid: 12978, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x108a5d050, pid: 12978, label: 'Bucătăria'
+  }
+)

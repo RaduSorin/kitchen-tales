@@ -1,0 +1,96 @@
+Optional(Attributes: Application, 0x1035a21a0, pid: 40135, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x1035a21a0, pid: 40135, label: 'Bucătăria'
+    Window (Main), 0x10358db90, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x10358e990, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x103579e80, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x103579840, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x10358c890, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1035a35d0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1035a36f0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1035a3810, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1035a3930, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1035a3a50, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x1035a3b70, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1035a3c90, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1035a3db0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1035a3ed0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1035a3ff0, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1035a4110, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x1035a4230, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x1035a4350, {{0.0, 0.0}, {402.0, 987.3}}
+                                        Image, 0x1035a4470, {{21.3, 196.3}, {14.3, 10.0}}, identifier: 'person.2.fill', label: 'person.2.fill'
+                                        StaticText, 0x1035a4590, {{42.0, 194.0}, {208.3, 14.7}}, label: 'CIORBE ȘI SUPE · PARTAJATĂ'
+                                        StaticText, 0x1035a46b0, {{20.0, 216.7}, {341.0, 44.7}}, label: 'Ciorbă de perișoare'
+                                        Image, 0x1035a47d0, {{21.0, 274.7}, {13.7, 13.7}}, identifier: 'clock', label: 'Ceas'
+                                        StaticText, 0x1035a48f0, {{40.7, 272.8}, {37.7, 17.0}}, label: '1 h 30'
+                                        StaticText, 0x1035a4a10, {{96.3, 272.8}, {47.0, 17.0}}, label: '4 porții'
+                                        Button, 0x1035a4b30, {{149.3, 265.3}, {32.0, 32.0}}, label: 'Mai puține porții'
+                                        Button, 0x1035a4c50, {{187.3, 265.3}, {32.0, 32.0}}, label: 'Mai multe porții'
+                                        StaticText, 0x1035a4d70, {{237.3, 272.8}, {38.0, 17.0}}, label: '6 pași'
+                                        StaticText, 0x1035a4e90, {{20.0, 297.3}, {205.3, 17.0}}, label: 'Gătită o dată · acum 3 săptămâni'
+                                        Button, 0x1035a4fb0, {{23.0, 335.3}, {118.7, 38.0}}, label: 'Ingrediente', Selected
+                                        Button, 0x1035a50d0, {{141.7, 335.3}, {118.7, 38.0}}, label: 'Pași'
+                                        Button, 0x1035a51f0, {{260.3, 335.3}, {118.7, 38.0}}, label: 'Note'
+                                        Button, 0x1035a5310, {{20.0, 394.3}, {362.0, 63.3}}, label: 'Valori nutriționale pe porție, deschide fișa'
+                                          StaticText, 0x1035a5430, {{50.7, 406.3}, {34.3, 21.7}}, label: '410'
+                                          StaticText, 0x1035a5550, {{56.0, 430.0}, {23.7, 15.7}}, label: 'kcal'
+                                          StaticText, 0x1035a5670, {{137.6, 406.3}, {38.0, 21.7}}, label: '26 g'
+                                          StaticText, 0x1035a5790, {{131.6, 430.0}, {50.0, 15.7}}, label: 'proteine'
+                                          StaticText, 0x1035a58b0, {{226.4, 406.3}, {38.0, 21.7}}, label: '38 g'
+                                          StaticText, 0x1035a59d0, {{209.2, 430.0}, {72.3, 15.7}}, label: 'carbohidrați'
+                                          StaticText, 0x1035a5af0, {{315.1, 406.3}, {38.0, 21.7}}, label: '16 g'
+                                          StaticText, 0x1035a5c10, {{312.5, 430.0}, {43.3, 15.7}}, label: 'grăsimi'
+                                        StaticText, 0x1035a5d30, {{93.7, 465.7}, {214.7, 15.7}}, label: 'pe porție, din 4 · atinge pentru detalii'
+                                        StaticText, 0x1035a5e50, {{20.0, 498.8}, {57.3, 17.0}}, label: 'Alergeni:'
+                                        StaticText, 0x1035a5f70, {{93.3, 498.8}, {23.3, 17.0}}, label: 'ouă'
+                                        StaticText, 0x1035a6090, {{142.7, 498.8}, {35.3, 17.0}}, label: 'țelină'
+                                        Image, 0x1035a61b0, {{205.3, 503.0}, {9.3, 9.0}}, identifier: 'checkmark', label: 'Selectat', Selected
+                                        StaticText, 0x1035a62d0, {{220.0, 498.8}, {56.0, 17.0}}, label: 'fără nuci'
+                                        Button, 0x1035a63f0, {{20.0, 533.3}, {362.0, 40.0}}, label: '500 g carne tocată'
+                                        Button, 0x1035a6510, {{20.0, 575.3}, {362.0, 40.0}}, label: '2 cepe'
+                                        Button, 0x1035a6630, {{20.0, 617.3}, {362.0, 40.0}}, label: '1 morcov'
+                                        Button, 0x1035a6750, {{20.0, 659.3}, {362.0, 40.0}}, label: '3 linguri orez'
+                                        Button, 0x1035a6870, {{20.0, 701.3}, {362.0, 40.0}}, label: '1 ou'
+                                        Button, 0x1035a6990, {{20.0, 743.3}, {362.0, 40.0}}, label: '1 legătură leuștean'
+                                        Button, 0x10358fd70, {{20.0, 785.3}, {362.0, 40.0}}, label: '2 l apă'
+                                        Button, 0x10358ffe0, {{20.0, 827.3}, {362.0, 40.0}}, label: 'Sare și piper'
+                                    Button, 0x103590300, {{12.0, 64.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Înapoi'
+                                    Button, 0x103590420, {{292.0, 64.0}, {44.0, 44.0}}, identifier: 'heart.fill', label: 'Scoate din favorite'
+                                    Button, 0x103590540, {{346.0, 64.0}, {44.0, 44.0}}, label: 'Mai multe'
+                                      Button, 0x103590660, {{346.0, 64.0}, {44.0, 44.0}}
+                                        Image, 0x103590780, {{359.3, 84.0}, {17.3, 4.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                    Button, 0x1035908a0, {{16.0, 778.0}, {238.0, 56.0}}, label: 'Gătește pas cu pas'
+                                    Button, 0x1035909c0, {{264.0, 778.0}, {56.0, 56.0}}, identifier: 'calendar', label: 'Pune în săptămână'
+                                    Button, 0x103590ae0, {{330.0, 778.0}, {56.0, 56.0}}, identifier: 'cart', label: 'Pune în listă'
+                            Other, 0x103590c00, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x103590d20, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x103590e40, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x103590f60, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x103591080, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x1035911a0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1035912c0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1035913e0, {{0.0, 0.0}, {402.0, 874.0}}
+            Image, 0x103591500, {{-431.0, 0.0}, {1264.0, 874.0}}
+            StaticText, 0x103591620, {{147.0, 104.9}, {108.0, 297.3}}, label: '1'
+            Button, 0x103591740, {{0.0, 90.0}, {120.7, 784.0}}, label: 'Pasul anterior'
+            Button, 0x103591860, {{120.7, 90.0}, {281.3, 784.0}}, label: 'Pasul următor'
+            Other, 0x103591980, {{12.0, 72.0}, {378.0, 3.0}}, label: 'Pasul 1 din 6'
+            StaticText, 0x103591aa0, {{12.0, 95.2}, {174.7, 23.7}}, label: 'Ciorbă de perișoare'
+            StaticText, 0x103591bc0, {{194.7, 99.5}, {43.0, 18.0}}, label: '1 din 6'
+            Button, 0x103591ce0, {{294.0, 85.0}, {44.0, 44.0}}, identifier: 'mic', label: 'Gătește fără mâini: citesc pașii și te ascult'
+            Button, 0x103591e00, {{346.0, 85.0}, {44.0, 44.0}}, identifier: 'xmark', label: 'Închide modul de gătit'
+            StaticText, 0x103591f20, {{28.0, 694.7}, {54.3, 14.7}}, label: 'PASUL 1'
+            StaticText, 0x103592040, {{28.0, 721.3}, {312.3, 25.3}}, label: 'Toacă ceapa și morcovul mărunt.'
+            StaticText, 0x103592160, {{40.0, 762.7}, {61.0, 18.0}}, label: '1 morcov'
+            Button, 0x103592280, {{133.0, 802.7}, {136.0, 37.3}}, label: 'Ingrediente'
+              Image, 0x1035923a0, {{150.3, 821.0}, {11.0, 6.7}}, identifier: 'chevron.up', label: 'Deplasare În Sus'
+              StaticText, 0x1035924c0, {{168.8, 814.7}, {84.0, 19.3}}, label: 'Ingrediente'
+Path to element:
+ →Application, 0x1035a21a0, pid: 40135, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1035925e0, pid: 40135, label: 'Bucătăria'
+  }
+)

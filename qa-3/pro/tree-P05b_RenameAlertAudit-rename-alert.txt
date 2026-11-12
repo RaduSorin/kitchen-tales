@@ -1,0 +1,3 @@
+Optional(Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+)

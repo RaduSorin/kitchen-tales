@@ -1,0 +1,202 @@
+Optional(Attributes: Application, 0x1157c7bd0, pid: 50058, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x1157c7bd0, pid: 50058, label: 'Bucătăria'
+    Window (Main), 0x1157ce690, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x115f057a0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x115f058c0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x115f05650, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1157e36e0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x115f059e0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x115f05b00, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x115f05c20, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x115f05d40, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x115f05e60, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x115f05f80, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x115f060a0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x115f061c0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x115f062e0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x115f06400, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x115f06520, {{0.0, 0.0}, {402.0, 874.0}}
+                                    StaticText, 0x108d64350, {{20.0, 70.0}, {124.3, 14.3}}, label: 'SĂPTĂMÂNA MEA'
+                                    Button, 0x108d63b70, {{20.0, 86.3}, {255.0, 37.0}}, label: 'Noiembrie 2026'
+                                      StaticText, 0x108d6e6f0, {{20.0, 86.3}, {229.3, 37.0}}, label: 'Noiembrie 2026'
+                                      Image, 0x108df3760, {{259.3, 101.0}, {13.7, 8.0}}, identifier: 'chevron.down', label: 'Deplasare În Jos'
+                                    Button, 0x108d6fad0, {{338.0, 79.3}, {44.0, 44.0}}, label: 'Lista de cumpărături'
+                                      Button, 0x108d6fef0, {{338.0, 79.3}, {44.0, 44.0}}
+                                        Image, 0x108d6ead0, {{350.0, 93.0}, {19.7, 17.0}}, identifier: 'cart', label: 'Cărucior De Cumpărături'
+                                    ScrollView, 0x108dff1b0, {{0.0, 141.3}, {402.0, 732.7}}
+                                      Other, 0x108d757c0, {{-938.0, 141.3}, {8576.0, 698.7}}
+                                        Other, 0x108d75be0, {{-392.0, 141.3}, {1186.0, 732.7}}
+                                          StaticText, 0x108dff9f0, {{-348.5, 141.3}, {27.0, 15.7}}, label: 'Luni'
+                                          StaticText, 0x108dff5d0, {{-350.0, 169.2}, {30.0, 29.7}}, label: '09'
+                                          ScrollView, 0x108d5c040, {{-392.0, 217.0}, {114.0, 657.0}}
+                                            Other, 0x108d269b0, {{-392.0, 217.0}, {114.0, 306.0}}
+                                              Button, 0x108d26ad0, {{-431.3, 217.0}, {192.7, 132.0}}
+                                                Image, 0x108d26bf0, {{-431.3, 217.0}, {192.7, 132.0}}
+                                              Button, 0x108d26d10, {{-392.0, 355.0}, {84.3, 58.0}}, label: 'Cartofi țărănești, 50 min · 4 porții'
+                                                StaticText, 0x108d26e30, {{-392.0, 355.0}, {67.0, 39.7}}, label: 'Cartofi țărănești'
+                                                StaticText, 0x108d26f50, {{-392.0, 398.7}, {84.3, 14.3}}, label: '50 min · 4 porții'
+                                              Button, 0x108d27070, {{-302.0, 355.0}, {24.0, 30.0}}, label: 'Opțiuni pentru Cartofi țărănești'
+                                                Button, 0x108d27190, {{-302.0, 355.0}, {24.0, 30.0}}
+                                                  Image, 0x108d272b0, {{-302.0, 355.0}, {24.0, 30.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                          StaticText, 0x108d273d0, {{-217.5, 141.3}, {33.0, 15.7}}, label: 'Marți'
+                                          StaticText, 0x108d274f0, {{-214.2, 169.2}, {26.3, 29.7}}, label: '10'
+                                          ScrollView, 0x108d27610, {{-258.0, 217.0}, {114.0, 657.0}}
+                                            Other, 0x108d27730, {{-258.0, 217.0}, {114.0, 325.7}}
+                                              Button, 0x108d27850, {{-351.3, 217.0}, {300.7, 132.0}}
+                                                Image, 0x108d27970, {{-351.3, 217.0}, {300.7, 132.0}}
+                                              Button, 0x108d27a90, {{-258.0, 355.0}, {84.0, 77.7}}, label: 'Cartofi cu ardei la tigaie, 35 min · 2 porții'
+                                                StaticText, 0x108d27bb0, {{-258.0, 355.0}, {78.0, 59.3}}, label: 'Cartofi cu ardei la tigaie'
+                                                StaticText, 0x108d27cd0, {{-258.0, 418.3}, {84.0, 14.3}}, label: '35 min · 2 porții'
+                                              Button, 0x108d27df0, {{-168.0, 355.0}, {24.0, 30.0}}, label: 'Opțiuni pentru Cartofi cu ardei la tigaie'
+                                                Button, 0x108d27f10, {{-168.0, 355.0}, {24.0, 30.0}}
+                                                  Image, 0x108d28030, {{-168.0, 355.0}, {24.0, 30.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                          StaticText, 0x108d28150, {{-93.0, 141.3}, {52.0, 15.7}}, label: 'Miercuri'
+                                          StaticText, 0x108d28270, {{-77.8, 169.2}, {21.7, 29.7}}, label: '11'
+                                          ScrollView, 0x108d28390, {{-67.0, 217.0}, {0.0, 657.0}}
+                                            Other, 0x108d284b0, {{-67.0, 217.0}, {0.0, 110.0}}
+                                          StaticText, 0x108d285d0, {{42.3, 141.3}, {49.3, 15.7}}, label: 'Azi · Joi'
+                                          StaticText, 0x108d286f0, {{54.3, 169.2}, {25.3, 29.7}}, label: '12'
+                                          ScrollView, 0x108d28810, {{10.0, 217.0}, {114.0, 657.0}}
+                                            Other, 0x108d28930, {{10.0, 217.0}, {114.0, 800.0}}
+                                              Button, 0x108d28a50, {{-28.3, 217.0}, {190.7, 132.0}}
+                                                Image, 0x108d28b70, {{-28.3, 217.0}, {190.7, 132.0}}
+                                              Button, 0x108d28c90, {{10.0, 355.0}, {85.3, 58.0}}, label: 'Ciorbă de perișoare, 1 h 30 · 4 porții'
+                                                StaticText, 0x108d28db0, {{10.0, 355.0}, {76.0, 39.7}}, label: 'Ciorbă de perișoare'
+                                                StaticText, 0x108d28ed0, {{10.0, 398.7}, {85.3, 14.3}}, label: '1 h 30 · 4 porții'
+                                              Button, 0x108d28ff0, {{100.0, 355.0}, {24.0, 30.0}}, label: 'Opțiuni pentru Ciorbă de perișoare'
+                                                Button, 0x108d29110, {{100.0, 355.0}, {24.0, 30.0}}
+                                                  Image, 0x108d29230, {{100.0, 355.0}, {24.0, 30.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                              Button, 0x108d29350, {{-51.7, 427.0}, {237.3, 132.0}}
+                                                Image, 0x108d29470, {{-51.7, 427.0}, {237.3, 132.0}}
+                                              Button, 0x108d29590, {{10.0, 565.0}, {82.7, 58.0}}, label: 'Chifle de casă, 40 min · 12 porții'
+                                                StaticText, 0x108d296b0, {{10.0, 565.0}, {54.7, 39.7}}, label: 'Chifle de casă'
+                                                StaticText, 0x108d297d0, {{10.0, 608.7}, {82.7, 14.3}}, label: '40 min · 12 porții'
+                                              Button, 0x108d298f0, {{100.0, 565.0}, {24.0, 30.0}}, label: 'Opțiuni pentru Chifle de casă'
+                                                Button, 0x108d29a10, {{100.0, 565.0}, {24.0, 30.0}}
+                                                  Image, 0x108d29b30, {{100.0, 565.0}, {24.0, 30.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                              Button, 0x108d2d040, {{6.3, 637.0}, {121.3, 132.0}}
+                                                Image, 0x108d2d160, {{6.3, 637.0}, {121.3, 132.0}}
+                                              Button, 0x108d2d280, {{10.0, 775.0}, {81.7, 58.0}}, label: 'Suc de portocale, 5 min · 2 porții'
+                                                StaticText, 0x108d2d3a0, {{10.0, 775.0}, {71.7, 39.7}}, label: 'Suc de portocale'
+                                                StaticText, 0x108d2d4c0, {{10.0, 818.7}, {81.7, 14.3}}, label: '5 min · 2 porții'
+                                              Button, 0x108d2d5e0, {{100.0, 775.0}, {24.0, 30.0}}, label: 'Opțiuni pentru Suc de portocale'
+                                                Button, 0x108d2d700, {{100.0, 775.0}, {24.0, 30.0}}
+                                                  Image, 0x108d2d820, {{100.0, 775.0}, {24.0, 30.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                              Button, 0x108d2d940, {{10.0, 847.0}, {114.0, 60.0}}, identifier: 'plus', label: 'Adaugă o rețetă azi'
+                                          StaticText, 0x108d2da60, {{182.5, 141.3}, {37.0, 15.7}}, label: 'Vineri'
+                                          StaticText, 0x108d2db80, {{189.0, 169.2}, {24.0, 29.7}}, label: '13'
+                                          ScrollView, 0x108d2dca0, {{144.0, 217.0}, {114.0, 657.0}}
+                                            Other, 0x108d2ddc0, {{144.0, 217.0}, {114.0, 399.7}}
+                                              Button, 0x108d2dee0, {{50.7, 217.0}, {300.7, 132.0}}
+                                                Image, 0x108d2e000, {{50.7, 217.0}, {300.7, 132.0}}
+                                              Button, 0x108d2e120, {{144.0, 355.0}, {84.7, 77.7}}, label: 'Supă cremă de cartofi, 40 min · 4 porții'
+                                                StaticText, 0x108d2e240, {{144.0, 355.0}, {72.7, 59.3}}, label: 'Supă cremă de cartofi'
+                                                StaticText, 0x108d2e360, {{144.0, 418.3}, {84.7, 14.3}}, label: '40 min · 4 porții'
+                                              Button, 0x108d2e480, {{234.0, 355.0}, {24.0, 30.0}}, label: 'Opțiuni pentru Supă cremă de cartofi'
+                                                Button, 0x108d2e5a0, {{234.0, 355.0}, {24.0, 30.0}}
+                                                  Image, 0x108d2e6c0, {{234.0, 355.0}, {24.0, 30.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                              Button, 0x108d2e7e0, {{144.0, 446.7}, {114.0, 60.0}}, identifier: 'plus', label: 'Adaugă o rețetă vineri'
+                                          StaticText, 0x108d2e900, {{307.0, 141.3}, {56.0, 15.7}}, label: 'Sâmbătă'
+                                          StaticText, 0x108d2ea20, {{322.3, 169.2}, {25.3, 29.7}}, label: '14'
+                                          ScrollView, 0x108d2eb40, {{278.0, 217.0}, {114.0, 657.0}}
+                                            Other, 0x108d2ec60, {{278.0, 217.0}, {114.0, 170.0}}
+                                              Button, 0x108d2ed80, {{278.0, 217.0}, {114.0, 60.0}}, identifier: 'plus', label: 'Adaugă o rețetă sâmbătă'
+                                          StaticText, 0x108d2eea0, {{439.5, 141.3}, {59.0, 15.7}}, label: 'Duminică'
+                                          StaticText, 0x108d2efc0, {{456.8, 169.2}, {24.3, 29.7}}, label: '15'
+                                          ScrollView, 0x108d2f0e0, {{412.0, 217.0}, {114.0, 657.0}}
+                                            Other, 0x108d2f200, {{412.0, 217.0}, {114.0, 170.0}}
+                                              Button, 0x108d2f320, {{412.0, 217.0}, {114.0, 60.0}}, identifier: 'plus', label: 'Adaugă o rețetă duminică'
+                                          StaticText, 0x108d2f440, {{589.5, 141.3}, {27.0, 15.7}}, label: 'Luni'
+                                          StaticText, 0x108d2f560, {{590.5, 169.2}, {25.0, 29.7}}, label: '16'
+                                          ScrollView, 0x108d2f680, {{546.0, 217.0}, {114.0, 657.0}}
+                                            Other, 0x108d2f7a0, {{546.0, 217.0}, {114.0, 170.0}}
+                                              Button, 0x108d2f8c0, {{546.0, 217.0}, {114.0, 60.0}}, identifier: 'plus', label: 'Adaugă o rețetă luni'
+                                          StaticText, 0x108d2f9e0, {{720.5, 141.3}, {33.0, 15.7}}, label: 'Marți'
+                                          StaticText, 0x108d2fb00, {{725.5, 169.2}, {23.0, 29.7}}, label: '17'
+                                          ScrollView, 0x108d2fc20, {{680.0, 217.0}, {114.0, 657.0}}
+                                            Other, 0x108d2fd40, {{680.0, 217.0}, {114.0, 170.0}}
+                                              Button, 0x108d2fe60, {{680.0, 217.0}, {114.0, 60.0}}, identifier: 'plus', label: 'Adaugă o rețetă marți'
+                                    Button, 0x108d302d0, {{326.0, 690.0}, {58.0, 58.0}}, identifier: 'sparkles', label: 'Propune cinele săptămânii'
+                            Other, 0x108d303f0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x108d30510, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x108d30630, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x108d30750, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x108d30870, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x108d30990, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x108d30ab0, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d30bd0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x108d30cf0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna', Selected
+                Other, 0x108d30e10, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d30f30, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+              Button, 0x108d31050, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+                Other, 0x108d31170, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d31290, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+              Button, 0x108d313b0, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Listă, 16 de luat'
+                Other, 0x108d314d0, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d315f0, {{281.8, 781.2}, {11.3, 13.3}}, label: '16'
+                StaticText, 0x108d31710, {{262.2, 811.8}, {24.0, 13.3}}, label: 'Listă'
+              Button, 0x108d31830, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+                Other, 0x108d31950, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x108d31a70, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+      Other, 0x108d31b90, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x108d31cb0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x108d31dd0, {{0.0, 0.0}, {402.0, 874.0}}
+            Button, 0x108d31ef0, {{16.0, 70.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Înapoi la săptămână'
+            Other, 0x108d32010, {{177.0, 88.7}, {48.0, 7.0}}, label: 'Pasul 1 din 3'
+            ScrollView, 0x108d32130, {{0.0, 122.0}, {402.0, 648.0}}
+              Other, 0x108d32250, {{0.0, 122.0}, {402.0, 746.0}}
+                StaticText, 0x108d32370, {{20.0, 132.0}, {147.7, 14.7}}, label: 'PLANIFICĂ AUTOMAT'
+                StaticText, 0x108d32490, {{20.0, 154.7}, {321.3, 79.0}}, label: 'Ce gătim săptămâna asta?'
+                StaticText, 0x108d325b0, {{20.0, 241.7}, {305.3, 38.7}}, label: 'Cât timp ai pentru cină în fiecare seară. „–” înseamnă că sărim seara.'
+                StaticText, 0x108d326d0, {{34.0, 308.3}, {23.0, 19.3}}, label: 'Azi'
+                StaticText, 0x108d327f0, {{34.0, 328.7}, {311.3, 14.3}}, label: 'deja: Ciorbă de perișoare, Chifle de casă, Suc de portocale'
+                StaticText, 0x108d32910, {{34.0, 363.5}, {44.0, 19.3}}, label: 'Mâine'
+                StaticText, 0x115f06640, {{34.0, 383.8}, {155.7, 14.3}}, label: 'deja: Supă cremă de cartofi'
+                StaticText, 0x115f06760, {{34.0, 421.3}, {64.3, 19.3}}, label: 'Sâmbătă'
+                StaticText, 0x115f06880, {{34.0, 441.7}, {37.3, 14.3}}, label: '14 nov'
+                Button, 0x115f069a0, {{161.0, 421.7}, {49.7, 34.0}}, label: '–', Selected
+                Button, 0x115f06ac0, {{212.7, 421.7}, {49.3, 34.0}}, label: '20 min'
+                Button, 0x115f06be0, {{264.0, 421.7}, {49.7, 34.0}}, label: '45 min'
+                Button, 0x115f06d00, {{315.7, 421.7}, {49.3, 34.0}}, label: 'oricât'
+                StaticText, 0x115f06e20, {{34.0, 481.8}, {68.3, 19.3}}, label: 'Duminică'
+                StaticText, 0x115f06f40, {{34.0, 502.2}, {37.0, 14.3}}, label: '15 nov'
+                Button, 0x115f07060, {{161.0, 482.3}, {49.7, 34.0}}, label: '–', Selected
+                Button, 0x115f07180, {{212.7, 482.3}, {49.3, 34.0}}, label: '20 min'
+                Button, 0x115f072a0, {{264.0, 482.3}, {49.7, 34.0}}, label: '45 min'
+                Button, 0x115f073c0, {{315.7, 482.3}, {49.3, 34.0}}, label: 'oricât'
+                StaticText, 0x108d32a30, {{34.0, 542.3}, {30.7, 19.3}}, label: 'Luni'
+                StaticText, 0x108d32b50, {{34.0, 562.7}, {37.0, 14.3}}, label: '16 nov'
+                Button, 0x108d32c70, {{161.0, 542.7}, {49.7, 34.0}}, label: '–'
+                Button, 0x108d32d90, {{212.7, 542.7}, {49.3, 34.0}}, label: '20 min'
+                Button, 0x108d32eb0, {{264.0, 542.7}, {49.7, 34.0}}, label: '45 min', Selected
+                Button, 0x108d32fd0, {{315.7, 542.7}, {49.3, 34.0}}, label: 'oricât'
+                StaticText, 0x108d330f0, {{34.0, 602.8}, {38.3, 19.3}}, label: 'Marți'
+                StaticText, 0x108d33210, {{34.0, 623.2}, {36.3, 14.3}}, label: '17 nov'
+                Button, 0x108d33480, {{161.0, 603.3}, {49.7, 33.7}}, label: '–'
+                Button, 0x108d335a0, {{212.7, 603.3}, {49.3, 33.7}}, label: '20 min'
+                Button, 0x108d336c0, {{264.0, 603.3}, {49.7, 33.7}}, label: '45 min', Selected
+                Button, 0x108d337e0, {{315.7, 603.3}, {49.3, 33.7}}, label: 'oricât'
+                StaticText, 0x108d33900, {{34.0, 663.3}, {60.0, 19.3}}, label: 'Miercuri'
+                StaticText, 0x108d33a20, {{34.0, 683.7}, {37.0, 14.3}}, label: '18 nov'
+                Button, 0x108d33b40, {{161.0, 663.7}, {49.7, 34.0}}, label: '–'
+                Button, 0x108d33c60, {{212.7, 663.7}, {49.3, 34.0}}, label: '20 min'
+                Button, 0x108d33d80, {{264.0, 663.7}, {49.7, 34.0}}, label: '45 min', Selected
+                Button, 0x108d33ea0, {{315.7, 663.7}, {49.3, 34.0}}, label: 'oricât'
+                Button, 0x108d33fc0, {{23.0, 731.7}, {177.0, 44.0}}, label: 'Doar rețetele mele'
+                Button, 0x108d340e0, {{202.0, 731.7}, {177.0, 44.0}}, label: 'Și câteva noi', Selected
+                Image, 0x108d34200, {{36.0, 812.0}, {14.0, 17.0}}, identifier: 'shield', label: 'Scut'
+                StaticText, 0x108d34320, {{62.0, 810.7}, {64.7, 19.3}}, label: 'Fără nuci'
+              Other, 0x108d04080, {{369.0, 122.0}, {30.0, 648.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                Other, 0x108d041a0, {{396.0, 760.0}, {3.0, 7.0}}
+              Other, 0x108d042c0, {{369.0, 122.0}, {30.0, 648.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                Other, 0x108d043e0, {{396.0, 760.0}, {3.0, 7.0}}
+            Button, 0x108d04500, {{20.0, 780.0}, {362.0, 48.0}}, label: 'Mai departe · 3 seri'
+Path to element:
+ →Application, 0x1157c7bd0, pid: 50058, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1148ce4e0, pid: 50058, label: 'Bucătăria'
+  }
+)

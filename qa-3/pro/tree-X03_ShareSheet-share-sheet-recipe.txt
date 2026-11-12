@@ -1,0 +1,164 @@
+Optional(Attributes: Application, 0x108a53c50, pid: 25444, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x108a53c50, pid: 25444, label: 'Bucătăria'
+    Window (Main), 0x108a552f0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x108a54470, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x108a54050, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x108a54890, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x108a54cb0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x108a53610, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x108aed980, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x108a55710, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x108a55830, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x108a55950, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x108a55a70, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x108a55b90, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x108a55cb0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x108a55dd0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x108a55ef0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x108a56010, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x108a56130, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x108a56250, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x108a56370, {{0.0, 0.0}, {402.0, 987.3}}
+                                        Image, 0x108a56490, {{21.3, 196.3}, {14.3, 10.0}}, identifier: 'person.2.fill', label: 'person.2.fill'
+                                        StaticText, 0x108a565b0, {{42.0, 194.0}, {208.3, 14.7}}, label: 'CIORBE ȘI SUPE · PARTAJATĂ'
+                                        StaticText, 0x108a566d0, {{20.0, 216.7}, {341.0, 44.7}}, label: 'Ciorbă de perișoare'
+                                        Image, 0x108a567f0, {{21.0, 274.7}, {13.7, 13.7}}, identifier: 'clock', label: 'Ceas'
+                                        StaticText, 0x108a56910, {{40.7, 272.8}, {37.7, 17.0}}, label: '1 h 30'
+                                        StaticText, 0x108a56a30, {{96.3, 272.8}, {47.0, 17.0}}, label: '4 porții'
+                                        Button, 0x108a56b50, {{149.3, 265.3}, {32.0, 32.0}}, label: 'Mai puține porții'
+                                        Button, 0x108a56c70, {{187.3, 265.3}, {32.0, 32.0}}, label: 'Mai multe porții'
+                                        StaticText, 0x108a56d90, {{237.3, 272.8}, {38.0, 17.0}}, label: '6 pași'
+                                        StaticText, 0x108a56eb0, {{20.0, 297.3}, {205.3, 17.0}}, label: 'Gătită o dată · acum 3 săptămâni'
+                                        Button, 0x108a56fd0, {{23.0, 335.3}, {118.7, 38.0}}, label: 'Ingrediente', Selected
+                                        Button, 0x108a570f0, {{141.7, 335.3}, {118.7, 38.0}}, label: 'Pași'
+                                        Button, 0x108a57210, {{260.3, 335.3}, {118.7, 38.0}}, label: 'Note'
+                                        Button, 0x108a57330, {{20.0, 394.3}, {362.0, 63.3}}, label: 'Valori nutriționale pe porție, deschide fișa'
+                                          StaticText, 0x108a57450, {{50.7, 406.3}, {34.3, 21.7}}, label: '410'
+                                          StaticText, 0x108a57570, {{56.0, 430.0}, {23.7, 15.7}}, label: 'kcal'
+                                          StaticText, 0x108a57690, {{137.6, 406.3}, {38.0, 21.7}}, label: '26 g'
+                                          StaticText, 0x108a577b0, {{131.6, 430.0}, {50.0, 15.7}}, label: 'proteine'
+                                          StaticText, 0x108a578d0, {{226.4, 406.3}, {38.0, 21.7}}, label: '38 g'
+                                          StaticText, 0x108a579f0, {{209.2, 430.0}, {72.3, 15.7}}, label: 'carbohidrați'
+                                          StaticText, 0x108a57b10, {{315.1, 406.3}, {38.0, 21.7}}, label: '16 g'
+                                          StaticText, 0x108a57c30, {{312.5, 430.0}, {43.3, 15.7}}, label: 'grăsimi'
+                                        StaticText, 0x108a57d50, {{93.7, 465.7}, {214.7, 15.7}}, label: 'pe porție, din 4 · atinge pentru detalii'
+                                        StaticText, 0x108a57e70, {{20.0, 498.8}, {57.3, 17.0}}, label: 'Alergeni:'
+                                        StaticText, 0x108a57f90, {{93.3, 498.8}, {23.3, 17.0}}, label: 'ouă'
+                                        StaticText, 0x108a580b0, {{142.7, 498.8}, {35.3, 17.0}}, label: 'țelină'
+                                        Image, 0x108a581d0, {{205.3, 503.0}, {9.3, 9.0}}, identifier: 'checkmark', label: 'Selectat', Selected
+                                        StaticText, 0x108a582f0, {{220.0, 498.8}, {56.0, 17.0}}, label: 'fără nuci'
+                                        Button, 0x108a58410, {{20.0, 533.3}, {362.0, 40.0}}, label: '500 g carne tocată'
+                                        Button, 0x108a58530, {{20.0, 575.3}, {362.0, 40.0}}, label: '2 cepe'
+                                        Button, 0x108a58650, {{20.0, 617.3}, {362.0, 40.0}}, label: '1 morcov'
+                                        Button, 0x108a58770, {{20.0, 659.3}, {362.0, 40.0}}, label: '3 linguri orez'
+                                        Button, 0x108a58890, {{20.0, 701.3}, {362.0, 40.0}}, label: '1 ou'
+                                        Button, 0x108a589b0, {{20.0, 743.3}, {362.0, 40.0}}, label: '1 legătură leuștean'
+                                        Button, 0x108a58ad0, {{20.0, 785.3}, {362.0, 40.0}}, label: '2 l apă'
+                                        Button, 0x108a58d40, {{20.0, 827.3}, {362.0, 40.0}}, label: 'Sare și piper'
+                                    Button, 0x108a59060, {{12.0, 64.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Înapoi'
+                                    Button, 0x108a59180, {{292.0, 64.0}, {44.0, 44.0}}, identifier: 'heart.fill', label: 'Scoate din favorite'
+                                    Button, 0x108a592a0, {{346.0, 64.0}, {44.0, 44.0}}, label: 'Mai multe'
+                                      Button, 0x108a594c0, {{346.0, 64.0}, {44.0, 44.0}}
+                                        Image, 0x108a595e0, {{359.3, 84.0}, {17.3, 4.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                    Button, 0x108a59700, {{16.0, 778.0}, {238.0, 56.0}}, label: 'Gătește pas cu pas'
+                                    Button, 0x108a59820, {{264.0, 778.0}, {56.0, 56.0}}, identifier: 'calendar', label: 'Pune în săptămână'
+                                    Button, 0x108a59940, {{330.0, 778.0}, {56.0, 56.0}}, identifier: 'cart', label: 'Pune în listă'
+                            Other, 0x108a59a60, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x108a59b80, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x108a59ca0, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x108a59dc0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x108a59ee0, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x108a5a000, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x108a5a120, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'PopoverDismissRegion', label: 'ignorați pop-up'
+        Popover, 0x108a5a240, {{9.0, 498.0}, {384.0, 366.7}}
+          Image, 0x108a5a360, {{-141.0, 348.0}, {684.0, 666.7}}
+          Other, 0x108a5a480, {{9.0, 498.0}, {384.0, 366.7}}
+            Other, 0x108a5a5a0, {{9.0, 498.0}, {384.0, 366.7}}
+              Other, 0x108a5a6c0, {{9.0, 498.0}, {384.0, 366.7}}
+                Other, 0x108a5a7e0, {{9.0, 498.0}, {384.0, 366.7}}
+                  Other, 0x108a5a900, {{9.0, 498.0}, {384.0, 366.7}}
+                    Other, 0x108a5aa20, {{9.0, 498.0}, {384.0, 366.7}}
+                      Other, 0x108a5ab40, {{9.0, 498.0}, {0.0, 0.0}}
+                        Other, 0x108a5ac60, {{9.0, 498.0}, {384.0, 366.7}}
+                          Other, 0x108a5ad80, {{9.0, 498.0}, {384.0, 366.7}}
+                            Other, 0x108a5aea0, {{9.0, 498.0}, {384.0, 366.7}}
+                              Other, 0x108a5afc0, {{9.0, 498.0}, {384.0, 366.7}}
+            Other, 0x108a5b0e0, {{9.0, 498.0}, {384.0, 366.7}}
+              Other, 0x108a5b200, {{9.0, 498.0}, {384.0, 366.7}}, identifier: 'ActivityListView'
+                Other, 0x108a5b320, {{9.0, 498.0}, {384.0, 366.7}}, identifier: 'ShareSheet.RemoteContainerView'
+                  Other, 0x108a5b440, {{9.0, 498.0}, {384.0, 366.7}}
+                    Other, 0x108a5b560, {{9.0, 498.0}, {384.0, 366.7}}
+                      Other, 0x108a5b680, {{9.0, 498.0}, {384.0, 366.7}}
+                        Other, 0x108a5b7a0, {{9.0, 498.0}, {384.0, 366.7}}
+                          Other, 0x108a5b8c0, {{9.0, 498.0}, {384.0, 366.7}}
+                            Other, 0x108a5b9e0, {{9.0, 498.0}, {384.0, 366.7}}
+                              Other, 0x108a5bb00, {{9.0, 498.0}, {384.0, 366.7}}
+                                Other, 0x108a5bc20, {{9.0, 498.0}, {384.0, 366.7}}
+                                  NavigationBar, 0x108a5bd40, {{9.0, 498.0}, {384.0, 104.3}}, identifier: 'UIActivityContentView'
+                                    Image, 0x108a5be60, {{33.3, 522.3}, {64.0, 64.0}}, identifier: 'text.cursor', label: 'inserare text'
+                                    Other, 0x108a5bf80, {{112.3, 545.3}, {256.3, 18.0}}, identifier: 'LP.CaptionBar.BottomCaption', label: 'Ciorbă de perișoare
+
+1 h 30 · Ciorbe și supe
+
+Ingrediente: • 500 g carne tocată • 2 cepe • 1 morcov • 3 linguri orez • 1 ou • 1 legătură leuștean • 2 l apă • Sare și piper
+
+Pași: 1. Toacă ceapa și morcovul mărunt. 2. Amestecă carnea cu orezul, oul și jumătate din ceapă, apoi formează perișoare mici. 3. Pune perișoarele în ciorba care fierbe și lasă-le 15 minute la foc mic. 4. Adaugă legumele și mai fierbe 20 de minute. 5. Acrește cu borș și potrivește de sare. 6. Presară leuștean tocat și servește.'
+                                  Other, 0x108a5c0a0, {{9.0, 498.0}, {384.0, 366.7}}
+                                    Other, 0x108a5c1c0, {{9.0, 498.0}, {384.0, 366.7}}
+                                      Other, 0x108a5c2e0, {{9.0, 498.0}, {384.0, 366.7}}, identifier: 'shareSheet.activity.contentView'
+                                        CollectionView, 0x108a5c400, {{9.0, 498.0}, {384.0, 366.7}}, identifier: 'activityCollectionView'
+                                          Other, 0x108a5c520, {{9.0, 498.0}, {384.0, 366.7}}
+                                            Other, 0x108a5c640, {{9.0, 498.0}, {384.0, 159.1}}
+                                          Other, 0x108a5c760, {{9.0, 498.0}, {384.0, 366.7}}
+                                          ScrollView, 0x108a5c880, {{27.3, 602.3}, {347.3, 123.0}}
+                                            Cell, 0x108a5c9a0, {{27.3, 602.3}, {82.0, 122.3}}, identifier: 'shareCell', label: 'Reminders'
+                                              Other, 0x108a5cac0, {{27.3, 602.3}, {82.0, 122.3}}
+                                                Other, 0x108a5cbe0, {{27.3, 694.3}, {82.0, 14.3}}
+                                                  StaticText, 0x108a5cd00, {{27.3, 694.3}, {82.0, 14.3}}, identifier: 'cellTitleLabel', label: 'Reminders'
+                                                  StaticText, 0x103784d90, {{27.3, 694.3}, {32.7, 30.3}}, identifier: 'cellTitleLabel', label: 'Apple Inc'
+                                                  Other, 0x1037d98e0, {{27.3, 694.3}, {82.0, 14.3}}
+                                                Image, 0x103784510, {{34.3, 618.3}, {68.0, 68.0}}, identifier: 'activityImageView'
+                                            Cell, 0x1037fad50, {{115.7, 602.3}, {82.0, 122.3}}, identifier: 'shareCell', label: 'Bucătăria'
+                                              Other, 0x103785170, {{115.7, 602.3}, {82.0, 122.3}}
+                                                Other, 0x103786610, {{115.7, 694.3}, {82.0, 14.3}}
+                                                  StaticText, 0x103785dd0, {{115.7, 694.3}, {82.0, 14.3}}, identifier: 'cellTitleLabel', label: 'Bucătăria'
+                                                  StaticText, 0x1037da540, {{115.7, 694.3}, {32.7, 30.3}}, identifier: 'cellTitleLabel', label: 'Apple Inc'
+                                                  Other, 0x103784930, {{115.7, 694.3}, {82.0, 14.3}}
+                                                Image, 0x108c77c90, {{122.7, 618.3}, {68.0, 68.0}}, identifier: 'activityImageView'
+                                            Cell, 0x108c77db0, {{204.0, 602.3}, {82.0, 122.3}}, identifier: 'shareCell', label: 'More'
+                                              Other, 0x108c77ed0, {{204.0, 602.3}, {82.0, 122.3}}
+                                                Other, 0x108cbb4a0, {{204.0, 694.3}, {82.0, 14.3}}
+                                                  StaticText, 0x108cbb5c0, {{204.0, 694.3}, {82.0, 14.3}}, identifier: 'cellTitleLabel', label: 'More'
+                                                  StaticText, 0x108cbb6e0, {{204.0, 694.3}, {32.7, 30.3}}, identifier: 'cellTitleLabel', label: 'Apple Inc'
+                                                  Other, 0x108cbb800, {{204.0, 694.3}, {82.0, 14.3}}
+                                                Image, 0x108cbb920, {{211.0, 618.3}, {68.0, 68.0}}, identifier: 'activityImageView'
+                                          ScrollView, 0x108cbba40, {{27.3, 726.3}, {347.3, 138.3}}
+                                            Cell, 0x108cbbb60, {{27.3, 726.3}, {82.0, 138.3}}, identifier: 'actionGroupCell', label: 'Copiați'
+                                              Other, 0x108cbbc80, {{27.3, 726.3}, {82.0, 138.3}}
+                                                Other, 0x108cbbda0, {{27.3, 818.3}, {82.0, 14.3}}
+                                                  StaticText, 0x108cbbec0, {{27.3, 818.3}, {82.0, 14.3}}, identifier: 'cellTitleLabel', label: 'Copiați'
+                                                  StaticText, 0x108cbbfe0, {{27.3, 818.3}, {32.7, 30.3}}, identifier: 'cellTitleLabel', label: 'Apple Inc'
+                                                  Other, 0x108cbc100, {{27.3, 818.3}, {82.0, 14.3}}
+                                                Other, 0x108cbc220, {{33.3, 742.3}, {70.0, 70.0}}
+                                                Image, 0x108cbc340, {{52.3, 759.0}, {32.0, 36.7}}, identifier: 'activityImageView', label: 'copy'
+                                            Cell, 0x108cbc460, {{115.7, 726.3}, {82.0, 138.3}}, identifier: 'actionGroupCell', label: 'Save to Files'
+                                              Other, 0x108cbc580, {{115.7, 726.3}, {82.0, 138.3}}
+                                                Other, 0x108cbc6a0, {{115.7, 818.3}, {82.0, 14.3}}
+                                                  StaticText, 0x108cbc7c0, {{115.7, 818.3}, {82.0, 14.3}}, identifier: 'cellTitleLabel', label: 'Save to Files'
+                                                  StaticText, 0x108cbc8e0, {{115.7, 818.3}, {32.7, 30.3}}, identifier: 'cellTitleLabel', label: 'Apple Inc'
+                                                  Other, 0x108cbca00, {{115.7, 818.3}, {82.0, 14.3}}
+                                                Other, 0x108cbcb20, {{121.7, 742.3}, {70.0, 70.0}}
+                                                Image, 0x108cbcc40, {{135.0, 755.7}, {43.3, 43.3}}, identifier: 'activityImageView'
+                                          Other, 0x108cbcd60, {{33.3, 725.3}, {335.3, 1.0}}, identifier: 'collectionView.footerView'
+                                        Other, 0x108cbce80, {{33.3, 602.3}, {335.3, 1.0}}
+                                  Other, 0x108cbcfa0, {{9.0, 498.0}, {384.0, 366.7}}
+                                    Other, 0x108cbd0c0, {{9.0, 498.0}, {384.0, 366.7}}
+Path to element:
+ →Application, 0x108a53c50, pid: 25444, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1035d5ae0, pid: 25444, label: 'Bucătăria'
+  }
+)

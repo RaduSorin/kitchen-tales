@@ -1,0 +1,102 @@
+Optional(Attributes: Application, 0x1048abfe0, pid: 63131, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x1048abfe0, pid: 63131, label: 'Bucătăria'
+    Window (Main), 0x1048b3a70, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x10488ba60, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x104878260, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1048acde0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1048ad4f0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x10488fbb0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1048a9710, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1037d7480, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1037d8280, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1037d8c60, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x1037d9160, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1037d7e60, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1037d7a40, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1037d5690, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1037d6090, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1037fa7f0, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x1037fa910, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x1037faa30, {{0.0, 62.0}, {402.0, 1130.0}}
+                                        StaticText, 0x1037fab50, {{16.0, 72.0}, {222.7, 42.0}}, label: 'Rețetele mele'
+                                        Button, 0x1037fac70, {{340.0, 70.0}, {46.0, 46.0}}, identifier: 'plus', label: 'Rețetă nouă'
+                                        Image, 0x1037fad90, {{31.7, 145.7}, {14.7, 15.0}}, identifier: 'magnifyingglass', label: 'Căutare'
+                                        TextField, 0x1037faeb0, {{56.0, 142.0}, {262.0, 22.0}}, placeholderValue: 'Caută după nume sau ingredient'
+                                        Button, 0x1037fafd0, {{344.0, 134.0}, {38.0, 38.0}}, identifier: 'square.grid.2x2', label: 'Vizualizare: Grilă'
+                                        ScrollView, 0x1037fb0f0, {{16.0, 186.0}, {370.0, 44.0}}
+                                          Other, 0x1037fb210, {{16.0, 186.0}, {603.7, 44.0}}
+                                            Button, 0x1037fb330, {{18.0, 198.3}, {41.0, 31.7}}, label: 'Toate', Selected
+                                            Button, 0x1037fb450, {{77.0, 198.3}, {58.0, 19.3}}, label: 'Favorite'
+                                            Button, 0x1037fb570, {{153.0, 198.3}, {51.0, 19.3}}, label: 'Băuturi'
+                                            Button, 0x1037fb690, {{222.0, 198.3}, {102.0, 19.3}}, label: 'Ciorbe și supe'
+                                            Button, 0x1037fb7b0, {{342.0, 198.3}, {65.7, 19.3}}, label: 'Deserturi'
+                                            Button, 0x1037fb8d0, {{425.7, 198.3}, {112.7, 19.3}}, label: 'Feluri principale'
+                                            Button, 0x1037fb9f0, {{556.3, 198.3}, {61.3, 19.3}}, label: 'Patiserie'
+                                        Other, 0x1037fbb10, {{16.0, 240.0}, {180.0, 800.0}}
+                                          Button, 0x1037fbc30, {{16.0, 240.0}, {180.0, 230.0}}, label: 'Cartofi cu ardei la tigaie, 35 min · 2 porții'
+                                            Image, 0x1037fbd50, {{-156.0, 240.0}, {524.0, 230.0}}
+                                            StaticText, 0x1037fbe70, {{28.0, 404.7}, {117.3, 38.7}}, label: 'Cartofi cu ardei la tigaie'
+                                            StaticText, 0x1037fbf90, {{28.0, 445.3}, {84.7, 14.7}}, label: '35 min · 2 porții'
+                                          Button, 0x1037fc0b0, {{16.0, 480.0}, {180.0, 170.0}}, label: 'Ciorbă de perișoare, 1 h 30 · 4 porții'
+                                            Image, 0x1037fc1d0, {{-17.0, 480.0}, {246.0, 170.0}}
+                                            StaticText, 0x1037fc2f0, {{28.0, 604.0}, {142.7, 19.3}}, label: 'Ciorbă de perișoare'
+                                            StaticText, 0x1037fc410, {{28.0, 625.3}, {80.7, 14.7}}, label: '1 h 30 · 4 porții'
+                                          Button, 0x1037fc530, {{16.0, 660.0}, {180.0, 170.0}}, label: 'Plăcinta Anei, 45 min · 8 porții'
+                                            Other, 0x1037fc650, {{16.0, 653.3}, {180.0, 176.7}}
+                                            StaticText, 0x1037fc770, {{28.0, 784.0}, {95.0, 19.3}}, label: 'Plăcinta Anei'
+                                            StaticText, 0x1037fc890, {{28.0, 805.3}, {86.0, 14.7}}, label: '45 min · 8 porții'
+                                          Button, 0x1037fc9b0, {{16.0, 840.0}, {180.0, 200.0}}, label: 'Suc de portocale, 5 min · 2 porții'
+                                            Image, 0x1037fcad0, {{14.3, 840.0}, {183.3, 200.0}}
+                                            StaticText, 0x1037fcbf0, {{28.0, 994.0}, {123.3, 19.3}}, label: 'Suc de portocale'
+                                            StaticText, 0x1037fcd10, {{28.0, 1015.3}, {78.0, 14.7}}, label: '5 min · 2 porții'
+                                        Other, 0x1037fce30, {{206.0, 240.0}, {180.0, 860.0}}
+                                          Button, 0x1037fcf50, {{206.0, 240.0}, {180.0, 200.0}}, label: 'Cartofi țărănești, 50 min · 4 porții'
+                                            Image, 0x1037fd070, {{150.0, 240.0}, {292.0, 200.0}}
+                                            StaticText, 0x1037fd190, {{218.0, 394.0}, {119.7, 19.3}}, label: 'Cartofi țărănești'
+                                            StaticText, 0x1037fd2b0, {{218.0, 415.3}, {86.3, 14.7}}, label: '50 min · 4 porții'
+                                          Button, 0x1037fd3d0, {{206.0, 450.0}, {180.0, 230.0}}, label: 'Chifle de casă, 40 min · 12 porții'
+                                            Image, 0x1037fd4f0, {{89.0, 450.0}, {414.0, 230.0}}
+                                            StaticText, 0x1037fd610, {{218.0, 634.0}, {102.3, 19.3}}, label: 'Chifle de casă'
+                                            StaticText, 0x1037fd730, {{218.0, 655.3}, {91.3, 14.7}}, label: '40 min · 12 porții'
+                                          Button, 0x1037fd850, {{206.0, 690.0}, {180.0, 170.0}}, label: 'Roșii umplute, 1 h · 4 porții'
+                                            Image, 0x1037fd970, {{194.0, 690.0}, {204.0, 170.0}}
+                                            StaticText, 0x1037fda90, {{218.0, 814.0}, {99.3, 19.3}}, label: 'Roșii umplute'
+                                            StaticText, 0x1037fdbb0, {{218.0, 835.3}, {63.3, 14.7}}, label: '1 h · 4 porții'
+                                          Button, 0x1037fdcd0, {{206.0, 870.0}, {180.0, 230.0}}, label: 'Supă cremă de cartofi, 40 min · 4 porții'
+                                            Image, 0x1037fddf0, {{34.0, 870.0}, {524.0, 230.0}}
+                                            StaticText, 0x1037fdf10, {{218.0, 1034.7}, {90.0, 38.7}}, label: 'Supă cremă de cartofi'
+                                            StaticText, 0x1037fe030, {{218.0, 1075.3}, {87.0, 14.7}}, label: '40 min · 4 porții'
+                                      Other, 0x1037fe150, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                        Other, 0x1037fe270, {{396.0, 65.0}, {3.0, 530.3}}
+                                      Other, 0x1037fe390, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                        Other, 0x1037fe4b0, {{396.0, 65.0}, {3.0, 530.3}}
+                            Other, 0x1037fe5d0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1037fe6f0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1037fe810, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x1037fe930, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1037fea50, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x1037feb70, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x1037fec90, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037fedb0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x1037feed0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+                Other, 0x1037feff0, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037ff110, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+              Button, 0x1037ff230, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete', Selected
+                Other, 0x1037ff350, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037ff470, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+              Button, 0x1037ff590, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Listă, 7 de luat'
+                Other, 0x1037ff6b0, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037ff7d0, {{286.0, 781.2}, {6.3, 13.3}}, label: '7'
+                StaticText, 0x1037ff8f0, {{262.2, 811.8}, {24.0, 13.3}}, label: 'Listă'
+              Button, 0x1037ffa10, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+                Other, 0x1037ffb30, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1037ffc50, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+Path to element:
+ →Application, 0x1048abfe0, pid: 63131, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1035fa840, pid: 63131, label: 'Bucătăria'
+  }
+)

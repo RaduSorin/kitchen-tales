@@ -1,0 +1,1379 @@
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:46: error: -[KitchenTalesUITests.ProfileQATests testP01_Profile] : Failed to get background assertion for target app with pid 16289: Timed out while acquiring background assertion.
+Test Case '-[KitchenTalesUITests.ProfileQATests testP01_Profile]' failed (46.441 seconds).
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:46: error: -[KitchenTalesUITests.ProfileQATests testP02_FamilyAndInvite] : Failed to get background assertion for target app with pid 17328: Timed out while acquiring background assertion.
+Test Case '-[KitchenTalesUITests.ProfileQATests testP02_FamilyAndInvite]' failed (13.922 seconds).
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:46: error: -[KitchenTalesUITests.ProfileQATests testP03_PrefsAndCookbook] : Failed to get background assertion for target app with pid 17998: Timed out while acquiring background assertion.
+Test Case '-[KitchenTalesUITests.ProfileQATests testP03_PrefsAndCookbook]' failed (12.462 seconds).
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:46: error: -[KitchenTalesUITests.ProfileQATests testP04_PhoneAndCatalog] : Failed to get background assertion for target app with pid 18114: Timed out while acquiring background assertion.
+Test Case '-[KitchenTalesUITests.ProfileQATests testP04_PhoneAndCatalog]' failed (12.020 seconds).
+QA [P05_ChildSettings] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+QA [P05_ChildSettings] tap  '5 ani'
+QA [P05_ChildSettings] shot P05_ChildSettings-01-child
+QA [P05_ChildSettings] A11Y child: audit could not run: Error Domain=com.apple.xcode.xctest.accessibilityAudit Code=-56 "Audit failed to complete in time" UserInfo={NSLocalizedDescription=Audit failed to complete in time}
+QA [P05_ChildSettings] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Ana | DESPRE COPIL | Anul nașterii | Poveștile noi țin cont de vârstă și de nume. | MODUL COPIL | Timp de ascultare | SEARA | 2021 · 5 ani | Știe să citească | PIN pentru ieșire | Schimbă | 30 min | Ce foldere vede | Povești de seară, Basme | Vibrație la răsfoit | Ora de culcare | oprită
+QA [P05_ChildSettings] shot P05_ChildSettings-02-child-2
+QA [P05_ChildSettings] shot P05_ChildSettings-03-child-3
+QA [P05_ChildSettings] tap  'PIN pentru ieșire'
+QA [P05_ChildSettings] shot P05_ChildSettings-04-child-pin
+QA [P05_ChildSettings] tap  'Renunță'
+Test Case '-[KitchenTalesUITests.ProfileQATests testP05_ChildSettings]' passed (50.554 seconds).
+QA [P05b_RenameAlertAudit] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+QA [P05b_RenameAlertAudit] tap  'Schimbă-ți numele'
+QA [P05b_RenameAlertAudit] shot P05b_RenameAlertAudit-01-rename-alert
+QA [P05b_RenameAlertAudit] A11Y rename-alert: no issues
+QA [P05b_RenameAlertAudit] FAIL CRASH or exit after 'audit of the rename alert' (app state 1)
+QA [P05b_RenameAlertAudit] shot P05b_RenameAlertAudit-02-after-audit
+QA [P05b_RenameAlertAudit] FAIL CRASH or exit after 'after-audit' (app state 1)
+QA [P05b_RenameAlertAudit] FAIL CRASH or exit after 'tree of the rename alert' (app state 1)
+QA [P05b_RenameAlertAudit] skip 'Renunță' not found
+QA [P05b_RenameAlertAudit] shot P05b_RenameAlertAudit-03-after-cancel
+QA [P05b_RenameAlertAudit] FAIL CRASH or exit after 'after-cancel' (app state 1)
+QA [P05b_RenameAlertAudit] FAIL app is not in the foreground at the end (state 1): crash or exit?
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.ProfileQATests testP05b_RenameAlertAudit] : failed - 5 QA check(s) failed:
+- app is not in the foreground at the end (state 1): crash or exit?
+    t =    48.89s                                 Checking for crash reports corresponding to unexpected termination of app.kitchentales.ios
+Test Case '-[KitchenTalesUITests.ProfileQATests testP05b_RenameAlertAudit]' failed (68.930 seconds).
+QA [P06_Badges] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+QA [P06_Badges] badge cards: Pașaportul culinar, 10 din 33 | Albumul de povești, 10 din 32 | Ieși din cont
+QA [P06_Badges] shot P06_Badges-01-badges-1
+QA [P06_Badges] A11Y badges-1: Contrast failed · 48 'Acasă'
+QA [P06_Badges] A11Y badges-1: Contrast failed · 48 'Săptămâna'
+QA [P06_Badges] A11Y badges-1: Contrast failed · 48 'Rețete'
+QA [P06_Badges] A11Y badges-1: Contrast failed · 48 '7'
+QA [P06_Badges] A11Y badges-1: Contrast failed · 48 'Glisează sau atinge marginea paginii ca să răsfoiești.'
+QA [P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [P06_Badges] A11Y badges-1: Text clipped · 48 'Săptămâna'
+QA [P06_Badges] A11Y badges-1: Text clipped · 48 'Acasă'
+QA [P06_Badges] A11Y badges-1: Text clipped · 48 'Profil'
+QA [P06_Badges] A11Y badges-1: Text clipped · 48 'Rețete'
+QA [P06_Badges] shot P06_Badges-02-badges-1-page2
+QA [P06_Badges] shot P06_Badges-03-badges-1-page3
+QA [P06_Badges] back via 'Înapoi'
+QA [P06_Badges] shot P06_Badges-04-badges-2
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 '10 din 32 abțibilduri'
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Glisează ca să deschizi'
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Albumul meu'
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [P06_Badges] A11Y badges-2: Text clipped · 48 'Săptămâna'
+QA [P06_Badges] A11Y badges-2: Text clipped · 48 'Glisează sau atinge marginea paginii ca să răsfoiești. Atinge un loc gol ca să afli ce lipsește.'
+QA [P06_Badges] A11Y badges-2: Text clipped · 48 'Acasă'
+QA [P06_Badges] A11Y badges-2: Text clipped · 48 'Profil'
+QA [P06_Badges] A11Y badges-2: Text clipped · 48 'Rețete'
+QA [P06_Badges] A11Y badges-2: Element has no description · 43 ''
+QA [P06_Badges] A11Y badges-2: Element has no description · 43 ''
+QA [P06_Badges] A11Y badges-2: Element has no description · 43 ''
+QA [P06_Badges] A11Y badges-2: Element has no description · 43 ''
+QA [P06_Badges] A11Y badges-2: Contrast failed · 48 'Acasă'
+QA [P06_Badges] A11Y badges-2: Contrast failed · 48 'Săptămâna'
+QA [P06_Badges] A11Y badges-2: Contrast failed · 48 'Rețete'
+QA [P06_Badges] A11Y badges-2: Contrast failed · 48 '7'
+QA [P06_Badges] A11Y badges-2: Contrast failed · 48 'Glisează sau atinge marginea paginii ca să răsfoiești. Atinge un loc gol ca să afli ce lipsește.'
+QA [P06_Badges] shot P06_Badges-05-badges-2-page2
+QA [P06_Badges] back via 'Înapoi'
+QA [P06_Badges] LAUNCH -demo YES -area stories -tab profile -kt-kid none
+QA [P06_Badges] shot P06_Badges-06-stories-profile
+QA [P06_Badges] A11Y stories-profile: Hit area is too small · 9 'Ieși din cont'
+QA [P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 '3 persoane · 9 lucruri partajate'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 'Bibliotecă'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 '5 ani · modul copil: 30 min'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 'Adaugă'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 '3 povești descărcate · clic pe raft pornit'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 'Profil'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 'Favorite'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 'Acasă'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 'sorin@exemplu.ro · spațiu comun cu Loredana'
+QA [P06_Badges] A11Y stories-profile: Text clipped · 48 '4 aparate · mâncăm fără nuci · vocea Carmen'
+QA [P06_Badges] A11Y stories-profile: Contrast failed · 48 'Acasă'
+QA [P06_Badges] A11Y stories-profile: Contrast failed · 48 'Favorite'
+QA [P06_Badges] A11Y stories-profile: Contrast failed · 48 'Adaugă'
+QA [P06_Badges] A11Y stories-profile: Contrast failed · 48 'S'
+QA [P06_Badges] A11Y stories-profile: Contrast failed · 48 '10 din 32'
+QA [P06_Badges] A11Y stories-profile: Contrast failed · 48 '3 povești descărcate · clic pe raft pornit'
+Test Case '-[KitchenTalesUITests.ProfileQATests testP06_Badges]' passed (81.451 seconds).
+QA [P07_Login] LAUNCH -kt-kid none
+QA [P07_Login] shot P07_Login-01-login
+QA [P07_Login] A11Y login: Hit area is too small · 9 'Arată parola'
+QA [P07_Login] texts: Bucătăria
+QA [P07_Login] ok   'Intră în cont' disabled while e-mail and password are empty
+QA [P07_Login] type 'qa-test@example.invalid' into 'E-mail'
+QA [P07_Login] ok   password field
+QA [P07_Login] tap  'Arată parola'
+QA [P07_Login] shot P07_Login-02-login-filled
+QA [P07_Login] tap  'Intră în cont'
+QA [P07_Login] shot P07_Login-03-login-wrong
+QA [P07_Login] after wrong sign-in: Bucătăria
+QA [P07_Login] ok   wrong credentials do not sign in
+QA [P07_Login] tap  'Ai uitat parola?'
+QA [P07_Login] shot P07_Login-04-forgot
+QA [P07_Login] A11Y forgot: Text clipped · 49 ''
+QA [P07_Login] forgot: Bucătăria
+QA [P07_Login] tap  'Înapoi la intrare'
+QA [P07_Login] shot P07_Login-05-back-to-login
+QA [P07_Login] ok   shows 'Intră în cont'
+Test Case '-[KitchenTalesUITests.ProfileQATests testP07_Login]' passed (49.417 seconds).
+QA [R01_Home] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+QA [R01_Home] shot R01_Home-01-home-azi
+QA [R01_Home] A11Y home-azi: Hit area is too small · 9 'Povești'
+QA [R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Săptămâna'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Chifle de casă'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Rețete'
+QA [R01_Home] A11Y home-azi: Text clipped · 9 'Povești'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Profil'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Suc de portocale'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Azi în meniu · 5 min · Băuturi'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Acasă'
+QA [R01_Home] A11Y home-azi: Text clipped · 9 'Gătește pas cu pas'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Azi în meniu · 1 h 30 · Ciorbe și supe'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Azi în meniu · 40 min · Patiserie'
+QA [R01_Home] A11Y home-azi: Text clipped · 48 'Ciorbă de perișoare'
+QA [R01_Home] A11Y home-azi: Contrast failed · 48 'Săptămâna'
+QA [R01_Home] A11Y home-azi: Contrast failed · 48 '7'
+QA [R01_Home] A11Y home-azi: Contrast failed · 48 'Profil'
+QA [R01_Home] A11Y home-azi: Contrast nearly passed · 9 'Povești'
+QA [R01_Home] A11Y home-azi: Contrast failed · 48 'Suc de portocale'
+QA [R01_Home] A11Y home-azi: Contrast failed · 48 '🐉'
+QA [R01_Home] A11Y home-azi: Contrast failed · 48 'Dragonul care strănuta'
+QA [R01_Home] A11Y home-azi: Contrast failed · 48 'Ciorbe și supe · 4 porții'
+QA [R01_Home] ok   Rețete / Povești switch shows
+QA [R01_Home] ok   shows 'Povești'
+QA [R01_Home] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Ciorbă de perișoare | Azi în meniu · 1 h 30 · Ciorbe și supe | Chifle de casă | Azi în meniu · 40 min · Patiserie | Suc de portocale | Azi în meniu · 5 min · Băuturi | 🐉 | PENTRU ANA, LA CULCARE | Dragonul care strănuta | Ascultă · 7 min | AZI ÎN PLAN · 1 H 30 | Ciorbă de perișoare | Ciorbe și supe · 4 porții
+QA [R01_Home] shot R01_Home-02-home-hero-swiped
+QA [R01_Home] tap  'Săptămâna'
+QA [R01_Home] shot R01_Home-03-home-saptamana
+QA [R01_Home] tap  'Caiet'
+QA [R01_Home] shot R01_Home-04-home-caiet
+QA [R01_Home] ok   shows 'Recente'
+QA [R01_Home] shot R01_Home-05-home-caiet-scrolled
+QA [R01_Home] ok   shows 'Caietul meu'
+QA [R01_Home] tap  'Ciorbe și supe'
+QA [R01_Home] shot R01_Home-06-category-page
+QA [R01_Home] ok   category page lists its recipes
+QA [R01_Home] back via 'Înapoi'
+QA [R01_Home] tap  'Caută rețete'
+QA [R01_Home] shot R01_Home-07-search-empty
+QA [R01_Home] type 'cartofi'
+QA [R01_Home] shot R01_Home-08-search-cartofi
+QA [R01_Home] ok   search 'cartofi' finds Cartofi țărănești
+QA [R01_Home] ok   search 'cartofi' finds the soup by title
+QA [R01_Home] shot R01_Home-09-search-ciorba-no-diacritics
+QA [R01_Home] ok   search without diacritics ('ciorba') still finds 'Ciorbă'
+QA [R01_Home] shot R01_Home-10-search-ingredient
+QA [R01_Home] ok   search by ingredient ('orez') finds Roșii umplute
+QA [R01_Home] shot R01_Home-11-search-nothing
+QA [R01_Home] ok   empty search result message
+QA [R01_Home] tap  'Chifle de casă'
+QA [R01_Home] shot R01_Home-12-search-opened-recipe
+QA [R01_Home] ok   recipe opens from search
+QA [R01_Home] back via 'Înapoi'
+QA [R01_Home] shot R01_Home-13-search-after-back
+Test Case '-[KitchenTalesUITests.RecipesQATests testR01_Home]' passed (105.554 seconds).
+QA [R02_RecipePage] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+QA [R02_RecipePage] tap  'Ciorbă de perișoare'
+QA [R02_RecipePage] shot R02_RecipePage-01-recipe
+QA [R02_RecipePage] A11Y recipe: Text clipped · 9 'Gătește pas cu pas'
+QA [R02_RecipePage] A11Y recipe: Text clipped · 48 'carbohidrați'
+QA [R02_RecipePage] A11Y recipe: Text clipped · 48 'grăsimi'
+QA [R02_RecipePage] A11Y recipe: Text clipped · 48 'proteine'
+QA [R02_RecipePage] A11Y recipe: Label not human-readable · 43 'person.2.fill'
+QA [R02_RecipePage] A11Y recipe: Contrast failed · 9 '1 legătură leuștean'
+QA [R02_RecipePage] A11Y recipe: Contrast failed · 9 'Sare și piper'
+QA [R02_RecipePage] A11Y recipe: 1 button(s) without a real label: ''@368,86
+QA [R02_RecipePage] ok   shows 'Ciorbă de perișoare'
+QA [R02_RecipePage] ok   shows '4 porții'
+QA [R02_RecipePage] texts: CIORBE ȘI SUPE · PARTAJATĂ | Ciorbă de perișoare | 1 h 30 | 4 porții | 6 pași | Gătită o dată · acum 3 săptămâni | pe porție, din 4 · atinge pentru detalii | Alergeni: | ouă | țelină | fără nuci | 410 | kcal | 26 g | proteine | 38 g | carbohidrați | 16 g | grăsimi
+QA [R02_RecipePage] tap  'Mai multe porții'
+QA [R02_RecipePage] tap  'Mai multe porții'
+QA [R02_RecipePage] ok   servings go to 6
+QA [R02_RecipePage] ok   500 g carne × 1.5 = 750 g
+QA [R02_RecipePage] shot R02_RecipePage-02-recipe-6-portions
+QA [R02_RecipePage] tap  'Mai puține porții'
+QA [R02_RecipePage] tap  'Mai puține porții'
+QA [R02_RecipePage] ok   servings back to 4
+QA [R02_RecipePage] tap  'Mai puține porții'
+QA [R02_RecipePage] tap  'Mai puține porții'
+QA [R02_RecipePage] tap  'Mai puține porții'
+QA [R02_RecipePage] tap  'Mai puține porții'
+QA [R02_RecipePage] tap  'Mai puține porții'
+QA [R02_RecipePage] ok   servings stop at 1 porție
+QA [R02_RecipePage] shot R02_RecipePage-03-recipe-1-portion
+QA [R02_RecipePage] tap  'Mai multe porții'
+QA [R02_RecipePage] tap  'Mai multe porții'
+QA [R02_RecipePage] tap  'Mai multe porții'
+QA [R02_RecipePage] ok   shows '4 porții'
+QA [R02_RecipePage] tap  '3 linguri orez'
+QA [R02_RecipePage] ok   hint after ticking an ingredient
+QA [R02_RecipePage] shot R02_RecipePage-04-recipe-ticked
+QA [R02_RecipePage] tap  'Pune în listă'
+QA [R02_RecipePage] shot R02_RecipePage-05-recipe-put-on-list
+QA [R02_RecipePage] toast after Pune în listă: 7 | CIORBE ȘI SUPE · PARTAJATĂ | Ciorbă de perișoare | 1 h 30 | 4 porții | 6 pași | Gătită o dată · acum 3 săptămâni | pe porție, din 4 · atinge pentru detalii
+QA [R02_RecipePage] FAIL ticked ingredient is left out: expected 'Am pus 3 ingrediente' (3 new of 4, one ticked), got other
+QA [R02_RecipePage] tap  'Listă'
+QA [R02_RecipePage] shot R02_RecipePage-06-list-after-ticked-put
+QA [R02_RecipePage] FAIL the ticked '3 linguri orez' is not on the shopping list
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:363: error: -[KitchenTalesUITests.RecipesQATests testR02_RecipePage] : Failed to get matching snapshot: No matches found for Element at index 22 from input {(
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.RecipesQATests testR02_RecipePage] : failed - 2 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.RecipesQATests testR02_RecipePage]' failed (99.294 seconds).
+QA [R02b_OtherAccountRecipe] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+QA [R02b_OtherAccountRecipe] tap  'Plăcinta Anei'
+QA [R02b_OtherAccountRecipe] shot R02b_OtherAccountRecipe-01-other-recipe
+QA [R02b_OtherAccountRecipe] ok   kicker says it comes from Ana
+QA [R02b_OtherAccountRecipe] tap  'Mai multe'
+QA [R02b_OtherAccountRecipe] shot R02b_OtherAccountRecipe-02-other-recipe-menu
+QA [R02b_OtherAccountRecipe] ok   no 'Editează rețeta' for another account's recipe
+QA [R02b_OtherAccountRecipe] ok   no 'Șterge rețeta' for another account's recipe
+Test Case '-[KitchenTalesUITests.RecipesQATests testR02b_OtherAccountRecipe]' passed (30.785 seconds).
+QA [R03_CookMode] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+QA [R03_CookMode] tap  'Ciorbă de perișoare'
+QA [R03_CookMode] tap  'Gătește pas cu pas'
+QA [R03_CookMode] shot R03_CookMode-01-cook-step1
+QA [R03_CookMode] A11Y cook: Hit area is too small · 1 'Pasul 1 din 6'
+QA [R03_CookMode] A11Y cook: Text clipped · 48 'Ciorbă de perișoare'
+QA [R03_CookMode] A11Y cook: Contrast failed · 48 '1'
+QA [R03_CookMode] A11Y cook: 1 button(s) without a real label: ''@368,86
+QA [R03_CookMode] ok   shows '1 din 6'
+QA [R03_CookMode] tap  'Pasul următor'
+QA [R03_CookMode] tap  'Pasul următor'
+QA [R03_CookMode] shot R03_CookMode-02-cook-step3-timer
+QA [R03_CookMode] ok   shows '3 din 6'
+QA [R03_CookMode] ok   step with '15 minute' shows a timer
+QA [R03_CookMode] system alert: “Bucătăria” Would Like to Send You Notifications
+QA [R03_CookMode] shot R03_CookMode-03-cook-timer-running
+QA [R03_CookMode] ok   timer runs
+QA [R03_CookMode] tap  'Ingrediente'
+QA [R03_CookMode] shot R03_CookMode-04-cook-ingredients
+QA [R03_CookMode] FAIL shows 'TOATĂ REȚETA'
+QA [R03_CookMode] tap  'Pasul anterior'
+QA [R03_CookMode] ok   previous step works
+QA [R03_CookMode] tap  'Închide modul de gătit'
+QA [R03_CookMode] shot R03_CookMode-05-cook-closed-midway
+QA [R03_CookMode] ok   recipe offers 'Continuă să gătești' after leaving cook mode midway
+QA [R03_CookMode] tap  'Continuă să gătești'
+QA [R03_CookMode] ok   cook mode resumes on step 2
+QA [R03_CookMode] tap  'Pasul următor'
+QA [R03_CookMode] tap  'Pasul următor'
+QA [R03_CookMode] tap  'Pasul următor'
+QA [R03_CookMode] tap  'Pasul următor'
+QA [R03_CookMode] shot R03_CookMode-06-cook-last-step
+QA [R03_CookMode] tap  'Pasul următor'
+QA [R03_CookMode] shot R03_CookMode-07-cook-finished
+QA [R03_CookMode] ok   finish page
+QA [R03_CookMode] type 'Nota din modul de gătit'
+QA [R03_CookMode] tap  'Salvează nota și închide'
+QA [R03_CookMode] shot R03_CookMode-08-cook-after-finish
+QA [R03_CookMode] ok   recipe says it was cooked twice (once before in demo)
+QA [R03_CookMode] tap  'Note'
+QA [R03_CookMode] ok   note from cook mode is on the recipe
+QA [R03_CookMode] shot R03_CookMode-09-cook-note-on-recipe
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.RecipesQATests testR03_CookMode] : failed - 1 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.RecipesQATests testR03_CookMode]' failed (101.696 seconds).
+QA [R04_Week] LAUNCH -demo YES -area recipes -tab week -kt-kid none
+QA [R04_Week] shot R04_Week-01-week
+QA [R04_Week] A11Y week: Contrast failed · 48 'Acasă'
+QA [R04_Week] A11Y week: Contrast failed · 48 'Rețete'
+QA [R04_Week] A11Y week: Contrast failed · 48 '7'
+QA [R04_Week] A11Y week: Contrast failed · 48 'Profil'
+QA [R04_Week] A11Y week: Contrast failed · 48 'Suc de portocale'
+QA [R04_Week] A11Y week: Contrast failed · 48 '5 min · 2 porții'
+QA [R04_Week] A11Y week: Contrast failed · 48 'Supă cremă de cartofi'
+QA [R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [R04_Week] A11Y week: Text clipped · 48 '40 min · 12 porții'
+QA [R04_Week] A11Y week: Text clipped · 48 'Profil'
+QA [R04_Week] A11Y week: Text clipped · 48 'Vineri'
+QA [R04_Week] A11Y week: Text clipped · 48 'Acasă'
+QA [R04_Week] A11Y week: Text clipped · 48 'Sâmbătă'
+QA [R04_Week] A11Y week: Text clipped · 48 'Rețete'
+QA [R04_Week] A11Y week: Text clipped · 48 '40 min · 4 porții'
+QA [R04_Week] A11Y week: Text clipped · 48 'Săptămâna'
+QA [R04_Week] A11Y week: Text clipped · 48 '1 h 30 · 4 porții'
+QA [R04_Week] A11Y week: Text clipped · 48 'Ciorbă de perișoare'
+QA [R04_Week] A11Y week: Text clipped · 48 'Azi · Joi'
+QA [R04_Week] A11Y week: Text clipped · 48 'Supă cremă de cartofi'
+QA [R04_Week] A11Y week: Text clipped · 48 '5 min · 2 porții'
+QA [R04_Week] A11Y week: Text clipped · 48 'Suc de portocale'
+QA [R04_Week] A11Y week: Text clipped · 48 'Chifle de casă'
+QA [R04_Week] A11Y week: Element has no description · 9 ''
+QA [R04_Week] A11Y week: Element has no description · 9 ''
+QA [R04_Week] A11Y week: Element has no description · 9 ''
+QA [R04_Week] A11Y week: Element has no description · 9 ''
+QA [R04_Week] A11Y week: 13 button(s) without a real label: ''@360,101, ''@-335,283, ''@-201,283, ''@66,283, ''@67,493, ''@67,703, ''@200,283, ''@-290,370
+QA [R04_Week] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | SĂPTĂMÂNA MEA | Noiembrie 2026 | Luni | 09 | Marți | 10 | Miercuri | 11 | Azi · Joi | 12 | Vineri | 13 | Sâmbătă | 14 | Duminică | 15 | Luni | 16 | Marți | 17 | Cartofi țărănești | 50 min · 4 porții | Cartofi cu ardei la tigaie | 35 min · 2 porții | Ciorbă de perișoare | 1 h 30 · 4 porții | Chifle de casă | 40 min · 12 porții | Suc de portocale | 5 min · 2 porții | Supă cremă de cartofi | 40 min · 4 porții
+QA [R04_Week] ok   shows 'SĂPTĂMÂNA MEA'
+QA [R04_Week] tap  'Adaugă o rețetă azi'
+QA [R04_Week] shot R04_Week-02-week-add-sheet
+QA [R04_Week] tap  'Pune Cartofi țărănești în ziua asta'
+QA [R04_Week] ok   + turns into 'Pusă'
+QA [R04_Week] shot R04_Week-03-week-add-picked
+QA [R04_Week] tap  'Gata'
+QA [R04_Week] shot R04_Week-04-week-after-add
+QA [R04_Week] tap  'Opțiuni pentru Suc de portocale'
+QA [R04_Week] shot R04_Week-05-week-entry-menu
+QA [R04_Week] tap  'Porții'
+QA [R04_Week] shot R04_Week-06-week-servings-menu
+QA [R04_Week] tap  '4 porții'
+QA [R04_Week] tap  'Opțiuni pentru Suc de portocale'
+QA [R04_Week] tap  'Mută în altă zi'
+QA [R04_Week] shot R04_Week-07-week-move-menu
+QA [R04_Week] LAUNCH -demo YES -area recipes -tab week -kt-kid none
+QA [R04_Week] tap  'Opțiuni pentru Suc de portocale'
+QA [R04_Week] shot R04_Week-08-week-entry-menu-2
+QA [R04_Week] tap  'Scoate din ziua asta'
+QA [R04_Week] shot R04_Week-09-week-removed
+QA [R04_Week] ok   Suc de portocale removed from the day
+QA [R04_Week] LAUNCH -demo YES -area recipes -tab week -kt-kid none
+QA [R04_Week] tap  'Lista de cumpărături'
+QA [R04_Week] shot R04_Week-10-week-list-menu
+QA [R04_Week] tap  'Pune în listă ce gătești în 7 zile'
+QA [R04_Week] FAIL toast after putting the week on the list
+QA [R04_Week] shot R04_Week-11-week-put-week-on-list
+QA [R04_Week] tap  'Propune cinele săptămânii'
+QA [R04_Week] shot R04_Week-12-plan-week-1
+QA [R04_Week] A11Y plan-week: Hit area is too small · 1 'Pasul 1 din 3'
+QA [R04_Week] A11Y plan-week: Text clipped · 48 '15 nov'
+QA [R04_Week] A11Y plan-week: Text clipped · 48 'deja: Supă cremă de cartofi'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 'Doar rețetele mele'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 48 '17 nov'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+QA [R04_Week] A11Y plan-week: Text clipped · 48 '16 nov'
+QA [R04_Week] A11Y plan-week: Text clipped · 48 '18 nov'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 'Și câteva noi'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+QA [R04_Week] A11Y plan-week: Text clipped · 48 '14 nov'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 48 'deja: Ciorbă de perișoare, Chifle de casă, Suc de portocale'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+QA [R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+QA [R04_Week] A11Y plan-week: Contrast nearly passed · 48 'deja: Ciorbă de perișoare, Chifle de casă, Suc de portocale'
+QA [R04_Week] A11Y plan-week: Contrast nearly passed · 48 'deja: Supă cremă de cartofi'
+QA [R04_Week] A11Y plan-week: Contrast failed · 9 '–'
+QA [R04_Week] A11Y plan-week: Contrast failed · 9 '–'
+QA [R04_Week] texts: Acasă | Săptămâna | Rețete | 16 | Listă | Profil | PLANIFICĂ AUTOMAT | Ce gătim săptămâna asta? | Cât timp ai pentru cină în fiecare seară. „–” înseamnă că sărim seara. | Azi | deja: Ciorbă de perișoare, Chifle de casă, Suc de portocale | Mâine | deja: Supă cremă de cartofi | Sâmbătă | 14 nov | Duminică | 15 nov | Luni | 16 nov | Marți | 17 nov | Miercuri | 18 nov | Fără nuci | SĂPTĂMÂNA MEA | Noiembrie 2026 | Luni | 09 | Marți | 10 | Miercuri | 11 | Azi · Joi | 12 | Vineri | 13 | Sâmbătă | 14 | Duminică | 15 | Luni | 16 | Marți | 17 | Cartofi țărănești | 50 min · 4 porții | Cartofi cu ardei la tigaie | 35 min · 2 porții | Ciorbă de perișoare | 1 h 30 · 4 porții | Chifle de casă | 40 min · 12 porții | Suc de portocale | 5 min · 2 porții | Supă cremă de cartofi | 40 min · 4 porții
+QA [R04_Week] tap  'Mai departe'
+QA [R04_Week] shot R04_Week-13-plan-week-2
+QA [R04_Week] skip 'Mai departe' not found
+QA [R04_Week] shot R04_Week-14-plan-week-3
+QA [R04_Week] tap  'Propune cinele'
+QA [R04_Week] shot R04_Week-15-plan-week-result
+QA [R04_Week] texts: Propune cinele | Acasă | Săptămâna | Rețete | 16 | Listă | Profil | PLANIFICĂ AUTOMAT | Ce ai deja acasă? | Folosim întâi ce trebuie gătit, iar la listă nu mai punem ce ai. Poți sări peste. | De exemplu: 2 dovlecei, piept de pui, smântână, ouă, orez | SĂPTĂMÂNA MEA | Noiembrie 2026 | Luni | 09 | Marți | 10 | Miercuri | 11 | Azi · Joi | 12 | Vineri | 13 | Sâmbătă | 14 | Duminică | 15 | Luni | 16 | Marți | 17 | Cartofi țărănești | 50 min · 4 porții | Cartofi cu ardei la tigaie | 35 min · 2 porții | Ciorbă de perișoare | 1 h 30 · 4 porții | Chifle de casă | 40 min · 12 porții | Suc de portocale | 5 min · 2 porții | Supă cremă de cartofi | 40 min · 4 porții
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.RecipesQATests testR04_Week] : failed - 1 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.RecipesQATests testR04_Week]' failed (213.692 seconds).
+QA [R05_ShoppingList] LAUNCH -demo YES -area recipes -tab list -kt-kid none
+QA [R05_ShoppingList] shot R05_ShoppingList-01-list
+QA [R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [R05_ShoppingList] A11Y list: Text clipped · 48 'Profil'
+QA [R05_ShoppingList] A11Y list: Text clipped · 9 'Pe raioane'
+QA [R05_ShoppingList] A11Y list: Text clipped · 48 'Rețete'
+QA [R05_ShoppingList] A11Y list: Text clipped · 48 'Săptămâna'
+QA [R05_ShoppingList] A11Y list: Text clipped · 48 'Acasă'
+QA [R05_ShoppingList] A11Y list: Text clipped · 48 'Listă'
+QA [R05_ShoppingList] A11Y list: Text clipped · 49 ''
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 'Acasă'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 'Săptămâna'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 'Rețete'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 '7'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 'Profil'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 9 'Pe rețete'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 'LEGUME ȘI FRUCTE'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 'CASĂ ȘI IGIENĂ'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 9 'Detergent de vase'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 '2 cepe'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 '1 morcov'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 '1 ou'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 '300 ml lapte'
+QA [R05_ShoppingList] A11Y list: Contrast failed · 48 'Chifle de casă'
+QA [R05_ShoppingList] A11Y list: 1 button(s) without a real label: ''@364,107
+QA [R05_ShoppingList] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Cumpărături | 7 de luat · 2 în coș | LEGUME ȘI FRUCTE | CARNE ȘI PEȘTE | LACTATE ȘI OUĂ | CASĂ ȘI IGIENĂ | 2 cepe | Ciorbă de perișoare | 1 morcov | Ciorbă de perișoare | 8 roșii | Roșii umplute | 500 g carne tocată | Ciorbă de perișoare | 1 ou | Ciorbă de perișoare | 300 ml lapte | Chifle de casă
+QA [R05_ShoppingList] ok   shows 'Cumpărături'
+QA [R05_ShoppingList] ok   shows 'de luat'
+QA [R05_ShoppingList] ok   Listă tab shows a count
+QA [R05_ShoppingList] type '1 l lapte' into 'Adaugă ceva, ex. 1 l lapte'
+QA [R05_ShoppingList] tap  'Adaugă'
+QA [R05_ShoppingList] shot R05_ShoppingList-02-list-added-milk
+QA [R05_ShoppingList] after adding milk: Acasă | Săptămâna | Rețete | 8 | Listă | Profil | Cumpărături | 7 de luat · 2 în coș | LEGUME ȘI FRUCTE | CARNE ȘI PEȘTE | LACTATE ȘI OUĂ | CASĂ ȘI IGIENĂ | 2 cepe | Ciorbă de perișoare | 1 morcov | Ciorbă de perișoare | 8 roșii | Roșii umplute | 500 g carne tocată | Ciorbă de perișoare | 1 ⅓ l lapte | Chifle de casă | 1 ou | Ciorbă de perișoare
+QA [R05_ShoppingList] ok   shows 'lapte'
+QA [R05_ShoppingList] shot R05_ShoppingList-03-list-empty-line
+QA [R05_ShoppingList] keyboard hidden by dragging the content down
+QA [R05_ShoppingList] shot R05_ShoppingList-04-list-keyboard-hidden
+QA [R05_ShoppingList] tap  'Detergent de vase'
+QA [R05_ShoppingList] shot R05_ShoppingList-05-list-ticked
+QA [R05_ShoppingList] ok   basket shows 3 after ticking one
+QA [R05_ShoppingList] tap  'Pe rețete'
+QA [R05_ShoppingList] shot R05_ShoppingList-06-list-by-recipe
+QA [R05_ShoppingList] ok   grouped by recipe
+QA [R05_ShoppingList] tap  'Pe raioane'
+QA [R05_ShoppingList] shot R05_ShoppingList-07-list-by-aisle
+QA [R05_ShoppingList] ok   row '8 roșii' to swipe
+QA [R05_ShoppingList] shot R05_ShoppingList-08-list-swipe
+QA [R05_ShoppingList] tap  'Șterge'
+QA [R05_ShoppingList] ok   row deleted by swipe
+QA [R05_ShoppingList] tap  'ÎN COȘ'
+QA [R05_ShoppingList] shot R05_ShoppingList-09-list-basket-open
+QA [R05_ShoppingList] FAIL cannot find 'Golește coșul' to tap
+QA [R05_ShoppingList] shot R05_ShoppingList-10-list-empty-basket-confirm
+QA [R05_ShoppingList] FAIL cannot find 'Da, golește' to tap
+QA [R05_ShoppingList] FAIL basket emptied
+QA [R05_ShoppingList] tap  'Opțiuni listă'
+QA [R05_ShoppingList] shot R05_ShoppingList-11-list-menu
+QA [R05_ShoppingList] tap  'Trimite lista'
+QA [R05_ShoppingList] shot R05_ShoppingList-12-list-share-sheet
+QA [R05_ShoppingList] share sheet shows our extension 'Bucătăria': false
+QA [R05_ShoppingList] tap  'Opțiuni listă'
+QA [R05_ShoppingList] tap  'Golește toată lista'
+QA [R05_ShoppingList] shot R05_ShoppingList-13-list-clear-confirm
+QA [R05_ShoppingList] tap  'Da, golește tot'
+QA [R05_ShoppingList] ok   empty list message
+QA [R05_ShoppingList] shot R05_ShoppingList-14-list-empty
+QA [R05_ShoppingList] tap  'Pune în listă ce gătești în 7 zile'
+QA [R05_ShoppingList] FAIL toast after refilling from the week
+QA [R05_ShoppingList] shot R05_ShoppingList-15-list-refilled
+QA [R05_ShoppingList] after refill: Acasă | Săptămâna | Rețete | 14 | Listă | Profil | Cumpărături | 13 de luat | LEGUME ȘI FRUCTE | CARNE ȘI PEȘTE | LACTATE ȘI OUĂ | 3 cepe | Ciorbă de perișoare · Supă cremă de cartofi | 1 morcov | Ciorbă de perișoare | 1 legătură leuștean | Ciorbă de perișoare | 6 portocale | Suc de portocale | 6 cartofi | Supă cremă de cartofi | 500 g carne tocată | Ciorbă de perișoare | 1 ou | Ciorbă de perișoare | 300 ml lapte | Chifle de casă
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.RecipesQATests testR05_ShoppingList] : failed - 4 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.RecipesQATests testR05_ShoppingList]' failed (195.401 seconds).
+QA [R06_RecipesList] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+QA [R06_RecipesList] shot R06_RecipesList-01-recipes-grid
+QA [R06_RecipesList] A11Y recipes-grid: Hit area is too small · 9 'Favorite'
+QA [R06_RecipesList] A11Y recipes-grid: Hit area is too small · 9 'Băuturi'
+QA [R06_RecipesList] A11Y recipes-grid: Hit area is too small · 9 'Ciorbe și supe'
+QA [R06_RecipesList] A11Y recipes-grid: Hit area is too small · 9 'Deserturi'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 49 ''
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Acasă'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Săptămâna'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '7'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Listă'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Profil'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '35 min · 2 porții'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '1 h 30 · 4 porții'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Plăcinta Anei'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '40 min · 12 porții'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Roșii umplute'
+QA [R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '1 h · 4 porții'
+QA [R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 49 ''
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Acasă'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Ciorbă de perișoare'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 '45 min · 8 porții'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Cartofi cu ardei la tigaie'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Săptămâna'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 '1 h 30 · 4 porții'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Cartofi țărănești'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Profil'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Chifle de casă'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Rețete'
+QA [R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Roșii umplute'
+QA [R06_RecipesList] ok   shows 'Rețetele mele'
+QA [R06_RecipesList] type 'cartofi'
+QA [R06_RecipesList] shot R06_RecipesList-02-recipes-search
+QA [R06_RecipesList] ok   shows 'Cartofi țărănești'
+QA [R06_RecipesList] ok   search hides recipes without 'cartofi'
+QA [R06_RecipesList] tap  'Șterge căutarea'
+QA [R06_RecipesList] tap  'Deserturi'
+QA [R06_RecipesList] shot R06_RecipesList-03-recipes-category
+QA [R06_RecipesList] ok   shows 'Plăcinta Anei'
+QA [R06_RecipesList] tap  'Favorite'
+QA [R06_RecipesList] shot R06_RecipesList-04-recipes-favorites
+QA [R06_RecipesList] tap  'Toate'
+QA [R06_RecipesList] tap  'Vizualizare'
+QA [R06_RecipesList] shot R06_RecipesList-05-recipes-view-switch
+QA [R06_RecipesList] keyboard hidden with 'Search'
+QA [R06_RecipesList] skip 'Vizualizare: Listă' not found
+QA [R06_RecipesList] FAIL cannot find 'Listă' to tap
+QA [R06_RecipesList] skip 'Vizualizare: Revistă' not found
+QA [R06_RecipesList] FAIL cannot find 'Revistă' to tap
+QA [R06_RecipesList] skip 'Vizualizare: Categorii' not found
+QA [R06_RecipesList] FAIL cannot find 'Categorii' to tap
+QA [R06_RecipesList] tap  'Vizualizare: Grilă'
+QA [R06_RecipesList] shot R06_RecipesList-06-recipes-view-Grilă
+QA [R06_RecipesList] tap  'Vizualizare'
+QA [R06_RecipesList] tap  'Ordine'
+QA [R06_RecipesList] shot R06_RecipesList-07-recipes-sort-menu
+QA [R06_RecipesList] FAIL cannot find 'Cele mai rapide' to tap
+QA [R06_RecipesList] shot R06_RecipesList-08-recipes-sorted-fast
+QA [R06_RecipesList] shot R06_RecipesList-09-recipes-context-menu
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.RecipesQATests testR06_RecipesList] : failed - 4 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.RecipesQATests testR06_RecipesList]' failed (143.752 seconds).
+QA [R07_EditorNewRecipe] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+QA [R07_EditorNewRecipe] tap  'Rețetă nouă'
+QA [R07_EditorNewRecipe] shot R07_EditorNewRecipe-01-new-ways
+QA [R07_EditorNewRecipe] A11Y new-ways: no issues
+QA [R07_EditorNewRecipe] ok   shows 'De unde vine rețeta?'
+QA [R07_EditorNewRecipe] tap  'Scriu eu'
+QA [R07_EditorNewRecipe] shot R07_EditorNewRecipe-02-editor-blank
+QA [R07_EditorNewRecipe] A11Y editor-blank: Hit area is too small · 9 'Mai multe porții'
+QA [R07_EditorNewRecipe] A11Y editor-blank: Hit area is too small · 49 ''
+QA [R07_EditorNewRecipe] A11Y editor-blank: Contrast failed · 9 'Salvează rețeta'
+QA [R07_EditorNewRecipe] A11Y editor-blank: 2 button(s) without a real label: ''@340,86, ''@201,481
+QA [R07_EditorNewRecipe] tap  'Salvează rețeta'
+QA [R07_EditorNewRecipe] ok   saving without a title asks for one
+QA [R07_EditorNewRecipe] shot R07_EditorNewRecipe-03-editor-no-title
+QA [R07_EditorNewRecipe] type 'Omletă QA' into 'Numele rețetei'
+QA [R07_EditorNewRecipe] tap  'Ingrediente'
+QA [R07_EditorNewRecipe] shot R07_EditorNewRecipe-04-editor-ingredients-tab
+QA [R07_EditorNewRecipe] shot R07_EditorNewRecipe-05-editor-ingredients-typed
+QA [R07_EditorNewRecipe] tap  'Pași'
+QA [R07_EditorNewRecipe] shot R07_EditorNewRecipe-06-editor-steps-tab
+QA [R07_EditorNewRecipe] tap  'Adaugă un pas'
+QA [R07_EditorNewRecipe] ok   a step field after 'Adaugă un pas'
+QA [R07_EditorNewRecipe] NOTE the keyboard cannot be put away on this screen (no Done key, tap and drag do nothing)
+QA [R07_EditorNewRecipe] keyboard hidden by dragging the content down
+QA [R07_EditorNewRecipe] tap  'Adaugă un pas'
+QA [R07_EditorNewRecipe] step fields after the second 'Adaugă un pas': 4
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/RecipesQATests.swift:509: error: -[KitchenTalesUITests.RecipesQATests testR07_EditorNewRecipe] : Failed to not hittable: TextField, {{56.0, 142.0}, {262.0, 22.0}}
+Test Case '-[KitchenTalesUITests.RecipesQATests testR07_EditorNewRecipe]' failed (94.298 seconds).
+QA [S01_StoriesHome] LAUNCH -demo YES -area stories -tab home -kt-kid none
+QA [S01_StoriesHome] shot S01_StoriesHome-01-stories-home
+QA [S01_StoriesHome] A11Y stories-home: Hit area is too small · 9 'Rețete'
+QA [S01_StoriesHome] A11Y stories-home: Hit area is too small · 9 'Toate'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Adaugă'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Profil'
+QA [S01_StoriesHome] A11Y stories-home: Contrast nearly passed · 9 'Rețete'
+QA [S01_StoriesHome] A11Y stories-home: Contrast nearly passed · 9 'Povești'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Adăugate recent'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 9 'Toate'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '🐠'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '8 min'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '🍎'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '12 min'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Povești Disney'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '🐻'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '6 min'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Ursulețul și luna'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Povești create de noi'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '⭐'
+QA [S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '🐉'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are unsupported · 48 '🍎'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 '6 min'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 '8 min'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 '12 min'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are unsupported · 48 '🐠'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 '🍎'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 9 'Rețete'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Albă ca Zăpada'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Favorite'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Povești create de noi'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'În căutarea lui Nemo'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Adaugă'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Profil'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Povești Disney'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 '🐠'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Acasă'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Bibliotecă'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Ursulețul și luna'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Povești Disney'
+QA [S01_StoriesHome] A11Y stories-home: Text clipped · 9 'Povești'
+QA [S01_StoriesHome] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Pentru azi | Adăugate recent | Din bucătărie | Azi în meniu | Ciorbă de perișoare | Azi în meniu | Chifle de casă | 🐠 | 8 min | Nou | În căutarea lui Nemo | Povești Disney | 🍎 | 12 min | Nou | Albă ca Zăpada | Povești Disney | 🐻 | 6 min | Nou | Ursulețul și luna | Povești create de noi | ⭐ | 7 min | Nou | Steaua căzătoare | Povești de seară | 🚂 | 5 min | Nou | Trenulețul curajos | Povești de seară | 🐠 | 8 min | Nou | În căutarea lui Nemo | Povești Disney | 🍎 | 12 min | Nou | Albă ca Zăpada | Povești Disney | 🐻 | 6 min | Nou | Ursulețul și luna | Povești create de noi | ⭐ | 7 min | Nou | Steaua căzătoare | Povești de seară | 🚂 | 5 min | Nou
+QA [S01_StoriesHome] ok   shows 'Povești'
+QA [S01_StoriesHome] tap  'Colecții'
+QA [S01_StoriesHome] shot S01_StoriesHome-02-stories-colectii
+QA [S01_StoriesHome] tap  'Favorite'
+QA [S01_StoriesHome] shot S01_StoriesHome-03-stories-favorite
+QA [S01_StoriesHome] Favorite on Acasă shows: Acasă | Favorite | Bibliotecă | Adaugă | Profil | 🌙 Povești de seară | 2 povești · 12 min | 2 noi | 🚂 | ⭐ | Povești Disney | 4 povești · 39 min | 4 noi | 🐠 | 🦁 | 🧞 | Povești Hachette | 1 poveste · 9 min | 1 nouă | 🐭 | Povești create de noi | 1 poveste · 6 min | 1 nouă | 🐻 | Vocea noastră
+QA [S01_StoriesHome] skip 'Diseară' not found
+QA [S01_StoriesHome] tap  'Azi'
+QA [S01_StoriesHome] shot S01_StoriesHome-04-stories-tonight
+QA [S01_StoriesHome] tap  'Rețete'
+QA [S01_StoriesHome] shot S01_StoriesHome-05-switched-to-recipes
+QA [S01_StoriesHome] ok   recipes Acasă after the switch
+QA [S01_StoriesHome] tap  'Povești'
+QA [S01_StoriesHome] ok   stories Acasă after switching back
+QA [S01_StoriesHome] tap  'Caută povești'
+QA [S01_StoriesHome] shot S01_StoriesHome-06-stories-search-button
+QA [S01_StoriesHome] 'Caută povești' opened: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Bibliotecă | 🎵 Cântece | gol | 🎵 | 🌙 Povești de seară | 2 povești · 12 min | 2 noi | 🚂 | ⭐ | Povești Disney
+Test Case '-[KitchenTalesUITests.StoriesQATests testS01_StoriesHome]' passed (93.495 seconds).
+QA [S02_Player] LAUNCH -demo YES -area stories -tab library -kt-kid none
+QA [S02_Player] shot S02_Player-01-library
+QA [S02_Player] A11Y library: Contrast nearly passed · 45 'Caută în 10 povești'
+QA [S02_Player] A11Y library: Contrast failed · 48 'Acasă'
+QA [S02_Player] A11Y library: Contrast failed · 48 'Adaugă'
+QA [S02_Player] A11Y library: Contrast failed · 48 'Profil'
+QA [S02_Player] A11Y library: Contrast failed · 48 '🎵'
+QA [S02_Player] A11Y library: Contrast failed · 48 '🌙 Povești de seară'
+QA [S02_Player] A11Y library: Contrast failed · 48 '2 povești · 12 min'
+QA [S02_Player] A11Y library: Contrast failed · 48 '🚂'
+QA [S02_Player] A11Y library: Contrast failed · 48 '⭐'
+QA [S02_Player] A11Y library: Contrast failed · 48 '🐠'
+QA [S02_Player] A11Y library: Contrast failed · 48 '🦁'
+QA [S02_Player] A11Y library: Contrast failed · 48 '🧞'
+QA [S02_Player] A11Y library: Contrast failed · 48 '1 poveste · 9 min'
+QA [S02_Player] A11Y library: Contrast failed · 48 '1 nouă'
+QA [S02_Player] A11Y library: Contrast failed · 48 '🐭'
+QA [S02_Player] A11Y library: Contrast failed · 48 'Povești create de noi'
+QA [S02_Player] A11Y library: Contrast failed · 48 '🐻'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🦁'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 '2 noi'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 '4 noi'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🚂'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🐠'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🐭'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '⭐'
+QA [S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🎵'
+QA [S02_Player] A11Y library: Text clipped · 48 '🧞'
+QA [S02_Player] A11Y library: Text clipped · 48 '🦁'
+QA [S02_Player] A11Y library: Text clipped · 48 '4 povești · 39 min'
+QA [S02_Player] A11Y library: Text clipped · 48 '🎵 Cântece'
+QA [S02_Player] A11Y library: Text clipped · 48 '🚂'
+QA [S02_Player] A11Y library: Text clipped · 48 'Adaugă'
+QA [S02_Player] A11Y library: Text clipped · 48 '2 povești · 12 min'
+QA [S02_Player] A11Y library: Text clipped · 48 'Acasă'
+QA [S02_Player] A11Y library: Text clipped · 48 'Bibliotecă'
+QA [S02_Player] A11Y library: Text clipped · 48 'Profil'
+QA [S02_Player] A11Y library: Text clipped · 45 'Caută în 10 povești'
+QA [S02_Player] A11Y library: Text clipped · 48 '🐠'
+QA [S02_Player] A11Y library: Text clipped · 48 '🌙 Povești de seară'
+QA [S02_Player] A11Y library: Text clipped · 48 'Favorite'
+QA [S02_Player] A11Y library: Text clipped · 48 '🐭'
+QA [S02_Player] A11Y library: Text clipped · 48 '🎵'
+QA [S02_Player] A11Y library: Text clipped · 48 '1 poveste · 9 min'
+QA [S02_Player] A11Y library: Text clipped · 48 'Povești Hachette'
+QA [S02_Player] A11Y library: Text clipped · 48 'Povești Disney'
+QA [S02_Player] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Bibliotecă | 🎵 Cântece | gol | 🎵 | 🌙 Povești de seară | 2 povești · 12 min | 2 noi | 🚂 | ⭐ | Povești Disney | 4 povești · 39 min | 4 noi | 🐠 | 🦁 | 🧞 | Povești Hachette | 1 poveste · 9 min | 1 nouă | 🐭 | Povești create de noi | 1 poveste · 6 min | 1 nouă | 🐻 | Vocea noastră | 1 poveste · 3 min | 1 nouă | 🌙 | Basme · Ana | 1 poveste · 7 min | 1 nouă | 🐉 | Folder nou | pentru povești sau muzică
+QA [S02_Player] tap the 'Povești Disney' card at its visible centre (y 587; its accessibility frame is (-302.4666748046875, 291.6666564941406, 1066.1334228515625, 592.0))
+QA [S02_Player] opened: nav bar 'Bibliotecă' · Acasă | Favorite | Bibliotecă | Adaugă | Profil | Bibliotecă
+QA [S02_Player] FAIL tapping the middle of the 'Povești Disney' card opens 'Povești Disney' (opened 'Bibliotecă')
+QA [S02_Player] shot S02_Player-02-folder-disney
+QA [S02_Player] A11Y folder: Contrast nearly passed · 45 'Caută în 10 povești'
+QA [S02_Player] A11Y folder: Contrast failed · 48 'Acasă'
+QA [S02_Player] A11Y folder: Contrast failed · 48 'Adaugă'
+QA [S02_Player] A11Y folder: Contrast failed · 48 'Profil'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '🎵'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '🌙 Povești de seară'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '2 povești · 12 min'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '🚂'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '⭐'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '🐠'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '🦁'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '🧞'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '1 poveste · 9 min'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '1 nouă'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '🐭'
+QA [S02_Player] A11Y folder: Contrast failed · 48 'Povești create de noi'
+QA [S02_Player] A11Y folder: Contrast failed · 48 '🐻'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🦁'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 '2 noi'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 '4 noi'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🚂'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🐠'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🐭'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '⭐'
+QA [S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🎵'
+QA [S02_Player] A11Y folder: Text clipped · 48 '🧞'
+QA [S02_Player] A11Y folder: Text clipped · 48 '🦁'
+QA [S02_Player] A11Y folder: Text clipped · 48 '4 povești · 39 min'
+QA [S02_Player] A11Y folder: Text clipped · 48 '🎵 Cântece'
+QA [S02_Player] A11Y folder: Text clipped · 48 '🚂'
+QA [S02_Player] A11Y folder: Text clipped · 48 'Adaugă'
+QA [S02_Player] A11Y folder: Text clipped · 48 '2 povești · 12 min'
+QA [S02_Player] A11Y folder: Text clipped · 48 'Acasă'
+QA [S02_Player] A11Y folder: Text clipped · 48 'Bibliotecă'
+QA [S02_Player] A11Y folder: Text clipped · 48 'Profil'
+QA [S02_Player] A11Y folder: Text clipped · 45 'Caută în 10 povești'
+QA [S02_Player] A11Y folder: Text clipped · 48 '🐠'
+QA [S02_Player] A11Y folder: Text clipped · 48 '🌙 Povești de seară'
+QA [S02_Player] A11Y folder: Text clipped · 48 'Favorite'
+QA [S02_Player] A11Y folder: Text clipped · 48 '🐭'
+QA [S02_Player] A11Y folder: Text clipped · 48 '🎵'
+QA [S02_Player] A11Y folder: Text clipped · 48 '1 poveste · 9 min'
+QA [S02_Player] A11Y folder: Text clipped · 48 'Povești Hachette'
+QA [S02_Player] A11Y folder: Text clipped · 48 'Povești Disney'
+QA [S02_Player] LAUNCH -demo YES -area stories -tab library -kt-kid none
+QA [S02_Player] tap  'Regele Leu'
+QA [S02_Player] shot S02_Player-03-player
+QA [S02_Player] A11Y player: Hit area is too small · 48 'Regele Leu'
+QA [S02_Player] A11Y player: Hit area is too small · 48 '5:56 rămase'
+QA [S02_Player] A11Y player: Hit area is too small · 9 'Ștergeți text'
+QA [S02_Player] A11Y player: Element has no description · 1 ''
+QA [S02_Player] A11Y player: Element has no description · 1 ''
+QA [S02_Player] A11Y player: Element has no description · 1 ''
+QA [S02_Player] ok   shows 'Regele Leu'
+QA [S02_Player] FAIL shows 'DIN POVEȘTI DISNEY'
+QA [S02_Player] keyboard hidden with 'Search'
+QA [S02_Player] skip 'Pornește' not found
+QA [S02_Player] FAIL the player is open (Viteză button)
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.StoriesQATests testS02_Player] : failed - 3 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.StoriesQATests testS02_Player]' failed (122.306 seconds).
+QA [S02b_StoryText] LAUNCH -demo YES -area stories -tab library -kt-kid none
+QA [S02b_StoryText] tap  'Ursulețul și luna'
+QA [S02b_StoryText] shot S02b_StoryText-01-player-ursuletul
+QA [S02b_StoryText] keyboard hidden with 'Search'
+QA [S02b_StoryText] FAIL cannot find 'Mai multe' to tap
+QA [S02b_StoryText] FAIL cannot find 'Textul poveștii' to tap
+QA [S02b_StoryText] shot S02b_StoryText-02-story-text
+QA [S02b_StoryText] FAIL story text shows
+QA [S02b_StoryText] A11Y story-text: Hit area is too small · 48 'Ursulețul și luna'
+QA [S02b_StoryText] A11Y story-text: Hit area is too small · 48 '3:57 rămase'
+QA [S02b_StoryText] A11Y story-text: Hit area is too small · 9 'Ștergeți text'
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.StoriesQATests testS02b_StoryText] : failed - 3 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.StoriesQATests testS02b_StoryText]' failed (73.842 seconds).
+QA [S03_LibraryFolders] LAUNCH -demo YES -area stories -tab library -kt-kid none
+QA [S03_LibraryFolders] tap  'Folder nou'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-01-folder-new
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🎵'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '📚'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🌙'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '⭐'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🐻'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🚗'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🦄'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🎄'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🌊'
+QA [S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🏰'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🎵'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '⭐'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🦄'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🏰'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🌙'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🚗'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🎄'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are partially unsupported · 9 'Renunță'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🐻'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '📚'
+QA [S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🌊'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🎵'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🦄'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🏰'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🌙'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🚗'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🎄'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 49 ''
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🐻'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '📚'
+QA [S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🌊'
+QA [S03_LibraryFolders] type 'Folder QA' into 'Muzică pentru copii'
+QA [S03_LibraryFolders] tap  '🐻'
+QA [S03_LibraryFolders] tap  'Creează folderul'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-02-folder-created
+QA [S03_LibraryFolders] ok   new folder shows in the library
+QA [S03_LibraryFolders] tap the 'Povești Disney' card at its visible centre (y 731; its accessibility frame is (-302.4666748046875, 435.6666564941406, 1066.1334228515625, 592.0))
+QA [S03_LibraryFolders] opened: nav bar 'Bibliotecă' · Acasă | Favorite | Bibliotecă | Adaugă | Profil | Bibliotecă
+QA [S03_LibraryFolders] FAIL tapping the middle of the 'Povești Disney' card opens 'Povești Disney' (opened 'Bibliotecă')
+QA [S03_LibraryFolders] back via edge swipe
+QA [S03_LibraryFolders] LAUNCH -demo YES -area stories -tab library -screen folder -kt-kid none
+QA [S03_LibraryFolders] opened the first folder with -screen folder instead
+QA [S03_LibraryFolders] tap  'Vizualizare'
+QA [S03_LibraryFolders] tap  'Raft'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-03-folder-look-Raft
+QA [S03_LibraryFolders] tap  'Vizualizare'
+QA [S03_LibraryFolders] tap  'Cover Flow'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-04-folder-look-Cover-Flow
+QA [S03_LibraryFolders] tap  'Vizualizare'
+QA [S03_LibraryFolders] tap  'Listă'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-05-folder-look-Listă
+QA [S03_LibraryFolders] tap  'Vizualizare'
+QA [S03_LibraryFolders] tap  'Pătrate'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-06-folder-look-Pătrate
+QA [S03_LibraryFolders] skip 'Caută în Povești Disney' not found
+QA [S03_LibraryFolders] tap  'Mai multe'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-07-folder-more
+QA [S03_LibraryFolders] tap  'Partajează folderul'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-08-folder-share-dialog
+QA [S03_LibraryFolders] FAIL cannot find 'Renunță' to tap
+QA [S03_LibraryFolders] NOTE 'Mai multe' exists but is not hittable; tapping its centre
+QA [S03_LibraryFolders] tap  'Mai multe'
+QA [S03_LibraryFolders] skip 'Redenumește' not found
+QA [S03_LibraryFolders] shot S03_LibraryFolders-09-folder-rename
+QA [S03_LibraryFolders] tap  'Adaugă o poveste în folder'
+QA [S03_LibraryFolders] shot S03_LibraryFolders-10-folder-add-menu
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.StoriesQATests testS03_LibraryFolders] : failed - 2 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.StoriesQATests testS03_LibraryFolders]' failed (204.000 seconds).
+QA [S04_Favorites] LAUNCH -demo YES -area stories -tab favorites -kt-kid none
+QA [S04_Favorites] shot S04_Favorites-01-favorites
+QA [S04_Favorites] A11Y favorites: Contrast failed · 48 'Acasă'
+QA [S04_Favorites] A11Y favorites: Contrast failed · 48 'Bibliotecă'
+QA [S04_Favorites] A11Y favorites: Contrast failed · 48 'Adaugă'
+QA [S04_Favorites] A11Y favorites: Contrast failed · 48 'Profil'
+QA [S04_Favorites] A11Y favorites: Contrast failed · 48 '🧞'
+QA [S04_Favorites] A11Y favorites: Contrast failed · 48 'Povești Disney'
+QA [S04_Favorites] A11Y favorites: Contrast failed · 48 '🦁'
+QA [S04_Favorites] A11Y favorites: Contrast failed · 48 '🐻'
+QA [S04_Favorites] A11Y favorites: Dynamic Type font sizes are unsupported · 48 '🦁'
+QA [S04_Favorites] A11Y favorites: Dynamic Type font sizes are unsupported · 48 '🐻'
+QA [S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S04_Favorites] A11Y favorites: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 '🦁'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 '🐻'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Profil'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Favorite'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Acasă'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Bibliotecă'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Povești create de noi'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Povești Disney'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Povești Disney'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Ursulețul și luna'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 '🧞'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Regele Leu'
+QA [S04_Favorites] A11Y favorites: Text clipped · 48 'Adaugă'
+QA [S04_Favorites] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Favorite | Poveștile preferate ale lui Ana | 🧞 | 10 min | Aladdin | Povești Disney | 🦁 | 9 min | Regele Leu | Povești Disney | 🐻 | 6 min | Ursulețul și luna | Povești create de noi
+QA [S04_Favorites] ok   shows 'Aladdin'
+QA [S04_Favorites] hearts on Favorite: 0
+Test Case '-[KitchenTalesUITests.StoriesQATests testS04_Favorites]' passed (25.630 seconds).
+QA [S05_AddStory] LAUNCH -demo YES -area stories -tab add -kt-kid none
+QA [S05_AddStory] shot S05_AddStory-01-add
+QA [S05_AddStory] A11Y add: Contrast failed · 48 'Acasă'
+QA [S05_AddStory] A11Y add: Contrast failed · 48 'Favorite'
+QA [S05_AddStory] A11Y add: Contrast failed · 48 'Bibliotecă'
+QA [S05_AddStory] A11Y add: Contrast failed · 48 'Profil'
+QA [S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'MOD PĂRINTE'
+QA [S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [S05_AddStory] A11Y add: Text clipped · 48 'Profil'
+QA [S05_AddStory] A11Y add: Text clipped · 48 'Favorite'
+QA [S05_AddStory] A11Y add: Text clipped · 48 'Acasă'
+QA [S05_AddStory] A11Y add: Text clipped · 48 'Creează o poveste'
+QA [S05_AddStory] A11Y add: Text clipped · 48 'Citește tu'
+QA [S05_AddStory] A11Y add: Text clipped · 48 'Adaugă'
+QA [S05_AddStory] A11Y add: Text clipped · 48 'Bibliotecă'
+QA [S05_AddStory] A11Y add: Text clipped · 48 'Încarcă un fișier'
+QA [S05_AddStory] ok   shows 'Poveste nouă'
+QA [S05_AddStory] tap  'Creează o poveste'
+QA [S05_AddStory] shot S05_AddStory-02-create-1
+QA [S05_AddStory] A11Y create: Hit area is too small · 1 'Pasul 1 din 4'
+QA [S05_AddStory] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | Urmează: tema | Mai departe | POVESTE NOUĂ | Pentru cine e povestea? | Completează în Profil și nu te mai întrebăm. | EROUL POVEȘTII | ESTE | VÂRSTA | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+QA [S05_AddStory] skip 'aventură' not found
+QA [S05_AddStory] tap  'Mai departe'
+QA [S05_AddStory] shot S05_AddStory-03-create-2
+QA [S05_AddStory] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | Mai departe | POVESTE NOUĂ | Despre ce să fie povestea? | ALTCEVA? | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+QA [S05_AddStory] tap  'Mai departe'
+QA [S05_AddStory] shot S05_AddStory-04-create-3
+QA [S05_AddStory] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | Urmează: titlul (opțional) | Mai departe | POVESTE NOUĂ | Cât de lungă? | 2 min | Scurtă, pentru când e deja somnoros | 4 min | Cât o poveste obișnuită de culcare | 7 min | Pentru o seară fără grabă | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+QA [S05_AddStory] tap  'Mai departe'
+QA [S05_AddStory] shot S05_AddStory-05-create-4
+QA [S05_AddStory] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | POVESTE NOUĂ | Cum se numește? | TITLUL | Citită de Carmen | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+QA [S05_AddStory] type 'Povestea de test'
+QA [S05_AddStory] shot S05_AddStory-06-create-title
+QA [S05_AddStory] tap  'Creează povestea'
+QA [S05_AddStory] shot S05_AddStory-07-create-generating
+QA [S05_AddStory] after Creează: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | POVESTE NOUĂ | Cum se numește? | TITLUL | Citită de Carmen | Sesiunea a expirat. Intră din nou în cont. | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+QA [S05_AddStory] tap  'Înapoi'
+QA [S05_AddStory] tap  'Înapoi'
+QA [S05_AddStory] skip 'Închide' not found
+QA [S05_AddStory] LAUNCH -demo YES -area stories -tab add -kt-kid none
+QA [S05_AddStory] tap  'Citește tu'
+QA [S05_AddStory] shot S05_AddStory-08-record
+QA [S05_AddStory] A11Y record: Contrast failed · 48 'Ține telefonul la o palmă de gură'
+QA [S05_AddStory] A11Y record: Text clipped · 48 'Titlul și coperta le alegi la final'
+QA [S05_AddStory] A11Y record: Text clipped · 48 'Ține telefonul la o palmă de gură'
+QA [S05_AddStory] A11Y record: Text clipped · 48 'Poți face pauză oricând și continui'
+QA [S05_AddStory] tap  'Începe înregistrarea'
+QA [S05_AddStory] shot S05_AddStory-09-recording
+QA [S05_AddStory] recording: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Ia cartea și citește cu glas tare | Ține telefonul aproape, pe masă sau în mână. | 0:06 | Se înregistrează | Pauză | Gata | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+QA [S05_AddStory] tap  'Înapoi'
+QA [S05_AddStory] shot S05_AddStory-10-record-leave-confirm
+QA [S05_AddStory] tap  'Pleacă și renunță'
+QA [S05_AddStory] tap  'Încarcă un fișier'
+QA [S05_AddStory] shot S05_AddStory-11-upload
+QA [S05_AddStory] A11Y upload: Text clipped · 48 'Alege un fișier audio'
+QA [S05_AddStory] A11Y upload: Text clipped · 48 'MP3, M4A sau WAV, din Fișiere, iCloud sau AirDrop'
+QA [S05_AddStory] A11Y upload: Contrast failed · 48 'ÎNCARCĂ UN FIȘIER'
+QA [S05_AddStory] tap  'Alege un fișier audio'
+QA [S05_AddStory] shot S05_AddStory-12-upload-picker
+Test Case '-[KitchenTalesUITests.StoriesQATests testS05_AddStory]' passed (158.367 seconds).
+QA [S06_KidMode] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+QA [S06_KidMode] shot S06_KidMode-01-profile
+QA [S06_KidMode] tap  'Dă-i telefonul copilului'
+QA [S06_KidMode] shot S06_KidMode-02-kid-home
+QA [S06_KidMode] A11Y kid-home: Hit area is too small · 9 'Toate poveștile Bibliotecă'
+QA [S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Caută'
+QA [S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Surpriză'
+QA [S06_KidMode] A11Y kid-home: Text clipped · 48 'Acasă'
+QA [S06_KidMode] A11Y kid-home: Text clipped · 48 'Favorite'
+QA [S06_KidMode] A11Y kid-home: Text clipped · 48 'Caută'
+QA [S06_KidMode] A11Y kid-home: Text clipped · 48 'Bibliotecă'
+QA [S06_KidMode] A11Y kid-home: Text clipped · 48 'Surpriză'
+QA [S06_KidMode] A11Y kid-home: Contrast failed · 48 'Acasă'
+QA [S06_KidMode] A11Y kid-home: Contrast failed · 48 'Favorite'
+QA [S06_KidMode] A11Y kid-home: Contrast failed · 48 'Bibliotecă'
+QA [S06_KidMode] A11Y kid-home: Contrast failed · 48 'Surpriză'
+QA [S06_KidMode] A11Y kid-home: Contrast failed · 48 'Caută'
+QA [S06_KidMode] A11Y kid-home: Contrast failed · 48 '🚂'
+QA [S06_KidMode] ok   kid mode tab Surpriză
+QA [S06_KidMode] ok   kid mode tab Caută
+QA [S06_KidMode] ok   no Rețete / Povești switch in kid mode
+QA [S06_KidMode] ok   no Profil tab in kid mode
+QA [S06_KidMode] texts: Acasă | Favorite | Bibliotecă | Surpriză | Caută | 30 min | 🚂 | POVESTEA ZILEI | Trenulețul curajos | Povești de seară · 5 min | Ascultă
+QA [S06_KidMode] tap  'Bibliotecă'
+QA [S06_KidMode] shot S06_KidMode-03-kid-library
+QA [S06_KidMode] kid library: Acasă | Favorite | Bibliotecă | Surpriză | Caută | 30 min | Bibliotecă | 🎵 Cântece | gol | 🎵 | 🌙 Povești de seară | 2 povești · 12 min | 2 noi | 🚂 | ⭐
+QA [S06_KidMode] ok   kid library hides folders not chosen for the child (Povești Disney)
+QA [S06_KidMode] tap  'Caută'
+QA [S06_KidMode] shot S06_KidMode-04-kid-search
+QA [S06_KidMode] type 'tren'
+QA [S06_KidMode] shot S06_KidMode-05-kid-search-tren
+QA [S06_KidMode] ok   kid search finds a story in a kid folder
+QA [S06_KidMode] shot S06_KidMode-06-kid-search-aladdin
+QA [S06_KidMode] ok   kid search does not show stories outside the kid folders (Aladdin)
+QA [S06_KidMode] tap  'Surpriză'
+QA [S06_KidMode] shot S06_KidMode-07-kid-surprise
+QA [S06_KidMode] surprise: ⭐ | DIN POVEȘTI DE SEARĂ | Steaua căzătoare | ⭐ | Steaua căzătoare | Povești de seară | 2:22 | AirPlay | 1× | Viteză
+QA [S06_KidMode] ok   no ⋯ menu in the player in kid mode
+QA [S06_KidMode] tap  'Ieși din modul copil'
+QA [S06_KidMode] shot S06_KidMode-08-kid-pin
+QA [S06_KidMode] A11Y kid-pin: no issues
+QA [S06_KidMode] tap  '0'
+QA [S06_KidMode] tap  '0'
+QA [S06_KidMode] tap  '0'
+QA [S06_KidMode] tap  '0'
+QA [S06_KidMode] shot S06_KidMode-09-kid-pin-wrong
+QA [S06_KidMode] ok   wrong PIN message
+QA [S06_KidMode] shot S06_KidMode-10-kid-after-relaunch
+QA [S06_KidMode] ok   kid mode stays on after the app is closed and opened
+QA [S06_KidMode] tap  'Ieși din modul copil'
+QA [S06_KidMode] tap  '1'
+QA [S06_KidMode] tap  '2'
+QA [S06_KidMode] tap  '3'
+QA [S06_KidMode] tap  '4'
+QA [S06_KidMode] shot S06_KidMode-11-kid-exited
+QA [S06_KidMode] ok   after the right PIN the parent tabs are back
+Test Case '-[KitchenTalesUITests.StoriesQATests testS06_KidMode]' passed (110.892 seconds).
+QA [S07_Bedtime] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+QA [S07_Bedtime] tap  '5 ani'
+QA [S07_Bedtime] shot S07_Bedtime-01-child
+QA [S07_Bedtime] A11Y child: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y child: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [S07_Bedtime] A11Y child: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S07_Bedtime] A11Y child: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [S07_Bedtime] A11Y child: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [S07_Bedtime] A11Y child: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [S07_Bedtime] A11Y child: Text clipped · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y child: Text clipped · 48 'Profil'
+QA [S07_Bedtime] A11Y child: Text clipped · 48 'Acasă'
+QA [S07_Bedtime] A11Y child: Text clipped · 48 'Rețete'
+QA [S07_Bedtime] A11Y child: Contrast failed · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y child: Contrast failed · 48 'Rețete'
+QA [S07_Bedtime] A11Y child: Contrast failed · 48 '7'
+QA [S07_Bedtime] A11Y child: Contrast failed · 48 'DESPRE COPIL'
+QA [S07_Bedtime] A11Y child: Contrast failed · 48 'SEARA'
+QA [S07_Bedtime] A11Y child: Contrast failed · 48 'Vibrație la răsfoit'
+QA [S07_Bedtime] A11Y child: Contrast failed · 48 'Ora de culcare'
+QA [S07_Bedtime] A11Y child: Contrast failed · 48 'oprită'
+QA [S07_Bedtime] tap  'Ora de culcare'
+QA [S07_Bedtime] shot S07_Bedtime-02-bedtime-settings
+QA [S07_Bedtime] A11Y bedtime-settings: Contrast failed · 48 'Acasă'
+QA [S07_Bedtime] A11Y bedtime-settings: Contrast failed · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y bedtime-settings: Contrast failed · 48 'Rețete'
+QA [S07_Bedtime] A11Y bedtime-settings: Contrast failed · 48 '7'
+QA [S07_Bedtime] A11Y bedtime-settings: Contrast failed · 48 'RUTINA'
+QA [S07_Bedtime] A11Y bedtime-settings: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y bedtime-settings: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [S07_Bedtime] A11Y bedtime-settings: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S07_Bedtime] A11Y bedtime-settings: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [S07_Bedtime] A11Y bedtime-settings: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [S07_Bedtime] A11Y bedtime-settings: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [S07_Bedtime] A11Y bedtime-settings: Text clipped · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y bedtime-settings: Text clipped · 48 'Profil'
+QA [S07_Bedtime] A11Y bedtime-settings: Text clipped · 48 'Acasă'
+QA [S07_Bedtime] A11Y bedtime-settings: Text clipped · 48 'Rețete'
+QA [S07_Bedtime] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Ora de culcare | RUTINA | Ana primește un memento pe ecranul blocat, apoi ecranul de noapte cu poveștile la rând. | Rutina de seară
+QA [S07_Bedtime] tap  'Rutina de seară'
+QA [S07_Bedtime] shot S07_Bedtime-03-bedtime-on
+QA [S07_Bedtime] FAIL cannot find 'Încearcă acum ecranul de noapte' to tap
+QA [S07_Bedtime] shot S07_Bedtime-04-bedtime-night
+QA [S07_Bedtime] A11Y bedtime-night: Contrast failed · 48 'Acasă'
+QA [S07_Bedtime] A11Y bedtime-night: Contrast failed · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y bedtime-night: Contrast failed · 48 'Rețete'
+QA [S07_Bedtime] A11Y bedtime-night: Contrast failed · 48 '7'
+QA [S07_Bedtime] A11Y bedtime-night: Contrast failed · 48 'RUTINA'
+QA [S07_Bedtime] A11Y bedtime-night: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y bedtime-night: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [S07_Bedtime] A11Y bedtime-night: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [S07_Bedtime] A11Y bedtime-night: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [S07_Bedtime] A11Y bedtime-night: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [S07_Bedtime] A11Y bedtime-night: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [S07_Bedtime] A11Y bedtime-night: Text clipped · 48 'Săptămâna'
+QA [S07_Bedtime] A11Y bedtime-night: Text clipped · 48 'Profil'
+QA [S07_Bedtime] A11Y bedtime-night: Text clipped · 48 'Acasă'
+QA [S07_Bedtime] A11Y bedtime-night: Text clipped · 48 'Rețete'
+QA [S07_Bedtime] night: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Ora de culcare | RUTINA | Ana primește un memento pe ecranul blocat, apoi ecranul de noapte cu poveștile la rând. | Rutina de seară
+QA [S07_Bedtime] FAIL cannot find 'Pornește poveștile' to tap
+QA [S07_Bedtime] shot S07_Bedtime-05-bedtime-started
+QA [S07_Bedtime] after start: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Ora de culcare | RUTINA | Ana primește un memento pe ecranul blocat, apoi ecranul de noapte cu poveștile la rând. | Rutina de seară
+QA [S07_Bedtime] skip 'Închide' not found
+QA [S07_Bedtime] shot S07_Bedtime-06-bedtime-closed
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:95: error: -[KitchenTalesUITests.StoriesQATests testS07_Bedtime] : failed - 2 QA check(s) failed:
+Test Case '-[KitchenTalesUITests.StoriesQATests testS07_Bedtime]' failed (104.269 seconds).
+QA [X01_DeepLinks] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+QA [X01_DeepLinks] open link kitchentales://list
+QA [X01_DeepLinks] shot X01_DeepLinks-01-link-list
+QA [X01_DeepLinks] ok   kitchentales://list opens the shopping list
+QA [X01_DeepLinks] open link kitchentales://week
+QA [X01_DeepLinks] shot X01_DeepLinks-02-link-week
+QA [X01_DeepLinks] ok   kitchentales://week opens the week
+QA [X01_DeepLinks] open link kitchentales://recipe/r3
+QA [X01_DeepLinks] shot X01_DeepLinks-03-link-recipe
+QA [X01_DeepLinks] ok   kitchentales://recipe/r3 opens Cartofi țărănești
+QA [X01_DeepLinks] open link kitchentales://recipe/does-not-exist
+QA [X01_DeepLinks] shot X01_DeepLinks-04-link-recipe-missing
+QA [X01_DeepLinks] missing recipe link shows: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Rețeta nu a fost găsită | Poate a fost ștearsă.
+QA [X01_DeepLinks] open link kitchentales://story/d3
+QA [X01_DeepLinks] shot X01_DeepLinks-05-link-story
+QA [X01_DeepLinks] ok   kitchentales://story/d3 opens the player with Nemo
+QA [X01_DeepLinks] open link kitchentales://story
+QA [X01_DeepLinks] shot X01_DeepLinks-06-link-story-last
+QA [X01_DeepLinks] story with no id plays: 🧞 | DIN POVEȘTI DISNEY | Aladdin | 🧞 | Aladdin | Povești Disney | 3:24 | AirPlay | 1× | Viteză
+QA [X01_DeepLinks] open link kitchentales://bedtime
+QA [X01_DeepLinks] shot X01_DeepLinks-07-link-bedtime
+QA [X01_DeepLinks] bedtime link: Noapte bună, Ana | 3 povești · aproape 25 de minute | Pijama | Dinți | În pat | Pornește poveștile | Acasă | Favorite | Bibliotecă | Adaugă | Profil | Aladdin | 1 | 10 min | Regele Leu
+QA [X01_DeepLinks] tap  'Închide'
+QA [X01_DeepLinks] open link kitchentales://nothing-here
+QA [X01_DeepLinks] shot X01_DeepLinks-08-link-unknown
+Test Case '-[KitchenTalesUITests.SystemQATests testX01_DeepLinks]' passed (86.007 seconds).
+QA [X02_DeepLinksInKidMode] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+QA [X02_DeepLinksInKidMode] tap  'Dă-i telefonul copilului'
+QA [X02_DeepLinksInKidMode] open link kitchentales://recipe/r1
+QA [X02_DeepLinksInKidMode] shot X02_DeepLinksInKidMode-01-kid-link-recipe
+QA [X02_DeepLinksInKidMode] ok   a recipe link does not leave kid mode
+QA [X02_DeepLinksInKidMode] ok   still in kid mode after a recipe link
+QA [X02_DeepLinksInKidMode] open link kitchentales://list
+QA [X02_DeepLinksInKidMode] shot X02_DeepLinksInKidMode-02-kid-link-list
+QA [X02_DeepLinksInKidMode] ok   a list link does not leave kid mode
+QA [X02_DeepLinksInKidMode] open link kitchentales://story/d1
+QA [X02_DeepLinksInKidMode] shot X02_DeepLinksInKidMode-03-kid-link-story
+QA [X02_DeepLinksInKidMode] kid mode + story link (Aladdin is outside the kid folders): ⭐ | DIN POVEȘTI DE SEARĂ | Steaua căzătoare | ⭐ | Steaua căzătoare | Povești de seară | 2:22 | AirPlay | 1× | Viteză
+QA [X02_DeepLinksInKidMode] ok   a story link does not play a story outside the kid folders
+QA [X02_DeepLinksInKidMode] tap  'Ieși din modul copil'
+QA [X02_DeepLinksInKidMode] tap  '1'
+QA [X02_DeepLinksInKidMode] tap  '2'
+QA [X02_DeepLinksInKidMode] tap  '3'
+QA [X02_DeepLinksInKidMode] tap  '4'
+Test Case '-[KitchenTalesUITests.SystemQATests testX02_DeepLinksInKidMode]' passed (54.915 seconds).
+QA [X03_ShareSheet] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+QA [X03_ShareSheet] tap  'Ciorbă de perișoare'
+QA [X03_ShareSheet] tap  'Mai multe'
+QA [X03_ShareSheet] tap  'Trimite'
+QA [X03_ShareSheet] shot X03_ShareSheet-01-share-sheet
+QA [X03_ShareSheet] our extension is in the Share sheet
+QA [X03_ShareSheet] shot X03_ShareSheet-02-share-extension
+/Users/runner/work/kitchen-tales/kitchen-tales/ios/KitchenTalesUITests/QABase.swift:363: error: -[KitchenTalesUITests.SystemQATests testX03_ShareSheet] : Failed to get matching snapshot: No matches found for Element at index 19 from input {(
+Test Case '-[KitchenTalesUITests.SystemQATests testX03_ShareSheet]' failed (40.617 seconds).
+QA [X04_BackgroundAndBack] LAUNCH -demo YES -area stories -tab library -kt-kid none
+QA [X04_BackgroundAndBack] tap  'Aladdin'
+QA [X04_BackgroundAndBack] shot X04_BackgroundAndBack-01-before-background
+QA [X04_BackgroundAndBack] shot X04_BackgroundAndBack-02-after-background
+QA [X04_BackgroundAndBack] ok   player still shows Aladdin after going to the background and back
+QA [X04_BackgroundAndBack] tap  'Acasă'
+QA [X04_BackgroundAndBack] tap  'Rețete'
+QA [X04_BackgroundAndBack] tap  'Rețete'
+QA [X04_BackgroundAndBack] tap  'Roșii umplute'
+QA [X04_BackgroundAndBack] shot X04_BackgroundAndBack-03-recipe-after-background
+QA [X04_BackgroundAndBack] ok   recipe still open after background
+Test Case '-[KitchenTalesUITests.SystemQATests testX04_BackgroundAndBack]' passed (47.184 seconds).
+QA [X05_LargeText] LAUNCH -demo YES -area recipes -tab home -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-01-ax3-home
+QA [X05_LargeText] A11Y ax3-home: Contrast failed · 48 '7'
+QA [X05_LargeText] A11Y ax3-home: Contrast failed · 9 'Povești'
+QA [X05_LargeText] A11Y ax3-home: Contrast failed · 48 'Azi în meniu · 1 h 30 · Ciorbe și supe'
+QA [X05_LargeText] A11Y ax3-home: Contrast failed · 48 'Azi în meniu · 40 min · Patiserie'
+QA [X05_LargeText] A11Y ax3-home: Contrast failed · 48 'Ciorbe și supe · 4 porții'
+QA [X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 48 'Azi în meniu · 1 h 30 · Ciorbe și supe'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 9 'Gătește pas cu pas'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 9 'Povești'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 48 'Ciorbă de perișoare'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 48 'Chifle de casă'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-home: Text clipped · 48 'Profil'
+QA [X05_LargeText] LAUNCH -demo YES -area recipes -tab home -screen recipe -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-02-ax3-recipe
+QA [X05_LargeText] A11Y ax3-recipe: Text clipped · 9 'Gătește pas cu pas'
+QA [X05_LargeText] A11Y ax3-recipe: Label not human-readable · 43 'person.2.fill'
+QA [X05_LargeText] A11Y ax3-recipe: Contrast failed · 48 'CIORBE ȘI SUPE · PARTAJATĂ'
+QA [X05_LargeText] A11Y ax3-recipe: Contrast failed · 9 'Note'
+QA [X05_LargeText] LAUNCH -demo YES -area recipes -tab home -screen cook -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-03-ax3-cook
+QA [X05_LargeText] A11Y ax3-cook: Hit area is too small · 1 'Pasul 3 din 6'
+QA [X05_LargeText] A11Y ax3-cook: Text clipped · 48 'Ciorbă de perișoare'
+QA [X05_LargeText] A11Y ax3-cook: Text clipped · 48 'Sună și cu telefonul blocat, chiar dacă ieși din aplicație.'
+QA [X05_LargeText] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-04-ax3-recipes
+QA [X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Chifle de casă'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 '1 h 30 · 4 porții'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 49 ''
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Ciorbă de perișoare'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Cartofi țărănești'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Cartofi cu ardei la tigaie'
+QA [X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '7'
+QA [X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '1 h 30 · 4 porții'
+QA [X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Plăcinta Anei'
+QA [X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '50 min · 4 porții'
+QA [X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '40 min · 12 porții'
+QA [X05_LargeText] LAUNCH -demo YES -area recipes -tab week -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-05-ax3-week
+QA [X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Ciorbă de perișoare'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 '1 h 30 · 4 porții'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 '40 min · 4 porții'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Sâmbătă'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Vineri'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Supă cremă de cartofi'
+QA [X05_LargeText] A11Y ax3-week: Text clipped · 48 'Azi · Joi'
+QA [X05_LargeText] A11Y ax3-week: Element has no description · 9 ''
+QA [X05_LargeText] A11Y ax3-week: Element has no description · 9 ''
+QA [X05_LargeText] A11Y ax3-week: Element has no description · 9 ''
+QA [X05_LargeText] A11Y ax3-week: Contrast failed · 48 '7'
+QA [X05_LargeText] A11Y ax3-week: Contrast failed · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-week: Contrast failed · 48 '12'
+QA [X05_LargeText] A11Y ax3-week: Contrast failed · 48 '13'
+QA [X05_LargeText] A11Y ax3-week: Contrast failed · 48 '1 h 30 · 4 porții'
+QA [X05_LargeText] A11Y ax3-week: Contrast failed · 48 '40 min · 4 porții'
+QA [X05_LargeText] LAUNCH -demo YES -area recipes -tab list -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-06-ax3-list
+QA [X05_LargeText] A11Y ax3-list: Contrast failed · 48 '7'
+QA [X05_LargeText] A11Y ax3-list: Contrast failed · -
+QA [X05_LargeText] A11Y ax3-list: Contrast failed · -
+QA [X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-list: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-list: Text clipped · 9 'Pe raioane'
+QA [X05_LargeText] A11Y ax3-list: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-list: Text clipped · 49 ''
+QA [X05_LargeText] A11Y ax3-list: Text clipped · 48 'Listă'
+QA [X05_LargeText] A11Y ax3-list: Text clipped · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-list: Text clipped · 48 'Săptămâna'
+QA [X05_LargeText] LAUNCH -demo YES -area recipes -tab profile -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-07-ax3-profile
+QA [X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 '7'
+QA [X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+QA [X05_LargeText] A11Y ax3-profile: Text clipped · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-profile: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-profile: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-profile: Text clipped · 48 'Săptămâna'
+QA [X05_LargeText] A11Y ax3-profile: Text clipped · 48 'sorin@exemplu.ro · spațiu comun cu Loredana'
+QA [X05_LargeText] A11Y ax3-profile: Contrast failed · 48 'Rețete'
+QA [X05_LargeText] A11Y ax3-profile: Contrast failed · 48 '7'
+QA [X05_LargeText] A11Y ax3-profile: Contrast failed · 48 'S'
+QA [X05_LargeText] A11Y ax3-profile: Contrast failed · 48 '10 din 32'
+QA [X05_LargeText] LAUNCH -demo YES -area stories -tab home -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-08-ax3-stories-home
+QA [X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Pentru azi'
+QA [X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '🐭'
+QA [X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '9 min'
+QA [X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '7 min'
+QA [X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Nou'
+QA [X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '🍎'
+QA [X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Povești Disney · 8 min'
+QA [X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are unsupported · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 9 'Povești'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 9 'Rețete'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'CONTINUĂ · MAI SUNT 5 MIN'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 '🐠'
+QA [X05_LargeText] LAUNCH -demo YES -area stories -tab library -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-09-ax3-library
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 în curs'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🐭'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '⭐'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 45 'Caută în 10 povești'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '2 povești · 12 min'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '1 în curs'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🌙 Povești de seară'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🐭'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🎵 Cântece'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '4 povești · 39 min'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Povești Hachette'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Povești Disney'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '⭐'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 în curs'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Povești Hachette'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 poveste · 9 min'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐭'
+QA [X05_LargeText] LAUNCH -demo YES -area stories -tab home -screen player -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-10-ax3-player
+QA [X05_LargeText] A11Y ax3-player: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Dynamic Type font sizes are partially unsupported · 48 'DIN POVEȘTI DISNEY'
+QA [X05_LargeText] A11Y ax3-player: Text clipped · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Text clipped · 48 'DIN POVEȘTI DISNEY'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 'Povești Disney'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '3:24'
+QA [X05_LargeText] LAUNCH -demo YES -area stories -tab add -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-11-ax3-add
+QA [X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Spui eroul și tema, aplicația o scrie și o citește'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'MOD PĂRINTE'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Creează o poveste'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Favorite'
+QA [X05_LargeText] LAUNCH -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+QA [X05_LargeText] shot X05_LargeText-12-ax3-login
+Test Case '-[KitchenTalesUITests.SystemQATests testX05_LargeText]' passed (170.944 seconds).
+QA [X06_LaunchTime] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+QA [X06_LaunchTime] launch to Acasă ready: 8.0 s (demo data, simulator)
+QA [X06_LaunchTime] ok   Acasă is ready after launch
+Test Case '-[KitchenTalesUITests.SystemQATests testX06_LaunchTime]' passed (8.345 seconds).
+QA [X08_KidTimeRunsOutInPlayer] LAUNCH -demo YES -area stories -tab library -kt-kid <7b22616374697665223a747275652c22656e64734174223a3831363139303036302e3230393236332c22746f74616c223a36302c226c6f636b6564223a66616c73652c2277726f6e67223a307d>
+QA [X08_KidTimeRunsOutInPlayer] shot X08_KidTimeRunsOutInPlayer-01-kid-start
+QA [X08_KidTimeRunsOutInPlayer] ok   kid mode is on from the saved state
+QA [X08_KidTimeRunsOutInPlayer] tap  'Povești de seară'
+QA [X08_KidTimeRunsOutInPlayer] tap  'Steaua căzătoare'
+QA [X08_KidTimeRunsOutInPlayer] skip 'Pornește' not found
+QA [X08_KidTimeRunsOutInPlayer] shot X08_KidTimeRunsOutInPlayer-02-kid-player
+QA [X08_KidTimeRunsOutInPlayer] shot X08_KidTimeRunsOutInPlayer-03-kid-time-up-in-player
+QA [X08_KidTimeRunsOutInPlayer] after the time ran out: 🌙 | Gata pentru azi | Poveștile se odihnesc acum. Cheamă un părinte. | PIN-ul de părinte |   | Acasă | Favorite | Bibliotecă | Surpriză | Caută | 0 min | ⭐ | Steaua căzătoare | 4:37 rămase | 🌙 Povești de seară
+QA [X08_KidTimeRunsOutInPlayer] ok   the 'Gata pentru azi' lock shows when time runs out while the player page is open
+QA [X08_KidTimeRunsOutInPlayer] shot X08_KidTimeRunsOutInPlayer-04-kid-after-closing-player
+QA [X08_KidTimeRunsOutInPlayer] ok   lock shows after closing the player
+Test Case '-[KitchenTalesUITests.SystemQATests testX08_KidTimeRunsOutInPlayer]' passed (81.637 seconds).

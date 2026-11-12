@@ -1,0 +1,32 @@
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-01-key-home
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen recipe -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-02-key-recipe
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen cook -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-03-key-cook
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-04-key-recipes
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab week -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-05-key-week
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab list -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-06-key-list
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -screen editor-edit -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-07-key-editor
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-08-key-profile
+[X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-09-key-stories-home
+[X07_KeyScreens] LAUNCH -demo YES -area stories -tab library -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-10-key-library
+[X07_KeyScreens] LAUNCH -demo YES -area stories -tab library -screen folder -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-11-key-folder
+[X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen player -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-12-key-player
+[X07_KeyScreens] LAUNCH -demo YES -area stories -tab add -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-13-key-add
+[X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen kid -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-14-key-kid
+[X07_KeyScreens] LAUNCH -demo YES -area stories -tab home -screen bedtime-night -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-15-key-bedtime-night
+[X07_KeyScreens] LAUNCH -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-16-key-login

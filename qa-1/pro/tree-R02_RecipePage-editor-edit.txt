@@ -1,0 +1,121 @@
+Optional(Attributes: Application, 0x114235d60, pid: 38588, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x114235d60, pid: 38588, label: 'Bucătăria'
+    Window (Main), 0x1146044c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11460eff0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1146113c0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x11460cb50, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x11460eb10, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1146114e0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x114611600, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x114611720, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x114611840, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x114611960, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x114611a80, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x114611ba0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x114611cc0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x114611de0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x114611f00, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x114610b60, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x114610c80, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x114610da0, {{0.0, -24.7}, {402.0, 784.7}}
+                                        Image, 0x114610ec0, {{21.3, 171.7}, {14.3, 10.0}}, identifier: 'person.2.fill', label: 'person.2.fill'
+                                        StaticText, 0x114610fe0, {{42.0, 169.3}, {208.3, 14.7}}, label: 'CIORBE ȘI SUPE · PARTAJATĂ'
+                                        StaticText, 0x114612350, {{20.0, 192.0}, {341.0, 44.7}}, label: 'Ciorbă de perișoare'
+                                        Image, 0x114612470, {{21.0, 250.0}, {13.7, 13.7}}, identifier: 'clock', label: 'Ceas'
+                                        StaticText, 0x114612590, {{40.7, 248.2}, {37.7, 17.0}}, label: '1 h 30'
+                                        StaticText, 0x1146126b0, {{96.3, 248.2}, {47.0, 17.0}}, label: '4 porții'
+                                        Button, 0x1146127d0, {{149.3, 240.7}, {32.0, 32.0}}, label: 'Mai puține porții'
+                                        Button, 0x1146128f0, {{187.3, 240.7}, {32.0, 32.0}}, label: 'Mai multe porții'
+                                        StaticText, 0x114612a10, {{237.3, 248.2}, {38.0, 17.0}}, label: '6 pași'
+                                        StaticText, 0x114612b30, {{20.0, 272.7}, {205.3, 17.0}}, label: 'Gătită o dată · acum 3 săptămâni'
+                                        Button, 0x114612c50, {{23.0, 310.7}, {118.7, 38.0}}, label: 'Ingrediente'
+                                        Button, 0x114612d70, {{141.7, 310.7}, {118.7, 38.0}}, label: 'Pași'
+                                        Button, 0x114612e90, {{260.3, 310.7}, {118.7, 38.0}}, label: 'Note', Selected
+                                        StaticText, 0x114612fb0, {{20.0, 369.7}, {169.3, 20.7}}, label: 'Merge și cu smântână.'
+                                        StaticText, 0x1146130d0, {{20.0, 410.3}, {143.7, 26.0}}, label: 'Notele noastre'
+                                        TextField, 0x1146131f0, {{32.0, 458.3}, {338.0, 40.7}}, value: Nota QA de test, Keyboard Focused
+                                          Other, 0x114613310, {{32.0, 458.3}, {0.0, 0.0}}, identifier: '_UITextSelectionRangeAdjustmentContainerView'
+                                            Other, 0x114613430, {{32.0, 458.3}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'
+                                              Other, 0x114613550, {{24.8, 444.8}, {16.5, 16.5}}
+                                              Other, 0x114613670, {{32.0, 458.3}, {2.0, 0.0}}
+                                            Other, 0x114613790, {{32.0, 458.3}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'
+                                              Other, 0x1146138b0, {{24.8, 444.8}, {16.5, 16.5}}
+                                              Other, 0x1146139d0, {{32.0, 458.3}, {2.0, 0.0}}
+                                          Other, 0x114613af0, {{32.0, 475.7}, {338.0, 20.3}}, label: 'Bară de derulare orizontală, 1 pagină', value: 0 %
+                                            Other, 0x114613c10, {{35.0, 493.0}, {332.0, 3.0}}
+                                        Button, 0x114613d30, {{20.0, 517.0}, {107.7, 48.0}}, label: 'Salvează'
+                                        Button, 0x114613e50, {{135.7, 517.0}, {104.7, 48.0}}, label: 'Renunță'
+                                        StaticText, 0x114613f70, {{34.0, 589.1}, {238.0, 20.7}}, label: 'Data viitoare mai mult leuștean.'
+                                        StaticText, 0x114614090, {{34.0, 613.8}, {166.3, 14.3}}, label: 'Loredana · acum 3 săptămâni'
+                                        Button, 0x1146141b0, {{330.3, 613.8}, {37.7, 14.3}}, label: 'Șterge nota'
+                                    Button, 0x1146142d0, {{12.0, 64.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Înapoi'
+                                    Button, 0x1146143f0, {{292.0, 64.0}, {44.0, 44.0}}, identifier: 'heart.fill', label: 'Scoate din favorite'
+                                    Button, 0x114614510, {{346.0, 64.0}, {44.0, 44.0}}, label: 'Mai multe'
+                                      Button, 0x114614630, {{346.0, 64.0}, {44.0, 44.0}}
+                                        Image, 0x114614750, {{359.3, 84.0}, {17.3, 4.0}}, identifier: 'ellipsis', label: 'Mai Multe'
+                                    Button, 0x114614870, {{16.0, 778.0}, {238.0, 56.0}}, label: 'Gătește pas cu pas'
+                                    Button, 0x114614990, {{264.0, 778.0}, {56.0, 56.0}}, identifier: 'calendar', label: 'Pune în săptămână'
+                                    Button, 0x114614ab0, {{330.0, 775.0}, {59.0, 59.0}}, label: 'Pune în listă'
+                                      Image, 0x114614bd0, {{347.0, 796.7}, {21.7, 18.7}}, identifier: 'cart', label: 'Cărucior De Cumpărături'
+                                      StaticText, 0x114614cf0, {{375.8, 778.3}, {6.3, 13.3}}, label: '7'
+                            Other, 0x114614e10, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x114614f30, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x114615050, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x114615170, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x114615290, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x1146153b0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1146154d0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1146155f0, {{0.0, 0.0}, {402.0, 874.0}}
+            Image, 0x114615710, {{-431.0, 0.0}, {1264.0, 874.0}}
+            StaticText, 0x114615830, {{147.0, 104.9}, {108.0, 297.3}}, label: '1'
+            Button, 0x114615950, {{0.0, 90.0}, {120.7, 784.0}}, label: 'Pasul anterior'
+            Button, 0x114615a70, {{120.7, 90.0}, {281.3, 784.0}}, label: 'Pasul următor'
+            Other, 0x114615b90, {{12.0, 72.0}, {378.0, 3.0}}, label: 'Pasul 1 din 6'
+            StaticText, 0x114615cb0, {{12.0, 95.2}, {174.7, 23.7}}, label: 'Ciorbă de perișoare'
+            StaticText, 0x114615dd0, {{194.7, 99.5}, {43.0, 18.0}}, label: '1 din 6'
+            Button, 0x114615ef0, {{294.0, 85.0}, {44.0, 44.0}}, identifier: 'mic', label: 'Gătește fără mâini: citesc pașii și te ascult'
+            Button, 0x114616010, {{346.0, 85.0}, {44.0, 44.0}}, identifier: 'xmark', label: 'Închide modul de gătit'
+            StaticText, 0x114616130, {{28.0, 694.7}, {54.3, 14.7}}, label: 'PASUL 1'
+            StaticText, 0x114616250, {{28.0, 721.3}, {312.3, 25.3}}, label: 'Toacă ceapa și morcovul mărunt.'
+            StaticText, 0x114616370, {{40.0, 762.7}, {61.0, 18.0}}, label: '1 morcov'
+            Button, 0x114616490, {{133.0, 802.7}, {136.0, 37.3}}, label: 'Ingrediente'
+              Image, 0x1146165b0, {{150.3, 821.0}, {11.0, 6.7}}, identifier: 'chevron.up', label: 'Deplasare În Sus'
+              StaticText, 0x1146166d0, {{168.8, 814.7}, {84.0, 19.3}}, label: 'Ingrediente'
+      Other, 0x1146167f0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x114616910, {{-402.0, -874.0}, {1206.0, 2622.0}}
+        Other, 0x114616a30, {{0.0, 72.0}, {402.0, 802.0}}
+          Button, 0x114616b50, {{163.0, 67.0}, {76.0, 25.0}}, label: 'Control foaie', value: Extins
+          Image, 0x114616c70, {{-150.0, -78.0}, {702.0, 1102.0}}
+          Other, 0x114616d90, {{0.0, 72.0}, {402.0, 802.0}}
+            Other, 0x114616eb0, {{0.0, 72.0}, {402.0, 802.0}}
+              Other, 0x114616fd0, {{0.0, 72.0}, {402.0, 802.0}}
+                Other, 0x1146170f0, {{0.0, 72.0}, {402.0, 802.0}}
+                  ScrollView, 0x114617210, {{0.0, 72.0}, {402.0, 802.0}}
+                    Other, 0x114617330, {{0.0, 72.0}, {402.0, 501.7}}
+                      StaticText, 0x114617450, {{22.0, 98.0}, {250.0, 32.3}}, label: 'Ingrediente · 4 porții'
+                      StaticText, 0x114617570, {{22.0, 146.3}, {111.0, 14.7}}, label: 'PENTRU PASUL 1'
+                      Button, 0x114617690, {{22.0, 169.0}, {358.0, 40.0}}, label: '1 morcov'
+                      StaticText, 0x1146177b0, {{22.0, 227.0}, {100.0, 14.7}}, label: 'TOATĂ REȚETA'
+                      Button, 0x1146178d0, {{22.0, 249.7}, {358.0, 40.0}}, label: '500 g carne tocată'
+                      Button, 0x1146179f0, {{22.0, 293.7}, {358.0, 40.0}}, label: '2 cepe'
+                      Button, 0x114617b10, {{22.0, 337.7}, {358.0, 40.0}}, label: '3 linguri orez'
+                      Button, 0x114617c30, {{22.0, 381.7}, {358.0, 40.0}}, label: '1 ou'
+                      Button, 0x114617d50, {{22.0, 425.7}, {358.0, 40.0}}, label: '1 legătură leuștean'
+                      Button, 0x114617e70, {{22.0, 469.7}, {358.0, 40.0}}, label: '2 l apă'
+                      Button, 0x114617f90, {{22.0, 513.7}, {358.0, 40.0}}, label: 'Sare și piper'
+                    Other, 0x1146180b0, {{369.0, 110.0}, {30.0, 702.0}}, label: 'Bară de derulare verticală, 1 pagină', value: 0 %
+                      Other, 0x1146181d0, {{396.0, 379.3}, {3.0, 429.7}}
+                    Other, 0x1146182f0, {{369.0, 110.0}, {30.0, 702.0}}, label: 'Bară de derulare verticală, 1 pagină', value: 0 %
+                      Other, 0x114618410, {{396.0, 379.3}, {3.0, 429.7}}
+    Window, 0x114618530, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x114618650, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x114618770, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x114235d60, pid: 38588, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1146241f0, pid: 38588, label: 'Bucătăria'
+  }
+)

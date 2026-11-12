@@ -1,0 +1,26 @@
+Optional(Attributes: Application, 0x101f69770, pid: 31570, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x101f69770, pid: 31570, label: 'Bucătăria'
+    Window (Main), 0x101f6b6e0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x101f6c1c0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x101f6c2e0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x101f6c400, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x101f6bf20, {{0.0, 0.0}, {402.0, 874.0}}
+              Image, 0x101f6c040, {{145.0, 109.0}, {112.0, 112.0}}, label: 'LoginIcon'
+              StaticText, 0x101f6e9d0, {{121.0, 238.9}, {160.0, 84.0}}, label: 'Bucătăria
+cu povești'
+              StaticText, 0x101f6eaf0, {{92.8, 330.9}, {216.3, 19.3}}, label: 'Rețete și povești pentru acasă'
+              TextField, 0x101f6ec10, {{38.0, 594.7}, {326.0, 22.0}}, placeholderValue: 'E-mail'
+              SecureTextField, 0x101f6ed30, {{38.0, 659.3}, {289.7, 21.0}}, placeholderValue: 'Parolă'
+              Button, 0x101f6ee50, {{337.7, 661.7}, {26.3, 16.3}}, identifier: 'eye', label: 'Arată parola'
+              Button, 0x101f6ef70, {{22.0, 711.7}, {358.0, 48.0}}, label: 'Intră în cont', Disabled
+              Button, 0x101f6f090, {{142.3, 777.7}, {117.3, 20.7}}, label: 'Ai uitat parola?'
+              StaticText, 0x101f6c760, {{76.7, 812.3}, {248.7, 15.7}}, label: 'Doar cu invitație. Cere-i lui Sorin un cont.'
+Path to element:
+ →Application, 0x101f69770, pid: 31570, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x101f72150, pid: 31570, label: 'Bucătăria'
+  }
+)

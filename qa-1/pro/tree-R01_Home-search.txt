@@ -1,0 +1,140 @@
+Optional(Attributes: Application, 0x1071cbec0, pid: 34493, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x1071cbec0, pid: 34493, label: 'Bucătăria'
+    Window (Main), 0x1071db110, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1071ebdf0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1071ebf10, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1071da050, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1071eb7b0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1071ec030, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1071ec150, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1071ec270, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1071ec390, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1071ec4b0, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x1071ec5d0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1071ec6f0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1071ec810, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1071ec930, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1071eca50, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1071ecb70, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x1071ecc90, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x1071ecdb0, {{0.0, 62.0}, {402.0, 498.3}}
+                                        Button, 0x1071eced0, {{16.0, 64.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Înapoi'
+                                        StaticText, 0x1071ecff0, {{16.0, 122.0}, {91.0, 39.7}}, label: 'Caută'
+                                        Image, 0x1071ed110, {{31.7, 193.0}, {14.7, 15.0}}, identifier: 'magnifyingglass', label: 'Căutare'
+                                        TextField, 0x1071ed230, {{56.0, 190.0}, {316.0, 21.0}}, placeholderValue: 'Rețetă, ingredient sau poveste', Keyboard Focused
+                                        StaticText, 0x1071ed350, {{16.0, 249.7}, {98.7, 27.3}}, label: 'Categorii'
+                                        Button, 0x1071ed470, {{16.0, 287.0}, {79.0, 40.0}}, label: 'Băuturi'
+                                        Button, 0x1071ed590, {{103.0, 287.0}, {130.0, 40.0}}, label: 'Ciorbe și supe'
+                                        Button, 0x1071ed6b0, {{241.0, 287.0}, {93.7, 40.0}}, label: 'Deserturi'
+                                        Button, 0x1071ed7d0, {{16.0, 335.0}, {140.7, 40.0}}, label: 'Feluri principale'
+                                        Button, 0x1071ed8f0, {{164.7, 335.0}, {89.3, 40.0}}, label: 'Patiserie'
+                                        Button, 0x1071eda10, {{16.0, 397.0}, {370.0, 71.3}}, label: 'Nu știi ce să gătești?, Spune ce ai în frigider și primești idei de rețete'
+                                          StaticText, 0x1071edb30, {{32.0, 413.0}, {160.7, 20.7}}, label: 'Nu știi ce să gătești?'
+                                          StaticText, 0x1071edc50, {{32.0, 436.7}, {281.3, 15.7}}, label: 'Spune ce ai în frigider și primești idei de rețete'
+                                          Image, 0x1071edd70, {{361.3, 426.0}, {7.7, 13.3}}, identifier: 'chevron.right', label: 'Înainte'
+                                      Other, 0x1071ede90, {{369.0, 62.0}, {30.0, 477.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                        Other, 0x1071edfb0, {{396.0, 65.0}, {3.0, 459.7}}
+                                      Other, 0x1071ee0d0, {{369.0, 62.0}, {30.0, 477.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                        Other, 0x1071ee1f0, {{396.0, 65.0}, {3.0, 459.7}}
+                            Other, 0x1071ee310, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1071ee430, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1071ee550, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x1071ee670, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1071ee790, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x1071ee8b0, {{19.0, 478.0}, {71.3, 50.0}}, label: 'Acasă', Selected
+                Other, 0x1071ee9d0, {{42.7, 484.0}, {24.0, 24.0}}
+                StaticText, 0x1071eeaf0, {{19.0, 478.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x1071eec10, {{92.3, 478.0}, {71.0, 50.0}}, label: 'Săptămâna'
+                Other, 0x1071eed30, {{116.0, 484.0}, {24.0, 24.0}}
+                StaticText, 0x1071eee50, {{92.3, 478.0}, {71.0, 50.0}}, label: 'Săptămâna'
+              Button, 0x1071eef70, {{165.3, 478.0}, {71.3, 50.0}}, label: 'Rețete'
+                Other, 0x1071ef090, {{189.0, 484.0}, {24.0, 24.0}}
+                StaticText, 0x1071ef1b0, {{165.3, 478.0}, {71.3, 50.0}}, label: 'Rețete'
+              Button, 0x1071ef2d0, {{238.7, 478.0}, {71.0, 50.0}}, label: 'Listă, 7 de luat'
+                Other, 0x1071ef3f0, {{262.3, 484.0}, {24.0, 24.0}}
+                StaticText, 0x1071ef510, {{286.0, 480.2}, {6.3, 13.3}}, label: '7'
+                StaticText, 0x1071ef630, {{262.2, 510.8}, {24.0, 13.3}}, label: 'Listă'
+              Button, 0x1071ef750, {{311.7, 478.0}, {71.3, 50.0}}, label: 'Profil'
+                Other, 0x1071ef870, {{335.3, 484.0}, {24.0, 24.0}}
+                StaticText, 0x1071ef990, {{311.7, 478.0}, {71.3, 50.0}}, label: 'Profil'
+    Window, 0x1071efab0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1071efbd0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1071efcf0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1071efe10, {{0.0, 539.0}, {402.0, 335.0}}
+          Other, 0x1071eff30, {{0.0, 539.0}, {402.0, 335.0}}, identifier: 'inputView'
+    Window, 0x1071f0050, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1071f0170, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1071f0290, {{0.0, 539.0}, {402.0, 335.0}}
+          Other, 0x1071f03b0, {{0.0, 539.0}, {402.0, 44.0}}, identifier: 'SystemInputAssistantView'
+            Other, 0x1071f04d0, {{0.0, 539.0}, {402.0, 44.0}}
+              Other, 0x1071f05f0, {{0.0, 539.0}, {402.0, 44.0}}, identifier: 'CenterPageView'
+                Other, 0x1071f0710, {{0.0, -61.0}, {402.0, 1244.0}}
+                  ScrollView, 0x1071f0830, {{0.0, 539.0}, {402.0, 44.0}}
+                Other, 0x1071f0950, {{0.0, 539.0}, {402.0, 44.0}}
+                  Other, 0x1071f0a70, {{0.0, 539.0}, {402.0, 44.0}}, label: 'Predicții tastare'
+                    Other, 0x1071f0b90, {{0.0, 539.0}, {402.0, 44.0}}
+                      Other, 0x1071f0cb0, {{0.0, 539.0}, {402.0, 44.0}}
+                        Other, 0x1071f0dd0, {{0.0, 539.0}, {134.0, 44.0}}, label: 'I'
+                        Other, 0x1071f0ef0, {{134.0, 539.0}, {134.0, 44.0}}, label: 'The'
+                        Other, 0x1071f1010, {{268.0, 539.0}, {134.0, 44.0}}, label: 'I’m'
+          Other, 0x1071f1130, {{0.0, 539.0}, {402.0, 335.0}}
+            Other, 0x1071f1250, {{0.0, 539.0}, {402.0, 335.0}}
+              Other, 0x1071f1370, {{0.0, 539.0}, {402.0, 335.0}}
+          Other, 0x1071f1490, {{0.0, 583.0}, {402.0, 233.0}}
+            Keyboard, 0x1071f15b0, {{0.0, 583.0}, {402.0, 233.0}}
+              Other, 0x1071f16d0, {{0.0, 583.0}, {402.0, 233.0}}
+                Other, 0x1071f17f0, {{0.0, 583.0}, {402.0, 233.0}}, identifier: 'UIKeyboardLayoutStar Preview'
+                  Key, 0x1071f1910, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x1071f1a30, {{4.7, 590.0}, {39.3, 54.0}}, label: 'Q'
+                  Key, 0x1071f1b50, {{44.0, 590.0}, {39.7, 54.0}}, label: 'W'
+                  Key, 0x1071f1c70, {{83.7, 590.0}, {39.3, 54.0}}, label: 'E'
+                  Key, 0x1071f1d90, {{123.0, 590.0}, {39.7, 54.0}}, label: 'R'
+                  Key, 0x1071f1eb0, {{162.7, 590.0}, {39.3, 54.0}}, label: 'T'
+                  Key, 0x1071f1fd0, {{202.0, 590.0}, {39.7, 54.0}}, label: 'Y'
+                  Key, 0x1071f20f0, {{241.7, 590.0}, {39.3, 54.0}}, label: 'U'
+                  Key, 0x1071f2210, {{281.0, 590.0}, {39.7, 54.0}}, label: 'I'
+                  Key, 0x1071f2330, {{320.7, 590.0}, {39.3, 54.0}}, label: 'O'
+                  Key, 0x1071f2450, {{360.0, 590.0}, {39.7, 54.0}}, label: 'P'
+                  Key, 0x1071f2570, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x1071f2690, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x1071f27b0, {{24.3, 644.0}, {39.3, 54.0}}, label: 'A'
+                  Key, 0x1071f28d0, {{63.7, 644.0}, {39.7, 54.0}}, label: 'S'
+                  Key, 0x1071f29f0, {{103.3, 644.0}, {39.3, 54.0}}, label: 'D'
+                  Key, 0x1071f2b10, {{142.7, 644.0}, {39.7, 54.0}}, label: 'F'
+                  Key, 0x1071f2c30, {{182.3, 644.0}, {39.3, 54.0}}, label: 'G'
+                  Key, 0x1071f2d50, {{221.7, 644.0}, {39.7, 54.0}}, label: 'H'
+                  Key, 0x1071f2e70, {{261.3, 644.0}, {39.3, 54.0}}, label: 'J'
+                  Key, 0x1071f2f90, {{300.7, 644.0}, {39.7, 54.0}}, label: 'K'
+                  Key, 0x1071f30b0, {{340.3, 644.0}, {39.3, 54.0}}, label: 'L'
+                  Key, 0x1071f31d0, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Button, 0x1071f32f0, {{4.7, 698.0}, {51.3, 54.0}}, identifier: 'shift', label: 'shift', Selected
+                  Key, 0x1071f3410, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x1071f3530, {{63.7, 698.0}, {39.7, 54.0}}, label: 'Z'
+                  Key, 0x1071f3650, {{103.3, 698.0}, {39.3, 54.0}}, label: 'X'
+                  Key, 0x1071f38c0, {{142.7, 698.0}, {39.7, 54.0}}, label: 'C'
+                  Key, 0x1071f39e0, {{182.3, 698.0}, {39.3, 54.0}}, label: 'V'
+                  Key, 0x1071f3b00, {{221.7, 698.0}, {39.7, 54.0}}, label: 'B'
+                  Key, 0x1071f3c20, {{261.3, 698.0}, {39.3, 54.0}}, label: 'N'
+                  Key, 0x1071f3d40, {{300.7, 698.0}, {39.7, 54.0}}, label: 'M'
+                  Key, 0x1071f3e60, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x1071f3f80, {{348.0, 698.0}, {51.7, 54.0}}, identifier: 'delete', label: 'delete'
+                  Key, 0x1071f40a0, {{4.7, 752.0}, {49.3, 54.0}}, identifier: 'more', label: 'numbers'
+                  Button, 0x1071f41c0, {{54.0, 752.0}, {49.3, 54.0}}, identifier: 'emoji', label: 'Emoji'
+                  Key, 0x1071f42e0, {{103.3, 752.0}, {197.3, 54.0}}, identifier: 'space', label: ' '
+                  Button, 0x1071f4400, {{300.7, 752.0}, {99.0, 54.0}}, identifier: 'Search', label: 'search'
+          Other, 0x1071f4720, {{0.0, 583.0}, {402.0, 291.0}}
+            Button, 0x1071f4840, {{8.5, 805.7}, {68.1, 68.7}}, label: 'Tastatura următoare', value: Română
+              StaticText, 0x1071f4960, {{8.5, 805.7}, {0.0, 0.0}}
+            Button, 0x1071f4a80, {{325.4, 805.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictați'
+              StaticText, 0x1071f4ba0, {{325.4, 805.4}, {0.0, 0.0}}
+            Button, 0x1071f4cc0, {{325.4, 805.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictați'
+              StaticText, 0x1071f4de0, {{325.4, 805.4}, {0.0, 0.0}}
+Path to element:
+ →Application, 0x1071cbec0, pid: 34493, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1071fe3d0, pid: 34493, label: 'Bucătăria'
+  }
+)

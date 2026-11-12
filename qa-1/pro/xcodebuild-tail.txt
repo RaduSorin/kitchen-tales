@@ -1,0 +1,400 @@
+    t =   207.30s             Find the "🌙 Povești de seară" StaticText
+    t =   207.39s             Find the "🌙 Povești de seară" StaticText
+    t =   207.46s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381773392.25)
+    t =   207.52s             Find the "2 povești · 12 min" StaticText
+    t =   207.63s             Find the "2 povești · 12 min" StaticText
+    t =   207.71s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381774960.27)
+    t =   207.77s             Find the "🚂" StaticText
+    t =   207.84s             Find the "🚂" StaticText
+    t =   207.93s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381776416.28)
+    t =   208.00s             Find the "⭐" StaticText
+    t =   208.08s             Find the "⭐" StaticText
+    t =   208.14s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381783808.33)
+    t =   208.23s             Find the "🐠" StaticText
+    t =   208.33s             Find the "🐠" StaticText
+    t =   208.39s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381786720.34)
+    t =   208.44s             Find the "🦁" StaticText
+    t =   208.50s             Find the "🦁" StaticText
+    t =   208.54s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381788928.35)
+    t =   208.59s             Find the "🧞" StaticText
+    t =   208.68s             Find the "🧞" StaticText
+    t =   208.73s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381793344.37)
+    t =   208.83s             Find the "1 poveste · 9 min" StaticText
+    t =   208.88s             Find the "1 poveste · 9 min" StaticText
+    t =   208.92s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381793776.38)
+    t =   208.97s             Find the "1 nouă" StaticText
+    t =   209.06s             Find the "1 nouă" StaticText
+    t =   209.10s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381794560.39)
+    t =   209.18s             Find the "🐭" StaticText
+    t =   209.27s             Find the "🐭" StaticText
+    t =   209.35s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381799536.40)
+    t =   209.40s             Find the "Povești create de noi" StaticText
+    t =   209.48s             Find the "Povești create de noi" StaticText
+    t =   209.56s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381800400.41)
+    t =   209.62s             Find the "🐻" StaticText
+    t =   209.70s             Find the "🐻" StaticText
+    t =   209.76s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381783024.32)
+    t =   209.82s             Find the "1 în curs" StaticText
+    t =   209.89s             Find the "1 în curs" StaticText
+    t =   209.96s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381592016.17)
+    t =   210.11s             Find the "Favorite" StaticText
+    t =   210.23s             Find the "Favorite" StaticText
+    t =   210.28s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381794560.39)
+    t =   210.32s             Find the "🐭" StaticText
+    t =   210.38s             Find the "🐭" StaticText
+    t =   210.43s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381774960.27)
+    t =   210.48s             Find the "🚂" StaticText
+    t =   210.53s             Find the "🚂" StaticText
+    t =   210.58s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381558288.16)
+    t =   210.67s             Find the "Acasă" StaticText
+    t =   210.74s             Find the "Acasă" StaticText
+    t =   210.83s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381786720.34)
+    t =   210.90s             Find the "🦁" StaticText
+    t =   210.99s             Find the "🦁" StaticText
+    t =   211.05s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381782240.31)
+    t =   211.13s             Find the "2 noi" StaticText
+    t =   211.21s             Find the "2 noi" StaticText
+    t =   211.29s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381682144.19)
+    t =   211.39s             Find the "Adaugă" StaticText
+    t =   211.44s             Find the "Adaugă" StaticText
+    t =   211.48s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381788928.35)
+    t =   211.54s             Find the "🧞" StaticText
+    t =   211.62s             Find the "🧞" StaticText
+    t =   211.93s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381774176.26)
+    t =   212.02s             Find the "1 nouă" StaticText
+    t =   212.12s             Find the "1 nouă" StaticText
+    t =   212.16s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381783808.33)
+    t =   212.23s             Find the "🐠" StaticText
+    t =   212.31s             Find the "🐠" StaticText
+    t =   212.35s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381770128.23)
+    t =   212.48s             Find the "🎵" StaticText
+    t =   212.55s             Find the "🎵" StaticText
+    t =   212.64s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381793776.38)
+    t =   212.73s             Find the "1 nouă" StaticText
+    t =   212.85s             Find the "1 nouă" StaticText
+    t =   212.93s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381549216.18)
+    t =   213.01s             Find the "Bibliotecă" StaticText
+    t =   213.19s             Find the "Bibliotecă" StaticText
+    t =   213.31s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381776416.28)
+    t =   213.37s             Find the "⭐" StaticText
+    t =   213.45s             Find the "⭐" StaticText
+    t =   213.56s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381684960.20)
+    t =   213.73s             Find the "Profil" StaticText
+    t =   213.85s             Find the "Profil" StaticText
+    t =   213.91s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381773392.25)
+    t =   213.97s             Find the "2 povești · 12 min" StaticText
+    t =   214.07s             Find the "2 povești · 12 min" StaticText
+    t =   214.18s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381783024.32)
+    t =   214.27s             Find the "1 în curs" StaticText
+    t =   214.41s             Find the "1 în curs" StaticText
+    t =   214.47s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381592016.17)
+    t =   214.53s             Find the "Favorite" StaticText
+    t =   214.60s             Find the "Favorite" StaticText
+    t =   214.65s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381794560.39)
+    t =   214.71s             Find the "🐭" StaticText
+    t =   214.76s             Find the "🐭" StaticText
+    t =   214.80s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381774960.27)
+    t =   214.89s             Find the "🚂" StaticText
+    t =   214.94s             Find the "🚂" StaticText
+    t =   214.98s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381786720.34)
+    t =   215.06s             Find the "🦁" StaticText
+    t =   215.13s             Find the "🦁" StaticText
+    t =   215.17s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381788928.35)
+    t =   215.21s             Find the "🧞" StaticText
+    t =   215.30s             Find the "🧞" StaticText
+    t =   215.35s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381793344.37)
+    t =   215.47s             Find the "1 poveste · 9 min" StaticText
+    t =   215.54s             Find the "1 poveste · 9 min" StaticText
+    t =   215.65s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381682144.19)
+    t =   215.72s             Find the "Adaugă" StaticText
+    t =   215.81s             Find the "Adaugă" StaticText
+    t =   215.88s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381558288.16)
+    t =   215.94s             Find the "Acasă" StaticText
+    t =   216.07s             Find the "Acasă" StaticText
+    t =   216.18s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381782240.31)
+    t =   216.25s             Find the "2 noi" StaticText
+    t =   216.30s             Find the "2 noi" StaticText
+    t =   216.35s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381783808.33)
+    t =   216.40s             Find the "🐠" StaticText
+    t =   216.46s             Find the "🐠" StaticText
+    t =   216.58s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4405069312.9)
+    t =   216.68s             Find the "Caută în 10 povești" SearchField
+    t =   216.75s             Find the "Caută în 10 povești" SearchField
+    t =   216.83s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381779840.29)
+    t =   216.92s             Find the "Povești Disney" StaticText
+    t =   216.99s             Find the "Povești Disney" StaticText
+    t =   217.07s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381770128.23)
+    t =   217.17s             Find the "🎵" StaticText
+    t =   217.29s             Find the "🎵" StaticText
+    t =   217.36s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381771776.24)
+    t =   217.43s             Find the "🌙 Povești de seară" StaticText
+    t =   217.52s             Find the "🌙 Povești de seară" StaticText
+    t =   217.58s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381549216.18)
+    t =   217.66s             Find the "Bibliotecă" StaticText
+    t =   217.76s             Find the "Bibliotecă" StaticText
+    t =   217.83s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381684960.20)
+    t =   217.93s             Find the "Profil" StaticText
+    t =   217.99s             Find the "Profil" StaticText
+    t =   218.07s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381768512.21)
+    t =   218.13s             Find the "🎵 Cântece" StaticText
+    t =   218.33s             Find the "🎵 Cântece" StaticText
+    t =   218.45s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381781456.30)
+    t =   218.52s             Find the "4 povești · 39 min" StaticText
+    t =   218.61s             Find the "4 povești · 39 min" StaticText
+    t =   218.72s             Find the Any (Descendant with identity binding to AX element pid: 45599, elementOrHash.elementID: 4381792912.36)
+    t =   218.87s             Find the "Povești Hachette" StaticText
+    t =   218.96s             Find the "Povești Hachette" StaticText
+QA [X05_LargeText] A11Y ax3-library: Contrast nearly passed · 45 'Caută în 10 povești'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🌙 Povești de seară'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '2 povești · 12 min'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '⭐'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 poveste · 9 min'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐭'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Povești create de noi'
+QA [X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐻'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 în curs'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🐭'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '2 noi'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '⭐'
+QA [X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '2 povești · 12 min'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '1 în curs'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🐭'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🚂'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🦁'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '1 poveste · 9 min'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '2 noi'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🐠'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 45 'Caută în 10 povești'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Povești Disney'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🎵'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🌙 Povești de seară'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '🎵 Cântece'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 '4 povești · 39 min'
+QA [X05_LargeText] A11Y ax3-library: Text clipped · 48 'Povești Hachette'
+    t =   219.14s             Open app.kitchentales.ios
+    t =   219.15s                 Launch app.kitchentales.ios
+    t =   219.15s                     Terminate app.kitchentales.ios:45599
+    t =   221.16s                     Setting up automation session
+    t =   223.48s                     Wait for app.kitchentales.ios to idle
+QA [X05_LargeText] LAUNCH -demo YES -area stories -tab home -screen player -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+    t =   226.40s             Wait for app.kitchentales.ios to become Running Foreground
+    t =   229.37s Added attachment named 'X05_LargeText-10-ax3-player'
+QA [X05_LargeText] shot X05_LargeText-10-ax3-player
+    t =   235.34s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858110752.11)
+    t =   235.72s             Find the "Arată durata totală" Button
+    t =   235.92s             Find the "Arată durata totală" Button
+    t =   236.04s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858081472.22)
+    t =   236.21s             Find the "🧞" StaticText
+    t =   236.34s             Find the "🧞" StaticText
+    t =   236.56s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858100048.25)
+    t =   236.72s             Find the "🧞" StaticText
+    t =   236.84s             Find the "🧞" StaticText
+    t =   237.01s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858116256.26)
+    t =   237.17s             Find the "1×" StaticText
+    t =   237.38s             Find the "1×" StaticText
+    t =   237.54s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858100048.25)
+    t =   237.68s             Find the "🧞" StaticText
+    t =   237.83s             Find the "🧞" StaticText
+    t =   237.96s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858095568.23)
+    t =   238.10s             Find the "DIN POVEȘTI DISNEY" StaticText
+    t =   238.21s             Find the "DIN POVEȘTI DISNEY" StaticText
+    t =   238.35s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858095568.23)
+    t =   238.46s             Find the "DIN POVEȘTI DISNEY" StaticText
+    t =   238.54s             Find the "DIN POVEȘTI DISNEY" StaticText
+    t =   238.66s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858100048.25)
+    t =   238.80s             Find the "🧞" StaticText
+    t =   238.92s             Find the "🧞" StaticText
+    t =   238.99s             Find the Any (Descendant with identity binding to AX element pid: 46461, elementOrHash.elementID: 4858121376.28)
+    t =   239.07s             Find the "După 1 poveste" StaticText
+    t =   239.15s             Find the "După 1 poveste" StaticText
+QA [X05_LargeText] A11Y ax3-player: Hit area is too small · 9 'Arată durata totală'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Contrast failed · 48 '1×'
+QA [X05_LargeText] A11Y ax3-player: Dynamic Type font sizes are unsupported · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Dynamic Type font sizes are partially unsupported · 48 'DIN POVEȘTI DISNEY'
+QA [X05_LargeText] A11Y ax3-player: Text clipped · 48 'DIN POVEȘTI DISNEY'
+QA [X05_LargeText] A11Y ax3-player: Text clipped · 48 '🧞'
+QA [X05_LargeText] A11Y ax3-player: Text clipped · 48 'După 1 poveste'
+    t =   239.25s             Open app.kitchentales.ios
+    t =   239.25s                 Launch app.kitchentales.ios
+    t =   239.25s                     Terminate app.kitchentales.ios:46461
+    t =   240.89s                     Setting up automation session
+    t =   242.94s                     Wait for app.kitchentales.ios to idle
+QA [X05_LargeText] LAUNCH -demo YES -area stories -tab add -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+    t =   245.03s             Wait for app.kitchentales.ios to become Running Foreground
+    t =   247.71s Added attachment named 'X05_LargeText-11-ax3-add'
+QA [X05_LargeText] shot X05_LargeText-11-ax3-add
+    t =   250.75s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319616144.15)
+    t =   250.80s             Find the "Acasă" StaticText
+    t =   250.85s             Find the "Acasă" StaticText
+    t =   250.88s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319610000.16)
+    t =   250.90s             Find the "Favorite" StaticText
+    t =   250.93s             Find the "Favorite" StaticText
+    t =   250.98s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319612784.17)
+    t =   251.02s             Find the "Bibliotecă" StaticText
+    t =   251.05s             Find the "Bibliotecă" StaticText
+    t =   251.09s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319600944.19)
+    t =   251.14s             Find the "Profil" StaticText
+    t =   251.18s             Find the "Profil" StaticText
+    t =   251.21s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319600944.19)
+    t =   251.24s             Find the "Profil" StaticText
+    t =   251.26s             Find the "Profil" StaticText
+    t =   251.29s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319610000.16)
+    t =   251.33s             Find the "Favorite" StaticText
+    t =   251.37s             Find the "Favorite" StaticText
+    t =   251.41s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319612784.17)
+    t =   251.44s             Find the "Bibliotecă" StaticText
+    t =   251.47s             Find the "Bibliotecă" StaticText
+    t =   251.51s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319606880.18)
+    t =   251.55s             Find the "Adaugă" StaticText
+    t =   251.60s             Find the "Adaugă" StaticText
+    t =   251.62s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4321515808.9)
+    t =   251.67s             Find the "MOD PĂRINTE" StaticText
+    t =   251.70s             Find the "MOD PĂRINTE" StaticText
+    t =   251.74s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319616144.15)
+    t =   251.77s             Find the "Acasă" StaticText
+    t =   251.80s             Find the "Acasă" StaticText
+    t =   251.85s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319610000.16)
+    t =   251.88s             Find the "Favorite" StaticText
+    t =   251.92s             Find the "Favorite" StaticText
+    t =   251.94s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319612784.17)
+    t =   251.98s             Find the "Bibliotecă" StaticText
+    t =   252.02s             Find the "Bibliotecă" StaticText
+    t =   252.05s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319606880.18)
+    t =   252.09s             Find the "Adaugă" StaticText
+    t =   252.11s             Find the "Adaugă" StaticText
+    t =   252.14s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4321519264.20)
+    t =   252.18s             Find the "Creează o poveste" StaticText
+    t =   252.23s             Find the "Creează o poveste" StaticText
+    t =   252.26s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4321530624.24)
+    t =   252.30s             Find the "Încarcă un fișier" StaticText
+    t =   252.33s             Find the "Încarcă un fișier" StaticText
+    t =   252.36s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319616144.15)
+    t =   252.41s             Find the "Acasă" StaticText
+    t =   252.43s             Find the "Acasă" StaticText
+    t =   252.47s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4321525120.22)
+    t =   252.51s             Find the "Citește tu" StaticText
+    t =   252.56s             Find the "Citește tu" StaticText
+    t =   252.59s             Find the Any (Descendant with identity binding to AX element pid: 47323, elementOrHash.elementID: 4319600944.19)
+    t =   252.63s             Find the "Profil" StaticText
+    t =   252.66s             Find the "Profil" StaticText
+QA [X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'MOD PĂRINTE'
+QA [X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Favorite'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Bibliotecă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Adaugă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Creează o poveste'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Încarcă un fișier'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Acasă'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Citește tu'
+QA [X05_LargeText] A11Y ax3-add: Text clipped · 48 'Profil'
+    t =   252.71s             Open app.kitchentales.ios
+    t =   252.71s                 Launch app.kitchentales.ios
+    t =   252.71s                     Terminate app.kitchentales.ios:47323
+    t =   254.33s                     Setting up automation session
+    t =   256.13s                     Wait for app.kitchentales.ios to idle
+QA [X05_LargeText] LAUNCH -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+    t =   257.74s             Wait for app.kitchentales.ios to become Running Foreground
+    t =   259.44s Added attachment named 'X05_LargeText-12-ax3-login'
+QA [X05_LargeText] shot X05_LargeText-12-ax3-login
+    t =   259.50s Tear Down
+Test Case '-[KitchenTalesUITests.SystemQATests testX05_LargeText]' passed (260.149 seconds).
+Test Case '-[KitchenTalesUITests.SystemQATests testX06_LaunchTime]' started.
+    t =     0.00s Start Test at 2026-11-12 13:55:48.520
+    t =     0.12s Set Up
+    t =     0.12s             Open app.kitchentales.ios
+    t =     0.12s                 Launch app.kitchentales.ios
+    t =     0.12s                     Terminate app.kitchentales.ios:47793
+    t =     1.78s                     Setting up automation session
+    t =     3.56s                     Wait for app.kitchentales.ios to idle
+QA [X06_LaunchTime] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+    t =     6.15s             Wait for app.kitchentales.ios to become Running Foreground
+    t =     7.65s             Waiting 20.0s for Button (First Match) to exist
+    t =     8.68s                 Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =     8.68s                     Checking existence of `Button (First Match)`
+QA [X06_LaunchTime] launch to Acasă ready: 9.0 s (demo data, simulator)
+QA [X06_LaunchTime] ok   Acasă is ready after launch
+    t =     9.10s Tear Down
+Test Case '-[KitchenTalesUITests.SystemQATests testX06_LaunchTime]' passed (9.438 seconds).
+Test Case '-[KitchenTalesUITests.SystemQATests testX07_KeyScreens]' started.
+    t =     0.00s Start Test at 2026-11-12 13:55:57.959
+    t =     0.06s Set Up
+    t =     0.07s             Open app.kitchentales.ios
+    t =     0.07s                 Launch app.kitchentales.ios
+    t =     0.07s                     Terminate app.kitchentales.ios:48505
+    t =     3.41s                     Setting up automation session
+    t =     5.95s                     Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+    t =     8.28s             Wait for app.kitchentales.ios to become Running Foreground
+    t =    11.15s Added attachment named 'X07_KeyScreens-01-key-home'
+QA [X07_KeyScreens] shot X07_KeyScreens-01-key-home
+    t =    11.15s             Open app.kitchentales.ios
+    t =    11.16s                 Launch app.kitchentales.ios
+    t =    11.16s                     Terminate app.kitchentales.ios:48584
+    t =    13.26s                     Setting up automation session
+    t =    15.51s                     Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen recipe -kt-kid none
+    t =    18.35s             Wait for app.kitchentales.ios to become Running Foreground
+    t =    21.11s Added attachment named 'X07_KeyScreens-02-key-recipe'
+QA [X07_KeyScreens] shot X07_KeyScreens-02-key-recipe
+    t =    21.11s             Open app.kitchentales.ios
+    t =    21.11s                 Launch app.kitchentales.ios
+    t =    21.11s                     Terminate app.kitchentales.ios:48798
+    t =    23.10s                     Setting up automation session
+    t =    25.61s                     Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen cook -kt-kid none
+    t =    29.28s             Wait for app.kitchentales.ios to become Running Foreground
+    t =    32.09s Added attachment named 'X07_KeyScreens-03-key-cook'
+QA [X07_KeyScreens] shot X07_KeyScreens-03-key-cook
+    t =    32.10s             Open app.kitchentales.ios
+    t =    32.10s                 Launch app.kitchentales.ios
+    t =    32.10s                     Terminate app.kitchentales.ios:49016
+    t =    34.07s                     Setting up automation session
+    t =    36.50s                     Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+    t =    39.05s             Wait for app.kitchentales.ios to become Running Foreground
+    t =    42.05s Added attachment named 'X07_KeyScreens-04-key-recipes'
+QA [X07_KeyScreens] shot X07_KeyScreens-04-key-recipes
+    t =    42.06s             Open app.kitchentales.ios
+    t =    42.06s                 Launch app.kitchentales.ios
+    t =    42.06s                     Terminate app.kitchentales.ios:49212
+    t =    44.88s                     Setting up automation session
+    t =    47.25s                     Wait for app.kitchentales.ios to idle
+QA [X07_KeyScreens] LAUNCH -demo YES -area recipes -tab week -kt-kid none
+    t =    49.74s             Wait for app.kitchentales.ios to become Running Foreground

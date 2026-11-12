@@ -1,0 +1,90 @@
+Optional(Attributes: Application, 0x101f9e0a0, pid: 16405, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x101f9e0a0, pid: 16405, label: 'Bucătăria'
+    Window (Main), 0x101f9e8d0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x101fa12d0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x101fa1eb0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x101fa2210, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x101fa1030, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x101fa1150, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x101fa1fd0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x101fa20f0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x101fa25a0, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x101fa26c0, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x101fa27e0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x101fa2900, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x101fa2a20, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x101fa2b40, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x101fa2c60, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x101fa2d80, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x101fa2ea0, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x101fa2fc0, {{0.0, 62.0}, {402.0, 884.0}}
+                                        Button, 0x101fa30e0, {{66.8, 90.0}, {268.3, 150.3}}, label: 'Schimbă-ți numele'
+                                          StaticText, 0x101fa3200, {{190.5, 111.5}, {21.0, 41.0}}, label: 'S'
+                                          StaticText, 0x101fa3320, {{164.0, 186.0}, {74.0, 34.7}}, label: 'Sorin'
+                                          StaticText, 0x101fa3440, {{66.8, 224.7}, {268.3, 15.7}}, label: 'sorin@exemplu.ro · spațiu comun cu Loredana'
+                                        Button, 0x101fa3560, {{20.0, 262.3}, {176.0, 142.0}}, label: 'Pașaportul culinar, 10 din 33'
+                                          StaticText, 0x101fa3680, {{34.0, 276.3}, {77.3, 36.0}}, label: 'Pașaportul culinar'
+                                          StaticText, 0x101fa37a0, {{133.7, 279.3}, {48.3, 14.7}}, label: '10 din 33'
+                                          Image, 0x101fa38c0, {{34.0, 340.3}, {46.7, 48.0}}
+                                          Image, 0x101fa39e0, {{84.7, 340.3}, {46.7, 48.0}}
+                                          Image, 0x101fa3b00, {{135.3, 340.3}, {46.7, 48.0}}
+                                        Button, 0x101fa3c20, {{206.0, 262.3}, {176.0, 154.3}}, label: 'Albumul de povești, 10 din 32'
+                                          StaticText, 0x101fa3d40, {{220.0, 276.3}, {71.3, 48.3}}, label: 'Albumul de povești'
+                                          StaticText, 0x101fa3e60, {{319.7, 281.3}, {48.3, 14.7}}, label: '10 din 32'
+                                          Image, 0x101fa4090, {{220.0, 353.3}, {46.7, 46.7}}
+                                          Image, 0x101fa41b0, {{270.7, 353.3}, {46.7, 46.7}}
+                                          Image, 0x101fa42d0, {{321.3, 353.3}, {46.7, 46.7}}
+                                        Button, 0x101fa43f0, {{20.0, 430.7}, {362.0, 71.3}}, label: 'Ana, 5 ani · modul copil: 30 min'
+                                          StaticText, 0x101fa4510, {{20.0, 446.7}, {30.7, 20.7}}, label: 'Ana'
+                                          StaticText, 0x101fa4630, {{20.0, 470.3}, {151.7, 15.7}}, label: '5 ani · modul copil: 30 min'
+                                          Image, 0x101fa4750, {{374.0, 460.3}, {7.3, 12.3}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x101fa4870, {{20.0, 506.0}, {362.0, 48.0}}, label: 'Dă-i telefonul copilului'
+                                          Image, 0x101fa4990, {{104.0, 521.0}, {12.0, 17.0}}, identifier: 'lock.fill', label: 'Blocare'
+                                          StaticText, 0x101fa4ab0, {{20.0, 506.0}, {362.0, 48.0}}, label: 'Dă-i telefonul copilului'
+                                        Button, 0x101fa4bd0, {{20.0, 566.0}, {362.0, 71.3}}, label: 'Familie și partajare, 3 persoane · 9 lucruri partajate'
+                                          StaticText, 0x101fa4cf0, {{20.0, 582.0}, {145.3, 20.7}}, label: 'Familie și partajare'
+                                          StaticText, 0x101fa4e10, {{20.0, 605.7}, {176.3, 15.7}}, label: '3 persoane · 9 lucruri partajate'
+                                          Image, 0x101fa4f30, {{374.0, 595.7}, {7.3, 12.3}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x101fa5050, {{20.0, 637.3}, {362.0, 71.3}}, label: 'Bucătărie și povești, 4 aparate · mâncăm fără nuci · vocea Carmen'
+                                          StaticText, 0x101fa5170, {{20.0, 653.3}, {151.0, 20.7}}, label: 'Bucătărie și povești'
+                                          StaticText, 0x101fa5290, {{20.0, 677.0}, {261.7, 15.7}}, label: '4 aparate · mâncăm fără nuci · vocea Carmen'
+                                          Image, 0x101fa53b0, {{374.0, 667.0}, {7.3, 12.3}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x101fa54d0, {{20.0, 708.7}, {362.0, 71.3}}, label: 'Pe acest telefon, 3 povești descărcate · clic pe raft pornit'
+                                          StaticText, 0x101fa55f0, {{20.0, 724.7}, {125.0, 20.7}}, label: 'Pe acest telefon'
+                                          StaticText, 0x101fa5710, {{20.0, 748.3}, {230.7, 15.7}}, label: '3 povești descărcate · clic pe raft pornit'
+                                          Image, 0x101fa5830, {{374.0, 738.3}, {7.3, 12.3}}, identifier: 'chevron.right', label: 'Înainte'
+                                        Button, 0x101fa5950, {{156.3, 816.3}, {89.7, 19.3}}, label: 'Ieși din cont'
+                                      Other, 0x101fa5a70, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                        Other, 0x101fa5b90, {{396.0, 65.0}, {3.0, 663.7}}
+                                      Other, 0x101fa5cb0, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                        Other, 0x101fa5dd0, {{396.0, 65.0}, {3.0, 663.7}}
+                            Other, 0x101fa5ef0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x101fa6010, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x101fa6130, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x101fa6250, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x101fa6370, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x101fa6490, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x101fa65b0, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fa66d0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x101fa67f0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+                Other, 0x101fa6910, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fa6a30, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+              Button, 0x101fa6b50, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+                Other, 0x101fa6c70, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fa6d90, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+              Button, 0x101fa6eb0, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Listă, 7 de luat'
+                Other, 0x101fa6fd0, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fa70f0, {{286.0, 781.2}, {6.3, 13.3}}, label: '7'
+                StaticText, 0x101fa7210, {{262.2, 811.8}, {24.0, 13.3}}, label: 'Listă'
+              Button, 0x101fa7330, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil', Selected
+                Other, 0x101fa7450, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fa7570, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+Path to element:
+ →Application, 0x101f9e0a0, pid: 16405, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x10216d4f0, pid: 16405, label: 'Bucătăria'
+  }
+)

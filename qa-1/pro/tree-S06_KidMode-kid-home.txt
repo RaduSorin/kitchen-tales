@@ -1,0 +1,77 @@
+Optional(Attributes: Application, 0x101f7f210, pid: 23827, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x101f7f210, pid: 23827, label: 'Bucătăria'
+    Window (Main), 0x101f6dd70, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x101f7fd10, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x101f7fe30, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x101f7fa70, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x107162dd0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x107162930, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x107161cf0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1021b1ef0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x10712b990, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x107163140, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x107163260, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x107163380, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1071640d0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1071641f0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x107164310, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x107164430, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x107164550, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x107164670, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x107164790, {{0.0, 0.0}, {402.0, 830.0}}
+                                        CollectionView, 0x107164b30, {{0.0, 0.0}, {402.0, 560.0}}
+                                          Cell, 0x107164c50, {{0.0, 0.0}, {402.0, 560.0}}
+                                            Other, 0x107164d70, {{0.0, 0.0}, {402.0, 560.0}}
+                                              Other, 0x107164e90, {{0.0, 0.0}, {402.0, 560.0}}
+                                                Other, 0x107164fb0, {{0.0, 0.0}, {402.0, 560.0}}
+                                                  Other, 0x1071650d0, {{-140.7, 0.0}, {723.7, 688.7}}
+                                                    StaticText, 0x1071651f0, {{-140.7, 0.0}, {723.7, 688.7}}, label: '🚂'
+                                                    StaticText, 0x107165310, {{20.0, 366.0}, {116.0, 14.3}}, label: 'POVESTEA ZILEI'
+                                                    StaticText, 0x107165430, {{20.0, 388.3}, {315.0, 48.3}}, label: 'Trenulețul curajos'
+                                                    StaticText, 0x107165550, {{20.0, 444.7}, {167.7, 19.3}}, label: 'Povești de seară · 5 min'
+                                                    Button, 0x107165670, {{20.0, 478.0}, {122.0, 48.0}}, label: 'Ascultă'
+                                                      Image, 0x107165790, {{42.0, 494.0}, {13.3, 15.0}}, identifier: 'play.fill', label: 'Redare'
+                                                      StaticText, 0x1071658b0, {{20.0, 478.0}, {122.0, 48.0}}, label: 'Ascultă'
+                                                    Button, 0x1071659d0, {{154.0, 478.0}, {48.0, 48.0}}, identifier: 'heart', label: 'Adaugă la favorite'
+                                          Other, 0x107165af0, {{369.0, 62.0}, {30.0, 498.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                            Other, 0x107165c10, {{396.0, 550.0}, {3.0, 7.0}}
+                                          Other, 0x107165d30, {{369.0, 62.0}, {30.0, 498.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                            Other, 0x107165e50, {{396.0, 550.0}, {3.0, 7.0}}
+                                        Button, 0x107165f70, {{23.0, 569.0}, {118.7, 38.0}}, label: 'Azi', Selected
+                                        Button, 0x10712ce60, {{141.7, 569.0}, {118.7, 38.0}}, label: 'Colecții'
+                                        Button, 0x10712cf80, {{260.3, 569.0}, {118.7, 38.0}}, label: 'Favorite'
+                                        Button, 0x10712d0a0, {{20.0, 626.0}, {163.0, 17.0}}, label: 'Toate poveștile Bibliotecă'
+                                    Button, 0x10712d1c0, {{302.0, 66.0}, {38.0, 38.0}}, label: 'Albumul meu'
+                                    Button, 0x10712d2e0, {{348.0, 66.0}, {38.0, 38.0}}, identifier: 'magnifyingglass', label: 'Caută povești'
+                            Other, 0x10712d400, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x10712d520, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x10712d640, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x10712d760, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x10712d880, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x10712d9a0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x10712dac0, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10712dbe0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x10712dd00, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Favorite'
+                Other, 0x10712de20, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10712df40, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Favorite'
+              Button, 0x10712e060, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Bibliotecă'
+                Other, 0x10712e180, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10712e2a0, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Bibliotecă'
+              Button, 0x10712e3c0, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Surpriză'
+                Other, 0x10712e4e0, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10712e600, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Surpriză'
+              Button, 0x10712e720, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Caută'
+                Other, 0x10712e840, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x10712e960, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Caută'
+              Button, 0x10712ea80, {{16.0, 64.0}, {85.7, 32.0}}, label: 'Ieși din modul copil'
+                Image, 0x10712eba0, {{29.7, 74.0}, {8.7, 12.0}}, identifier: 'lock.fill', label: 'Blocare'
+                StaticText, 0x10712ecc0, {{46.0, 72.2}, {43.7, 15.7}}, label: '30 min'
+Path to element:
+ →Application, 0x101f7f210, pid: 23827, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x107132ef0, pid: 23827, label: 'Bucătăria'
+  }
+)

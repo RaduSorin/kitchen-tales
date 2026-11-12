@@ -1,0 +1,135 @@
+Optional(Attributes: Application, 0x101f75c50, pid: 22732, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x101f75c50, pid: 22732, label: 'Bucătăria'
+    Window (Main), 0x101f97f80, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x101f8b0c0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x101f9a4f0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x101f9e3c0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x101fa9210, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x101f9d500, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x101f9a800, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x101f9bf70, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x101f9c390, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x101f9f790, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x101f9f8b0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x101f9f9d0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x101f9faf0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x101f9fc10, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x101f9fd30, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x101f9fe50, {{0.0, 0.0}, {402.0, 874.0}}
+                                    CollectionView, 0x101f9ff70, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x101fa0090, {{-16.0, -1686.0}, {434.0, 1904.3}}
+                                      Cell, 0x101fa01b0, {{16.0, 97.0}, {370.0, 103.7}}
+                                        Other, 0x101fa02d0, {{16.0, 97.0}, {370.0, 103.7}}
+                                          Other, 0x101fa03f0, {{16.0, 97.0}, {370.0, 103.7}}
+                                            Other, 0x101fa0510, {{16.0, 97.0}, {370.0, 103.7}}
+                                        Other, 0x101fa0630, {{16.0, 97.0}, {370.0, 103.7}}
+                                          Other, 0x101fa0750, {{16.0, 97.0}, {370.0, 103.7}}
+                                            Other, 0x101fa0870, {{16.0, 97.0}, {370.0, 103.7}}
+                                              Button, 0x101fa0990, {{32.0, 99.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Înapoi'
+                                              StaticText, 0x101fa0ab0, {{32.0, 157.0}, {301.7, 39.7}}, label: 'Bucătărie și povești'
+                                      Other, 0x101fa0bd0, {{-16.0, 218.3}, {434.0, 366.0}}
+                                      Cell, 0x101fa0cf0, {{16.0, 218.3}, {370.0, 34.3}}
+                                        Other, 0x101fa0e10, {{16.0, 218.3}, {370.0, 34.3}}
+                                        Other, 0x101fa0f30, {{16.0, 218.3}, {370.0, 34.3}}
+                                          Other, 0x101fa1050, {{16.0, 218.3}, {370.0, 34.3}}
+                                            Other, 0x101fa1170, {{16.0, 218.3}, {370.0, 34.3}}
+                                              StaticText, 0x101fa1290, {{16.0, 218.3}, {370.0, 34.3}}, label: 'BUCĂTĂRIA MEA'
+                                      Cell, 0x101fa13b0, {{16.0, 252.7}, {370.0, 286.0}}
+                                        Other, 0x101fa14d0, {{16.0, 252.7}, {370.0, 286.0}}
+                                          Other, 0x101fa15f0, {{16.0, 252.7}, {370.0, 286.0}}
+                                            Other, 0x101fa1710, {{16.0, 252.7}, {370.0, 286.0}}
+                                        Other, 0x101fa1830, {{16.0, 252.7}, {370.0, 286.0}}
+                                          Other, 0x101fa1950, {{16.0, 252.7}, {370.0, 286.0}}
+                                            Other, 0x101fa1a70, {{16.0, 252.7}, {370.0, 286.0}}
+                                              Button, 0x101fa1b90, {{32.0, 273.7}, {107.0, 34.0}}, label: 'Thermomix'
+                                              Button, 0x101fa1cb0, {{147.0, 273.7}, {154.3, 34.0}}, label: 'Oală sub presiune'
+                                              Button, 0x101fa1dd0, {{32.0, 315.7}, {110.7, 34.0}}, label: 'Multicooker', Selected
+                                              Button, 0x101fa1ef0, {{150.7, 315.7}, {84.7, 34.0}}, label: 'Air fryer', Selected
+                                              Button, 0x101fa2010, {{32.0, 357.7}, {161.7, 34.0}}, label: 'Robot de bucătărie', Selected
+                                              Button, 0x101fa2130, {{201.7, 357.7}, {81.7, 34.0}}, label: 'Blender'
+                                              Button, 0x101fa2250, {{291.3, 357.7}, {65.7, 34.0}}, label: 'Mixer'
+                                              Button, 0x101fa2370, {{32.0, 399.7}, {113.0, 34.0}}, label: 'Slow cooker'
+                                              Button, 0x101fa2490, {{153.0, 399.7}, {141.7, 34.0}}, label: 'Mașină de pâine'
+                                              Button, 0x101fa25b0, {{32.0, 441.7}, {176.7, 34.0}}, label: 'Cuptor cu microunde', Selected
+                                              Button, 0x101fa26d0, {{216.7, 441.7}, {71.7, 34.0}}, label: 'Grătar'
+                                              Button, 0x101fa27f0, {{32.0, 483.7}, {98.7, 34.0}}, label: 'Sous-vide'
+                                              Button, 0x101fa2910, {{138.7, 483.7}, {109.3, 34.0}}, label: '+ Alt aparat'
+                                      Cell, 0x101fa2a30, {{16.0, 538.7}, {370.0, 45.7}}
+                                        Other, 0x101fa2b50, {{16.0, 538.7}, {370.0, 45.7}}
+                                        Other, 0x101fa2c70, {{16.0, 538.7}, {370.0, 45.7}}
+                                          Other, 0x101fa2d90, {{16.0, 538.7}, {370.0, 45.7}}
+                                            Other, 0x101fa2eb0, {{16.0, 538.7}, {370.0, 45.7}}
+                                              StaticText, 0x101fa2fd0, {{16.0, 538.7}, {370.0, 45.7}}, label: 'Aragazul, cuptorul și oalele se înțeleg de la sine. Rețetele noi folosesc doar ce bifezi.'
+                                      Other, 0x101fa30f0, {{-16.0, 584.3}, {434.0, 430.0}}
+                                      Cell, 0x101fa3210, {{16.0, 584.3}, {370.0, 34.3}}
+                                        Other, 0x101fa3330, {{16.0, 584.3}, {370.0, 34.3}}
+                                        Other, 0x101fa3450, {{16.0, 584.3}, {370.0, 34.3}}
+                                          Other, 0x101fa3570, {{16.0, 584.3}, {370.0, 34.3}}
+                                            Other, 0x101fa3690, {{16.0, 584.3}, {370.0, 34.3}}
+                                              StaticText, 0x101fa37b0, {{16.0, 584.3}, {370.0, 34.3}}, label: 'CE MÂNCĂM · FĂRĂ'
+                                      Cell, 0x101fa38d0, {{16.0, 618.7}, {370.0, 202.0}}
+                                        Other, 0x101fa39f0, {{16.0, 618.7}, {370.0, 202.0}}
+                                          Other, 0x101fa3b10, {{16.0, 618.7}, {370.0, 202.0}}
+                                            Other, 0x101fa3c30, {{16.0, 618.7}, {370.0, 202.0}}
+                                        Other, 0x101fa3d50, {{16.0, 618.7}, {370.0, 202.0}}
+                                          Other, 0x101fa3e70, {{16.0, 618.7}, {370.0, 202.0}}
+                                            Other, 0x101fa3f90, {{16.0, 618.7}, {370.0, 202.0}}
+                                              Button, 0x101fa40b0, {{32.0, 639.7}, {73.3, 34.0}}, label: 'Gluten'
+                                              Button, 0x101fa41d0, {{113.3, 639.7}, {82.3, 34.0}}, label: 'Lactoză'
+                                              Button, 0x101fa42f0, {{203.7, 639.7}, {55.0, 34.0}}, label: 'Ouă'
+                                              Button, 0x101fd1f50, {{266.7, 639.7}, {58.7, 34.0}}, label: 'Nuci', Selected
+                                              Button, 0x101fd2070, {{32.0, 681.7}, {81.7, 34.0}}, label: 'Arahide'
+                                              Button, 0x101fd2190, {{121.7, 681.7}, {66.3, 34.0}}, label: 'Pește'
+                                              Button, 0x101fd22b0, {{196.0, 681.7}, {99.7, 34.0}}, label: 'Crustacee'
+                                              Button, 0x101fd23d0, {{303.7, 681.7}, {57.0, 34.0}}, label: 'Soia'
+                                              Button, 0x101fd24f0, {{32.0, 723.7}, {70.0, 34.0}}, label: 'Susan'
+                                              Button, 0x101fd2610, {{110.0, 723.7}, {68.0, 34.0}}, label: 'Țelină'
+                                              Button, 0x101fd2730, {{186.0, 723.7}, {76.3, 34.0}}, label: 'Muștar'
+                                              Button, 0x101fd2850, {{270.3, 723.7}, {58.7, 34.0}}, label: 'Porc'
+                                              Button, 0x101fd2970, {{32.0, 765.7}, {69.0, 34.0}}, label: 'Carne'
+                                      Cell, 0x101fd2a90, {{16.0, 820.7}, {370.0, 68.3}}
+                                        Other, 0x101fd2bb0, {{16.0, 820.7}, {370.0, 68.3}}
+                                          Other, 0x101fd2cd0, {{16.0, 820.7}, {370.0, 68.3}}
+                                            Other, 0x101fd2df0, {{16.0, 820.7}, {370.0, 68.3}}
+                                        Other, 0x101fd2f10, {{16.0, 820.7}, {370.0, 68.3}}
+                                          Other, 0x101fd3030, {{16.0, 820.7}, {370.0, 68.3}}
+                                            Other, 0x101fd3150, {{16.0, 820.7}, {370.0, 68.3}}
+                                              Button, 0x101fd3270, {{16.0, 820.7}, {370.0, 68.3}}, label: 'Nuci, alergie · Ana'
+                                                StaticText, 0x101fd3390, {{32.0, 835.7}, {36.0, 20.7}}, label: 'Nuci'
+                                                StaticText, 0x101fd34b0, {{32.0, 858.3}, {75.0, 15.7}}, label: 'alergie · Ana'
+                                                Image, 0x101fd35d0, {{362.7, 849.0}, {6.7, 11.7}}, identifier: 'chevron.right', label: 'Înainte'
+                                      Other, 0x101fd36f0, {{45.0, 819.7}, {325.0, 1.0}}
+                                      Other, 0x101fd3810, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                        Other, 0x101fd3930, {{396.0, 65.0}, {3.0, 499.7}}
+                                      Other, 0x101fd3a50, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Bară de derulare verticală, 2 pagini', value: 0 %
+                                        Other, 0x101fd3b70, {{396.0, 65.0}, {3.0, 499.7}}
+                            Other, 0x101fd3c90, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x101fd3db0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x101fd3ed0, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x101fd3ff0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x101fd4110, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x101fd4230, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x101fd4350, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fd4470, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x101fd4590, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+                Other, 0x101fd46b0, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fd47d0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Săptămâna'
+              Button, 0x101fd48f0, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+                Other, 0x101fd4a10, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fd4b30, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Rețete'
+              Button, 0x101fd4c50, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Listă, 7 de luat'
+                Other, 0x101fd4d70, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fd4e90, {{286.0, 781.2}, {6.3, 13.3}}, label: '7'
+                StaticText, 0x101fd4fb0, {{262.2, 811.8}, {24.0, 13.3}}, label: 'Listă'
+              Button, 0x101fd50d0, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil', Selected
+                Other, 0x101fd51f0, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fd5310, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+Path to element:
+ →Application, 0x101f75c50, pid: 22732, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x101fe77d0, pid: 22732, label: 'Bucătăria'
+  }
+)

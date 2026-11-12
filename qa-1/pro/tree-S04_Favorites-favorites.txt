@@ -1,0 +1,70 @@
+Optional(Attributes: Application, 0x1022cce60, pid: 15726, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x1022cce60, pid: 15726, label: 'Bucătăria'
+    Window (Main), 0x1022cd8c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x101fde870, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x101f70a10, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x101f60870, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x101fdec90, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x101f7e650, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x101fdf1c0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x101fdf2e0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x101fdf400, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x101fdf520, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x101fdf640, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x101fdf760, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x101fdf880, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x101fdf9a0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x101fdfac0, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x101fdfbe0, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x101fdfd00, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x101fdfe20, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x101fdff40, {{0.0, 62.0}, {402.0, 650.3}}
+                                        StaticText, 0x101fe0060, {{16.0, 70.0}, {136.0, 42.0}}, label: 'Favorite'
+                                        StaticText, 0x101fe0180, {{16.0, 116.0}, {211.7, 19.3}}, label: 'Poveștile preferate ale lui Ana'
+                                        Other, 0x101fe02a0, {{-46.3, 157.3}, {512.3, 462.7}}
+                                          Button, 0x101fe03c0, {{-46.3, 157.3}, {320.3, 222.3}}, label: '10 min, Aladdin, Povești Disney'
+                                            StaticText, 0x101fe04e0, {{68.5, 195.2}, {73.0, 81.0}}, label: '🧞'
+                                            Image, 0x101fe0600, {{16.0, 157.3}, {178.0, 178.0}}
+                                            StaticText, 0x101fe0720, {{142.7, 309.7}, {36.3, 14.7}}, label: '10 min'
+                                            StaticText, 0x101fe0840, {{16.0, 341.3}, {52.0, 18.0}}, label: 'Aladdin'
+                                            StaticText, 0x101fe0960, {{16.0, 365.3}, {82.7, 14.3}}, label: 'Povești Disney'
+                                          Button, 0x101fe0a80, {{145.7, 157.3}, {320.3, 222.3}}, label: '9 min, Regele Leu, Povești Disney'
+                                            StaticText, 0x101fe0ba0, {{260.5, 195.2}, {73.0, 81.0}}, label: '🦁'
+                                            Image, 0x101fe0cc0, {{208.0, 157.3}, {178.0, 178.0}}
+                                            StaticText, 0x101fe0de0, {{340.7, 309.7}, {30.3, 14.7}}, label: '9 min'
+                                            StaticText, 0x101fe0f00, {{208.0, 341.3}, {75.3, 18.0}}, label: 'Regele Leu'
+                                            StaticText, 0x101fe1020, {{208.0, 365.3}, {82.7, 14.3}}, label: 'Povești Disney'
+                                          Button, 0x101fe1140, {{-46.3, 397.7}, {320.3, 222.3}}, label: '6 min, Ursulețul și luna, Povești create de noi'
+                                            StaticText, 0x101fe1260, {{-46.3, 397.7}, {320.3, 219.0}}, label: '🐻'
+                                            StaticText, 0x101fe1380, {{148.7, 550.0}, {30.3, 14.7}}, label: '6 min'
+                                            StaticText, 0x101fe14a0, {{16.0, 581.7}, {107.7, 18.0}}, label: 'Ursulețul și luna'
+                                            StaticText, 0x101fe15c0, {{16.0, 605.7}, {118.3, 14.3}}, label: 'Povești create de noi'
+                            Other, 0x101fe16e0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x101fe1800, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x101fe1920, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x101fe1a40, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x101fe1b60, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x101fe1c80, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x101fe1da0, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fe1ec0, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x101fe1fe0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Favorite', Selected
+                Other, 0x101fe2100, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fe2220, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Favorite'
+              Button, 0x101fe2340, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Bibliotecă'
+                Other, 0x101fe2460, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fe2580, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Bibliotecă'
+              Button, 0x101fe26a0, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Adaugă'
+                Other, 0x101fe27c0, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fe28e0, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Adaugă'
+              Button, 0x101fe2a00, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+                Other, 0x101fe2b20, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x101fe2c40, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+Path to element:
+ →Application, 0x1022cce60, pid: 15726, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x10717e1b0, pid: 15726, label: 'Bucătăria'
+  }
+)

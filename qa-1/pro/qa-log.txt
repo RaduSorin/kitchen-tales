@@ -1,0 +1,1633 @@
+[P01_Profile] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[P01_Profile] shot P01_Profile-01-profile
+[P01_Profile] A11Y profile: Hit area is too small · 9 'Ieși din cont'
+[P01_Profile] A11Y profile: Contrast failed · 48 'Acasă'
+[P01_Profile] A11Y profile: Contrast failed · 48 'Săptămâna'
+[P01_Profile] A11Y profile: Contrast failed · 48 '7'
+[P01_Profile] A11Y profile: Contrast failed · 48 'Listă'
+[P01_Profile] A11Y profile: Contrast failed · 48 'S'
+[P01_Profile] A11Y profile: Contrast failed · 48 '10 din 33'
+[P01_Profile] A11Y profile: Contrast failed · 48 '10 din 32'
+[P01_Profile] A11Y profile: Contrast failed · 48 '3 povești descărcate · clic pe raft pornit'
+[P01_Profile] A11Y profile: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[P01_Profile] A11Y profile: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[P01_Profile] A11Y profile: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[P01_Profile] A11Y profile: Dynamic Type font sizes are partially unsupported · 48 '7'
+[P01_Profile] A11Y profile: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[P01_Profile] A11Y profile: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[P01_Profile] A11Y profile: Text clipped · 48 '4 aparate · mâncăm fără nuci · vocea Carmen'
+[P01_Profile] A11Y profile: Text clipped · 48 '5 ani · modul copil: 30 min'
+[P01_Profile] A11Y profile: Text clipped · 48 'sorin@exemplu.ro · spațiu comun cu Loredana'
+[P01_Profile] A11Y profile: Text clipped · 48 '3 persoane · 9 lucruri partajate'
+[P01_Profile] A11Y profile: Text clipped · 48 'Profil'
+[P01_Profile] A11Y profile: Text clipped · 48 'Rețete'
+[P01_Profile] A11Y profile: Text clipped · 48 'Săptămâna'
+[P01_Profile] A11Y profile: Text clipped · 48 '3 povești descărcate · clic pe raft pornit'
+[P01_Profile] A11Y profile: Text clipped · 48 'Acasă'
+[P01_Profile] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | S | Sorin | sorin@exemplu.ro · spațiu comun cu Loredana | Pașaportul culinar | 10 din 33 | Albumul de povești | 10 din 32 | Ana | 5 ani · modul copil: 30 min | Dă-i telefonul copilului | Familie și partajare | 3 persoane · 9 lucruri partajate | Bucătărie și povești | 4 aparate · mâncăm fără nuci · vocea Carmen | Pe acest telefon | 3 povești descărcate · clic pe raft pornit
+[P01_Profile] ok   shows 'Sorin'
+[P01_Profile] shot P01_Profile-02-profile-scrolled
+[P01_Profile] tap  'Schimbă-ți numele'
+[P01_Profile] shot P01_Profile-03-rename-alert
+[P01_Profile] ok   rename alert has a text field
+[P01_Profile] tap  'Salvează'
+[P01_Profile] ok   new name shows on Profil
+[P01_Profile] shot P01_Profile-04-renamed
+[P01_Profile] tap  'Ieși din cont'
+[P01_Profile] shot P01_Profile-05-signout-confirm
+[P01_Profile] FAIL shows 'Ieși din cont?'
+[P01_Profile] ok   still signed in after cancelling sign-out
+[P02_FamilyAndInvite] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[P02_FamilyAndInvite] tap  'Familie și partajare'
+[P02_FamilyAndInvite] shot P02_FamilyAndInvite-01-family
+[P02_FamilyAndInvite] A11Y family: Contrast failed · 48 'Acasă'
+[P02_FamilyAndInvite] A11Y family: Contrast failed · 48 'Săptămâna'
+[P02_FamilyAndInvite] A11Y family: Contrast failed · 48 'Rețete'
+[P02_FamilyAndInvite] A11Y family: Contrast failed · 48 '7'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 'Ce partajez'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 '9'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 '7'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 'Ce partajezi apare la ceilalți ca „De la Sorin”.'
+[P02_FamilyAndInvite] A11Y family: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[P02_FamilyAndInvite] A11Y family: Text clipped · 48 'Acasă'
+[P02_FamilyAndInvite] A11Y family: Text clipped · 48 'Rețete'
+[P02_FamilyAndInvite] A11Y family: Text clipped · 48 'Săptămâna'
+[P02_FamilyAndInvite] A11Y family: Text clipped · 48 'Profil'
+[P02_FamilyAndInvite] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Familie și partajare | Ce partajezi apare la ceilalți ca „De la Sorin”. | Persoane | 3 | Invită pe cineva | Numele spațiului | Sorin | Ce partajez | 9
+[P02_FamilyAndInvite] tap  'Invită pe cineva'
+[P02_FamilyAndInvite] shot P02_FamilyAndInvite-02-invite
+[P02_FamilyAndInvite] A11Y invite: Contrast failed · 9 'Trimite'
+[P02_FamilyAndInvite] A11Y invite: Dynamic Type font sizes are partially unsupported · 9 'Trimite'
+[P02_FamilyAndInvite] A11Y invite: Dynamic Type font sizes are partially unsupported · 48 'Primește un e-mail cu parola de început, apoi poate intra din aplicație.'
+[P02_FamilyAndInvite] A11Y invite: Dynamic Type font sizes are partially unsupported · 48 'partenerul de viață'
+[P02_FamilyAndInvite] A11Y invite: Dynamic Type font sizes are partially unsupported · 9 'Renunță'
+[P02_FamilyAndInvite] A11Y invite: Dynamic Type font sizes are partially unsupported · 48 'Tot, în spațiul nostru'
+[P02_FamilyAndInvite] A11Y invite: Text clipped · 9 'Trimite'
+[P02_FamilyAndInvite] A11Y invite: Text clipped · 48 'CE VEDE'
+[P02_FamilyAndInvite] A11Y invite: Text clipped · -
+[P02_FamilyAndInvite] A11Y invite: Text clipped · 48 'Tot, în spațiul nostru'
+[P02_FamilyAndInvite] A11Y invite: Text clipped · 48 'Invită pe cineva'
+[P02_FamilyAndInvite] A11Y invite: Text clipped · 49 ''
+[P02_FamilyAndInvite] A11Y invite: Text clipped · 48 'Primește un e-mail cu parola de început, apoi poate intra din aplicație.'
+[P02_FamilyAndInvite] A11Y invite: Text clipped · 48 'partenerul de viață'
+[P02_FamilyAndInvite] A11Y invite: Text clipped · -
+[P02_FamilyAndInvite] A11Y invite: Text clipped · 9 'Renunță'
+[P02_FamilyAndInvite] ok   Trimite is disabled with no e-mail
+[P02_FamilyAndInvite] type 'nu-e-email'
+[P02_FamilyAndInvite] ok   Trimite stays disabled for text without @
+[P02_FamilyAndInvite] shot P02_FamilyAndInvite-03-invite-bad-email
+[P02_FamilyAndInvite] Trimite enabled for 'a@': true
+[P02_FamilyAndInvite] tap  'Renunță'
+[P02_FamilyAndInvite] tap  'Persoane'
+[P02_FamilyAndInvite] shot P02_FamilyAndInvite-04-people
+[P02_FamilyAndInvite] people: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Persoane | SPAȚIUL TĂU | S | sorin@exemplu.ro | Tu · administrator | L | loredana@exemplu.ro | Vede și modifică tot | Cei din spațiul tău văd și modifică toate rețetele, poveștile, săptămâna și lista de cumpărături. | CONTURI SEPARATE | M | mihaela@exemplu.ro | Invitat, încă nu s-a conectat | Au rețetele și poveștile lor și văd doar ce partajezi tu.
+[P02_FamilyAndInvite] back via 'Înapoi'
+[P02_FamilyAndInvite] tap  'Ce partajez'
+[P02_FamilyAndInvite] shot P02_FamilyAndInvite-05-sharing
+[P02_FamilyAndInvite] sharing: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Persoane | SPAȚIUL TĂU | S | sorin@exemplu.ro | Tu · administrator | L | loredana@exemplu.ro | Vede și modifică tot | Cei din spațiul tău văd și modifică toate rețetele, poveștile, săptămâna și lista de cumpărături. | CONTURI SEPARATE | M | mihaela@exemplu.ro | Invitat, încă nu s-a conectat | Au rețetele și poveștile lor și văd doar ce partajezi tu.
+[P03_PrefsAndCookbook] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[P03_PrefsAndCookbook] tap  'Bucătărie și povești'
+[P03_PrefsAndCookbook] shot P03_PrefsAndCookbook-01-prefs
+[P03_PrefsAndCookbook] A11Y prefs: Dynamic Type font sizes are partially unsupported · 48 'Aragazul, cuptorul și oalele se înțeleg de la sine. Rețetele noi folosesc doar ce bifezi.'
+[P03_PrefsAndCookbook] A11Y prefs: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[P03_PrefsAndCookbook] A11Y prefs: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[P03_PrefsAndCookbook] A11Y prefs: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[P03_PrefsAndCookbook] A11Y prefs: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[P03_PrefsAndCookbook] A11Y prefs: Dynamic Type font sizes are partially unsupported · 48 '7'
+[P03_PrefsAndCookbook] A11Y prefs: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[P03_PrefsAndCookbook] A11Y prefs: Text clipped · 48 'Profil'
+[P03_PrefsAndCookbook] A11Y prefs: Text clipped · 48 'Acasă'
+[P03_PrefsAndCookbook] A11Y prefs: Text clipped · 48 'Săptămâna'
+[P03_PrefsAndCookbook] A11Y prefs: Text clipped · 48 'Rețete'
+[P03_PrefsAndCookbook] A11Y prefs: Contrast failed · 48 'Acasă'
+[P03_PrefsAndCookbook] A11Y prefs: Contrast failed · 48 '7'
+[P03_PrefsAndCookbook] A11Y prefs: Contrast failed · 48 'BUCĂTĂRIA MEA'
+[P03_PrefsAndCookbook] A11Y prefs: Contrast failed · 9 'Carne'
+[P03_PrefsAndCookbook] A11Y prefs: Contrast failed · 48 'Nuci'
+[P03_PrefsAndCookbook] A11Y prefs: Contrast failed · 48 'alergie · Ana'
+[P03_PrefsAndCookbook] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Bucătărie și povești | BUCĂTĂRIA MEA | Aragazul, cuptorul și oalele se înțeleg de la sine. Rețetele noi folosesc doar ce bifezi. | CE MÂNCĂM · FĂRĂ | Nuci | alergie · Ana
+[P03_PrefsAndCookbook] tap  '+ Alt aparat'
+[P03_PrefsAndCookbook] shot P03_PrefsAndCookbook-02-prefs-add-tool
+[P03_PrefsAndCookbook] tap  'Adaugă'
+[P03_PrefsAndCookbook] ok   new kitchen tool shows
+[P03_PrefsAndCookbook] shot P03_PrefsAndCookbook-03-prefs-scrolled
+[P03_PrefsAndCookbook] shot P03_PrefsAndCookbook-04-prefs-scrolled-2
+[P03_PrefsAndCookbook] tap  'Caietul de rețete'
+[P03_PrefsAndCookbook] shot P03_PrefsAndCookbook-05-cookbook
+[P03_PrefsAndCookbook] A11Y cookbook: Dynamic Type font sizes are partially unsupported · 9 'Închide'
+[P03_PrefsAndCookbook] A11Y cookbook: Dynamic Type font sizes are partially unsupported · 48 'Poze'
+[P03_PrefsAndCookbook] A11Y cookbook: Dynamic Type font sizes are partially unsupported · 48 'Pozele se iau de pe server; fără internet caietul iese fără ele.'
+[P03_PrefsAndCookbook] A11Y cookbook: Dynamic Type font sizes are partially unsupported · 9 'Creează PDF-ul'
+[P03_PrefsAndCookbook] A11Y cookbook: Text clipped · 48 'Mărime'
+[P03_PrefsAndCookbook] A11Y cookbook: Text clipped · 9 'Închide'
+[P03_PrefsAndCookbook] A11Y cookbook: Text clipped · 48 'Ce intră'
+[P03_PrefsAndCookbook] A11Y cookbook: Text clipped · 48 'Pozele se iau de pe server; fără internet caietul iese fără ele.'
+[P03_PrefsAndCookbook] A11Y cookbook: Text clipped · 9 'Creează PDF-ul'
+[P03_PrefsAndCookbook] A11Y cookbook: Potentially inaccessible text · -
+[P03_PrefsAndCookbook] A11Y cookbook: Potentially inaccessible text · -
+[P03_PrefsAndCookbook] A11Y cookbook: Potentially inaccessible text · -
+[P03_PrefsAndCookbook] A11Y cookbook: Potentially inaccessible text · -
+[P03_PrefsAndCookbook] A11Y cookbook: Potentially inaccessible text · -
+[P03_PrefsAndCookbook] A11Y cookbook: Potentially inaccessible text · -
+[P03_PrefsAndCookbook] A11Y cookbook: Potentially inaccessible text · -
+[P03_PrefsAndCookbook] cookbook: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Caietul de rețete | Ce intră | Stil | Mărime | Poze | Pozele se iau de pe server; fără internet caietul iese fără ele. | Toate · 8 | Clasic | A5 | Cu poze | Bucătărie și povești | BUCĂTĂRIA MEA | Aragazul, cuptorul și oalele se înțeleg de la sine. Rețetele noi folosesc doar ce bifezi. | CE MÂNCĂM · FĂRĂ | Nuci | alergie · Ana
+[P04_PhoneAndCatalog] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[P04_PhoneAndCatalog] tap  'Pe acest telefon'
+[P04_PhoneAndCatalog] shot P04_PhoneAndCatalog-01-phone
+[P04_PhoneAndCatalog] A11Y phone: Contrast failed · 48 'Acasă'
+[P04_PhoneAndCatalog] A11Y phone: Contrast failed · 48 'Săptămâna'
+[P04_PhoneAndCatalog] A11Y phone: Contrast failed · 48 'Rețete'
+[P04_PhoneAndCatalog] A11Y phone: Contrast failed · 48 '7'
+[P04_PhoneAndCatalog] A11Y phone: Contrast failed · 48 'Offline'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 '7'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 'O vibrație ușoară când răsfoiești copertele în Cover Flow.'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 'Despre aplicație'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[P04_PhoneAndCatalog] A11Y phone: Dynamic Type font sizes are partially unsupported · 48 'Componente de design'
+[P04_PhoneAndCatalog] A11Y phone: Text clipped · 48 'Săptămâna'
+[P04_PhoneAndCatalog] A11Y phone: Text clipped · 48 'Profil'
+[P04_PhoneAndCatalog] A11Y phone: Text clipped · 48 'Acasă'
+[P04_PhoneAndCatalog] A11Y phone: Text clipped · 48 'Componente de design'
+[P04_PhoneAndCatalog] A11Y phone: Text clipped · 48 'Rețete'
+[P04_PhoneAndCatalog] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Pe acest telefon | Offline | Povești pe telefon | Povești pe telefon, 3 · Zero KB | Ține apăsat pe o poveste sau pe un dosar și alege „Descarcă” ca să le asculți fără internet. | O vibrație ușoară când răsfoiești copertele în Cover Flow. | Despre aplicație | Versiune | Versiune, 0.1.0 (1) | Clic pe raft | Componente de design
+[P04_PhoneAndCatalog] Clic pe raft: 1 → 1
+[P04_PhoneAndCatalog] tap  'Componente de design'
+[P04_PhoneAndCatalog] shot P04_PhoneAndCatalog-02-catalog
+[P04_PhoneAndCatalog] shot P04_PhoneAndCatalog-03-catalog-2
+[P04_PhoneAndCatalog] shot P04_PhoneAndCatalog-04-catalog-3
+[P05_ChildSettings] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[P05_ChildSettings] tap  'Ana'
+[P05_ChildSettings] shot P05_ChildSettings-01-child
+[P05_ChildSettings] A11Y child: Contrast failed · -
+[P05_ChildSettings] A11Y child: Potentially inaccessible text · -
+[P05_ChildSettings] A11Y child: Potentially inaccessible text · -
+[P05_ChildSettings] A11Y child: Potentially inaccessible text · -
+[P05_ChildSettings] A11Y child: Potentially inaccessible text · -
+[P05_ChildSettings] FAIL app is not in the foreground at the end (state 1): crash or exit?
+[P06_Badges] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[P06_Badges] badge cards: Pașaportul culinar, 10 din 33 | Albumul de povești, 10 din 32 | Ieși din cont
+[P06_Badges] shot P06_Badges-01-badges-1
+[P06_Badges] A11Y badges-1: Contrast failed · 48 'Acasă'
+[P06_Badges] A11Y badges-1: Contrast failed · 48 'Săptămâna'
+[P06_Badges] A11Y badges-1: Contrast failed · 48 'Rețete'
+[P06_Badges] A11Y badges-1: Contrast failed · 48 '7'
+[P06_Badges] A11Y badges-1: Contrast failed · 48 'Glisează sau atinge marginea paginii ca să răsfoiești.'
+[P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 '7'
+[P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[P06_Badges] A11Y badges-1: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[P06_Badges] A11Y badges-1: Text clipped · 48 'Săptămâna'
+[P06_Badges] A11Y badges-1: Text clipped · 48 'Profil'
+[P06_Badges] A11Y badges-1: Text clipped · 48 'Rețete'
+[P06_Badges] A11Y badges-1: Text clipped · 48 'Acasă'
+[P06_Badges] shot P06_Badges-02-badges-1-page2
+[P06_Badges] shot P06_Badges-03-badges-1-page3
+[P06_Badges] back via 'Înapoi'
+[P06_Badges] shot P06_Badges-04-badges-2
+[P06_Badges] A11Y badges-2: Contrast failed · 48 'Acasă'
+[P06_Badges] A11Y badges-2: Contrast failed · 48 'Săptămâna'
+[P06_Badges] A11Y badges-2: Contrast failed · 48 'Rețete'
+[P06_Badges] A11Y badges-2: Contrast failed · 48 '7'
+[P06_Badges] A11Y badges-2: Contrast failed · 48 'Glisează sau atinge marginea paginii ca să răsfoiești. Atinge un loc gol ca să afli ce lipsește.'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Glisează ca să deschizi'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 '10 din 32 abțibilduri'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 '7'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[P06_Badges] A11Y badges-2: Dynamic Type font sizes are partially unsupported · 48 'Albumul meu'
+[P06_Badges] A11Y badges-2: Text clipped · 48 'Glisează sau atinge marginea paginii ca să răsfoiești. Atinge un loc gol ca să afli ce lipsește.'
+[P06_Badges] A11Y badges-2: Text clipped · 48 'Profil'
+[P06_Badges] A11Y badges-2: Text clipped · 48 'Acasă'
+[P06_Badges] A11Y badges-2: Text clipped · 48 'Săptămâna'
+[P06_Badges] A11Y badges-2: Text clipped · 48 'Rețete'
+[P06_Badges] A11Y badges-2: Element has no description · 43 ''
+[P06_Badges] A11Y badges-2: Element has no description · 43 ''
+[P06_Badges] A11Y badges-2: Element has no description · 43 ''
+[P06_Badges] A11Y badges-2: Element has no description · 43 ''
+[P06_Badges] shot P06_Badges-05-badges-2-page2
+[P06_Badges] back via 'Înapoi'
+[P06_Badges] LAUNCH -demo YES -area stories -tab profile -kt-kid none
+[P06_Badges] shot P06_Badges-06-stories-profile
+[P06_Badges] A11Y stories-profile: Hit area is too small · 9 'Ieși din cont'
+[P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[P06_Badges] A11Y stories-profile: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 'sorin@exemplu.ro · spațiu comun cu Loredana'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 '3 persoane · 9 lucruri partajate'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 'Favorite'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 'Acasă'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 'Adaugă'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 '4 aparate · mâncăm fără nuci · vocea Carmen'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 'Bibliotecă'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 '3 povești descărcate · clic pe raft pornit'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 'Profil'
+[P06_Badges] A11Y stories-profile: Text clipped · 48 '5 ani · modul copil: 30 min'
+[P06_Badges] A11Y stories-profile: Contrast failed · 48 'Acasă'
+[P06_Badges] A11Y stories-profile: Contrast failed · 48 'Favorite'
+[P06_Badges] A11Y stories-profile: Contrast failed · 48 'Adaugă'
+[P06_Badges] A11Y stories-profile: Contrast failed · 48 'S'
+[P06_Badges] A11Y stories-profile: Contrast failed · 48 '10 din 32'
+[P06_Badges] A11Y stories-profile: Contrast failed · 48 '3 povești descărcate · clic pe raft pornit'
+[P07_Login] LAUNCH -kt-kid none
+[P07_Login] shot P07_Login-01-login
+[P07_Login] A11Y login: Hit area is too small · 9 'Arată parola'
+[P07_Login] texts: Bucătăria
+cu povești | Rețete și povești pentru acasă | Doar cu invitație. Cere-i lui Sorin un cont.
+[P07_Login] ok   'Intră în cont' disabled while e-mail and password are empty
+[P07_Login] type 'qa-test@example.invalid' into 'E-mail'
+[P07_Login] ok   password field
+[P07_Login] tap  'Arată parola'
+[P07_Login] shot P07_Login-02-login-filled
+[P07_Login] tap  'Intră în cont'
+[P07_Login] shot P07_Login-03-login-wrong
+[P07_Login] after wrong sign-in: Bucătăria
+cu povești | Rețete și povești pentru acasă | Doar cu invitație. Cere-i lui Sorin un cont. | Intră în cont
+[P07_Login] ok   wrong credentials do not sign in
+[P07_Login] tap  'Ai uitat parola?'
+[P07_Login] shot P07_Login-04-forgot
+[P07_Login] A11Y forgot: Contrast failed · 48 'Trimite codul'
+[P07_Login] A11Y forgot: Text clipped · 49 ''
+[P07_Login] forgot: Bucătăria
+cu povești | Ai uitat parola? | Îți trimitem un cod pe e-mail ca să alegi o parolă nouă. | Trimite codul
+[P07_Login] tap  'Înapoi la intrare'
+[P07_Login] shot P07_Login-05-back-to-login
+[P07_Login] ok   shows 'Intră în cont'
+[R01_Home] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+[R01_Home] shot R01_Home-01-home-azi
+[R01_Home] A11Y home-azi: Hit area is too small · 9 'Povești'
+[R01_Home] A11Y home-azi: Contrast failed · 48 'Săptămâna'
+[R01_Home] A11Y home-azi: Contrast failed · 48 '7'
+[R01_Home] A11Y home-azi: Contrast failed · 48 'Profil'
+[R01_Home] A11Y home-azi: Contrast nearly passed · 9 'Povești'
+[R01_Home] A11Y home-azi: Contrast failed · 48 'Suc de portocale'
+[R01_Home] A11Y home-azi: Contrast failed · 48 '🐉'
+[R01_Home] A11Y home-azi: Contrast failed · 48 'Dragonul care strănuta'
+[R01_Home] A11Y home-azi: Contrast failed · 48 'Ciorbe și supe · 4 porții'
+[R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 '7'
+[R01_Home] A11Y home-azi: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Suc de portocale'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Acasă'
+[R01_Home] A11Y home-azi: Text clipped · 9 'Gătește pas cu pas'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Azi în meniu · 5 min · Băuturi'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Azi în meniu · 1 h 30 · Ciorbe și supe'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Profil'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Săptămâna'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Ciorbă de perișoare'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Chifle de casă'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Rețete'
+[R01_Home] A11Y home-azi: Text clipped · 9 'Povești'
+[R01_Home] A11Y home-azi: Text clipped · 48 'Azi în meniu · 40 min · Patiserie'
+[R01_Home] ok   Rețete / Povești switch shows
+[R01_Home] ok   shows 'Povești'
+[R01_Home] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Ciorbă de perișoare | Azi în meniu · 1 h 30 · Ciorbe și supe | Chifle de casă | Azi în meniu · 40 min · Patiserie | Suc de portocale | Azi în meniu · 5 min · Băuturi | 🐉 | PENTRU ANA, LA CULCARE | Dragonul care strănuta | Ascultă · 7 min | AZI ÎN PLAN · 1 H 30 | Ciorbă de perișoare | Ciorbe și supe · 4 porții
+[R01_Home] shot R01_Home-02-home-hero-swiped
+[R01_Home] tap  'Săptămâna'
+[R01_Home] shot R01_Home-03-home-saptamana
+[R01_Home] tap  'Caiet'
+[R01_Home] shot R01_Home-04-home-caiet
+[R01_Home] ok   shows 'Recente'
+[R01_Home] shot R01_Home-05-home-caiet-scrolled
+[R01_Home] ok   shows 'Caietul meu'
+[R01_Home] tap  'Ciorbe și supe'
+[R01_Home] shot R01_Home-06-category-page
+[R01_Home] ok   category page lists its recipes
+[R01_Home] back via 'Înapoi'
+[R01_Home] tap  'Caută rețete'
+[R01_Home] shot R01_Home-07-search-empty
+[R01_Home] type 'cartofi'
+[R01_Home] shot R01_Home-08-search-cartofi
+[R01_Home] ok   search 'cartofi' finds Cartofi țărănești
+[R01_Home] ok   search 'cartofi' finds the soup by title
+[R01_Home] shot R01_Home-09-search-ciorba-no-diacritics
+[R01_Home] ok   search without diacritics ('ciorba') still finds 'Ciorbă'
+[R01_Home] shot R01_Home-10-search-ingredient
+[R01_Home] ok   search by ingredient ('orez') finds Roșii umplute
+[R01_Home] shot R01_Home-11-search-nothing
+[R01_Home] ok   empty search result message
+[R01_Home] tap  'Chifle de casă'
+[R01_Home] shot R01_Home-12-search-opened-recipe
+[R01_Home] ok   recipe opens from search
+[R01_Home] back via 'Înapoi'
+[R01_Home] shot R01_Home-13-search-after-back
+[R02_RecipePage] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+[R02_RecipePage] tap  'Ciorbă de perișoare'
+[R02_RecipePage] shot R02_RecipePage-01-recipe
+[R02_RecipePage] A11Y recipe: Text clipped · 9 'Gătește pas cu pas'
+[R02_RecipePage] A11Y recipe: Text clipped · 48 'proteine'
+[R02_RecipePage] A11Y recipe: Text clipped · 48 'carbohidrați'
+[R02_RecipePage] A11Y recipe: Text clipped · 48 'grăsimi'
+[R02_RecipePage] A11Y recipe: Label not human-readable · 43 'person.2.fill'
+[R02_RecipePage] A11Y recipe: Contrast failed · 9 '1 legătură leuștean'
+[R02_RecipePage] A11Y recipe: Contrast failed · 9 'Sare și piper'
+[R02_RecipePage] A11Y recipe: 1 button(s) without a real label: ''@368,86
+[R02_RecipePage] ok   shows 'Ciorbă de perișoare'
+[R02_RecipePage] ok   shows '4 porții'
+[R02_RecipePage] texts: CIORBE ȘI SUPE · PARTAJATĂ | Ciorbă de perișoare | 1 h 30 | 4 porții | 6 pași | Gătită o dată · acum 3 săptămâni | pe porție, din 4 · atinge pentru detalii | Alergeni: | ouă | țelină | fără nuci | 410 | kcal | 26 g | proteine | 38 g | carbohidrați | 16 g | grăsimi
+[R02_RecipePage] tap  'Mai multe porții'
+[R02_RecipePage] tap  'Mai multe porții'
+[R02_RecipePage] ok   servings go to 6
+[R02_RecipePage] ok   500 g carne × 1.5 = 750 g
+[R02_RecipePage] shot R02_RecipePage-02-recipe-6-portions
+[R02_RecipePage] tap  'Mai puține porții'
+[R02_RecipePage] tap  'Mai puține porții'
+[R02_RecipePage] ok   servings back to 4
+[R02_RecipePage] tap  'Mai puține porții'
+[R02_RecipePage] tap  'Mai puține porții'
+[R02_RecipePage] tap  'Mai puține porții'
+[R02_RecipePage] tap  'Mai puține porții'
+[R02_RecipePage] tap  'Mai puține porții'
+[R02_RecipePage] ok   servings stop at 1 porție
+[R02_RecipePage] shot R02_RecipePage-03-recipe-1-portion
+[R02_RecipePage] tap  'Mai multe porții'
+[R02_RecipePage] tap  'Mai multe porții'
+[R02_RecipePage] tap  'Mai multe porții'
+[R02_RecipePage] ok   shows '4 porții'
+[R02_RecipePage] tap  '3 linguri orez'
+[R02_RecipePage] ok   hint after ticking an ingredient
+[R02_RecipePage] shot R02_RecipePage-04-recipe-ticked
+[R02_RecipePage] tap  'Pune în listă'
+[R02_RecipePage] shot R02_RecipePage-05-recipe-put-on-list
+[R02_RecipePage] toast after Pune în listă: 7 | CIORBE ȘI SUPE · PARTAJATĂ | Ciorbă de perișoare | 1 h 30 | 4 porții | 6 pași | Gătită o dată · acum 3 săptămâni | pe porție, din 4 · atinge pentru detalii
+[R02_RecipePage] FAIL ticked ingredient is left out: expected 'Am pus 3 ingrediente' (3 new of 4, one ticked), got other
+[R02_RecipePage] tap  'Pași'
+[R02_RecipePage] shot R02_RecipePage-06-recipe-steps
+[R02_RecipePage] tap  'Toacă ceapa'
+[R02_RecipePage] shot R02_RecipePage-07-recipe-step-done
+[R02_RecipePage] tap  'Note'
+[R02_RecipePage] shot R02_RecipePage-08-recipe-notes
+[R02_RecipePage] ok   shows 'Notele noastre'
+[R02_RecipePage] ok   family note from Loredana shows
+[R02_RecipePage] tap  'Adaugă o notă'
+[R02_RecipePage] type 'Nota QA de test'
+[R02_RecipePage] shot R02_RecipePage-09-recipe-note-typing
+[R02_RecipePage] NOTE 'Salvează' exists but is not hittable; tapping its centre
+[R02_RecipePage] tap  'Salvează'
+[R02_RecipePage] FAIL new note shows
+[R02_RecipePage] shot R02_RecipePage-10-recipe-note-added
+[R02_RecipePage] NOTE 'Șterge nota' exists but is not hittable; tapping its centre
+[R02_RecipePage] tap  'Șterge nota'
+[R02_RecipePage] ok   note deleted
+[R02_RecipePage] NOTE 'Scoate din favorite' exists but is not hittable; tapping its centre
+[R02_RecipePage] tap  'Scoate din favorite'
+[R02_RecipePage] FAIL toast 'Scoasă din favorite'
+[R02_RecipePage] FAIL heart switches to 'Pune la favorite'
+[R02_RecipePage] FAIL cannot find 'Pune la favorite' to tap
+[R02_RecipePage] NOTE 'Pune în săptămână' exists but is not hittable; tapping its centre
+[R02_RecipePage] tap  'Pune în săptămână'
+[R02_RecipePage] shot R02_RecipePage-11-recipe-day-picker
+[R02_RecipePage] FAIL shows 'Când o gătești?'
+[R02_RecipePage] FAIL cannot find 'Mâine' to tap
+[R02_RecipePage] FAIL toast 'Adăugată mâine.'
+[R02_RecipePage] shot R02_RecipePage-12-recipe-planned-tomorrow
+[R02_RecipePage] NOTE 'Mai multe' exists but is not hittable; tapping its centre
+[R02_RecipePage] tap  'Mai multe'
+[R02_RecipePage] shot R02_RecipePage-13-recipe-more-menu
+[R02_RecipePage] FAIL shows 'Editează rețeta'
+[R02_RecipePage] FAIL shows 'Trimite'
+[R02_RecipePage] FAIL shows 'Șterge rețeta'
+[R02_RecipePage] FAIL shared recipe offers 'Oprește partajarea'
+[R02_RecipePage] FAIL cannot find 'Editează rețeta' to tap
+[R02_RecipePage] shot R02_RecipePage-14-recipe-editor-open
+[R02_RecipePage] A11Y editor-edit: no issues
+[R02_RecipePage] FAIL shows 'Salvează rețeta'
+[R02_RecipePage] back via edge swipe
+[R02_RecipePage] shot R02_RecipePage-15-recipe-after-editor
+[R02_RecipePage] ok   back on the recipe after closing the editor untouched
+[R02b_OtherAccountRecipe] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+[R02b_OtherAccountRecipe] tap  'Plăcinta Anei'
+[R02b_OtherAccountRecipe] shot R02b_OtherAccountRecipe-01-other-recipe
+[R02b_OtherAccountRecipe] ok   kicker says it comes from Ana
+[R02b_OtherAccountRecipe] tap  'Mai multe'
+[R02b_OtherAccountRecipe] shot R02b_OtherAccountRecipe-02-other-recipe-menu
+[R02b_OtherAccountRecipe] ok   no 'Editează rețeta' for another account's recipe
+[R02b_OtherAccountRecipe] ok   no 'Șterge rețeta' for another account's recipe
+[R03_CookMode] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+[R03_CookMode] tap  'Ciorbă de perișoare'
+[R03_CookMode] tap  'Gătește pas cu pas'
+[R03_CookMode] shot R03_CookMode-01-cook-step1
+[R03_CookMode] A11Y cook: Hit area is too small · 1 'Pasul 1 din 6'
+[R03_CookMode] A11Y cook: Contrast failed · 48 '1'
+[R03_CookMode] A11Y cook: Text clipped · 48 'Ciorbă de perișoare'
+[R03_CookMode] A11Y cook: 1 button(s) without a real label: ''@368,86
+[R03_CookMode] ok   shows '1 din 6'
+[R03_CookMode] tap  'Pasul următor'
+[R03_CookMode] tap  'Pasul următor'
+[R03_CookMode] shot R03_CookMode-02-cook-step3-timer
+[R03_CookMode] ok   shows '3 din 6'
+[R03_CookMode] ok   step with '15 minute' shows a timer
+[R03_CookMode] system alert: “Bucătăria” Would Like to Send You Notifications
+[R03_CookMode] shot R03_CookMode-03-cook-timer-running
+[R03_CookMode] ok   timer runs
+[R03_CookMode] tap  'Ingrediente'
+[R03_CookMode] shot R03_CookMode-04-cook-ingredients
+[R03_CookMode] FAIL shows 'Toată rețeta'
+[R03_CookMode] tap  'Pasul anterior'
+[R03_CookMode] ok   previous step works
+[R03_CookMode] tap  'Închide modul de gătit'
+[R03_CookMode] shot R03_CookMode-05-cook-closed-midway
+[R03_CookMode] ok   recipe offers 'Continuă să gătești' after leaving cook mode midway
+[R03_CookMode] tap  'Continuă să gătești'
+[R03_CookMode] ok   cook mode resumes on step 2
+[R03_CookMode] tap  'Pasul următor'
+[R03_CookMode] tap  'Pasul următor'
+[R03_CookMode] tap  'Pasul următor'
+[R03_CookMode] tap  'Pasul următor'
+[R03_CookMode] shot R03_CookMode-06-cook-last-step
+[R03_CookMode] tap  'Pasul următor'
+[R03_CookMode] shot R03_CookMode-07-cook-finished
+[R03_CookMode] ok   finish page
+[R03_CookMode] type 'Nota din modul de gătit'
+[R03_CookMode] tap  'Salvează nota și închide'
+[R03_CookMode] shot R03_CookMode-08-cook-after-finish
+[R03_CookMode] ok   recipe says it was cooked twice (once before in demo)
+[R03_CookMode] tap  'Note'
+[R03_CookMode] ok   note from cook mode is on the recipe
+[R03_CookMode] shot R03_CookMode-09-cook-note-on-recipe
+[R04_Week] LAUNCH -demo YES -area recipes -tab week -kt-kid none
+[R04_Week] shot R04_Week-01-week
+[R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 '7'
+[R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[R04_Week] A11Y week: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[R04_Week] A11Y week: Text clipped · 48 '40 min · 12 porții'
+[R04_Week] A11Y week: Text clipped · 48 'Profil'
+[R04_Week] A11Y week: Text clipped · 48 'Suc de portocale'
+[R04_Week] A11Y week: Text clipped · 48 'Ciorbă de perișoare'
+[R04_Week] A11Y week: Text clipped · 48 'Sâmbătă'
+[R04_Week] A11Y week: Text clipped · 48 '1 h 30 · 4 porții'
+[R04_Week] A11Y week: Text clipped · 48 'Chifle de casă'
+[R04_Week] A11Y week: Text clipped · 48 'Vineri'
+[R04_Week] A11Y week: Text clipped · 48 'Supă cremă de cartofi'
+[R04_Week] A11Y week: Text clipped · 48 '40 min · 4 porții'
+[R04_Week] A11Y week: Text clipped · 48 'Azi · Joi'
+[R04_Week] A11Y week: Text clipped · 48 'Rețete'
+[R04_Week] A11Y week: Text clipped · 48 'Acasă'
+[R04_Week] A11Y week: Text clipped · 48 'Săptămâna'
+[R04_Week] A11Y week: Text clipped · 48 '5 min · 2 porții'
+[R04_Week] A11Y week: Element has no description · 9 ''
+[R04_Week] A11Y week: Element has no description · 9 ''
+[R04_Week] A11Y week: Element has no description · 9 ''
+[R04_Week] A11Y week: Element has no description · 9 ''
+[R04_Week] A11Y week: Contrast failed · 48 'Acasă'
+[R04_Week] A11Y week: Contrast failed · 48 'Rețete'
+[R04_Week] A11Y week: Contrast failed · 48 '7'
+[R04_Week] A11Y week: Contrast failed · 48 'Profil'
+[R04_Week] A11Y week: Contrast failed · 48 'Suc de portocale'
+[R04_Week] A11Y week: Contrast failed · 48 '5 min · 2 porții'
+[R04_Week] A11Y week: Contrast failed · 48 'Supă cremă de cartofi'
+[R04_Week] A11Y week: 13 button(s) without a real label: ''@360,101, ''@-335,283, ''@-201,283, ''@66,283, ''@67,493, ''@67,703, ''@200,283, ''@-290,370
+[R04_Week] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | SĂPTĂMÂNA MEA | Noiembrie 2026 | Luni | 09 | Marți | 10 | Miercuri | 11 | Azi · Joi | 12 | Vineri | 13 | Sâmbătă | 14 | Duminică | 15 | Luni | 16 | Marți | 17 | Cartofi țărănești | 50 min · 4 porții | Cartofi cu ardei la tigaie | 35 min · 2 porții | Ciorbă de perișoare | 1 h 30 · 4 porții | Chifle de casă | 40 min · 12 porții | Suc de portocale | 5 min · 2 porții | Supă cremă de cartofi | 40 min · 4 porții
+[R04_Week] ok   shows 'SĂPTĂMÂNA MEA'
+[R04_Week] tap  'Adaugă o rețetă azi'
+[R04_Week] shot R04_Week-02-week-add-sheet
+[R04_Week] tap  'Pune Cartofi țărănești în ziua asta'
+[R04_Week] ok   + turns into 'Pusă'
+[R04_Week] shot R04_Week-03-week-add-picked
+[R04_Week] tap  'Gata'
+[R04_Week] shot R04_Week-04-week-after-add
+[R04_Week] tap  'Opțiuni pentru Suc de portocale'
+[R04_Week] shot R04_Week-05-week-entry-menu
+[R04_Week] tap  'Porții'
+[R04_Week] shot R04_Week-06-week-servings-menu
+[R04_Week] tap  '4 porții'
+[R04_Week] tap  'Opțiuni pentru Suc de portocale'
+[R04_Week] tap  'Mută în altă zi'
+[R04_Week] shot R04_Week-07-week-move-menu
+[R04_Week] NOTE 'Opțiuni pentru Suc de portocale' exists but is not hittable; tapping its centre
+[R04_Week] tap  'Opțiuni pentru Suc de portocale'
+[R04_Week] FAIL cannot find 'Scoate din ziua asta' to tap
+[R04_Week] shot R04_Week-08-week-removed
+[R04_Week] NOTE 'Lista de cumpărături' exists but is not hittable; tapping its centre
+[R04_Week] tap  'Lista de cumpărături'
+[R04_Week] shot R04_Week-09-week-list-menu
+[R04_Week] FAIL cannot find 'Pune în listă ce gătești în 7 zile' to tap
+[R04_Week] FAIL toast after putting the week on the list
+[R04_Week] shot R04_Week-10-week-put-week-on-list
+[R04_Week] tap  'Propune cinele săptămânii'
+[R04_Week] shot R04_Week-11-plan-week-1
+[R04_Week] A11Y plan-week: Hit area is too small · 1 'Pasul 1 din 3'
+[R04_Week] A11Y plan-week: Text clipped · 9 'Și câteva noi'
+[R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+[R04_Week] A11Y plan-week: Text clipped · 48 'deja: Supă cremă de cartofi'
+[R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+[R04_Week] A11Y plan-week: Text clipped · 48 '14 nov'
+[R04_Week] A11Y plan-week: Text clipped · 48 '18 nov'
+[R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+[R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+[R04_Week] A11Y plan-week: Text clipped · 9 'Doar rețetele mele'
+[R04_Week] A11Y plan-week: Text clipped · 48 '17 nov'
+[R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+[R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+[R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+[R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+[R04_Week] A11Y plan-week: Text clipped · 48 '15 nov'
+[R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+[R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+[R04_Week] A11Y plan-week: Text clipped · 48 'deja: Ciorbă de perișoare, Chifle de casă, Suc de portocale, Cartofi țărănești'
+[R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+[R04_Week] A11Y plan-week: Text clipped · 48 '16 nov'
+[R04_Week] A11Y plan-week: Text clipped · 9 'oricât'
+[R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+[R04_Week] A11Y plan-week: Text clipped · 9 '45 min'
+[R04_Week] A11Y plan-week: Text clipped · 9 '20 min'
+[R04_Week] A11Y plan-week: Contrast nearly passed · 48 'deja: Ciorbă de perișoare, Chifle de casă, Suc de portocale, Cartofi țărănești'
+[R04_Week] A11Y plan-week: Contrast nearly passed · 48 'deja: Supă cremă de cartofi'
+[R04_Week] A11Y plan-week: Contrast failed · 9 '–'
+[R04_Week] A11Y plan-week: Contrast failed · 9 '–'
+[R04_Week] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | PLANIFICĂ AUTOMAT | Ce gătim săptămâna asta? | Cât timp ai pentru cină în fiecare seară. „–” înseamnă că sărim seara. | Azi | deja: Ciorbă de perișoare, Chifle de casă, Suc de portocale, Cartofi țărănești | Mâine | deja: Supă cremă de cartofi | Sâmbătă | 14 nov | Duminică | 15 nov | Luni | 16 nov | Marți | 17 nov | Miercuri | 18 nov | Fără nuci | SĂPTĂMÂNA MEA | Noiembrie 2026 | Luni | 09 | Marți | 10 | Miercuri | 11 | Azi · Joi | 12 | Vineri | 13 | Sâmbătă | 14 | Duminică | 15 | Luni | 16 | Marți | 17 | Cartofi țărănești | 50 min · 4 porții | Cartofi cu ardei la tigaie | 35 min · 2 porții | Ciorbă de perișoare | 1 h 30 · 4 porții | Chifle de casă | 40 min · 12 porții | Suc de portocale | 5 min · 4 porții | Cartofi țărănești | 50 min · 4 porții | Supă cremă de cartofi | 40 min · 4 porții
+[R04_Week] tap  'Mai departe'
+[R04_Week] shot R04_Week-12-plan-week-2
+[R04_Week] skip 'Mai departe' not found
+[R04_Week] shot R04_Week-13-plan-week-3
+[R04_Week] tap  'Propune cinele'
+[R04_Week] shot R04_Week-14-plan-week-result
+[R04_Week] texts: Propune cinele | Acasă | Săptămâna | Rețete | 7 | Listă | Profil | PLANIFICĂ AUTOMAT | Ce ai deja acasă? | Folosim întâi ce trebuie gătit, iar la listă nu mai punem ce ai. Poți sări peste. | De exemplu: 2 dovlecei, piept de pui, smântână, ouă, orez | SĂPTĂMÂNA MEA | Noiembrie 2026 | Luni | 09 | Marți | 10 | Miercuri | 11 | Azi · Joi | 12 | Vineri | 13 | Sâmbătă | 14 | Duminică | 15 | Luni | 16 | Marți | 17 | Cartofi țărănești | 50 min · 4 porții | Cartofi cu ardei la tigaie | 35 min · 2 porții | Ciorbă de perișoare | 1 h 30 · 4 porții | Chifle de casă | 40 min · 12 porții | Suc de portocale | 5 min · 4 porții | Cartofi țărănești | 50 min · 4 porții | Supă cremă de cartofi | 40 min · 4 porții
+[R05_ShoppingList] LAUNCH -demo YES -area recipes -tab list -kt-kid none
+[R05_ShoppingList] shot R05_ShoppingList-01-list
+[R05_ShoppingList] A11Y list: Contrast failed · 48 'Acasă'
+[R05_ShoppingList] A11Y list: Contrast failed · 48 'Săptămâna'
+[R05_ShoppingList] A11Y list: Contrast failed · 48 'Rețete'
+[R05_ShoppingList] A11Y list: Contrast failed · 48 '7'
+[R05_ShoppingList] A11Y list: Contrast failed · 48 'Profil'
+[R05_ShoppingList] A11Y list: Contrast failed · 9 'Pe rețete'
+[R05_ShoppingList] A11Y list: Contrast failed · -
+[R05_ShoppingList] A11Y list: Contrast failed · -
+[R05_ShoppingList] A11Y list: Contrast failed · -
+[R05_ShoppingList] A11Y list: Contrast failed · -
+[R05_ShoppingList] A11Y list: Contrast failed · -
+[R05_ShoppingList] A11Y list: Contrast failed · -
+[R05_ShoppingList] A11Y list: Contrast failed · -
+[R05_ShoppingList] A11Y list: Contrast failed · -
+[R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 '7'
+[R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[R05_ShoppingList] A11Y list: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[R05_ShoppingList] A11Y list: Text clipped · 49 ''
+[R05_ShoppingList] A11Y list: Text clipped · 48 'Acasă'
+[R05_ShoppingList] A11Y list: Text clipped · 48 'Săptămâna'
+[R05_ShoppingList] A11Y list: Text clipped · 48 'Rețete'
+[R05_ShoppingList] A11Y list: Text clipped · 48 'Listă'
+[R05_ShoppingList] A11Y list: Text clipped · 9 'Pe raioane'
+[R05_ShoppingList] A11Y list: Text clipped · 48 'Profil'
+[R05_ShoppingList] A11Y list: 1 button(s) without a real label: ''@364,107
+[R05_ShoppingList] texts: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Cumpărături | 7 de luat · 2 în coș | LEGUME ȘI FRUCTE | CARNE ȘI PEȘTE | LACTATE ȘI OUĂ | CASĂ ȘI IGIENĂ | 2 cepe | Ciorbă de perișoare | 1 morcov | Ciorbă de perișoare | 8 roșii | Roșii umplute | 500 g carne tocată | Ciorbă de perișoare | 1 ou | Ciorbă de perișoare | 300 ml lapte | Chifle de casă
+[R05_ShoppingList] ok   shows 'Cumpărături'
+[R05_ShoppingList] ok   shows 'de luat'
+[R05_ShoppingList] ok   Listă tab shows a count
+[R05_ShoppingList] type '1 l lapte' into 'Adaugă ceva, ex. 1 l lapte'
+[R05_ShoppingList] tap  'Adaugă'
+[R05_ShoppingList] shot R05_ShoppingList-02-list-added-milk
+[R05_ShoppingList] after adding milk: Acasă | Săptămâna | Rețete | 8 | Listă | Profil | Cumpărături | 7 de luat · 2 în coș | LEGUME ȘI FRUCTE | CARNE ȘI PEȘTE | LACTATE ȘI OUĂ | CASĂ ȘI IGIENĂ | 2 cepe | Ciorbă de perișoare | 1 morcov | Ciorbă de perișoare | 8 roșii | Roșii umplute | 500 g carne tocată | Ciorbă de perișoare | 1 ⅓ l lapte | Chifle de casă | 1 ou | Ciorbă de perișoare
+[R05_ShoppingList] ok   shows 'lapte'
+[R05_ShoppingList] shot R05_ShoppingList-03-list-empty-line
+[R05_ShoppingList] tap  'Detergent de vase'
+[R05_ShoppingList] shot R05_ShoppingList-04-list-ticked
+[R05_ShoppingList] FAIL basket shows 3 after ticking one
+[R05_ShoppingList] tap  'Pe rețete'
+[R05_ShoppingList] shot R05_ShoppingList-05-list-by-recipe
+[R05_ShoppingList] ok   grouped by recipe
+[R05_ShoppingList] tap  'Pe raioane'
+[R05_ShoppingList] shot R05_ShoppingList-06-list-by-aisle
+[R05_ShoppingList] ok   row '8 roșii' to swipe
+[R05_ShoppingList] shot R05_ShoppingList-07-list-swipe
+[R05_ShoppingList] tap  'Șterge'
+[R05_ShoppingList] ok   row deleted by swipe
+[R05_ShoppingList] tap  'ÎN COȘ'
+[R05_ShoppingList] shot R05_ShoppingList-08-list-basket-open
+[R05_ShoppingList] FAIL cannot find 'Golește coșul' to tap
+[R05_ShoppingList] shot R05_ShoppingList-09-list-empty-basket-confirm
+[R05_ShoppingList] FAIL cannot find 'Da, golește' to tap
+[R05_ShoppingList] FAIL basket emptied
+[R05_ShoppingList] FAIL cannot find 'Opțiuni listă' to tap
+[R05_ShoppingList] shot R05_ShoppingList-10-list-menu
+[R05_ShoppingList] FAIL cannot find 'Trimite lista' to tap
+[R05_ShoppingList] FAIL cannot find 'Opțiuni listă' to tap
+[R05_ShoppingList] FAIL cannot find 'Golește toată lista' to tap
+[R05_ShoppingList] shot R05_ShoppingList-11-list-clear-confirm
+[R05_ShoppingList] FAIL cannot find 'Da, golește tot' to tap
+[R05_ShoppingList] FAIL empty list message
+[R05_ShoppingList] shot R05_ShoppingList-12-list-empty
+[R05_ShoppingList] FAIL cannot find 'Pune în listă ce gătești în 7 zile' to tap
+[R05_ShoppingList] FAIL toast after refilling from the week
+[R05_ShoppingList] shot R05_ShoppingList-13-list-refilled
+[R05_ShoppingList] after refill: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | LACTATE ȘI OUĂ | CASĂ ȘI IGIENĂ | 500 g carne tocată | Ciorbă de perișoare | 1 ⅓ l lapte | Chifle de casă | 1 ou | Ciorbă de perișoare | ÎN COȘ · 2
+[R06_RecipesList] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+[R06_RecipesList] shot R06_RecipesList-01-recipes-grid
+[R06_RecipesList] A11Y recipes-grid: Hit area is too small · 9 'Favorite'
+[R06_RecipesList] A11Y recipes-grid: Hit area is too small · 9 'Băuturi'
+[R06_RecipesList] A11Y recipes-grid: Hit area is too small · 9 'Ciorbe și supe'
+[R06_RecipesList] A11Y recipes-grid: Hit area is too small · 9 'Deserturi'
+[R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[R06_RecipesList] A11Y recipes-grid: Dynamic Type font sizes are partially unsupported · 48 '7'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Ciorbă de perișoare'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Profil'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 49 ''
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 '1 h 30 · 4 porții'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Săptămâna'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Acasă'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Cartofi țărănești'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Cartofi cu ardei la tigaie'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Rețete'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 '45 min · 8 porții'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Chifle de casă'
+[R06_RecipesList] A11Y recipes-grid: Text clipped · 48 'Roșii umplute'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 49 ''
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Acasă'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Săptămâna'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '7'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Listă'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Profil'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '35 min · 2 porții'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '1 h 30 · 4 porții'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Plăcinta Anei'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '40 min · 12 porții'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 'Roșii umplute'
+[R06_RecipesList] A11Y recipes-grid: Contrast failed · 48 '1 h · 4 porții'
+[R06_RecipesList] ok   shows 'Rețetele mele'
+[R06_RecipesList] type 'cartofi'
+[R06_RecipesList] shot R06_RecipesList-02-recipes-search
+[R06_RecipesList] ok   shows 'Cartofi țărănești'
+[R06_RecipesList] ok   search hides recipes without 'cartofi'
+[R06_RecipesList] tap  'Șterge căutarea'
+[R06_RecipesList] tap  'Deserturi'
+[R06_RecipesList] shot R06_RecipesList-03-recipes-category
+[R06_RecipesList] ok   shows 'Plăcinta Anei'
+[R06_RecipesList] tap  'Favorite'
+[R06_RecipesList] shot R06_RecipesList-04-recipes-favorites
+[R06_RecipesList] tap  'Toate'
+[R06_RecipesList] tap  'Vizualizare'
+[R06_RecipesList] shot R06_RecipesList-05-recipes-view-switch
+[R06_RecipesList] skip 'Vizualizare: Listă' not found
+[R06_RecipesList] FAIL cannot find 'Listă' to tap
+[R06_RecipesList] skip 'Vizualizare: Revistă' not found
+[R06_RecipesList] FAIL cannot find 'Revistă' to tap
+[R06_RecipesList] skip 'Vizualizare: Categorii' not found
+[R06_RecipesList] FAIL cannot find 'Categorii' to tap
+[R06_RecipesList] NOTE 'Vizualizare: Grilă' exists but is not hittable; tapping its centre
+[R06_RecipesList] tap  'Vizualizare: Grilă'
+[R06_RecipesList] shot R06_RecipesList-06-recipes-view-Grilă
+[R06_RecipesList] NOTE 'Vizualizare' exists but is not hittable; tapping its centre
+[R06_RecipesList] tap  'Vizualizare'
+[R06_RecipesList] skip 'Ordine' not found
+[R06_RecipesList] shot R06_RecipesList-07-recipes-context-menu
+[R07_EditorNewRecipe] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+[R07_EditorNewRecipe] tap  'Rețetă nouă'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-01-new-ways
+[R07_EditorNewRecipe] A11Y new-ways: no issues
+[R07_EditorNewRecipe] ok   shows 'De unde vine rețeta?'
+[R07_EditorNewRecipe] tap  'Scriu eu'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-02-editor-blank
+[R07_EditorNewRecipe] A11Y editor-blank: Hit area is too small · 9 'Mai multe porții'
+[R07_EditorNewRecipe] A11Y editor-blank: Hit area is too small · 49 ''
+[R07_EditorNewRecipe] A11Y editor-blank: Contrast failed · 9 'Salvează rețeta'
+[R07_EditorNewRecipe] A11Y editor-blank: Contrast failed · 9 'Detalii'
+[R07_EditorNewRecipe] A11Y editor-blank: Contrast failed · 9 'Ingrediente'
+[R07_EditorNewRecipe] A11Y editor-blank: Contrast failed · 9 'Pași'
+[R07_EditorNewRecipe] A11Y editor-blank: Contrast failed · 9 'Note'
+[R07_EditorNewRecipe] A11Y editor-blank: Contrast failed · 48 'Link sursă'
+[R07_EditorNewRecipe] A11Y editor-blank: Potentially inaccessible text · -
+[R07_EditorNewRecipe] A11Y editor-blank: Potentially inaccessible text · -
+[R07_EditorNewRecipe] A11Y editor-blank: Potentially inaccessible text · -
+[R07_EditorNewRecipe] A11Y editor-blank: Potentially inaccessible text · -
+[R07_EditorNewRecipe] A11Y editor-blank: 2 button(s) without a real label: ''@340,86, ''@201,481
+[R07_EditorNewRecipe] tap  'Salvează rețeta'
+[R07_EditorNewRecipe] ok   saving without a title asks for one
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-03-editor-no-title
+[R07_EditorNewRecipe] type 'Omletă QA' into 'Numele rețetei'
+[R07_EditorNewRecipe] tap  'Ingrediente'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-04-editor-ingredients-tab
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-05-editor-ingredients-typed
+[R07_EditorNewRecipe] tap  'Pași'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-06-editor-steps-tab
+[R07_EditorNewRecipe] FAIL no text field 'Ce faci la acest pas?' to type 'Bate ouăle 2 minute.'
+[R07_EditorNewRecipe] tap  'Adaugă un pas'
+[R07_EditorNewRecipe] step fields after 'Adaugă un pas': 1
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-07-editor-steps-typed
+[R07_EditorNewRecipe] tap  'Salvează rețeta'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-08-editor-saved
+[R07_EditorNewRecipe] after save: Omletă QA | 1 pas
+[R07_EditorNewRecipe] ok   saved recipe opens
+[R07_EditorNewRecipe] ok   ingredients saved
+[R07_EditorNewRecipe] tap  'Pași'
+[R07_EditorNewRecipe] ok   second step saved
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-09-editor-saved-steps
+[R07_EditorNewRecipe] tap  'Mai multe'
+[R07_EditorNewRecipe] tap  'Șterge rețeta'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-10-delete-confirm
+[R07_EditorNewRecipe] tap  'Da, șterge'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-11-after-delete
+[R07_EditorNewRecipe] ok   deleted recipe is gone
+[R07_EditorNewRecipe] tap  'Rețetă nouă'
+[R07_EditorNewRecipe] tap  'Scriu eu'
+[R07_EditorNewRecipe] type 'De aruncat' into 'Numele rețetei'
+[R07_EditorNewRecipe] back via 'chevron.left'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-12-editor-discard-alert
+[R07_EditorNewRecipe] ok   leaving a changed draft asks first
+[R07_EditorNewRecipe] tap  'Renunță la modificări'
+[R07_EditorNewRecipe] ok   back on the list after discarding
+[R07_EditorNewRecipe] tap  'Rețetă nouă'
+[R07_EditorNewRecipe] tap  'Din link sau text'
+[R07_EditorNewRecipe] shot R07_EditorNewRecipe-13-new-paste
+[S01_StoriesHome] LAUNCH -demo YES -area stories -tab home -kt-kid none
+[S01_StoriesHome] shot S01_StoriesHome-01-stories-home
+[S01_StoriesHome] A11Y stories-home: Hit area is too small · 9 'Rețete'
+[S01_StoriesHome] A11Y stories-home: Hit area is too small · 9 'Toate'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 '8 min'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are unsupported · 48 '🐠'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 '6 min'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 '12 min'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are unsupported · 48 '🍎'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+[S01_StoriesHome] A11Y stories-home: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Povești Disney'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 9 'Rețete'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 '🐠'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Ursulețul și luna'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Acasă'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Profil'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Favorite'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Albă ca Zăpada'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 '🍎'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'În căutarea lui Nemo'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Povești create de noi'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 9 'Povești'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Povești Disney'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Bibliotecă'
+[S01_StoriesHome] A11Y stories-home: Text clipped · 48 'Adaugă'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Adaugă'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Profil'
+[S01_StoriesHome] A11Y stories-home: Contrast nearly passed · 9 'Rețete'
+[S01_StoriesHome] A11Y stories-home: Contrast nearly passed · 9 'Povești'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Adăugate recent'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 9 'Toate'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '🐠'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '8 min'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '🍎'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '12 min'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Povești Disney'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '🐻'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '6 min'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Ursulețul și luna'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 'Povești create de noi'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '⭐'
+[S01_StoriesHome] A11Y stories-home: Contrast failed · 48 '🐉'
+[S01_StoriesHome] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Pentru azi | Adăugate recent | Din bucătărie | Azi în meniu | Ciorbă de perișoare | Azi în meniu | Chifle de casă | 🐠 | 8 min | Nou | În căutarea lui Nemo | Povești Disney | 🍎 | 12 min | Nou | Albă ca Zăpada | Povești Disney | 🐻 | 6 min | Nou | Ursulețul și luna | Povești create de noi | ⭐ | 7 min | Nou | Steaua căzătoare | Povești de seară | 🚂 | 5 min | Nou | Trenulețul curajos | Povești de seară | 🐠 | 8 min | Nou | În căutarea lui Nemo | Povești Disney | 🍎 | 12 min | Nou | Albă ca Zăpada | Povești Disney | 🐻 | 6 min | Nou | Ursulețul și luna | Povești create de noi | ⭐ | 7 min | Nou | Steaua căzătoare | Povești de seară | 🚂 | 5 min | Nou
+[S01_StoriesHome] ok   shows 'Povești'
+[S01_StoriesHome] tap  'Colecții'
+[S01_StoriesHome] shot S01_StoriesHome-02-stories-colectii
+[S01_StoriesHome] tap  'Favorite'
+[S01_StoriesHome] shot S01_StoriesHome-03-stories-favorite
+[S01_StoriesHome] FAIL favourite Aladdin shows
+[S01_StoriesHome] skip 'Diseară' not found
+[S01_StoriesHome] NOTE 'Azi' exists but is not hittable; tapping its centre
+[S01_StoriesHome] tap  'Azi'
+[S01_StoriesHome] shot S01_StoriesHome-04-stories-tonight
+[S01_StoriesHome] tap  'Rețete'
+[S01_StoriesHome] shot S01_StoriesHome-05-switched-to-recipes
+[S01_StoriesHome] ok   recipes Acasă after the switch
+[S01_StoriesHome] tap  'Povești'
+[S01_StoriesHome] ok   stories Acasă after switching back
+[S01_StoriesHome] tap  'Caută povești'
+[S01_StoriesHome] shot S01_StoriesHome-06-stories-search-button
+[S01_StoriesHome] 'Caută povești' opened: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Bibliotecă | 🎵 Cântece | gol | 🎵 | 🌙 Povești de seară | 2 povești · 12 min | 2 noi | 🚂 | ⭐ | Povești Disney
+[S02_Player] LAUNCH -demo YES -area stories -tab library -kt-kid none
+[S02_Player] shot S02_Player-01-library
+[S02_Player] A11Y library: Contrast nearly passed · 45 'Caută în 10 povești'
+[S02_Player] A11Y library: Contrast failed · 48 'Acasă'
+[S02_Player] A11Y library: Contrast failed · 48 'Adaugă'
+[S02_Player] A11Y library: Contrast failed · 48 'Profil'
+[S02_Player] A11Y library: Contrast failed · 48 '🎵'
+[S02_Player] A11Y library: Contrast failed · 48 '🌙 Povești de seară'
+[S02_Player] A11Y library: Contrast failed · 48 '2 povești · 12 min'
+[S02_Player] A11Y library: Contrast failed · 48 '🚂'
+[S02_Player] A11Y library: Contrast failed · 48 '⭐'
+[S02_Player] A11Y library: Contrast failed · 48 '🐠'
+[S02_Player] A11Y library: Contrast failed · 48 '🦁'
+[S02_Player] A11Y library: Contrast failed · 48 '🧞'
+[S02_Player] A11Y library: Contrast failed · 48 '1 poveste · 9 min'
+[S02_Player] A11Y library: Contrast failed · 48 '1 nouă'
+[S02_Player] A11Y library: Contrast failed · 48 '🐭'
+[S02_Player] A11Y library: Contrast failed · 48 'Povești create de noi'
+[S02_Player] A11Y library: Contrast failed · 48 '🐻'
+[S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🐠'
+[S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🧞'
+[S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🎵'
+[S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '⭐'
+[S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+[S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 '2 noi'
+[S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🦁'
+[S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 '4 noi'
+[S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🐭'
+[S02_Player] A11Y library: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[S02_Player] A11Y library: Dynamic Type font sizes are unsupported · 48 '🚂'
+[S02_Player] A11Y library: Text clipped · 48 'Povești Disney'
+[S02_Player] A11Y library: Text clipped · 48 '🐠'
+[S02_Player] A11Y library: Text clipped · 48 '🧞'
+[S02_Player] A11Y library: Text clipped · 48 'Povești Hachette'
+[S02_Player] A11Y library: Text clipped · 48 '1 poveste · 9 min'
+[S02_Player] A11Y library: Text clipped · 48 '🎵'
+[S02_Player] A11Y library: Text clipped · 48 'Profil'
+[S02_Player] A11Y library: Text clipped · 48 '2 povești · 12 min'
+[S02_Player] A11Y library: Text clipped · 48 'Acasă'
+[S02_Player] A11Y library: Text clipped · 45 'Caută în 10 povești'
+[S02_Player] A11Y library: Text clipped · 48 '🌙 Povești de seară'
+[S02_Player] A11Y library: Text clipped · 48 '🎵 Cântece'
+[S02_Player] A11Y library: Text clipped · 48 'Adaugă'
+[S02_Player] A11Y library: Text clipped · 48 '🦁'
+[S02_Player] A11Y library: Text clipped · 48 'Favorite'
+[S02_Player] A11Y library: Text clipped · 48 '🐭'
+[S02_Player] A11Y library: Text clipped · 48 'Bibliotecă'
+[S02_Player] A11Y library: Text clipped · 48 '4 povești · 39 min'
+[S02_Player] A11Y library: Text clipped · 48 '🚂'
+[S02_Player] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Bibliotecă | 🎵 Cântece | gol | 🎵 | 🌙 Povești de seară | 2 povești · 12 min | 2 noi | 🚂 | ⭐ | Povești Disney | 4 povești · 39 min | 4 noi | 🐠 | 🦁 | 🧞 | Povești Hachette | 1 poveste · 9 min | 1 nouă | 🐭 | Povești create de noi | 1 poveste · 6 min | 1 nouă | 🐻 | Vocea noastră | 1 poveste · 3 min | 1 nouă | 🌙 | Basme · Ana | 1 poveste · 7 min | 1 nouă | 🐉 | Folder nou | pentru povești sau muzică
+[S02_Player] tap  'Povești Disney'
+[S02_Player] shot S02_Player-02-folder-disney
+[S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🐠'
+[S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🧞'
+[S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🎵'
+[S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '⭐'
+[S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+[S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 '2 noi'
+[S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🦁'
+[S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 '4 noi'
+[S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🐭'
+[S02_Player] A11Y folder: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[S02_Player] A11Y folder: Dynamic Type font sizes are unsupported · 48 '🚂'
+[S02_Player] A11Y folder: Text clipped · 48 'Povești Disney'
+[S02_Player] A11Y folder: Text clipped · 48 '🐠'
+[S02_Player] A11Y folder: Text clipped · 48 '🧞'
+[S02_Player] A11Y folder: Text clipped · 48 'Povești Hachette'
+[S02_Player] A11Y folder: Text clipped · 48 '1 poveste · 9 min'
+[S02_Player] A11Y folder: Text clipped · 48 '🎵'
+[S02_Player] A11Y folder: Text clipped · 48 'Profil'
+[S02_Player] A11Y folder: Text clipped · 48 '2 povești · 12 min'
+[S02_Player] A11Y folder: Text clipped · 48 'Acasă'
+[S02_Player] A11Y folder: Text clipped · 45 'Caută în 10 povești'
+[S02_Player] A11Y folder: Text clipped · 48 '🌙 Povești de seară'
+[S02_Player] A11Y folder: Text clipped · 48 '🎵 Cântece'
+[S02_Player] A11Y folder: Text clipped · 48 'Adaugă'
+[S02_Player] A11Y folder: Text clipped · 48 '🦁'
+[S02_Player] A11Y folder: Text clipped · 48 'Favorite'
+[S02_Player] A11Y folder: Text clipped · 48 '🐭'
+[S02_Player] A11Y folder: Text clipped · 48 'Bibliotecă'
+[S02_Player] A11Y folder: Text clipped · 48 '4 povești · 39 min'
+[S02_Player] A11Y folder: Text clipped · 48 '🚂'
+[S02_Player] A11Y folder: Contrast nearly passed · 45 'Caută în 10 povești'
+[S02_Player] A11Y folder: Contrast failed · 48 'Acasă'
+[S02_Player] A11Y folder: Contrast failed · 48 'Adaugă'
+[S02_Player] A11Y folder: Contrast failed · 48 'Profil'
+[S02_Player] A11Y folder: Contrast failed · 48 '🎵'
+[S02_Player] A11Y folder: Contrast failed · 48 '🌙 Povești de seară'
+[S02_Player] A11Y folder: Contrast failed · 48 '2 povești · 12 min'
+[S02_Player] A11Y folder: Contrast failed · 48 '🚂'
+[S02_Player] A11Y folder: Contrast failed · 48 '⭐'
+[S02_Player] A11Y folder: Contrast failed · 48 '🐠'
+[S02_Player] A11Y folder: Contrast failed · 48 '🦁'
+[S02_Player] A11Y folder: Contrast failed · 48 '🧞'
+[S02_Player] A11Y folder: Contrast failed · 48 '1 poveste · 9 min'
+[S02_Player] A11Y folder: Contrast failed · 48 '1 nouă'
+[S02_Player] A11Y folder: Contrast failed · 48 '🐭'
+[S02_Player] A11Y folder: Contrast failed · 48 'Povești create de noi'
+[S02_Player] A11Y folder: Contrast failed · 48 '🐻'
+[S02_Player] FAIL cannot find 'Regele Leu' to tap
+[S02_Player] shot S02_Player-03-player
+[S02_Player] A11Y player: Contrast failed · 48 'Adaugă'
+[S02_Player] A11Y player: Contrast failed · 48 'Profil'
+[S02_Player] A11Y player: Contrast failed · 48 '4 povești · 39 min'
+[S02_Player] A11Y player: Contrast failed · 48 '4 noi'
+[S02_Player] A11Y player: Contrast failed · 48 '🐠'
+[S02_Player] A11Y player: Contrast failed · 48 '🦁'
+[S02_Player] A11Y player: Contrast failed · 48 '🧞'
+[S02_Player] A11Y player: Contrast failed · 48 'Povești Hachette'
+[S02_Player] A11Y player: Contrast failed · 48 '1 poveste · 9 min'
+[S02_Player] A11Y player: Contrast failed · 48 '🐭'
+[S02_Player] A11Y player: Contrast failed · 48 '1 poveste · 6 min'
+[S02_Player] A11Y player: Contrast failed · 48 '🐻'
+[S02_Player] A11Y player: Contrast failed · 48 '🌙'
+[S02_Player] A11Y player: Contrast failed · 48 '1 poveste · 7 min'
+[S02_Player] A11Y player: Contrast failed · 48 '🐉'
+[S02_Player] A11Y player: Contrast failed · 48 'Folder nou'
+[S02_Player] A11Y player: Contrast failed · 48 'pentru povești sau muzică'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+[S02_Player] A11Y player: Dynamic Type font sizes are unsupported · 48 '🐉'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[S02_Player] A11Y player: Dynamic Type font sizes are unsupported · 48 '🐭'
+[S02_Player] A11Y player: Dynamic Type font sizes are unsupported · 48 '🌙'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[S02_Player] A11Y player: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+[S02_Player] A11Y player: Dynamic Type font sizes are unsupported · 48 '🐻'
+[S02_Player] A11Y player: Text clipped · 48 '1 poveste · 7 min'
+[S02_Player] A11Y player: Text clipped · 48 '1 poveste · 9 min'
+[S02_Player] A11Y player: Text clipped · 48 'Profil'
+[S02_Player] A11Y player: Text clipped · 48 '🐉'
+[S02_Player] A11Y player: Text clipped · 48 'Povești create de noi'
+[S02_Player] A11Y player: Text clipped · 48 'Acasă'
+[S02_Player] A11Y player: Text clipped · 45 'Caută în 10 povești'
+[S02_Player] A11Y player: Text clipped · 48 'Basme · Ana'
+[S02_Player] A11Y player: Text clipped · 48 'Adaugă'
+[S02_Player] A11Y player: Text clipped · 48 '1 poveste · 3 min'
+[S02_Player] A11Y player: Text clipped · 48 'Favorite'
+[S02_Player] A11Y player: Text clipped · 48 '🐭'
+[S02_Player] A11Y player: Text clipped · 48 'Vocea noastră'
+[S02_Player] A11Y player: Text clipped · 48 '🌙'
+[S02_Player] A11Y player: Text clipped · 48 'Bibliotecă'
+[S02_Player] A11Y player: Text clipped · 48 '🐻'
+[S02_Player] A11Y player: Text clipped · 48 '1 poveste · 6 min'
+[S02_Player] FAIL shows 'Regele Leu'
+[S02_Player] FAIL shows 'DIN POVEȘTI DISNEY'
+[S02_Player] skip 'Pornește' not found
+[S02b_StoryText] LAUNCH -demo YES -area stories -tab library -kt-kid none
+[S02b_StoryText] tap  'Favorite'
+[S02b_StoryText] shot S02b_StoryText-01-favorites-folder
+[S02b_StoryText] tap  'Ursulețul și luna'
+[S02b_StoryText] FAIL cannot find 'Mai multe' to tap
+[S02b_StoryText] FAIL cannot find 'Textul poveștii' to tap
+[S02b_StoryText] shot S02b_StoryText-02-story-text
+[S02b_StoryText] FAIL story text shows
+[S02b_StoryText] A11Y story-text: Hit area is too small · 48 'Ursulețul și luna'
+[S02b_StoryText] A11Y story-text: Hit area is too small · 48 '3:57 rămase'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are unsupported · 48 '🐻'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are unsupported · 48 '🐻'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are unsupported · 48 '🧞'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are unsupported · 48 '🦁'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[S02b_StoryText] A11Y story-text: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Regele Leu'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Profil'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 '🧞'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 '3:57 rămase'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Ursulețul și luna'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 '🦁'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Povești Disney'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Favorite'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Povești create de noi'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Acasă'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Adaugă'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Bibliotecă'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 '🐻'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Povești Disney'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 '🐻'
+[S02b_StoryText] A11Y story-text: Text clipped · 48 'Ursulețul și luna'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 'Acasă'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 'Bibliotecă'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 'Adaugă'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 'Profil'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 '🐻'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 'Ursulețul și luna'
+[S02b_StoryText] A11Y story-text: Contrast nearly passed · 48 '3:57 rămase'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 '🧞'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 'Povești Disney'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 '🦁'
+[S02b_StoryText] A11Y story-text: Contrast failed · 48 '🐻'
+[S03_LibraryFolders] LAUNCH -demo YES -area stories -tab library -kt-kid none
+[S03_LibraryFolders] tap  'Folder nou'
+[S03_LibraryFolders] shot S03_LibraryFolders-01-folder-new
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🎵'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '📚'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🌙'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '⭐'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🐻'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🚗'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🦄'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🎄'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🌊'
+[S03_LibraryFolders] A11Y folder-new: Contrast failed · 9 '🏰'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🦄'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are partially unsupported · 9 'Renunță'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🎵'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '📚'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🌊'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🏰'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '⭐'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🐻'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🎄'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🌙'
+[S03_LibraryFolders] A11Y folder-new: Dynamic Type font sizes are unsupported · 9 '🚗'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🦄'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🎵'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🌊'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '📚'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🏰'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🐻'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🎄'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 49 ''
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🌙'
+[S03_LibraryFolders] A11Y folder-new: Text clipped · 9 '🚗'
+[S03_LibraryFolders] type 'Folder QA' into 'Muzică pentru copii'
+[S03_LibraryFolders] tap  '🐻'
+[S03_LibraryFolders] tap  'Creează folderul'
+[S03_LibraryFolders] shot S03_LibraryFolders-02-folder-created
+[S03_LibraryFolders] ok   new folder shows in the library
+[S03_LibraryFolders] tap  'Povești Disney'
+[S03_LibraryFolders] skip 'Vizualizare' not found
+[S03_LibraryFolders] skip 'Vizualizare' not found
+[S03_LibraryFolders] skip 'Vizualizare' not found
+[S03_LibraryFolders] skip 'Vizualizare' not found
+[S03_LibraryFolders] skip 'Caută în Povești Disney' not found
+[S03_LibraryFolders] shot S03_LibraryFolders-03-folder-search
+[S03_LibraryFolders] ok   folder search finds Regele Leu
+[S03_LibraryFolders] ok   folder search hides Aladdin
+[S03_LibraryFolders] FAIL cannot find 'Mai multe' to tap
+[S03_LibraryFolders] shot S03_LibraryFolders-04-folder-more
+[S03_LibraryFolders] skip 'Partajează folderul' not found
+[S03_LibraryFolders] FAIL cannot find 'Mai multe' to tap
+[S03_LibraryFolders] skip 'Redenumește' not found
+[S03_LibraryFolders] shot S03_LibraryFolders-05-folder-rename
+[S03_LibraryFolders] skip 'Adaugă o poveste în folder' not found
+[S04_Favorites] LAUNCH -demo YES -area stories -tab favorites -kt-kid none
+[S04_Favorites] shot S04_Favorites-01-favorites
+[S04_Favorites] A11Y favorites: Contrast failed · 48 'Acasă'
+[S04_Favorites] A11Y favorites: Contrast failed · 48 'Bibliotecă'
+[S04_Favorites] A11Y favorites: Contrast failed · 48 'Adaugă'
+[S04_Favorites] A11Y favorites: Contrast failed · 48 'Profil'
+[S04_Favorites] A11Y favorites: Contrast failed · 48 '🧞'
+[S04_Favorites] A11Y favorites: Contrast failed · 48 'Povești Disney'
+[S04_Favorites] A11Y favorites: Contrast failed · 48 '🦁'
+[S04_Favorites] A11Y favorites: Contrast failed · 48 '🐻'
+[S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[S04_Favorites] A11Y favorites: Dynamic Type font sizes are unsupported · 48 '🦁'
+[S04_Favorites] A11Y favorites: Dynamic Type font sizes are unsupported · 48 '🐻'
+[S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[S04_Favorites] A11Y favorites: Dynamic Type font sizes are unsupported · 48 '🧞'
+[S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[S04_Favorites] A11Y favorites: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[S04_Favorites] A11Y favorites: Text clipped · 48 '🐻'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Bibliotecă'
+[S04_Favorites] A11Y favorites: Text clipped · 48 '🦁'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Adaugă'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Favorite'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Acasă'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Povești Disney'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Povești create de noi'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Profil'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Ursulețul și luna'
+[S04_Favorites] A11Y favorites: Text clipped · 48 '🧞'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Regele Leu'
+[S04_Favorites] A11Y favorites: Text clipped · 48 'Povești Disney'
+[S04_Favorites] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Favorite | Poveștile preferate ale lui Ana | 🧞 | 10 min | Aladdin | Povești Disney | 🦁 | 9 min | Regele Leu | Povești Disney | 🐻 | 6 min | Ursulețul și luna | Povești create de noi
+[S04_Favorites] ok   shows 'Aladdin'
+[S04_Favorites] hearts on Favorite: 0
+[S05_AddStory] LAUNCH -demo YES -area stories -tab add -kt-kid none
+[S05_AddStory] shot S05_AddStory-01-add
+[S05_AddStory] A11Y add: Contrast failed · 48 'Acasă'
+[S05_AddStory] A11Y add: Contrast failed · 48 'Favorite'
+[S05_AddStory] A11Y add: Contrast failed · 48 'Bibliotecă'
+[S05_AddStory] A11Y add: Contrast failed · 48 'Profil'
+[S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'MOD PĂRINTE'
+[S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[S05_AddStory] A11Y add: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[S05_AddStory] A11Y add: Text clipped · 48 'Încarcă un fișier'
+[S05_AddStory] A11Y add: Text clipped · 48 'Bibliotecă'
+[S05_AddStory] A11Y add: Text clipped · 48 'Acasă'
+[S05_AddStory] A11Y add: Text clipped · 48 'Creează o poveste'
+[S05_AddStory] A11Y add: Text clipped · 48 'Adaugă'
+[S05_AddStory] A11Y add: Text clipped · 48 'Favorite'
+[S05_AddStory] A11Y add: Text clipped · 48 'Profil'
+[S05_AddStory] A11Y add: Text clipped · 48 'Citește tu'
+[S05_AddStory] ok   shows 'Poveste nouă'
+[S05_AddStory] tap  'Creează o poveste'
+[S05_AddStory] shot S05_AddStory-02-create-1
+[S05_AddStory] A11Y create: Hit area is too small · 1 'Pasul 1 din 4'
+[S05_AddStory] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | Urmează: tema | Mai departe | POVESTE NOUĂ | Pentru cine e povestea? | Completează în Profil și nu te mai întrebăm. | EROUL POVEȘTII | ESTE | VÂRSTA | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+[S05_AddStory] skip 'aventură' not found
+[S05_AddStory] tap  'Mai departe'
+[S05_AddStory] shot S05_AddStory-03-create-2
+[S05_AddStory] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | Mai departe | POVESTE NOUĂ | Despre ce să fie povestea? | ALTCEVA? | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+[S05_AddStory] tap  'Mai departe'
+[S05_AddStory] shot S05_AddStory-04-create-3
+[S05_AddStory] texts: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | Urmează: titlul (opțional) | Mai departe | POVESTE NOUĂ | Cât de lungă? | 2 min | Scurtă, pentru când e deja somnoros | 4 min | Cât o poveste obișnuită de culcare | 7 min | Pentru o seară fără grabă | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+[S05_AddStory] FAIL no text field  to type 'Povestea de test'
+[S05_AddStory] shot S05_AddStory-05-create-title
+[S05_AddStory] FAIL cannot find 'Creează povestea' to tap
+[S05_AddStory] shot S05_AddStory-06-create-generating
+[S05_AddStory] after Creează: Acasă | Favorite | Bibliotecă | Adaugă | Profil |   | Urmează: titlul (opțional) | Mai departe | POVESTE NOUĂ | Cât de lungă? | 2 min | Scurtă, pentru când e deja somnoros | 4 min | Cât o poveste obișnuită de culcare | 7 min | Pentru o seară fără grabă | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+[S05_AddStory] tap  'Înapoi'
+[S05_AddStory] tap  'Înapoi'
+[S05_AddStory] skip 'Închide' not found
+[S05_AddStory] LAUNCH -demo YES -area stories -tab add -kt-kid none
+[S05_AddStory] tap  'Citește tu'
+[S05_AddStory] shot S05_AddStory-07-record
+[S05_AddStory] A11Y record: Contrast failed · 48 'Ține telefonul la o palmă de gură'
+[S05_AddStory] A11Y record: Text clipped · 48 'Poți face pauză oricând și continui'
+[S05_AddStory] A11Y record: Text clipped · 48 'Titlul și coperta le alegi la final'
+[S05_AddStory] A11Y record: Text clipped · 48 'Ține telefonul la o palmă de gură'
+[S05_AddStory] tap  'Începe înregistrarea'
+[S05_AddStory] shot S05_AddStory-08-recording
+[S05_AddStory] recording: Acasă | Favorite | Bibliotecă | Adaugă | Profil | Ia cartea și citește cu glas tare | Ține telefonul aproape, pe masă sau în mână. | 0:07 | Se înregistrează | Pauză | Gata | MOD PĂRINTE | Poveste nouă | Apare pe raftul copilului imediat ce o salvezi. | Creează o poveste | Spui eroul și tema, aplicația o scrie și o citește | Citește tu | Înregistrează-ți vocea citind o carte | Încarcă un fișier | MP3 sau M4A de pe telefon, iCloud sau AirDrop
+[S05_AddStory] tap  'Înapoi'
+[S05_AddStory] shot S05_AddStory-09-record-leave-confirm
+[S05_AddStory] tap  'Pleacă și renunță'
+[S05_AddStory] tap  'Încarcă un fișier'
+[S05_AddStory] shot S05_AddStory-10-upload
+[S05_AddStory] A11Y upload: Contrast failed · 48 'ÎNCARCĂ UN FIȘIER'
+[S05_AddStory] A11Y upload: Text clipped · 48 'Alege un fișier audio'
+[S05_AddStory] A11Y upload: Text clipped · 48 'MP3, M4A sau WAV, din Fișiere, iCloud sau AirDrop'
+[S05_AddStory] tap  'Alege un fișier audio'
+[S05_AddStory] shot S05_AddStory-11-upload-picker
+[S06_KidMode] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[S06_KidMode] shot S06_KidMode-01-profile
+[S06_KidMode] tap  'Dă-i telefonul copilului'
+[S06_KidMode] shot S06_KidMode-02-kid-home
+[S06_KidMode] A11Y kid-home: Hit area is too small · 9 'Toate poveștile Bibliotecă'
+[S06_KidMode] A11Y kid-home: Contrast failed · 48 'Acasă'
+[S06_KidMode] A11Y kid-home: Contrast failed · 48 'Favorite'
+[S06_KidMode] A11Y kid-home: Contrast failed · 48 'Bibliotecă'
+[S06_KidMode] A11Y kid-home: Contrast failed · 48 'Surpriză'
+[S06_KidMode] A11Y kid-home: Contrast failed · 48 'Caută'
+[S06_KidMode] A11Y kid-home: Contrast failed · 48 '🚂'
+[S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Caută'
+[S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[S06_KidMode] A11Y kid-home: Dynamic Type font sizes are partially unsupported · 48 'Surpriză'
+[S06_KidMode] A11Y kid-home: Text clipped · 48 'Caută'
+[S06_KidMode] A11Y kid-home: Text clipped · 48 'Bibliotecă'
+[S06_KidMode] A11Y kid-home: Text clipped · 48 'Acasă'
+[S06_KidMode] A11Y kid-home: Text clipped · 48 'Favorite'
+[S06_KidMode] A11Y kid-home: Text clipped · 48 'Surpriză'
+[S06_KidMode] ok   kid mode tab Surpriză
+[S06_KidMode] ok   kid mode tab Caută
+[S06_KidMode] ok   no Rețete / Povești switch in kid mode
+[S06_KidMode] ok   no Profil tab in kid mode
+[S06_KidMode] texts: Acasă | Favorite | Bibliotecă | Surpriză | Caută | 30 min | 🚂 | POVESTEA ZILEI | Trenulețul curajos | Povești de seară · 5 min | Ascultă
+[S06_KidMode] tap  'Bibliotecă'
+[S06_KidMode] shot S06_KidMode-03-kid-library
+[S06_KidMode] kid library: Acasă | Favorite | Bibliotecă | Surpriză | Caută | 30 min | Bibliotecă | 🎵 Cântece | gol | 🎵 | 🌙 Povești de seară | 2 povești · 12 min | 2 noi | 🚂 | ⭐
+[S06_KidMode] ok   kid library hides folders not chosen for the child (Povești Disney)
+[S06_KidMode] tap  'Caută'
+[S06_KidMode] shot S06_KidMode-04-kid-search
+[S06_KidMode] type 'tren'
+[S06_KidMode] shot S06_KidMode-05-kid-search-tren
+[S06_KidMode] ok   kid search finds a story in a kid folder
+[S06_KidMode] shot S06_KidMode-06-kid-search-aladdin
+[S06_KidMode] ok   kid search does not show stories outside the kid folders (Aladdin)
+[S06_KidMode] tap  'Surpriză'
+[S06_KidMode] shot S06_KidMode-07-kid-surprise
+[S06_KidMode] surprise: ⭐ | DIN POVEȘTI DE SEARĂ | Steaua căzătoare | ⭐ | Steaua căzătoare | Povești de seară | 2:22 | AirPlay | 1× | Viteză
+[S06_KidMode] ok   no ⋯ menu in the player in kid mode
+[S06_KidMode] tap  'Ieși din modul copil'
+[S06_KidMode] shot S06_KidMode-08-kid-pin
+[S06_KidMode] A11Y kid-pin: no issues
+[S06_KidMode] tap  '0'
+[S06_KidMode] tap  '0'
+[S06_KidMode] tap  '0'
+[S06_KidMode] tap  '0'
+[S06_KidMode] shot S06_KidMode-09-kid-pin-wrong
+[S06_KidMode] ok   wrong PIN message
+[S06_KidMode] shot S06_KidMode-10-kid-after-relaunch
+[S06_KidMode] ok   kid mode stays on after the app is closed and opened
+[S06_KidMode] tap  'Ieși din modul copil'
+[S06_KidMode] tap  '1'
+[S06_KidMode] tap  '2'
+[S06_KidMode] tap  '3'
+[S06_KidMode] tap  '4'
+[S06_KidMode] shot S06_KidMode-11-kid-exited
+[S06_KidMode] ok   after the right PIN the parent tabs are back
+[S07_Bedtime] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[S07_Bedtime] tap  'Ana'
+[S07_Bedtime] shot S07_Bedtime-01-child
+[S07_Bedtime] A11Y child: Contrast failed · -
+[S07_Bedtime] A11Y child: Potentially inaccessible text · -
+[S07_Bedtime] A11Y child: Potentially inaccessible text · -
+[S07_Bedtime] A11Y child: Potentially inaccessible text · -
+[S07_Bedtime] A11Y child: Potentially inaccessible text · -
+[S07_Bedtime] A11Y child: Potentially inaccessible text · -
+[S07_Bedtime] FAIL app is not in the foreground at the end (state 1): crash or exit?
+[X01_DeepLinks] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+[X01_DeepLinks] open link kitchentales://list
+[X01_DeepLinks] shot X01_DeepLinks-01-link-list
+[X01_DeepLinks] ok   kitchentales://list opens the shopping list
+[X01_DeepLinks] open link kitchentales://week
+[X01_DeepLinks] shot X01_DeepLinks-02-link-week
+[X01_DeepLinks] ok   kitchentales://week opens the week
+[X01_DeepLinks] open link kitchentales://recipe/r3
+[X01_DeepLinks] shot X01_DeepLinks-03-link-recipe
+[X01_DeepLinks] ok   kitchentales://recipe/r3 opens Cartofi țărănești
+[X01_DeepLinks] open link kitchentales://recipe/does-not-exist
+[X01_DeepLinks] shot X01_DeepLinks-04-link-recipe-missing
+[X01_DeepLinks] missing recipe link shows: Acasă | Săptămâna | Rețete | 7 | Listă | Profil | Rețeta nu a fost găsită | Poate a fost ștearsă.
+[X01_DeepLinks] open link kitchentales://story/d3
+[X01_DeepLinks] shot X01_DeepLinks-05-link-story
+[X01_DeepLinks] ok   kitchentales://story/d3 opens the player with Nemo
+[X01_DeepLinks] open link kitchentales://story
+[X01_DeepLinks] shot X01_DeepLinks-06-link-story-last
+[X01_DeepLinks] story with no id plays: 🧞 | DIN POVEȘTI DISNEY | Aladdin | 🧞 | Aladdin | Povești Disney | 3:24 | AirPlay | 1× | Viteză
+[X01_DeepLinks] open link kitchentales://bedtime
+[X01_DeepLinks] shot X01_DeepLinks-07-link-bedtime
+[X01_DeepLinks] bedtime link: Noapte bună, Ana | 3 povești · aproape 25 de minute | Pijama | Dinți | În pat | Pornește poveștile | Acasă | Favorite | Bibliotecă | Adaugă | Profil | Regele Leu | 1 | 9 min | Aladdin
+[X01_DeepLinks] tap  'Închide'
+[X01_DeepLinks] open link kitchentales://nothing-here
+[X01_DeepLinks] shot X01_DeepLinks-08-link-unknown
+[X02_DeepLinksInKidMode] LAUNCH -demo YES -area recipes -tab profile -kt-kid none
+[X02_DeepLinksInKidMode] tap  'Dă-i telefonul copilului'
+[X02_DeepLinksInKidMode] open link kitchentales://recipe/r1
+[X02_DeepLinksInKidMode] shot X02_DeepLinksInKidMode-01-kid-link-recipe
+[X02_DeepLinksInKidMode] ok   a recipe link does not leave kid mode
+[X02_DeepLinksInKidMode] ok   still in kid mode after a recipe link
+[X02_DeepLinksInKidMode] open link kitchentales://list
+[X02_DeepLinksInKidMode] shot X02_DeepLinksInKidMode-02-kid-link-list
+[X02_DeepLinksInKidMode] ok   a list link does not leave kid mode
+[X02_DeepLinksInKidMode] open link kitchentales://story/d1
+[X02_DeepLinksInKidMode] shot X02_DeepLinksInKidMode-03-kid-link-story
+[X02_DeepLinksInKidMode] kid mode + story link (Aladdin is outside the kid folders): ⭐ | DIN POVEȘTI DE SEARĂ | Steaua căzătoare | ⭐ | Steaua căzătoare | Povești de seară | 2:22 | AirPlay | 1× | Viteză
+[X02_DeepLinksInKidMode] ok   a story link does not play a story outside the kid folders
+[X02_DeepLinksInKidMode] tap  'Ieși din modul copil'
+[X02_DeepLinksInKidMode] tap  '1'
+[X02_DeepLinksInKidMode] tap  '2'
+[X02_DeepLinksInKidMode] tap  '3'
+[X02_DeepLinksInKidMode] tap  '4'
+[X03_ShareSheet] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+[X03_ShareSheet] tap  'Ciorbă de perișoare'
+[X03_ShareSheet] tap  'Mai multe'
+[X03_ShareSheet] tap  'Trimite'
+[X03_ShareSheet] shot X03_ShareSheet-01-share-sheet
+[X03_ShareSheet] our extension is in the Share sheet
+[X03_ShareSheet] shot X03_ShareSheet-02-share-extension
+[X04_BackgroundAndBack] LAUNCH -demo YES -area stories -tab library -kt-kid none
+[X04_BackgroundAndBack] tap  'Povești Disney'
+[X04_BackgroundAndBack] FAIL cannot find 'Aladdin' to tap
+[X04_BackgroundAndBack] shot X04_BackgroundAndBack-01-before-background
+[X04_BackgroundAndBack] shot X04_BackgroundAndBack-02-after-background
+[X04_BackgroundAndBack] FAIL player still shows Aladdin after going to the background and back
+[X04_BackgroundAndBack] tap  'Acasă'
+[X04_BackgroundAndBack] tap  'Rețete'
+[X04_BackgroundAndBack] tap  'Rețete'
+[X04_BackgroundAndBack] tap  'Roșii umplute'
+[X04_BackgroundAndBack] shot X04_BackgroundAndBack-03-recipe-after-background
+[X04_BackgroundAndBack] ok   recipe still open after background
+[X05_LargeText] LAUNCH -demo YES -area recipes -tab home -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-01-ax3-home
+[X05_LargeText] A11Y ax3-home: Hit area is too small · 9 'Povești'
+[X05_LargeText] A11Y ax3-home: Contrast failed · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-home: Contrast failed · 48 '7'
+[X05_LargeText] A11Y ax3-home: Contrast failed · 48 'Profil'
+[X05_LargeText] A11Y ax3-home: Contrast nearly passed · 9 'Povești'
+[X05_LargeText] A11Y ax3-home: Contrast failed · 48 'Suc de portocale'
+[X05_LargeText] A11Y ax3-home: Contrast failed · 48 '🐠'
+[X05_LargeText] A11Y ax3-home: Contrast failed · 48 'AȚI RĂMAS LA JUMĂTATE'
+[X05_LargeText] A11Y ax3-home: Contrast failed · 48 'În căutarea lui Nemo'
+[X05_LargeText] A11Y ax3-home: Contrast failed · 48 'Ciorbe și supe · 4 porții'
+[X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 '7'
+[X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[X05_LargeText] A11Y ax3-home: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Azi în meniu · 40 min · Patiserie'
+[X05_LargeText] A11Y ax3-home: Text clipped · 9 'Povești'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Chifle de casă'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Azi în meniu · 5 min · Băuturi'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Acasă'
+[X05_LargeText] A11Y ax3-home: Text clipped · 9 'Gătește pas cu pas'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Rețete'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Profil'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Azi în meniu · 1 h 30 · Ciorbe și supe'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Suc de portocale'
+[X05_LargeText] A11Y ax3-home: Text clipped · 48 'Ciorbă de perișoare'
+[X05_LargeText] LAUNCH -demo YES -area recipes -tab home -screen recipe -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-02-ax3-recipe
+[X05_LargeText] A11Y ax3-recipe: Contrast failed · 9 '1 legătură leuștean'
+[X05_LargeText] A11Y ax3-recipe: Contrast failed · 9 'Sare și piper'
+[X05_LargeText] A11Y ax3-recipe: Text clipped · 48 'grăsimi'
+[X05_LargeText] A11Y ax3-recipe: Text clipped · 9 'Gătește pas cu pas'
+[X05_LargeText] A11Y ax3-recipe: Text clipped · 48 'carbohidrați'
+[X05_LargeText] A11Y ax3-recipe: Text clipped · 48 'proteine'
+[X05_LargeText] A11Y ax3-recipe: Label not human-readable · 43 'person.2.fill'
+[X05_LargeText] LAUNCH -demo YES -area recipes -tab home -screen cook -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-03-ax3-cook
+[X05_LargeText] A11Y ax3-cook: Hit area is too small · 1 'Pasul 3 din 6'
+[X05_LargeText] A11Y ax3-cook: Contrast failed · 48 '3'
+[X05_LargeText] A11Y ax3-cook: Text clipped · 48 'Sună și cu telefonul blocat, chiar dacă ieși din aplicație.'
+[X05_LargeText] A11Y ax3-cook: Text clipped · 48 'Ciorbă de perișoare'
+[X05_LargeText] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-04-ax3-recipes
+[X05_LargeText] A11Y ax3-recipes: Hit area is too small · 9 'Favorite'
+[X05_LargeText] A11Y ax3-recipes: Hit area is too small · 9 'Băuturi'
+[X05_LargeText] A11Y ax3-recipes: Hit area is too small · 9 'Ciorbe și supe'
+[X05_LargeText] A11Y ax3-recipes: Hit area is too small · 9 'Deserturi'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 49 ''
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Acasă'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '7'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Listă'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Profil'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '35 min · 2 porții'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '1 h 30 · 4 porții'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Plăcinta Anei'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '40 min · 12 porții'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 'Roșii umplute'
+[X05_LargeText] A11Y ax3-recipes: Contrast failed · 48 '1 h · 4 porții'
+[X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 '7'
+[X05_LargeText] A11Y ax3-recipes: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Rețete'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 '1 h 30 · 4 porții'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Chifle de casă'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Cartofi țărănești'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Profil'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Roșii umplute'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 49 ''
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Cartofi cu ardei la tigaie'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 '45 min · 8 porții'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Acasă'
+[X05_LargeText] A11Y ax3-recipes: Text clipped · 48 'Ciorbă de perișoare'
+[X05_LargeText] LAUNCH -demo YES -area recipes -tab week -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-05-ax3-week
+[X05_LargeText] A11Y ax3-week: Contrast failed · 48 'Acasă'
+[X05_LargeText] A11Y ax3-week: Contrast failed · 48 'Rețete'
+[X05_LargeText] A11Y ax3-week: Contrast failed · 48 '7'
+[X05_LargeText] A11Y ax3-week: Contrast failed · 48 'Profil'
+[X05_LargeText] A11Y ax3-week: Contrast failed · 48 'Suc de portocale'
+[X05_LargeText] A11Y ax3-week: Contrast failed · 48 '5 min · 2 porții'
+[X05_LargeText] A11Y ax3-week: Contrast failed · 48 'Supă cremă de cartofi'
+[X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 '7'
+[X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[X05_LargeText] A11Y ax3-week: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Suc de portocale'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 '40 min · 12 porții'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Supă cremă de cartofi'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 '1 h 30 · 4 porții'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Acasă'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Rețete'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Vineri'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Chifle de casă'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Azi · Joi'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Profil'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 '5 min · 2 porții'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Ciorbă de perișoare'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 'Sâmbătă'
+[X05_LargeText] A11Y ax3-week: Text clipped · 48 '40 min · 4 porții'
+[X05_LargeText] A11Y ax3-week: Element has no description · 9 ''
+[X05_LargeText] A11Y ax3-week: Element has no description · 9 ''
+[X05_LargeText] A11Y ax3-week: Element has no description · 9 ''
+[X05_LargeText] A11Y ax3-week: Element has no description · 9 ''
+[X05_LargeText] LAUNCH -demo YES -area recipes -tab list -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-06-ax3-list
+[X05_LargeText] A11Y ax3-list: Contrast failed · 48 'Acasă'
+[X05_LargeText] A11Y ax3-list: Contrast failed · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-list: Contrast failed · 48 'Rețete'
+[X05_LargeText] A11Y ax3-list: Contrast failed · 48 '7'
+[X05_LargeText] A11Y ax3-list: Contrast failed · 48 'Profil'
+[X05_LargeText] A11Y ax3-list: Contrast failed · 9 'Pe rețete'
+[X05_LargeText] A11Y ax3-list: Contrast failed · -
+[X05_LargeText] A11Y ax3-list: Contrast failed · -
+[X05_LargeText] A11Y ax3-list: Contrast failed · -
+[X05_LargeText] A11Y ax3-list: Contrast failed · -
+[X05_LargeText] A11Y ax3-list: Contrast failed · -
+[X05_LargeText] A11Y ax3-list: Contrast failed · -
+[X05_LargeText] A11Y ax3-list: Contrast failed · -
+[X05_LargeText] A11Y ax3-list: Contrast failed · -
+[X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 '7'
+[X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-list: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[X05_LargeText] A11Y ax3-list: Text clipped · 48 'Rețete'
+[X05_LargeText] A11Y ax3-list: Text clipped · 48 'Listă'
+[X05_LargeText] A11Y ax3-list: Text clipped · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-list: Text clipped · 48 'Profil'
+[X05_LargeText] A11Y ax3-list: Text clipped · 48 'Acasă'
+[X05_LargeText] A11Y ax3-list: Text clipped · 9 'Pe raioane'
+[X05_LargeText] A11Y ax3-list: Text clipped · 49 ''
+[X05_LargeText] LAUNCH -demo YES -area recipes -tab profile -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-07-ax3-profile
+[X05_LargeText] A11Y ax3-profile: Hit area is too small · 9 'Ieși din cont'
+[X05_LargeText] A11Y ax3-profile: Contrast failed · 48 'Acasă'
+[X05_LargeText] A11Y ax3-profile: Contrast failed · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-profile: Contrast failed · 48 '7'
+[X05_LargeText] A11Y ax3-profile: Contrast failed · 48 'Listă'
+[X05_LargeText] A11Y ax3-profile: Contrast failed · 48 'S'
+[X05_LargeText] A11Y ax3-profile: Contrast failed · 48 '10 din 33'
+[X05_LargeText] A11Y ax3-profile: Contrast failed · 48 '10 din 32'
+[X05_LargeText] A11Y ax3-profile: Contrast failed · 48 '3 povești descărcate · clic pe raft pornit'
+[X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 '7'
+[X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Rețete'
+[X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Listă'
+[X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[X05_LargeText] A11Y ax3-profile: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 '4 aparate · mâncăm fără nuci · vocea Carmen'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 'Săptămâna'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 '3 povești descărcate · clic pe raft pornit'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 'Acasă'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 '3 persoane · 9 lucruri partajate'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 'Rețete'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 'Profil'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 'sorin@exemplu.ro · spațiu comun cu Loredana'
+[X05_LargeText] A11Y ax3-profile: Text clipped · 48 '5 ani · modul copil: 30 min'
+[X05_LargeText] LAUNCH -demo YES -area stories -tab home -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-08-ax3-stories-home
+[X05_LargeText] A11Y ax3-stories-home: Hit area is too small · 9 'Rețete'
+[X05_LargeText] A11Y ax3-stories-home: Hit area is too small · 9 'Toate'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Favorite'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Adaugă'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Profil'
+[X05_LargeText] A11Y ax3-stories-home: Contrast nearly passed · 9 'Rețete'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 9 'Povești'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Adăugate recent'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 9 'Toate'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '🐭'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '9 min'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '🐉'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Basme · Ana'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '🦁'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '9 min'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 'Povești Disney'
+[X05_LargeText] A11Y ax3-stories-home: Contrast failed · 48 '🐠'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 '9 min'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are unsupported · 48 '🐉'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are unsupported · 48 '🐭'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are unsupported · 48 '🐠'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 '7 min'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are unsupported · 48 '🦁'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Nou'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 '9 min'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[X05_LargeText] A11Y ax3-stories-home: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Bibliotecă'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 9 'Rețete'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Basme · Ana'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Favorite'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 '🦁'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Povești Hachette'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 '🐉'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 '🐭'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 '🐠'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Povești Disney'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Dragonul care strănuta'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Profil'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Regele Leu'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'CONTINUĂ · MAI SUNT 5 MIN'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Acasă'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Șoricelul de la bibliotecă'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 48 'Adaugă'
+[X05_LargeText] A11Y ax3-stories-home: Text clipped · 9 'Povești'
+[X05_LargeText] LAUNCH -demo YES -area stories -tab library -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-09-ax3-library
+[X05_LargeText] A11Y ax3-library: Contrast nearly passed · 45 'Caută în 10 povești'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Acasă'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Adaugă'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Profil'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🎵'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🌙 Povești de seară'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '2 povești · 12 min'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🚂'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '⭐'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐠'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🦁'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🧞'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 poveste · 9 min'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '1 nouă'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐭'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 'Povești create de noi'
+[X05_LargeText] A11Y ax3-library: Contrast failed · 48 '🐻'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 în curs'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🐭'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🚂'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🦁'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '2 noi'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🧞'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🐠'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '🎵'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 '1 nouă'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are unsupported · 48 '⭐'
+[X05_LargeText] A11Y ax3-library: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '2 povești · 12 min'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '1 în curs'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 'Favorite'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '🐭'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '🚂'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '🦁'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '🧞'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '1 poveste · 9 min'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 'Adaugă'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 'Acasă'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '2 noi'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '🐠'
+[X05_LargeText] A11Y ax3-library: Text clipped · 45 'Caută în 10 povești'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 'Povești Disney'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '🎵'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '🌙 Povești de seară'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 'Bibliotecă'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 'Profil'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '🎵 Cântece'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 '4 povești · 39 min'
+[X05_LargeText] A11Y ax3-library: Text clipped · 48 'Povești Hachette'
+[X05_LargeText] LAUNCH -demo YES -area stories -tab home -screen player -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-10-ax3-player
+[X05_LargeText] A11Y ax3-player: Hit area is too small · 9 'Arată durata totală'
+[X05_LargeText] A11Y ax3-player: Contrast failed · 48 '🧞'
+[X05_LargeText] A11Y ax3-player: Contrast failed · 48 '🧞'
+[X05_LargeText] A11Y ax3-player: Contrast failed · 48 '1×'
+[X05_LargeText] A11Y ax3-player: Dynamic Type font sizes are unsupported · 48 '🧞'
+[X05_LargeText] A11Y ax3-player: Dynamic Type font sizes are partially unsupported · 48 'DIN POVEȘTI DISNEY'
+[X05_LargeText] A11Y ax3-player: Text clipped · 48 'DIN POVEȘTI DISNEY'
+[X05_LargeText] A11Y ax3-player: Text clipped · 48 '🧞'
+[X05_LargeText] A11Y ax3-player: Text clipped · 48 'După 1 poveste'
+[X05_LargeText] LAUNCH -demo YES -area stories -tab add -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-11-ax3-add
+[X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Acasă'
+[X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Favorite'
+[X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Bibliotecă'
+[X05_LargeText] A11Y ax3-add: Contrast failed · 48 'Profil'
+[X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Profil'
+[X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Favorite'
+[X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Bibliotecă'
+[X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Adaugă'
+[X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'MOD PĂRINTE'
+[X05_LargeText] A11Y ax3-add: Dynamic Type font sizes are partially unsupported · 48 'Acasă'
+[X05_LargeText] A11Y ax3-add: Text clipped · 48 'Favorite'
+[X05_LargeText] A11Y ax3-add: Text clipped · 48 'Bibliotecă'
+[X05_LargeText] A11Y ax3-add: Text clipped · 48 'Adaugă'
+[X05_LargeText] A11Y ax3-add: Text clipped · 48 'Creează o poveste'
+[X05_LargeText] A11Y ax3-add: Text clipped · 48 'Încarcă un fișier'
+[X05_LargeText] A11Y ax3-add: Text clipped · 48 'Acasă'
+[X05_LargeText] A11Y ax3-add: Text clipped · 48 'Citește tu'
+[X05_LargeText] A11Y ax3-add: Text clipped · 48 'Profil'
+[X05_LargeText] LAUNCH -kt-kid none -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge
+[X05_LargeText] shot X05_LargeText-12-ax3-login
+[X06_LaunchTime] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+[X06_LaunchTime] launch to Acasă ready: 9.0 s (demo data, simulator)
+[X06_LaunchTime] ok   Acasă is ready after launch
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-01-key-home
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen recipe -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-02-key-recipe
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab home -screen cook -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-03-key-cook
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab recipes -kt-kid none
+[X07_KeyScreens] shot X07_KeyScreens-04-key-recipes
+[X07_KeyScreens] LAUNCH -demo YES -area recipes -tab week -kt-kid none

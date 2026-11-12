@@ -1,0 +1,110 @@
+Optional(Attributes: Application, 0x1143dabb0, pid: 98054, label: 'Bucătăria'
+Element subtree:
+ →Application, 0x1143dabb0, pid: 98054, label: 'Bucătăria'
+    Window (Main), 0x10720c690, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x10728d1d0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x10728d2f0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x10728cf30, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x10728d050, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x10728d410, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x10728d530, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x10728d650, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x10728d770, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x10728d890, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x10728d9b0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x10728dad0, {{0.0, 0.0}, {402.0, 874.0}}
+                            NavigationBar, 0x10728dd20, {{0.0, 62.0}, {402.0, 171.7}}, identifier: 'Bibliotecă'
+                              StaticText, 0x10728de40, {{16.0, 118.7}, {159.7, 47.7}}, label: 'Bibliotecă'
+                              SearchField, 0x10728df60, {{16.0, 174.7}, {370.0, 44.0}}, label: 'Caută în 10 povești', placeholderValue: 'Caută în 10 povești'
+                                Image, 0x10728e080, {{28.0, 187.0}, {20.3, 18.7}}, identifier: 'magnifyingglass', label: 'Căutare'
+                            Other, 0x10728e1a0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x10728e2c0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1070b5bc0, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x10708cc30, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x1070b6150, {{0.0, 0.0}, {402.0, 874.0}}
+                                    ScrollView, 0x10728e3e0, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x10728e500, {{0.0, 0.0}, {402.0, 874.0}}
+                                        Other, 0x10728e620, {{0.0, 0.0}, {402.0, 170.8}}
+                                      Other, 0x10728e740, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x10728e860, {{0.0, 233.7}, {402.0, 1128.0}}
+                                        Other, 0x10728e980, {{-302.5, 147.7}, {1066.1, 1190.0}}
+                                          Button, 0x10728eaa0, {{16.0, 233.7}, {370.0, 132.0}}, label: 'Cântece, 0 povești'
+                                            StaticText, 0x10728ebc0, {{32.0, 247.7}, {102.7, 27.0}}, label: '🎵 Cântece'
+                                            StaticText, 0x10728ece0, {{32.0, 277.7}, {20.0, 17.0}}, label: 'gol'
+                                            StaticText, 0x10728ee00, {{304.5, 273.3}, {49.0, 52.7}}, label: '🎵'
+                                          Button, 0x10728ef20, {{-302.5, 147.7}, {1066.1, 592.0}}, label: 'Povești de seară, 2 povești · 12 min'
+                                            Image, 0x10728f040, {{-302.5, 147.7}, {1066.1, 592.0}}
+                                            StaticText, 0x10728f160, {{32.0, 391.7}, {179.3, 27.0}}, label: '🌙 Povești de seară'
+                                            StaticText, 0x10728f280, {{32.0, 421.7}, {109.7, 17.0}}, label: '2 povești · 12 min'
+                                            StaticText, 0x10728f3a0, {{41.0, 478.0}, {27.3, 14.7}}, label: '2 noi'
+                                            StaticText, 0x10728f4c0, {{224.0, 400.7}, {154.7, 105.7}}, label: '🚂'
+                                            StaticText, 0x10728f5e0, {{310.5, 419.0}, {37.0, 39.0}}, label: '⭐'
+                                            Image, 0x10728f700, {{286.0, 400.7}, {86.0, 86.0}}
+                                          Button, 0x1143deae0, {{-302.5, 291.7}, {1066.1, 592.0}}, label: 'Povești Disney, 4 povești · 39 min'
+                                            Image, 0x1143de6c0, {{-302.5, 291.7}, {1066.1, 592.0}}
+                                            StaticText, 0x10728f820, {{32.0, 535.7}, {137.3, 27.0}}, label: 'Povești Disney'
+                                            StaticText, 0x1143de2a0, {{32.0, 565.7}, {112.3, 17.0}}, label: '4 povești · 39 min'
+                                            StaticText, 0x1143dba00, {{41.0, 622.0}, {27.7, 14.7}}, label: '4 noi'
+                                            StaticText, 0x1143ffbb0, {{246.5, 563.0}, {37.0, 39.0}}, label: '🐠'
+                                            Image, 0x1143a3d40, {{222.0, 544.7}, {86.0, 86.0}}
+                                            StaticText, 0x1143df120, {{278.5, 563.0}, {37.0, 39.0}}, label: '🦁'
+                                            Image, 0x1143bc060, {{254.0, 544.7}, {86.0, 86.0}}
+                                            StaticText, 0x1143bc180, {{310.5, 563.0}, {37.0, 39.0}}, label: '🧞'
+                                            Image, 0x1143bc2a0, {{286.0, 544.7}, {86.0, 86.0}}
+                                          Button, 0x1143bc3c0, {{-302.5, 435.7}, {1066.1, 592.0}}, label: 'Povești Hachette, 1 poveste · 9 min'
+                                            Image, 0x1143bc4e0, {{-302.5, 435.7}, {1066.1, 592.0}}
+                                            StaticText, 0x1143bc600, {{32.0, 679.7}, {157.0, 27.0}}, label: 'Povești Hachette'
+                                            StaticText, 0x1143bc720, {{32.0, 709.7}, {105.7, 17.0}}, label: '1 poveste · 9 min'
+                                            StaticText, 0x1143bc840, {{41.0, 766.0}, {35.3, 14.7}}, label: '1 nouă'
+                                            StaticText, 0x1143bc960, {{310.5, 707.0}, {37.0, 39.0}}, label: '🐭'
+                                            Image, 0x1143bca80, {{286.0, 688.7}, {86.0, 86.0}}
+                                          Button, 0x1143bcba0, {{-302.5, 770.1}, {1066.1, 259.7}}, label: 'Povești create de noi, 1 poveste · 6 min'
+                                            Other, 0x107264980, {{-302.5, 770.1}, {1066.1, 259.7}}
+                                            StaticText, 0x107264aa0, {{32.0, 823.7}, {135.0, 53.7}}, label: 'Povești create de noi'
+                                            StaticText, 0x107264bc0, {{32.0, 880.3}, {105.7, 17.0}}, label: '1 poveste · 6 min'
+                                            StaticText, 0x107264ce0, {{41.0, 910.0}, {35.3, 14.7}}, label: '1 nouă'
+                                            StaticText, 0x107264e00, {{256.0, 832.7}, {154.7, 105.7}}, label: '🐻'
+                                          Button, 0x107264f20, {{-302.5, 914.1}, {1066.1, 259.7}}, label: 'Vocea noastră, 1 poveste · 3 min'
+                                            Other, 0x107265040, {{-302.5, 914.1}, {1066.1, 259.7}}
+                                            StaticText, 0x107265160, {{32.0, 967.7}, {133.7, 27.0}}, label: 'Vocea noastră'
+                                            StaticText, 0x107265280, {{32.0, 997.7}, {105.3, 17.0}}, label: '1 poveste · 3 min'
+                                            StaticText, 0x1072653a0, {{41.0, 1054.0}, {35.3, 14.7}}, label: '1 nouă'
+                                            StaticText, 0x1072654c0, {{256.0, 976.7}, {154.7, 105.7}}, label: '🌙'
+                                          Button, 0x1072655e0, {{-302.5, 1058.1}, {1066.1, 259.7}}, label: 'Basme · Ana, 1 poveste · 7 min'
+                                            Other, 0x107265700, {{-302.5, 1058.1}, {1066.1, 259.7}}
+                                            StaticText, 0x107265820, {{32.0, 1111.7}, {117.3, 27.0}}, label: 'Basme · Ana'
+                                            StaticText, 0x107265940, {{32.0, 1141.7}, {105.3, 17.0}}, label: '1 poveste · 7 min'
+                                            StaticText, 0x107265a60, {{41.0, 1198.0}, {35.3, 14.7}}, label: '1 nouă'
+                                            StaticText, 0x107265b80, {{256.0, 1120.7}, {154.7, 105.7}}, label: '🐉'
+                                          Button, 0x107265ca0, {{16.0, 1241.7}, {370.0, 96.0}}, label: 'Folder nou'
+                                            StaticText, 0x107265dc0, {{32.0, 1266.2}, {99.3, 27.0}}, label: 'Folder nou'
+                                            StaticText, 0x107265ee0, {{32.0, 1296.2}, {166.7, 17.0}}, label: 'pentru povești sau muzică'
+                                            Image, 0x107266000, {{331.0, 1278.7}, {22.3, 22.3}}, identifier: 'plus', label: 'Adăugare'
+                            Other, 0x107266120, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x107266240, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x107255ba0, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x107255cc0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x107255de0, {{0.0, 791.0}, {402.0, 83.0}}
+              Button, 0x107255f00, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+                Other, 0x107256020, {{42.7, 785.0}, {24.0, 24.0}}
+                StaticText, 0x107256140, {{19.0, 779.0}, {71.3, 50.0}}, label: 'Acasă'
+              Button, 0x107256260, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Favorite'
+                Other, 0x107256380, {{116.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1072564a0, {{92.3, 779.0}, {71.0, 50.0}}, label: 'Favorite'
+              Button, 0x107288b20, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Bibliotecă', Selected
+                Other, 0x107288c40, {{189.0, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1070b7b20, {{165.3, 779.0}, {71.3, 50.0}}, label: 'Bibliotecă'
+              Button, 0x1070b7520, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Adaugă'
+                Other, 0x1070b7640, {{262.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1070b7760, {{238.7, 779.0}, {71.0, 50.0}}, label: 'Adaugă'
+              Button, 0x1070b7880, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+                Other, 0x1070b7f40, {{335.3, 785.0}, {24.0, 24.0}}
+                StaticText, 0x1070b8060, {{311.7, 779.0}, {71.3, 50.0}}, label: 'Profil'
+Path to element:
+ →Application, 0x1143dabb0, pid: 98054, label: 'Bucătăria'
+Query chain:
+ →Find: Target Application 'app.kitchentales.ios'
+  Output: {
+    Application, 0x1070b5300, pid: 98054, label: 'Bucătăria'
+  }
+)

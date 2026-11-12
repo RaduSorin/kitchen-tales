@@ -127,7 +127,7 @@ struct AddOptionRow: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            AddArt(mode: mode).frame(width: 58, height: 58)
+            StoryAddArt(mode: mode).frame(width: 58, height: 58)
             VStack(alignment: .leading, spacing: 3) {
                 Text(mode.title)
                     .font(.custom(AppFont.storyDisplay, size: 21, relativeTo: .title3))

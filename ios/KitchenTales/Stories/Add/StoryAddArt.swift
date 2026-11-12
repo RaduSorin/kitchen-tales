@@ -3,7 +3,7 @@ import SwiftUI
 /// The web's small gold line drawings for the ways to add a story (components/AddArt.tsx,
 /// "Desene mici"), drawn in the same 0–100 box: a book with a sparkle, a mic with the moon, a
 /// cloud with an arrow.
-struct AddArt: View {
+struct StoryAddArt: View {
     let mode: AddMode
 
     private static let gold = Color(hex: 0xF2C879)

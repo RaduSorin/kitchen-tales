@@ -181,7 +181,7 @@ struct AlbumView: View {
                 .background(Rectangle().fill(c.tape.opacity(0.95)))
                 .rotationEffect(.degrees(-2.2))
                 .offset(x: 12 * u, y: 5.7 * u)
-                Image(doodle).resizable().renderingMode(.template).scaledToFit()
+                Image.badgeArt(doodle).resizable().renderingMode(.template).scaledToFit()
                     .frame(width: 16 * u).foregroundStyle(.white.opacity(0.42))
                     .offset(x: 79 * u, y: 4 * u)
                 let cols = [GridItem(.flexible(), spacing: 2.1 * u), GridItem(.flexible(), spacing: 2.1 * u)]
@@ -190,7 +190,7 @@ struct AlbumView: View {
                 }
                 .frame(width: 85.1 * u)
                 .offset(x: 10.6 * u, y: 22 * u)
-                Image("trail").resizable().renderingMode(.template).scaledToFit()
+                Image.badgeArt("trail").resizable().renderingMode(.template).scaledToFit()
                     .frame(width: 27 * u).foregroundStyle(.white.opacity(0.42))
                     .frame(maxHeight: .infinity, alignment: .bottom)
                     .padding(.leading, 12 * u).padding(.bottom, 2.8 * u)

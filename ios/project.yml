@@ -98,6 +98,8 @@ targets:
         excludes:
           - Share.entitlements
       - path: KitchenTales/Features/ShareIn
+        excludes:
+          - ShareInApp.swift
       - path: KitchenTales/Auth/Account.swift
       - path: KitchenTales/Auth/CognitoClient.swift
       - path: KitchenTales/Auth/CognitoSRP.swift

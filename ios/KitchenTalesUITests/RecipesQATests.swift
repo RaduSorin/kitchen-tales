@@ -151,7 +151,7 @@ final class RecipesQATests: QABase {
         }
         expect("Nota QA de test", .staticText, exact: false, "new note shows")
         shot("recipe-note-added")
-        tap("Șterge nota", .button, pick: .highest, optional: true)
+        tap("Șterge nota", .button, optional: true, pick: .highest)
         expectGone("Nota QA de test", .staticText, exact: false, timeout: 3, "note deleted")
 
         // Favorite (r1 is a favourite). Start again so a stuck step above does not hide these.

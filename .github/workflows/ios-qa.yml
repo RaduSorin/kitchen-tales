@@ -67,6 +67,7 @@ jobs:
           xcrun simctl boot "$UDID" || true
 
       - name: Build the app and the QA tests
+        id: build
         run: |
           set -o pipefail
           mkdir -p build/qa
@@ -99,7 +100,7 @@ jobs:
           grep -c "FAIL" build/qa/pro/qa-log.txt || true
 
       - name: Key screens on a small iPhone and an iPad
-        if: always()
+        if: always() && steps.build.outcome == 'success'
         timeout-minutes: 25
         run: |
           for kind in small ipad; do

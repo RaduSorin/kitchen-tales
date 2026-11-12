@@ -263,7 +263,7 @@ class QABase: XCTestCase {
     func hideKeyboard() {
         guard keyboardShown else { return }
         let kb = app.keyboards.firstMatch
-        let multiLine = app.textViews.allElementsBoundByIndex.contains { ($0.value(forKey: "hasKeyboardFocus") as? Bool) == true }
+        let multiLine = app.textViews.matching(NSPredicate(format: "hasKeyboardFocus == true")).count > 0
         if !multiLine {
             for key in ["Done", "done", "Gata", "Return", "return", "Go", "Search"] {
                 let b = kb.buttons[key]

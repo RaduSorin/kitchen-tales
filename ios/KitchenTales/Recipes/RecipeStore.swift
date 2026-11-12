@@ -488,6 +488,18 @@ final class RecipeStore {
         }
     }
 
+    /// Ticks (or unticks) every stored line of a merged row.
+    @discardableResult
+    func setChecked(_ ids: [String], _ checked: Bool) async -> Bool {
+        let lines = shopping.filter { ids.contains($0.id) && $0.checked != checked }
+        guard !lines.isEmpty else { return true }
+        return await change({ for i in shopping.indices where ids.contains(shopping[i].id) { shopping[i].checked = checked } }) {
+            for line in lines {
+                try await mutate("updateShoppingItem", "UpdateShoppingItemInput", ["id": line.id, "text": line.text, "checked": checked])
+            }
+        }
+    }
+
     @discardableResult
     func removeShopping(_ ids: [String]) async -> Bool {
         guard !ids.isEmpty else { return true }

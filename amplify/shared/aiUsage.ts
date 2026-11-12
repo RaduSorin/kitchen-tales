@@ -59,3 +59,22 @@ export async function countAi(s3: S3Client, bucket: string, space: string | unde
     Body: JSON.stringify({ ...usage, [kind]: used + 1 }),
   }))
 }
+
+/**
+ * Gives one use back, for work that found nothing to keep (a shared video that is not a recipe):
+ * that attempt should not eat into the month.
+ */
+export async function refundAi(s3: S3Client, bucket: string, space: string | undefined, kind: AiKind) {
+  if (!space) return
+  const month = thisMonth()
+  const usage = await readUsage(s3, bucket, space, month)
+  const used = usage[kind] ?? 0
+  if (used <= 0) return
+  await s3.send(new PutObjectCommand({
+    Bucket: bucket, Key: usagePath(space, month), ContentType: 'application/json',
+    Body: JSON.stringify({ ...usage, [kind]: used - 1 }),
+  }))
+}
+
+/** The importer's "no recipe here" answers ("Nu am găsit rețeta…", "Nu am găsit o rețetă aici."). */
+export const isNoRecipe = (err: unknown) => /^Nu am găsit (o )?rețet/.test((err as Error)?.message ?? '')

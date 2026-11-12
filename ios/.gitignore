@@ -4,3 +4,6 @@ KitchenTales/Info.plist
 build/
 DerivedData/
 *.xcresult
+ShareExtension/Info.plist
+KitchenTales/KitchenTales.entitlements
+ShareExtension/Share.entitlements

@@ -44,30 +44,8 @@ struct RecipeServer {
     /// Starts AI work that runs in the background and waits for the outcome file it writes to
     /// ai-jobs/<space>/<jobId>.json (up to 150 s, a bit more than the function's own limit).
     private func runJob(_ mutation: String, _ variables: [String: Any]) async throws -> Any? {
-        let jobId = UUID().uuidString.lowercased()
-        var vars = variables
-        vars["jobId"] = jobId
-        _ = try await client.run(mutation, variables: vars)
-        let path = "ai-jobs/\(space)/\(jobId).json"
-        let links = FileLinks(client: client)
-        let until = Date().addingTimeInterval(150)
-        var wait: Double = 1.5
-        while Date() < until {
-            try await Task.sleep(for: .seconds(wait))
-            wait = min(wait + 0.5, 4)
-            guard let url = await links.url(for: path, ref: nil) else { continue }
-            var request = URLRequest(url: url)
-            request.cachePolicy = .reloadIgnoringLocalCacheData
-            guard let (data, response) = try? await URLSession.shared.data(for: request),
-                  (response as? HTTPURLResponse)?.statusCode == 200,
-                  let outcome = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
-            await deleteFiles([path])
-            guard outcome["ok"] as? Bool == true else {
-                throw BackendError.server((outcome["error"] as? String) ?? "Nu a mers.")
-            }
-            return outcome["data"]
-        }
-        throw BackendError.server("Durează mai mult decât de obicei. Verifică internetul și încearcă din nou.")
+        let jobId = try await AIJob.start(client, mutation: mutation, variables: variables)
+        return try await AIJob.wait(client, space: space, jobId: jobId)
     }
 
     struct ImportArgs {
@@ -90,11 +68,7 @@ struct RecipeServer {
         if let x = args.tools { v["tools"] = x }
         if let x = args.servings { v["servings"] = x }
         if let x = args.diet, !x.isEmpty { v["diet"] = x }
-        let mutation = """
-        mutation Imp($jobId: String!, $url: String, $photoKeys: [String], $text: String, $idea: String, $tools: [String], $servings: Int, $diet: String) {
-          startImportRecipe(jobId: $jobId, url: $url, photoKeys: $photoKeys, text: $text, idea: $idea, tools: $tools, servings: $servings, diet: $diet) { success }
-        }
-        """
+        let mutation = AIJob.importMutation
         guard let recipe = ImportedRecipe(json: try await runJob(mutation, v) as? [String: Any]) else {
             throw BackendError.server("Nu am găsit o rețetă aici.")
         }

@@ -93,3 +93,31 @@ They point at the family user pool (`eu-central-1_mH3Vk6Rfm`) and its single app
 
 The SRP unit tests use vectors from `scripts/srp-vectors.py`, a Python reference checked
 against pycognito.
+
+## Siri, Shortcuts and Spotlight
+
+`Features/Shortcuts/` holds App Intents: play a story (by name or the one started last), add to
+the shopping list, read the list, "ce gătim azi", open the list. They show in the Shortcuts app
+under Bucătăria and can go on the Action button or the Lock Screen. Siri has no Romanian voice,
+so each phrase also exists in English; a Shortcut you name yourself ("Poveste de seară") works
+with any Siri language. Stories and recipes are indexed in Spotlight after each refresh and the
+index is cleared on sign-out. Actions that open a screen go through `AppCommands`, handled in
+`SignedInRoot`.
+
+## Share extension
+
+`ShareExtension/` is "Salvează în Bucătăria" in the Share sheet (target `KitchenTalesShare`). It
+reads a link, text or photo, runs the same `startImportRecipe` job as the editor and shows the card
+from `Features/ShareIn/ShareCard.swift`, which the app also compiles (screens `-screen share-*`).
+The sign-in is shared through the Keychain group `$(AppIdentifierPrefix)app.kitchentales.shared`
+(both targets' entitlements). "Gata, lucrează în fundal" leaves the job in `PendingImports`; the
+app saves it the next time it becomes active. A link with no recipe can be kept as a recipe in the
+category "De încercat", and the server gives that AI use back (`refundAi`).
+
+## Ora de culcare
+
+`Features/Bedtime/`: settings per phone (Profil › Copilul › Ora de culcare), weekly local
+notifications with "Începe acum" / "Peste 10 min" (`NotificationRouter`), the night screen
+(`BedtimeNightView`: steps, tonight's stories, kid mode, dimmed screen), the Siri intent and a
+Sleep Focus filter (`BedtimeFocusFilter`). Story jobs ask for background time and post "Povestea
+e gata" when they finish while the app is in the background.

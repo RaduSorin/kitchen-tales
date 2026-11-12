@@ -1,6 +1,8 @@
 import AVFoundation
 import Foundation
+import UIKit
 import UniformTypeIdentifiers
+import UserNotifications
 
 /// The server side of adding a story, like `uploadFile`, `createStory` and `generateStory` in
 /// src/lib/db.ts: a signed upload link per file, the Story row in our space, and the AI story job.
@@ -97,6 +99,19 @@ struct StoryCreator {
 
     /// Starts the story job and waits for its outcome file (up to 3.5 minutes, like the web).
     func generate(title: String, brief: Brief?, ownText: String?, voice: String?) async throws -> Generated {
+        // Writing and reading a story takes minutes: ask iOS for time when the app goes to the
+        // background, and say so with a notification when it is ready.
+        let work = UIApplication.shared.beginBackgroundTask(withName: "story") {}
+        defer { UIApplication.shared.endBackgroundTask(work) }
+        if LaunchOptions.demoAccount == nil {
+            _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+        }
+        let generated = try await runGenerate(title: title, brief: brief, ownText: ownText, voice: voice)
+        NotificationRouter.storyReady(title: title)
+        return generated
+    }
+
+    private func runGenerate(title: String, brief: Brief?, ownText: String?, voice: String?) async throws -> Generated {
         let jobId = UUID().uuidString.lowercased()
         var variables: [String: Any] = ["jobId": jobId, "title": title]
         if let voice, !voice.isEmpty { variables["voice"] = voice }

@@ -14,6 +14,7 @@ final class StoryRecorder {
 
     @ObservationIgnored private var recorder: AVAudioRecorder?
     @ObservationIgnored private var timer: Timer?
+    @ObservationIgnored private var interruptions: NSObjectProtocol?
     let file = FileManager.default.temporaryDirectory.appendingPathComponent("recording-\(UUID().uuidString).m4a")
 
     var hasAudio: Bool { elapsed >= 1 }
@@ -34,6 +35,9 @@ final class StoryRecorder {
             self.recorder = recorder
             state = .recording
             startTimer()
+            watchInterruptions()
+            // The parent reads from a book: keep the screen (and the wave) on while recording.
+            UIApplication.shared.isIdleTimerDisabled = true
         } catch {
             state = .failed
         }
@@ -58,6 +62,7 @@ final class StoryRecorder {
         recorder.stop()
         stopTimer()
         state = .idle
+        endSession()
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, policy: .longFormAudio, options: [])
         return hasAudio ? file : nil
     }
@@ -68,6 +73,37 @@ final class StoryRecorder {
         stopTimer()
         try? FileManager.default.removeItem(at: file)
         state = .idle
+        endSession()
+    }
+
+    /// A phone call, FaceTime or an alarm pauses the recorder: show it as paused so the parent
+    /// sees it and taps to go on in the same file (nothing is lost).
+    private func watchInterruptions() {
+        if let interruptions { NotificationCenter.default.removeObserver(interruptions) }
+        interruptions = NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification,
+                                                               object: AVAudioSession.sharedInstance(), queue: .main) { [weak self] note in
+            let began = StoryRecorder.interruptionBegan(note.userInfo)
+            MainActor.assumeIsolated { self?.interrupted(began: began) }
+        }
+    }
+
+    private func interrupted(began: Bool) {
+        guard began, state == .recording, let recorder else { return }
+        recorder.pause()
+        elapsed = recorder.currentTime
+        state = .paused
+        Haptics.tap()
+    }
+
+    nonisolated static func interruptionBegan(_ info: [AnyHashable: Any]?) -> Bool {
+        guard let raw = info?[AVAudioSessionInterruptionTypeKey] as? UInt else { return false }
+        return AVAudioSession.InterruptionType(rawValue: raw) == .began
+    }
+
+    private func endSession() {
+        if let interruptions { NotificationCenter.default.removeObserver(interruptions) }
+        interruptions = nil
+        UIApplication.shared.isIdleTimerDisabled = false
     }
 
     private func startTimer() {

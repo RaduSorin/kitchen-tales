@@ -6,6 +6,8 @@ import SwiftUI
 final class KitchenModel {
     var tab: AppTab = LaunchOptions.tab.flatMap(AppTab.init(rawValue:)) ?? .home
     var cooking: CookSession?
+    /// A recipe Spotlight or a Shortcut asked to open (the Rețete tab shows it).
+    var openRecipe: String?
     private(set) var toast: String?
     @ObservationIgnored private var toastTask: Task<Void, Never>?
 

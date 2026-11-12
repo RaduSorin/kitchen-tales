@@ -35,6 +35,7 @@ enum RecipeSort: String, CaseIterable {
 struct RecipeListView: View {
     var category: String?
     @Environment(RecipeStore.self) private var store
+    @Environment(KitchenModel.self) private var kitchen
     @State private var query = ""
     @State private var chosen: String?
     @State private var showsNew = false
@@ -51,6 +52,12 @@ struct RecipeListView: View {
     init(category: String? = nil) {
         self.category = category
         _chosen = State(initialValue: category)
+    }
+
+    private func openAsked() {
+        guard category == nil, let id = kitchen.openRecipe else { return }
+        kitchen.openRecipe = nil
+        opened = id
     }
 
     private var shown: [Recipe] {
@@ -124,6 +131,8 @@ struct RecipeListView: View {
             RecipeEditorScreen(recipe: r, server: store.server) { _ in editing = nil }
         }
         .navigationDestination(item: $opened) { RecipeDetailView(recipeId: $0) }
+        // A recipe picked in Spotlight or a Shortcut opens here, on the Rețete tab.
+        .onChange(of: kitchen.openRecipe, initial: true) { openAsked() }
         .task {
             guard category == nil, let screen = LaunchOptions.screen else { return }
             guard screen.hasPrefix("editor-") else { return }

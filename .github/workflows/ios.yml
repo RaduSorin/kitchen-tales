@@ -107,8 +107,12 @@ jobs:
             -destination "id=$UDID,arch=arm64" \
             -parallel-testing-enabled NO \
             -derivedDataPath build/DerivedData \
+            -showBuildTimingSummary \
             CURRENT_PROJECT_VERSION=1 \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|Test (Case|Suite|run)|✔|✘|\*\* (TEST|BUILD)" || true
+          # How much the build cache saved: a warm run compiles only the changed files.
+          echo "Swift compile steps: $(grep -c '^SwiftCompile ' build/xcodebuild.log || true)"
+          grep -A30 "Build Timing Summary" build/xcodebuild.log | head -30 || true
           grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild.log

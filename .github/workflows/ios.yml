@@ -1,5 +1,5 @@
-# Native iOS app (ios/): generates the Xcode project, builds it, runs the unit tests on an iPhone
-# simulator. Nothing else: no screenshots and no uploads, so the run is as short as it can be.
+# Native iOS app (ios/): generates the Xcode project, builds it, runs the unit tests on an iOS 18
+# iPhone simulator. Nothing else: no screenshots and no uploads, so the run is as short as it can be.
 # Visual checks are done by hand on an iPhone; the on-demand XCUITest walk is in ios-qa.yml.
 # Runs when something under ios/ (or this file) changes: on every push to a claude/** branch, so
 # a Claude thread sees the result before it opens or announces a pull request, and on pull
@@ -122,9 +122,11 @@ jobs:
 
       - name: Run the unit tests
         run: |
-          xcrun simctl list runtimes
+          # iOS 18, the app's minimum version: the runner boots an iOS 18 simulator in about a
+          # minute, an iOS 26 one took four to five.
           UDID=$(IOS_MAJOR=18 bash scripts/pick-simulator.sh)
-          date; xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b > /dev/null; date
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b > /dev/null
           set -o pipefail
           xcodebuild test-without-building \
             -project KitchenTales.xcodeproj -scheme KitchenTales \

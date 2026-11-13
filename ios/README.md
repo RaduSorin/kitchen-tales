@@ -56,12 +56,15 @@ cd ios && xcodegen generate && open KitchenTales.xcodeproj
 
 The workflow runs on every push to a `claude/**` branch (and to `main`) that changes `ios/`, and
 on pull requests from other branches. It first runs `scripts/precheck.py` on Linux (about 15
-seconds), then on macOS builds the app and runs the unit tests on the newest iPhone simulator.
-DerivedData is cached between runs (file dates are restored from git), so a warm build and test
-takes a few minutes instead of 14 (the step summary lists what took the time). A `claude/**` branch is not built again for its pull request:
-the push run's result shows on the PR. The run only compiles and tests: no screenshots and no
-artifact uploads (visual checks are done by hand on an iPhone). When it fails, the errors are in
-the job log of the "Build and run the unit tests" step.
+seconds), then on macOS builds the app and runs the unit tests on an iOS 18 iPhone simulator
+(the app's minimum version; the runner boots it in about a minute, an iOS 26 one takes four to
+five). DerivedData is cached between runs (file and folder dates are restored from git), so a
+warm run takes about 4 minutes. The app is built before any simulator starts: while CoreSimulator
+boots a device, the asset catalog step takes minutes instead of seconds. A `claude/**` branch is
+not built again for its pull request: the push run's result shows on the PR. The run only
+compiles and tests: no screenshots and no artifact uploads (visual checks are done by hand on an
+iPhone). When it fails, the errors are in the job log of the build or test step; the build step
+also prints its timing summary.
 
 On demand only (Actions > iOS QA > Run workflow): **iOS QA** (`ios-qa.yml`) runs the XCUITest
 walk in `KitchenTalesUITests` over every screen (over an hour). Results go to

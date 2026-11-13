@@ -54,13 +54,6 @@ jobs:
           echo "Using $XCODE"
           sudo xcode-select -s "$XCODE"
 
-      # Picking and booting the simulator takes about 30 seconds (CoreSimulator starts up), so it
-      # runs in the background while the next steps prepare the build.
-      - name: Start the simulator in the background
-        run: |
-          ( UDID=$(bash scripts/pick-simulator.sh) && echo "$UDID" > "$RUNNER_TEMP/sim-udid" \
-            && xcrun simctl boot "$UDID"; touch "$RUNNER_TEMP/sim-done" ) > "$RUNNER_TEMP/sim.log" 2>&1 &
-
       # The build cache: Xcode only recompiles what changed since the last run on this branch (or
       # on main). A checkout gives every file today's date, which would look like a change to all
       # of them, so the dates are set back to each file's last commit first. --no-renames keeps
@@ -125,6 +118,15 @@ jobs:
           grep -oE "^[A-Z][A-Za-z]+ " build/xcodebuild.log | sort | uniq -c | sort -rn | head -12
           sed -n "/Build Timing Summary/,/^\*\*/p" build/xcodebuild.log | head -25
           grep -q "\*\* TEST BUILD SUCCEEDED \*\*" build/xcodebuild.log
+
+      # Picking and booting the simulator takes about 30 seconds (CoreSimulator starts up), so it
+      # runs in the background while the next steps prepare the build.
+      # EXPERIMENT: started after the build, to see if the asset catalog step is slow because the
+      # simulator boots at the same time.
+      - name: Start the simulator in the background
+        run: |
+          ( UDID=$(bash scripts/pick-simulator.sh) && echo "$UDID" > "$RUNNER_TEMP/sim-udid" \
+            && xcrun simctl boot "$UDID"; touch "$RUNNER_TEMP/sim-done" ) > "$RUNNER_TEMP/sim.log" 2>&1 &
 
       - name: Run the unit tests
         run: |

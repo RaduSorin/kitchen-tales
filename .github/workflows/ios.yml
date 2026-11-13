@@ -96,11 +96,14 @@ jobs:
           touch "$RUNNER_TEMP/before-generate"
           "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate --quiet
           # XcodeGen writes the project, plists and schemes anew every run. With today's date they
-          # look changed and Xcode redoes the steps that read them (the asset catalog alone took
-          # 4 minutes), so they get project.yml's date: same project.yml, same files.
+          # look changed and Xcode redoes the steps that read them, so they get project.yml's
+          # date: same project.yml, same files.
           find . -path ./build -prune -o -type f -newer "$RUNNER_TEMP/before-generate" -print \
             | tee "$RUNNER_TEMP/generated.txt" | xargs -I{} touch -r project.yml {}
           echo "generated files dated like project.yml: $(wc -l < "$RUNNER_TEMP/generated.txt")"
+          # Folders get a fixed old date too: a checkout dates them today, and Xcode reads a folder
+          # like Assets.xcassets as one input, so the asset catalog was compiled again every run.
+          find . -path ./build -prune -o -type d -print | xargs -I{} touch -t 202001010000 {}
 
       # Built for "any simulator" so the build does not wait for the simulator, which is still
       # booting in the background; arm64 only, like the runner.

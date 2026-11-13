@@ -95,24 +95,37 @@ jobs:
           unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
           "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate --quiet
 
-      - name: Build and run the unit tests
+      # Built for "any simulator" so the build does not wait for the simulator, which is still
+      # booting in the background; arm64 only, like the runner.
+      - name: Build the app and the unit tests
         run: |
-          for i in $(seq 120); do [ -f "$RUNNER_TEMP/sim-done" ] && break; sleep 1; done
+          set -o pipefail
+          mkdir -p build
+          xcodebuild build-for-testing \
+            -project KitchenTales.xcodeproj -scheme KitchenTales \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath build/DerivedData \
+            -showBuildTimingSummary \
+            ARCHS=arm64 \
+            CURRENT_PROJECT_VERSION=1 \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|\*\* (TEST |)BUILD" || true
+          # What the build did (a warm run compiles only the changed files) and where the time went.
+          grep -oE "^[A-Z][A-Za-z]+ " build/xcodebuild.log | sort | uniq -c | sort -rn | head -12
+          sed -n "/Build Timing Summary/,/^\*\*/p" build/xcodebuild.log | head -25
+          grep -q "\*\* TEST BUILD SUCCEEDED \*\*" build/xcodebuild.log
+
+      - name: Run the unit tests
+        run: |
+          for i in $(seq 180); do [ -f "$RUNNER_TEMP/sim-done" ] && break; sleep 1; done
           cat "$RUNNER_TEMP/sim.log"
           UDID=$(cat "$RUNNER_TEMP/sim-udid")
           set -o pipefail
-          mkdir -p build
-          xcodebuild test \
+          xcodebuild test-without-building \
             -project KitchenTales.xcodeproj -scheme KitchenTales \
             -destination "id=$UDID,arch=arm64" \
             -parallel-testing-enabled NO \
             -derivedDataPath build/DerivedData \
-            -showBuildTimingSummary \
-            CURRENT_PROJECT_VERSION=1 \
-            CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|Test (Case|Suite|run)|✔|✘|\*\* (TEST|BUILD)" || true
-          # How much the build cache saved: a warm run compiles only the changed files.
-          echo "Swift compile steps: $(grep -c '^SwiftCompile ' build/xcodebuild.log || true)"
-          grep -A30 "Build Timing Summary" build/xcodebuild.log | head -30 || true
-          grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild.log
+            | tee build/test.log | grep -E "error:|Test (Case|Suite|run)|✔|✘|\*\* TEST" || true
+          grep -qE "\*\* TEST (EXECUTE )?SUCCEEDED \*\*" build/test.log

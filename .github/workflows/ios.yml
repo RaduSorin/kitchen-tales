@@ -1,5 +1,6 @@
 # Native iOS app (ios/): generates the Xcode project, builds it, runs the unit tests on an iPhone
-# simulator. A run started by hand also saves screenshots of the main screens.
+# simulator. Nothing else: no screenshots and no uploads, so the run is as short as it can be.
+# Visual checks are done by hand on an iPhone; the on-demand XCUITest walk is in ios-qa.yml.
 # Runs when something under ios/ (or this file) changes: on every push to a claude/** branch, so
 # a Claude thread sees the result before it opens or announces a pull request, and on pull
 # requests from any other branch. macOS minutes cost 10x Linux ones, so a claude/** branch is not
@@ -36,25 +37,40 @@ jobs:
     needs: precheck
     runs-on: macos-15
     timeout-minutes: 30
-    permissions:
-      contents: write   # only to publish the screenshots to the ios-screenshots branch
     defaults:
       run:
         working-directory: ios
     steps:
+      # Full history for the file dates below, but without file contents (blob:none): only this
+      # commit's files are downloaded, not every old version or the PNGs on other branches.
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0   # for the file dates below
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Use the newest Xcode on the runner
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+
+      # Picking and booting the simulator takes about 30 seconds (CoreSimulator starts up), so it
+      # runs in the background while the next steps prepare the build.
+      - name: Start the simulator in the background
+        run: |
+          ( UDID=$(bash scripts/pick-simulator.sh) && echo "$UDID" > "$RUNNER_TEMP/sim-udid" \
+            && xcrun simctl boot "$UDID"; touch "$RUNNER_TEMP/sim-done" ) > "$RUNNER_TEMP/sim.log" 2>&1 &
 
       # The build cache: Xcode only recompiles what changed since the last run on this branch (or
       # on main). A checkout gives every file today's date, which would look like a change to all
-      # of them, so the dates are set back to each file's last commit first.
+      # of them, so the dates are set back to each file's last commit first. --no-renames keeps
+      # git from downloading old file contents to detect renames.
       - name: Keep file dates from git
         working-directory: .
         run: |
           python3 - <<'PY'
           import os, subprocess
-          out = subprocess.run(["git", "log", "--name-only", "--format=@%ct", "--", "ios"], capture_output=True, text=True).stdout
+          out = subprocess.run(["git", "log", "--no-renames", "--name-only", "--format=@%ct", "--", "ios"], capture_output=True, text=True, check=True).stdout
           seen, when = set(), 0
           for line in out.splitlines():
               if line.startswith("@"): when = int(line[1:]); continue
@@ -70,108 +86,30 @@ jobs:
           key: ios-dd-${{ runner.os }}-${{ hashFiles('ios/**/*.swift', 'ios/project.yml') }}
           restore-keys: ios-dd-${{ runner.os }}-
 
-      - name: Use the newest Xcode on the runner
-        run: |
-          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
-          echo "Using $XCODE"
-          sudo xcode-select -s "$XCODE"
-          xcodebuild -version
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
       - name: Generate the Xcode project
-        run: xcodegen generate
-
-      - name: Pick a simulator
-        id: sim
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
-          UDID=$(bash scripts/pick-simulator.sh)
-          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
-          # Boot it now, so the boot overlaps the build instead of following it.
-          xcrun simctl boot "$UDID" || true
+          brew install --quiet xcodegen
+          xcodegen generate --quiet
 
       - name: Build and run the unit tests
         run: |
+          for i in $(seq 120); do [ -f "$RUNNER_TEMP/sim-done" ] && break; sleep 1; done
+          cat "$RUNNER_TEMP/sim.log"
+          UDID=$(cat "$RUNNER_TEMP/sim-udid")
           set -o pipefail
           mkdir -p build
           xcodebuild test \
             -project KitchenTales.xcodeproj -scheme KitchenTales \
-            -destination "id=${{ steps.sim.outputs.udid }},arch=arm64" \
+            -destination "id=$UDID,arch=arm64" \
             -parallel-testing-enabled NO \
             -derivedDataPath build/DerivedData \
-            -resultBundlePath build/Tests.xcresult \
+            -skipMacroValidation -skipPackagePluginValidation \
             CURRENT_PROJECT_VERSION=1 \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
+            ONLY_ACTIVE_ARCH=YES \
             | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|Test (Case|Suite|run)|✔|✘|\*\* (TEST|BUILD)" || true
           grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild.log
-
-      # Screenshots take about 10 minutes, so only a run started by hand makes them
-      # (Actions > iOS > Run workflow).
-      - name: Screenshots
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          APP=$(find build/DerivedData/Build/Products/Debug-iphonesimulator -maxdepth 1 -name 'KitchenTales.app' | head -1)
-          bash scripts/screenshots.sh "$APP" "${{ steps.sim.outputs.udid }}"
-
-      - name: Upload screenshots
-        if: always() && github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v6
-        with:
-          name: ios-screenshots
-          path: ios/build/screenshots
-          if-no-files-found: ignore
-
-      # Also commit them to the ios-screenshots branch (folder pr-<number>, or the branch name for
-      # a push run or a run started by hand), so they can be viewed on GitHub and compared before/after
-      # without downloading the artifact.
-      - name: Publish screenshots to the ios-screenshots branch
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          # pr-<number>, or the branch name for a push run or a run started by hand.
-          DEST: ${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          SRC="$PWD/build/screenshots"
-          cd "$RUNNER_TEMP" && git init -q shots && cd shots
-          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
-          if git fetch -q --depth 1 origin ios-screenshots; then git checkout -q FETCH_HEAD; fi
-          git checkout -q -B ios-screenshots
-          rm -rf "$DEST" && mkdir -p "$DEST" && cp "$SRC"/*.png "$DEST"/
-          git add -A
-          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -qm "Screenshots for $DEST at $HEAD_SHA"
-          git push -q origin ios-screenshots
-          echo "Screenshots: https://github.com/${{ github.repository }}/tree/ios-screenshots/$DEST"
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v6
-        with:
-          name: ios-build-log
-          path: |
-            ios/build/xcodebuild.log
-            ios/build/Tests.xcresult
-
-  # Tells whether the App Store Connect secrets needed for TestFlight are set (never their values).
-  # The TestFlight upload itself comes in the next PR.
-  testflight-readiness:
-    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'claude/')
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: Check the App Store Connect secrets
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
-            if [ -n "${!name}" ]; then echo "$name: set"; else echo "$name: missing"; fi
-          done
-          if [ -n "$ASC_KEY_P8" ] && ! printf '%s' "$ASC_KEY_P8" | grep -q "BEGIN PRIVATE KEY"; then
-            echo "::warning::ASC_KEY_P8 is set but does not look like the contents of a .p8 file"
-          fi

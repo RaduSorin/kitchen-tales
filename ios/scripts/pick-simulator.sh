@@ -1,9 +1,10 @@
 #!/bin/bash
 # Prints the UDID of an available iPhone simulator on the newest iOS runtime, preferring a Pro
-# model (the closest to Sorin's and Lori's phones). Creates nothing.
+# model (the closest to Sorin's and Lori's phones). Creates nothing. With IOS_MAJOR set (for
+# example 18), only runtimes of that iOS version are considered.
 set -euo pipefail
 xcrun simctl list devices available -j | python3 -c '
-import json, re, sys
+import json, os, re, sys
 data = json.load(sys.stdin)["devices"]
 def version(runtime):
     m = re.search(r"iOS-(\d+)-(\d+)", runtime)
@@ -11,6 +12,8 @@ def version(runtime):
 best = None
 for runtime, devices in data.items():
     if "iOS" not in runtime:
+        continue
+    if os.environ.get("IOS_MAJOR") and version(runtime)[0] != int(os.environ["IOS_MAJOR"]):
         continue
     for d in devices:
         if not d["name"].startswith("iPhone"):

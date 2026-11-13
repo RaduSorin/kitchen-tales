@@ -80,8 +80,8 @@ jobs:
           key: ios-dd-${{ runner.os }}-${{ hashFiles('ios/**/*.swift', 'ios/project.yml', '.github/workflows/ios.yml') }}
           restore-keys: ios-dd-${{ runner.os }}-
 
-      # XcodeGen's prebuilt release instead of Homebrew: brew took up to a minute here (it pours
-      # while the simulator boots), the download takes a few seconds.
+      # XcodeGen's prebuilt release instead of Homebrew: brew took 7 to 70 seconds, the download
+      # takes one.
       - name: Generate the Xcode project
         run: |
           curl -fsSL -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip
@@ -98,8 +98,9 @@ jobs:
           # like Assets.xcassets as one input, so the asset catalog was compiled again every run.
           find . -path ./build -prune -o -type d -print | xargs -I{} touch -t 202001010000 {}
 
-      # Built for "any simulator" so the build does not wait for the simulator, which is still
-      # booting in the background; arm64 only, like the runner.
+      # Built for "any simulator" (arm64 only, like the runner), before any simulator is started:
+      # while CoreSimulator boots a device, compiling the asset catalog takes about 4 minutes
+      # instead of seconds. The test step below picks the simulator and boots it.
       - name: Build the app and the unit tests
         run: |
           set -o pipefail
@@ -119,20 +120,11 @@ jobs:
           sed -n "/Build Timing Summary/,/^\*\*/p" build/xcodebuild.log | head -25
           grep -q "\*\* TEST BUILD SUCCEEDED \*\*" build/xcodebuild.log
 
-      # Picking and booting the simulator takes about 30 seconds (CoreSimulator starts up), so it
-      # runs in the background while the next steps prepare the build.
-      # EXPERIMENT: started after the build, to see if the asset catalog step is slow because the
-      # simulator boots at the same time.
-      - name: Start the simulator in the background
-        run: |
-          ( UDID=$(bash scripts/pick-simulator.sh) && echo "$UDID" > "$RUNNER_TEMP/sim-udid" \
-            && xcrun simctl boot "$UDID"; touch "$RUNNER_TEMP/sim-done" ) > "$RUNNER_TEMP/sim.log" 2>&1 &
-
       - name: Run the unit tests
         run: |
-          for i in $(seq 180); do [ -f "$RUNNER_TEMP/sim-done" ] && break; sleep 1; done
-          cat "$RUNNER_TEMP/sim.log"
-          UDID=$(cat "$RUNNER_TEMP/sim-udid")
+          xcrun simctl list runtimes
+          UDID=$(IOS_MAJOR=18 bash scripts/pick-simulator.sh)
+          date; xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b > /dev/null; date
           set -o pipefail
           xcodebuild test-without-building \
             -project KitchenTales.xcodeproj -scheme KitchenTales \

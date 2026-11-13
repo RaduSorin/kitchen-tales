@@ -79,20 +79,21 @@ jobs:
           print(f"dates set on {len(seen)} files")
           PY
 
+      # The key includes this file, so a change to the build flags saves a fresh cache.
       - name: Restore the build cache
         uses: actions/cache@v4
         with:
           path: ios/build/DerivedData
-          key: ios-dd-${{ runner.os }}-${{ hashFiles('ios/**/*.swift', 'ios/project.yml') }}
+          key: ios-dd-${{ runner.os }}-${{ hashFiles('ios/**/*.swift', 'ios/project.yml', '.github/workflows/ios.yml') }}
           restore-keys: ios-dd-${{ runner.os }}-
 
+      # XcodeGen's prebuilt release instead of Homebrew: brew took up to a minute here (it pours
+      # while the simulator boots), the download takes a few seconds.
       - name: Generate the Xcode project
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
-          HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
-          brew install --quiet xcodegen
-          xcodegen generate --quiet
+          curl -fsSL -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate --quiet
 
       - name: Build and run the unit tests
         run: |
@@ -106,10 +107,8 @@ jobs:
             -destination "id=$UDID,arch=arm64" \
             -parallel-testing-enabled NO \
             -derivedDataPath build/DerivedData \
-            -skipMacroValidation -skipPackagePluginValidation \
             CURRENT_PROJECT_VERSION=1 \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            ONLY_ACTIVE_ARCH=YES \
             | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|Test (Case|Suite|run)|✔|✘|\*\* (TEST|BUILD)" || true
           grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild.log

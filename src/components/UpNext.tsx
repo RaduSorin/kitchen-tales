@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNowPlaying, type NowPlaying } from '../lib/nowPlaying'
 import { useKid } from '../lib/kidMode'
 import { showToast } from '../lib/toast'
@@ -32,14 +32,28 @@ function QueueRows({ story, done }: { story: Story; done: () => void }) {
   )
 }
 
+const OPEN_EVENT = 'kt-queue-menu'
+
 /** The ⋯ button on a story (long press is unreliable in Safari, so the web has a button). */
 export function QueueMenuButton({ story, className }: { story: Story; className?: string }) {
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
+  // Only one story's menu at a time: opening another closes this one (a tap on another ⋯ is not
+  // "outside" for PopMenu, since it is inside a menu-anchor too).
+  useEffect(() => {
+    if (!open) return
+    const other = (e: Event) => { if ((e as CustomEvent<string>).detail !== story.id) setOpen(false) }
+    window.addEventListener(OPEN_EVENT, other)
+    return () => window.removeEventListener(OPEN_EVENT, other)
+  }, [open, story.id])
+  const toggle = () => {
+    if (!open) window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: story.id }))
+    setOpen(!open)
+  }
   return (
     <span className={`menu-anchor queue-anchor${className ? ` ${className}` : ''}`}>
       <button type="button" className="queue-dots" aria-label={`Mai multe pentru „${story.title}”`} aria-haspopup="menu" aria-expanded={open}
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o) }}>{DOTS}</button>
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle() }}>{DOTS}</button>
       {open && <PopMenu label={`Coada pentru „${story.title}”`} onClose={close}><QueueRows story={story} done={close} /></PopMenu>}
     </span>
   )

@@ -3,7 +3,7 @@ import type { Story } from '../lib/types'
 import { useCoverUrl } from '../lib/useCoverUrl'
 import { moonDust, NATIVE_SWITCH, nextFrame, primeClick, shelfClick, tickAllowed, wait } from '../lib/shelf'
 import { getPosition } from '../lib/stories'
-import { QueueMenuButton } from './UpNext'
+import { QueueSlot } from './UpNext'
 import { CoverPicture, type BookViewProps } from './Spine'
 
 /** Under the cover: time left (or the length) and how to browse. */
@@ -208,14 +208,16 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
         <div className="dust-layer" aria-hidden="true" />
       </label>
       <div className={`flow-caption${fresh ? ' fresh' : ''}`} aria-live="polite">
-        <b>{fresh ? 'Poveste nouă!' : sel.title}{!fresh && <QueueMenuButton story={sel} className="inline" />}</b>
+        <b>{fresh ? 'Poveste nouă!' : sel.title}</b>
         <small>{fresh ? caption?.title : flowMeta(sel)}</small>
       </div>
       {!fresh && (
+        <QueueSlot story={sel} className="flow-play-slot">
         <button type="button" className="sa-hero-btn flow-play" onClick={() => onOpen(sel)}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" /></svg>
           {getPosition(sel.id) > 5 ? 'Continuă' : 'Ascultă'}
         </button>
+        </QueueSlot>
       )}
       {/* Screen readers and keyboards get plain buttons for what the gestures do. */}
       <div className="sr-only">

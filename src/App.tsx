@@ -38,6 +38,7 @@ const StoryAdd = page(() => import('./pages/StoryAdd'))
 import Profile, { profileTitle } from './pages/Profile'
 const CookMode = page(() => import('./pages/CookMode'))
 import MiniPlayer from './components/MiniPlayer'
+import { PickBar, QueueMenuHost } from './components/UpNext'
 import { NowPlayingProvider } from './lib/nowPlaying'
 import TabBar, { PROFILE } from './components/TabBar'
 import AreaSwitch from './components/AreaSwitch'
@@ -247,6 +248,8 @@ function Shell() {
       <MiniPlayer />
       <TabBar />
       <ToastHost />
+      <QueueMenuHost />
+      <PickBar />
       <LeaveConfirm />
     </>
   )

@@ -32,7 +32,7 @@ The native iPhone app, built next to the web app in the same repo and on the sam
 | `KitchenTales/Features` | Screens, one folder per area |
 | `KitchenTales/Resources` | Asset catalog (icon, accent color) and the bundled fonts |
 | `KitchenTalesTests` | Unit tests (Swift Testing) |
-| `scripts` | Simulator picking, screenshots and the Linux precheck for CI |
+| `scripts` | Simulator picking and the Linux precheck for CI |
 
 ## Style A "Seară iOS"
 
@@ -56,19 +56,19 @@ cd ios && xcodegen generate && open KitchenTales.xcodeproj
 
 The workflow runs on every push to a `claude/**` branch (and to `main`) that changes `ios/`, and
 on pull requests from other branches. It first runs `scripts/precheck.py` on Linux (about 15
-seconds), then on macOS builds the app and runs the unit tests on the newest iPhone simulator.
-DerivedData is cached between runs (file dates are restored from git), so a warm build and test
-takes about 5 minutes instead of 14. A `claude/**` branch is not built again for its pull request:
-the push run's result shows on the PR. The `testflight-readiness` job reports which App Store
-Connect secrets are set (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`), never
-their values.
+seconds), then on macOS builds the app and runs the unit tests on an iOS 18 iPhone simulator
+(the app's minimum version; the runner boots it in about a minute, an iOS 26 one takes four to
+five). DerivedData is cached between runs (file and folder dates are restored from git), so a
+warm run takes about 4 minutes. The app is built before any simulator starts: while CoreSimulator
+boots a device, the asset catalog step takes minutes instead of seconds. A `claude/**` branch is
+not built again for its pull request: the push run's result shows on the PR. The run only
+compiles and tests: no screenshots and no artifact uploads (visual checks are done by hand on an
+iPhone). When it fails, the errors are in the job log of the build or test step; the build step
+also prints its timing summary.
 
-On demand only (Actions > Run workflow):
-- **iOS** started by hand also takes screenshots of the main screens (about 10 minutes). They are
-  uploaded as the artifact `ios-screenshots` and committed to the `ios-screenshots` branch under
-  the branch name.
-- **iOS QA** (`ios-qa.yml`) runs the XCUITest walk in `KitchenTalesUITests` over every screen
-  (over an hour). Results go to `ios-screenshots/qa-<run>/`.
+On demand only (Actions > iOS QA > Run workflow): **iOS QA** (`ios-qa.yml`) runs the XCUITest
+walk in `KitchenTalesUITests` over every screen (over an hour). Results go to
+`ios-screenshots/qa-<run>/`.
 
 ## Before pushing Swift without a Mac
 

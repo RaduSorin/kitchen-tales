@@ -1578,6 +1578,12 @@
 .queue-dots::after { content: ''; position: absolute; inset: -6px; }
 .queue-dots:focus-visible { outline: 3px solid var(--moon); outline-offset: 2px; }
 .queue-anchor .pop-menu { width: min(240px, calc(100vw - 32px)); }
+/* On a cover the menu opens over that cover, as wide as it, so it never leaves the screen on the
+   left column: the anchor gives way to the cover's slot, the ⋯ button keeps its corner. */
+.cover-slot .queue-anchor.on-cover, .sh-slot .queue-anchor.on-cover { position: static; }
+.queue-anchor.on-cover .queue-dots { position: absolute; z-index: 3; top: 8px; right: 8px; }
+.queue-anchor.on-cover .pop-menu { left: 6px; right: 6px; top: 46px; width: auto; padding: 8px; }
+.queue-anchor.on-cover .menu-row { font-size: var(--fs-sm); }
 .queue-badge { position: absolute; z-index: 2; top: 46px; left: 8px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center;
   background: var(--moon); color: var(--on-accent); font-weight: 800; font-size: var(--fs-2xs); pointer-events: none; }
 .row-slot .queue-badge { top: 2px; left: 48px; min-width: 20px; height: 20px; }

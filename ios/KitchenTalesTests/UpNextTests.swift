@@ -7,9 +7,10 @@ import Testing
 struct UpNextTests {
     @Test func addGoesToTheEndOnce() {
         var q = UpNext()
-        #expect(q.add("a"))
-        #expect(q.add("b"))
-        #expect(!q.add("a"))
+        let first = q.add("a")
+        let second = q.add("b")
+        let again = q.add("a")
+        #expect(first && second && !again)
         #expect(q.ids == ["a", "b"])
         #expect(q.place(of: "b") == 2)
         #expect(q.place(of: "x") == nil)
@@ -34,11 +35,16 @@ struct UpNextTests {
     @Test func theChildHasALimit() {
         var q = UpNext()
         q.add("p")
-        for i in 0..<UpNext.kidLimit { #expect(q.add("k\(i)", byKid: true)) }
+        for i in 0..<UpNext.kidLimit {
+            let added = q.add("k\(i)", byKid: true)
+            #expect(added)
+        }
         #expect(!q.kidHasRoom)
-        #expect(!q.add("one-more", byKid: true))
+        let oneMore = q.add("one-more", byKid: true)
+        #expect(!oneMore)
         // The parent can still add.
-        #expect(q.add("parent"))
+        let parent = q.add("parent")
+        #expect(parent)
         #expect(q.kidCount == UpNext.kidLimit)
     }
 

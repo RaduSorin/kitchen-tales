@@ -16,6 +16,21 @@ struct RecipeTests {
         ("½ ceapă mare", 3.0, "1 ½ cepe mari"),
         ("Sare și piper", 2.0, "Sare și piper"),
         ("1 1/2 cană lapte", 2.0, "3 căni lapte"),
+        // Analysis of 10 Nov (web PR #135): amounts in words, the plural above 1, whole pieces in ranges.
+        ("o lingură zahăr", 2.0, "2 linguri zahăr"),
+        ("O ceapă mare", 2.0, "2 cepe mari"),
+        ("un ou", 3.0, "3 ouă"),
+        ("două linguri ulei", 0.5, "1 lingură ulei"),
+        ("3 linguri ulei", 0.5, "1 ½ linguri ulei"),
+        ("1 cană orez", 1.5, "1 ½ căni orez"),
+        ("1 lingură miere", 0.5, "½ lingură miere"),
+        ("2-3 căței de usturoi", 0.5, "1-2 căței de usturoi"),
+        ("2-3 ouă", 0.5, "1-2 ouă"),
+        ("1-2 căței usturoi", 0.5, "1 cățel usturoi"),
+        ("2-3 linguri ulei", 0.5, "1-1 ½ linguri ulei"),
+        ("un pic de sare", 2.0, "un pic de sare"),
+        ("o jumătate de ceapă", 2.0, "o jumătate de ceapă"),
+        ("oregano", 2.0, "oregano"),
     ])
     func scalesLikeTheWeb(_ line: String, _ factor: Double, _ expected: String) {
         #expect(RecipeText.scaleIngredient(line, factor: factor) == expected)

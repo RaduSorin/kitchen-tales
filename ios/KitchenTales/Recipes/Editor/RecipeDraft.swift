@@ -169,6 +169,8 @@ final class RecipeDraft {
         // Clear "Ingrediente / Mod de preparare" text is split on the phone; anything looser is read by the AI.
         if !dictated && !p.ingredients.isEmpty && !p.steps.isEmpty {
             fill(p.title, p.ingredients, p.steps)
+            if let n = p.servings { recipe.servings = n }
+            if let n = p.minutes { recipe.minutes = n }
             way = .text
         } else {
             run("Citesc rețeta…", dictated ? .dictation : .text) { try await $0.importRecipe(.init(text: text)) }

@@ -29,6 +29,16 @@ struct ShoppingMergeTests {
         #expect(flour[0].text == "1 ¼ kg făină")
     }
 
+    @Test func toTasteIsTheSameThing() {
+        #expect(ShoppingMerge.rows([line("1", "sare", "A"), line("2", "sare după gust", "B")]).count == 1)
+    }
+
+    @Test func amountsInWordsAddUp() {
+        let rows = ShoppingMerge.rows([line("1", "o ceapă", "A"), line("2", "2 cepe", "B")])
+        #expect(rows.count == 1)
+        #expect(rows[0].text == "3 cepe")
+    }
+
     @Test func rangesStayOnTheirOwn() {
         let rows = ShoppingMerge.rows([line("1", "2-3 căței usturoi", "A"), line("2", "2 căței usturoi", "B")])
         #expect(rows.count == 2)

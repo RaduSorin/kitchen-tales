@@ -34,12 +34,29 @@ enum RecipeText {
     nonisolated(unsafe) private static let range = try! NSRegularExpression(pattern: #"^\s*[-–]\s*(\d+(?:[.,]\d+)?)"#)
     nonisolated(unsafe) private static let word = try! NSRegularExpression(pattern: #"^(\s*)(\p{L}+)"#)
     nonisolated(unsafe) private static let size = try! NSRegularExpression(pattern: #"^(\s+)(mare|mari)\b"#)
+    /// A word at the start that may be an amount ("o lingură", "două cepe"), with the word after it.
+    nonisolated(unsafe) private static let wordLead = try! NSRegularExpression(pattern: #"^\s*(\p{L}+)(?=\s+(\p{L}+))"#)
+
+    /// Amounts written as words. Not "un pic" or "o jumătate de", which are not scaled.
+    private static let wordAmounts: [String: Double] = [
+        "o": 1, "un": 1, "una": 1, "doi": 2, "două": 2, "trei": 3, "patru": 4, "cinci": 5, "șase": 6, "șapte": 7,
+        "opt": 8, "nouă": 9, "zece": 10,
+    ]
+    private static let notAmounts: Set<String> = ["pic", "picuț", "sfert", "jumătate"]
+
+    /// Lower case, with "ş"/"ţ" (cedilla, older keyboards) as "ș"/"ț".
+    private static func ro(_ w: String) -> String {
+        w.lowercased().replacingOccurrences(of: "ş", with: "ș").replacingOccurrences(of: "ţ", with: "ț")
+    }
 
     private static let units: [(String, String)] = [
         ("cană", "căni"), ("ceașcă", "cești"), ("lingură", "linguri"), ("linguriță", "lingurițe"), ("pahar", "pahare"),
         ("legătură", "legături"), ("felie", "felii"), ("bucată", "bucăți"), ("cățel", "căței"), ("conservă", "conserve"),
         ("plic", "plicuri"), ("pachet", "pachete"), ("fir", "fire"), ("frunză", "frunze"), ("vârf", "vârfuri"),
+        ("praf", "prafuri"), ("mână", "mâini"),
     ]
+    /// Units counted whole: a range of them is rounded out to whole pieces ("2-3 căței" × ½ → "1-2 căței").
+    private static let whole: Set<String> = ["cățel", "bucată", "felie", "conservă", "plic", "pachet", "fir", "frunză", "legătură"]
     private static let nouns: [(String, String)] = [
         ("ou", "ouă"), ("ceapă", "cepe"), ("morcov", "morcovi"), ("cartof", "cartofi"), ("roșie", "roșii"), ("lămâie", "lămâi"),
         ("măr", "mere"), ("pară", "pere"), ("dovlecel", "dovlecei"), ("castravete", "castraveți"), ("vânătă", "vinete"),
@@ -66,7 +83,7 @@ enum RecipeText {
 
     /// The amount at the start of a line; `max` is the upper end of a range like "2-3".
     static func parseQuantity(_ line: String) -> (value: Double, max: Double?, rest: String)? {
-        guard let m = match(lead, line), !m.whole.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+        guard let m = match(lead, line), !m.whole.trimmingCharacters(in: .whitespaces).isEmpty else { return wordQuantity(line) }
         let g = m.groups
         let value: Double
         if let a = g[0], let b = g[1], let c = g[2] { value = number(a) + number(b) / number(c) }
@@ -82,6 +99,13 @@ enum RecipeText {
         return max > value ? (value, max, String(rest.dropFirst(r.whole.count))) : nil
     }
 
+    /// "o lingură zahăr" → 1 and " lingură zahăr".
+    private static func wordQuantity(_ line: String) -> (value: Double, max: Double?, rest: String)? {
+        guard let m = match(wordLead, line), let w = m.groups[0], let next = m.groups[1],
+              let value = wordAmounts[ro(w)], !notAmounts.contains(ro(next)) else { return nil }
+        return (value, nil, String(line.dropFirst(m.whole.count)))
+    }
+
     static func formatQuantity(_ amount: Double) -> String {
         if amount >= 10 { return String(Int(amount.rounded())) }
         let n = max(0.25, amount)
@@ -93,17 +117,17 @@ enum RecipeText {
         return whole > 0 ? "\(whole) \(best.1)" : best.1
     }
 
-    /// "3 cană" → "3 căni", "1 ouă" → "1 ou"; "1000 g" → "1 kg", "1500 ml" → "1,5 l".
-    private static func tidyUnit(_ amount: Double, _ rest: String, range: Bool) -> (amount: String?, rest: String) {
+    /// "3 cană" → "3 căni", "1 ouă" → "1 ou", "1 ½ lingură" → "1 ½ linguri"; "1000 g" → "1 kg", "1500 ml" → "1,5 l".
+    private static func tidyUnit(_ amount: Double, _ rest: String) -> (amount: String?, rest: String) {
         guard let m = match(word, rest), let space = m.groups[0], let w = m.groups[1] else { return (nil, rest) }
         let after = String(rest.dropFirst(m.whole.count))
-        let lower = w.lowercased()
+        let lower = ro(w)
         if (lower == "g" || lower == "ml") && amount >= 1000 {
             let big = (amount / 1000 * 100).rounded() / 100
             return (decimal(big), "\(space)\(lower == "g" ? "kg" : "l")\(after)")
         }
         for (one, many) in units where lower == one || lower == many {
-            let want = amount >= 2 || (range && amount > 1) ? many : one
+            let want = amount > 1 ? many : one
             return (nil, "\(space)\(want)\(after)")
         }
         for (one, many) in nouns where lower == one || lower == many {
@@ -117,13 +141,26 @@ enum RecipeText {
         return (nil, rest)
     }
 
+    /// Whether the line's unit (or the thing itself, "ou", "ceapă") is counted in whole pieces.
+    private static func countedWhole(_ rest: String) -> Bool {
+        guard let m = match(word, rest), let w = m.groups[1] else { return false }
+        let lower = ro(w)
+        return units.contains { whole.contains($0.0) && (lower == $0.0 || lower == $0.1) }
+            || nouns.contains { lower == $0.0 || lower == $0.1 }
+    }
+
     /// "500 g carne" × 1.5 → "750 g carne"
     static func scaleIngredient(_ line: String, factor: Double) -> String {
         guard factor != 1, let q = parseQuantity(line) else { return line }
         var rest = q.rest.hasPrefix(" ") || q.rest.isEmpty ? q.rest : " " + q.rest
-        let lo = q.value * factor
-        let hi = q.max.map { $0 * factor }
-        let t = tidyUnit(hi ?? lo, rest, range: hi != nil)
+        var lo = q.value * factor
+        var hi = q.max.map { $0 * factor }
+        if let top = hi, countedWhole(rest) {
+            lo = max(1, (lo + 1e-9).rounded(.down))
+            let up = max(lo, (top - 1e-9).rounded(.up))
+            hi = up == lo ? nil : up
+        }
+        let t = tidyUnit(hi ?? lo, rest)
         rest = t.rest
         if let amount = t.amount {
             if hi == nil { return amount + rest }

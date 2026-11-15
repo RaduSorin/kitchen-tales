@@ -64,6 +64,8 @@ enum ShoppingMerge {
         // Without "(...)" and only up to the first comma: "ceapă (mare), tocată" → "ceapa".
         var core = RecipeText.norm(rest).replacingOccurrences(of: #"\(.*?\)"#, with: " ", options: .regularExpression)
         if let cut = core.firstIndex(where: { $0 == "," || $0 == ";" }) { core = String(core[..<cut]) }
+        // "sare după gust" asks for the same thing as "sare".
+        core = core.replacingOccurrences(of: #"\b(dupa gust|optional|la nevoie)\b"#, with: " ", options: .regularExpression)
         let words = core.split { !($0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-")) }.map(String.init).filter { !skip.contains($0) }
         return Parsed(name: rest, nameKey: words.map(stem).joined(separator: " "), unit: unit, amount: q?.value, range: q?.max != nil)
     }

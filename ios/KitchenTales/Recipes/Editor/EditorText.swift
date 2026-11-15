@@ -34,8 +34,39 @@ enum EditorText {
 
     // MARK: Pasted text
 
-    /// Splits pasted text with "Ingrediente" / "Mod de preparare" style headings (RO + EN).
-    static func parseRecipe(_ text: String) -> (title: String, ingredients: [String], steps: [String]) {
+    /// "Porții: 4", "Pentru 4 persoane", "Servings: 4" → 4 (parseRecipe.ts servingsOf).
+    static func servingsOf(_ line: String) -> Int? {
+        let patterns = [#"^(?:por[tțţ]ii|servings|serves|yield)\s*[:\-–]?\s*(\d{1,2})\b"#, #"^pentru\s+(\d{1,2})\s+(?:persoane|por[tțţ]ii)\b"#]
+        for p in patterns {
+            if let r = line.range(of: p, options: [.regularExpression, .caseInsensitive]),
+               let n = line[r].range(of: #"\d{1,2}"#, options: .regularExpression) {
+                return Int(line[r][n])
+            }
+        }
+        return nil
+    }
+
+    /// "Timp: 30 min", "Timp total: 1 h 30 min", "Timp de preparare: 1 oră" → minutes (parseRecipe.ts minutesOf).
+    static func minutesOf(_ line: String) -> Int? {
+        let head = #"^(?:timp(?:\s+(?:total|de\s+preparare|de\s+gătire|de\s+gatire))?|durat[aă]|(?:total\s+|prep\s+|cook\s+)?time)\s*[:\-–]?\s*"#
+        guard let r = line.range(of: head, options: [.regularExpression, .caseInsensitive]) else { return nil }
+        let t = line[r.upperBound...].lowercased()
+        func first(_ pattern: String) -> String? {
+            guard let m = t.range(of: pattern, options: .regularExpression) else { return nil }
+            return t[m].range(of: #"\d+(?:[.,]\d+)?"#, options: .regularExpression).map { String(t[m][$0]) }
+        }
+        let h = first(#"\d+(?:[.,]\d+)?\s*(?:h|ore|oră|ora|hours?|hrs?)(?!\p{L})"#)
+        let mins = first(#"\d+\s*(?:min|minute|minut|minutes|mins?)(?!\p{L})"#)
+        guard h != nil || mins != nil else { return nil }
+        let hours: Double = h.flatMap { Double($0.replacingOccurrences(of: ",", with: ".")) } ?? 0
+        let extra: Double = mins.flatMap { Double($0) } ?? 0
+        let total = hours * 60 + extra
+        return total > 0 ? Int(total.rounded()) : nil
+    }
+
+    /// Splits pasted text with "Ingrediente" / "Mod de preparare" style headings (RO + EN). "Porții: 4" and
+    /// "Timp: 30 min" lines fill the servings and time instead of becoming steps.
+    static func parseRecipe(_ text: String) -> (title: String, ingredients: [String], steps: [String], servings: Int?, minutes: Int?) {
         var lines = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let title = lines.isEmpty ? "" : lines.removeFirst()
         var ingredients: [String] = []
@@ -48,7 +79,11 @@ enum EditorText {
         func starts(_ l: String, _ pattern: String) -> Bool {
             l.range(of: "^(\(pattern))(?![\\p{L}\\d_])", options: [.regularExpression, .caseInsensitive]) != nil
         }
+        var servings: Int?
+        var minutes: Int?
         for l in lines {
+            if servings == nil, let n = servingsOf(clean(l)) { servings = n; continue }
+            if minutes == nil, let n = minutesOf(clean(l)) { minutes = n; continue }
             if starts(l, "ingrediente|ingredients") { part = .ingredients; continue }
             if starts(l, "mod de preparare|preparare|instruc[tț]iuni|pa[sș]i|method|directions|instructions|steps") { part = .steps; continue }
             switch part {
@@ -58,7 +93,7 @@ enum EditorText {
                 if l.range(of: #"^[-*•·]"#, options: .regularExpression) != nil { ingredients.append(clean(l)) } else { steps.append(clean(l)) }
             }
         }
-        return (title, ingredients, steps)
+        return (title, ingredients, steps, servings, minutes)
     }
 
     /// "Am găsit 8 ingrediente și 6 pași. Verifică și salvează." (or how many have no amount).

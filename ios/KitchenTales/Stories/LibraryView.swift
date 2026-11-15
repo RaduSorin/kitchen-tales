@@ -1,20 +1,26 @@
 import SwiftUI
 
-/// Bibliotecă like the web: the large title, "Caută în N povești", the folders as wide collection
-/// cards (tinted from their covers) and a dashed "Folder nou" card at the end. How a folder's
-/// stories look (Pătrate, Listă, Raft, Cover Flow) is chosen inside the folder.
+/// Bibliotecă, redesign "Seară de lux, curățat": the big serif title with the gold + (new folder),
+/// "Caută în N povești" with the view button next to it, quick filters (Colecții, Toate, În curs,
+/// Pe telefon), then the folders as calm collection cards or the filtered stories. How stories look
+/// (Pătrate, Listă, Raft, Cover Flow) is the same choice as inside a folder.
 struct LibraryView: View {
+    enum Filter: String, CaseIterable { case collections = "Colecții", all = "Toate", started = "În curs", offline = "Pe telefon" }
+
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
     @Environment(KidMode.self) private var kid
     @State private var query = ""
+    @State private var filter: Filter = .collections
     @State private var creating = LaunchOptions.screen == "folder-new"
-    @State private var path: [StoryFolder] = []
+    @State private var path = NavigationPath()
+    @AppStorage("folder-look") private var look: FolderView.Look = .squares
 
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    header
                     if store.showingCopy {
                         Label("Fără internet: se vede copia de pe telefon.", systemImage: "icloud.slash")
                             .font(.ktFootnote).foregroundStyle(Theme.Night.muted)
@@ -27,30 +33,122 @@ struct LibraryView: View {
                         EmptyStateView(symbol: "books.vertical", title: store.phase == .loading ? "Se încarcă…" : "Biblioteca e goală",
                                        message: "Poveștile pe care le adaugi din Adaugă apar aici.")
                             .padding(.top, 60)
-                    } else {
+                    } else if filter == .collections {
                         folderList
+                    } else {
+                        filtered
                     }
                 }
                 .padding(.bottom, 24)
             }
             .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.immediately)
             .ktNightBackground()
             .refreshable { await store.refresh() }
-            .navigationTitle("Bibliotecă")
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: "Caută în \(store.stories.count == 1 ? "o poveste" : "\(store.stories.count) povești")")
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: StoryFolder.self) { FolderView(folderName: $0.name) }
+            .storyDetailDestination()
+            .sheet(isPresented: $creating) { FolderSheet(folder: nil) }
         }
         .onAppear {
             // Screenshots: `-screen folder` opens the first folder.
             if ["folder", "folder-menu", "folder-edit", "folder-delete", "folder-share", "folder-shelf", "folder-list", "folder-flow"].contains(LaunchOptions.screen ?? ""), path.isEmpty, let first = store.folders.first(where: { $0.items.count > 1 }) ?? store.folders.first(where: { !$0.items.isEmpty }) {
-                path = [first]
+                path.append(first)
             }
         }
     }
 
+    // MARK: Header
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Bibliotecă")
+                    .font(.custom(AppFont.storyDisplay, size: 34, relativeTo: .largeTitle))
+                    .foregroundStyle(Theme.text)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                if !kid.active {
+                    Button { creating = true } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(Theme.Night.moon)
+                            .frame(width: 40, height: 40)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("Folder nou")
+                }
+            }
+            .padding(.horizontal, 20)
+            HStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.Night.muted)
+                    TextField("", text: $query, prompt: Text(Self.prompt(store.stories.count)).foregroundStyle(Theme.Night.muted))
+                        .font(.custom(AppFont.body, size: 16, relativeTo: .body))
+                        .foregroundStyle(Theme.text)
+                        .submitLabel(.search)
+                        .autocorrectionDisabled()
+                    if !query.isEmpty {
+                        Button { query = "" } label: {
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.Night.muted)
+                        }
+                        .accessibilityLabel("Șterge căutarea")
+                    }
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 40)
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(0.08)))
+                Menu {
+                    Picker("Vizualizare", selection: $look) {
+                        ForEach(FolderView.Look.allCases, id: \.self) { l in Label(l.rawValue, systemImage: l.symbol).tag(l) }
+                    }
+                } label: {
+                    Image(systemName: look.symbol)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Theme.text)
+                        .frame(width: 36, height: 40)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Vizualizare: \(look.rawValue)")
+            }
+            .padding(.horizontal, 16)
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(Filter.allCases, id: \.self) { f in chip(f) }
+                }
+                .padding(.horizontal, 16)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .padding(.top, 8)
+    }
+
+    private func chip(_ f: Filter) -> some View {
+        let on = f == filter
+        return Button {
+            Haptics.select()
+            withAnimation(.snappy) { filter = f }
+        } label: {
+            Text(f.rawValue)
+                .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .subheadline))
+                .foregroundStyle(on ? Theme.Night.ink : Theme.text.opacity(0.85))
+                .padding(.horizontal, 14)
+                .frame(height: 32)
+                .background(Capsule().fill(on ? Theme.Night.moon : .clear))
+                .overlay(Capsule().strokeBorder(on ? .clear : .white.opacity(0.16)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+
+    static func prompt(_ n: Int) -> String {
+        n == 1 ? "Caută într-o poveste" : "Caută în \(n) povești"
+    }
+
+    // MARK: Lists
+
     private var folderList: some View {
-        LazyVStack(spacing: 12) {
+        LazyVStack(spacing: 10) {
             ForEach(store.folders) { folder in
                 NavigationLink(value: folder) { CollectionCard(folder: folder) }
                     .buttonStyle(PressableStyle())
@@ -63,7 +161,51 @@ struct LibraryView: View {
             }
         }
         .padding(.horizontal, 16)
-        .sheet(isPresented: $creating) { FolderSheet(folder: nil) }
+    }
+
+    /// Toate, În curs or Pe telefon, shown as squares in Pătrate and as a list otherwise.
+    @ViewBuilder private var filtered: some View {
+        let list = Self.stories(filter, store.stories, saved: store.offline.saved)
+        if list.isEmpty {
+            Text(Self.emptyNote(filter))
+                .font(.ktCallout).foregroundStyle(Theme.Night.muted)
+                .padding(.horizontal, 20).padding(.top, 24)
+        } else if look == .squares {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], alignment: .leading, spacing: 16) {
+                ForEach(list) { story in
+                    StoryOpenLink(story: story, queue: list) {
+                        SquareTile(story: story).overlay(alignment: .topLeading) { QueuePlaceBadge(id: story.id).padding(8) }
+                    }
+                    .buttonStyle(PressableStyle())
+                    .storyContextMenu(story)
+                }
+            }
+            .padding(.horizontal, 16)
+        } else {
+            LazyVStack(spacing: 0) {
+                ForEach(list) { story in
+                    StoryRow(story: story, queue: list, showsDownload: !kid.active)
+                    Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 74)
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    static func stories(_ filter: Filter, _ all: [Story], saved: Set<String>) -> [Story] {
+        switch filter {
+        case .collections, .all: all
+        case .started: StoryProgress.started(all)
+        case .offline: all.filter { saved.contains($0.id) }
+        }
+    }
+
+    static func emptyNote(_ filter: Filter) -> String {
+        switch filter {
+        case .started: "Nicio poveste începută. Cele oprite la jumătate apar aici."
+        case .offline: "Nicio poveste pe telefon. Din ⋯ sau ținând apăsat pe o poveste, alege „Descarcă pentru offline”."
+        case .collections, .all: "Biblioteca e goală."
+        }
     }
 
     private var results: some View {
@@ -123,7 +265,7 @@ struct StoryRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Button { Task { await player.play(story, queue: queue, store: store) } } label: {
+            StoryOpenLink(story: story, queue: queue) {
                 HStack(spacing: 14) {
                     StoryCover(story: story, cornerRadius: 10)
                         .frame(width: 60, height: 60)
@@ -315,7 +457,7 @@ struct FolderView: View {
         case .squares:
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], alignment: .leading, spacing: 16) {
                 ForEach(items) { story in
-                    Button { play(items, from: story) } label: {
+                    StoryOpenLink(story: story, queue: items) {
                         SquareTile(story: story).overlay(alignment: .topLeading) { QueuePlaceBadge(id: story.id).padding(8) }
                     }
                         .buttonStyle(PressableStyle())
@@ -432,7 +574,7 @@ struct FolderView: View {
 
 /// A story as a square cover with its title and length under it ("Pătrate"): a heart on the
 /// cover for a favourite and the length in its corner, like the web.
-private struct SquareTile: View {
+fileprivate struct SquareTile: View {
     let story: Story
 
     var body: some View {
@@ -442,11 +584,10 @@ private struct SquareTile: View {
                 .overlay(alignment: .topLeading) {
                     if story.favorite {
                         Image(systemName: "heart.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color(hex: 0xFF6F91))
-                            .frame(width: 26, height: 26)
-                            .background(Circle().fill(.white.opacity(0.92)))
-                            .padding(8)
+                            .font(.system(size: 15))
+                            .foregroundStyle(Theme.Night.moon)
+                            .shadow(color: .black.opacity(0.6), radius: 4, y: 1)
+                            .padding(10)
                     }
                 }
                 .overlay(alignment: .bottomTrailing) {
@@ -460,9 +601,12 @@ private struct SquareTile: View {
                     }
                 }
                 .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+            if let p = StoryProgress.of(story) {
+                StoryProgressLine(value: p).padding(.top, 6)
+            }
             Text(story.title).font(.custom(AppFont.bodyBold, size: 15, relativeTo: .subheadline)).foregroundStyle(Theme.text).lineLimit(1)
                 .padding(.top, 4)
-            if let time = story.minutesLabel {
+            if let time = StoryProgress.left(story) ?? story.minutesLabel {
                 Text(time).font(.custom(AppFont.body, size: 13, relativeTo: .footnote)).foregroundStyle(Theme.Night.muted)
             }
         }
@@ -618,7 +762,7 @@ struct FavoritesView: View {
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 14)], spacing: 18) {
                         ForEach(favorites) { story in
-                            Button { Task { await player.play(story, queue: favorites, store: store) } } label: {
+                            StoryOpenLink(story: story, queue: favorites) {
                                 VStack(alignment: .leading, spacing: 6) {
                                     StoryCover(story: story).aspectRatio(1, contentMode: .fit)
                                         .overlay(alignment: .bottomTrailing) {
@@ -650,6 +794,7 @@ struct FavoritesView: View {
             .ktNightBackground()
             .refreshable { await store.refresh() }
             .toolbar(.hidden, for: .navigationBar)
+            .storyDetailDestination()
         }
     }
 }

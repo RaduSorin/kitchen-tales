@@ -154,7 +154,7 @@ private struct MiniPlayerInset: ViewModifier {
         content.safeAreaInset(edge: .bottom, spacing: 0) {
             if player.current != nil {
                 MiniPlayer()
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 14)
                     .padding(.bottom, 6)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -191,7 +191,7 @@ struct MiniPlayer: View {
     var body: some View {
         if let story = player.current {
             HStack(spacing: 12) {
-                StoryCover(story: story, cornerRadius: 8)
+                StoryCover(story: story, cornerRadius: 9)
                     .frame(width: 40, height: 40)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(story.title)
@@ -220,13 +220,13 @@ struct MiniPlayer: View {
             }
             .foregroundStyle(Theme.text)
             .padding(.leading, 8)
-            .padding(.trailing, 6)
+            .padding(.trailing, 12)
             .frame(height: 56)
             .background {
                 ZStack(alignment: .bottomLeading) {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.ultraThinMaterial)
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color(hex: CoverScene.of(story).top).opacity(0.25))
+                    Capsule(style: .continuous).fill(.ultraThinMaterial)
+                    Capsule(style: .continuous)
+                        .fill(Color(hex: CoverScene.of(story).top).opacity(0.18))
                     if player.duration > 0 {
                         let done: Double = min(1, player.position / player.duration)
                         GeometryReader { geo in
@@ -234,14 +234,14 @@ struct MiniPlayer: View {
                                 .frame(width: geo.size.width * CGFloat(done), height: 2)
                                 .frame(maxHeight: .infinity, alignment: .bottom)
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 28)
                         .padding(.bottom, 1)
                     }
                 }
             }
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(.white.opacity(0.12)))
+            .overlay(Capsule(style: .continuous).strokeBorder(.white.opacity(0.12)))
             .shadow(color: .black.opacity(0.35), radius: 12, y: 4)
-            .contentShape(RoundedRectangle(cornerRadius: 16))
+            .contentShape(Capsule())
             .onTapGesture { player.showsPlayer = true }
             .accessibilityElement(children: .contain)
             .accessibilityAction(named: "Deschide playerul") { player.showsPlayer = true }

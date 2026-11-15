@@ -145,37 +145,53 @@ final class AreaModel {
     var current: AppArea = LaunchOptions.area ?? .recipes
 }
 
-/// The Rețete / Povești capsule at the top of Acasă.
+/// The switch at the top of Acasă, as two big serif words: "Povești  Rețete". The side you are on
+/// is bright, the other one dimmed; tap it, or swipe across the words, to change sides.
 struct AreaPicker: View {
     let current: AppArea
     @Environment(AreaModel.self) private var area
     @Environment(KidMode.self) private var kid
+
+    /// Always in the same order, so the words do not jump when you switch.
+    static let order: [AppArea] = [.stories, .recipes]
 
     var body: some View {
         if !kid.active { picker }
     }
 
     private var picker: some View {
-        HStack(spacing: 2) {
-            ForEach(AppArea.allCases, id: \.self) { item in
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            ForEach(Self.order, id: \.self) { item in
                 Button {
-                    if item != current { area.current = item }
+                    go(item)
                 } label: {
                     Text(item.label)
-                        .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .subheadline))
-                        .foregroundStyle(item == current ? Theme.text : Theme.text.opacity(0.75))
-                        .padding(.horizontal, 14)
-                        .frame(height: 32)
-                        .background(Capsule().fill(item == current ? Color.white.opacity(0.22) : .clear))
+                        .font(.custom(AppFont.storyDisplay, size: 30, relativeTo: .largeTitle))
+                        .foregroundStyle(item == current ? Theme.text : Theme.text.opacity(0.3))
+                        .lineLimit(1)
+                        .fixedSize()
+                        .shadow(color: .black.opacity(0.35), radius: 8, y: 2)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(item == current ? .isSelected : [])
             }
         }
-        .padding(3)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(.white.opacity(0.12)))
+        .gesture(DragGesture(minimumDistance: 24).onEnded(swiped))
         .environment(\.colorScheme, .dark)
+    }
+
+    private func go(_ item: AppArea) {
+        guard item != current else { return }
+        Haptics.select()
+        area.current = item
+    }
+
+    /// Left goes to the word on the right (Rețete), right goes back to Povești.
+    private func swiped(_ value: DragGesture.Value) {
+        let dx = value.translation.width
+        guard abs(dx) > abs(value.translation.height) else { return }
+        go(dx < 0 ? Self.order[1] : Self.order[0])
     }
 }
 

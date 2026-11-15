@@ -112,6 +112,59 @@ struct UpNextLine: View {
 
 /// "Urmează": the story playing, the ones the family chose (drag to move, swipe to take out) and
 /// then what the folder plays by itself. A moon marks the story after which the player stops.
+/// The player's last line: a small cover and "Urmează: Regele Leu · apoi se oprește", or the moon
+/// with "Se oprește după povestea asta". Tap it for the whole list.
+struct PlayerNextLine: View {
+    let open: () -> Void
+    @Environment(StoryPlayer.self) private var player
+
+    var body: some View {
+        let next = player.following
+        let left = UpNext.untilStop(stopAfter: player.stopAfter, played: player.playedInRun)
+        Button { Haptics.tap(); open() } label: {
+            HStack(spacing: 10) {
+                if let next, left > 0 {
+                    StoryCover(story: next, cornerRadius: 6).frame(width: 28, height: 28)
+                } else {
+                    Image(systemName: "moon.fill").font(.system(size: 15)).foregroundStyle(Theme.Night.moon)
+                        .frame(width: 28, height: 28)
+                }
+                (Text(Self.lead(next, left: left)).foregroundStyle(Theme.Night.muted)
+                    + Text(Self.title(next, left: left)).foregroundStyle(Theme.text).bold()
+                    + Text(Self.tail(next, left: left)).foregroundStyle(Theme.Night.muted))
+                    .font(.custom(AppFont.bodySemibold, size: 13, relativeTo: .footnote))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if !player.upNext.isEmpty {
+                    Text("\(player.upNext.count)")
+                        .font(.custom(AppFont.bodyHeavy, size: 12, relativeTo: .caption))
+                        .foregroundStyle(Theme.Night.moon)
+                }
+            }
+            .frame(minHeight: 36)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(UpNextLine.spoken(player))
+        .accessibilityHint("Deschide lista Urmează")
+    }
+
+    static func lead(_ next: Story?, left: Int) -> String {
+        guard next != nil, left > 0 else { return "" }
+        return "Urmează: "
+    }
+
+    static func title(_ next: Story?, left: Int) -> String {
+        guard let next, left > 0 else { return "Se oprește după povestea asta" }
+        return next.title
+    }
+
+    static func tail(_ next: Story?, left: Int) -> String {
+        guard next != nil, left == 1 else { return "" }
+        return " · apoi se oprește"
+    }
+}
+
 struct UpNextSheet: View {
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
@@ -130,6 +183,7 @@ struct UpNextSheet: View {
             .navigationTitle("Urmează")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) { shuffleToggle }
                 ToolbarItem(placement: .confirmationAction) { Button("Gata") { dismiss() } }
             }
         }
@@ -139,6 +193,19 @@ struct UpNextSheet: View {
         .onAppear {
             if store.phase == .loaded { player.forgetMissing(Set(store.allStories.map(\.id))) }
         }
+    }
+
+    /// La rând / Amestecat for the folder's stories (it used to sit on the player's bottom row).
+    private var shuffleToggle: some View {
+        Button {
+            Haptics.select()
+            player.shuffle.toggle()
+        } label: {
+            Label(player.shuffle ? "Amestecat" : "La rând", systemImage: player.shuffle ? "shuffle" : "arrow.right")
+                .labelStyle(.titleAndIcon)
+                .foregroundStyle(player.shuffle ? Theme.Night.moon : Theme.text)
+        }
+        .accessibilityLabel(player.shuffle ? "Amestecat. Atinge pentru una după alta." : "Una după alta. Atinge ca să amesteci.")
     }
 
     /// The stories still to come, in order: the chosen ones, then the folder's.

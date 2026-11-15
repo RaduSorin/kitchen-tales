@@ -89,13 +89,12 @@ struct RecipeFactsView: View {
                 Button { open = true } label: { strip(n) }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Valori nutriționale pe porție, deschide fișa")
-                Text("pe porție\(recipe.servings.map { ", din \($0)" } ?? "") · atinge pentru detalii")
+                allergenLine(facts.allergens, diet)
                     .font(.custom(AppFont.body, size: 12.5, relativeTo: .caption))
-                    .foregroundStyle(Theme.muted)
+                    .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.top, -4)
                 clashes(facts.allergens, diet)
-                allergens(facts.allergens, diet)
             } else if busy {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
@@ -127,17 +126,14 @@ struct RecipeFactsView: View {
             divider
             cell(RecipeFactsText.grams(n.fat), "grăsimi")
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 4)
-        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.white.opacity(0.06)))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.08)))
+        .padding(.vertical, 6)
     }
 
     private var divider: some View { Rectangle().fill(.white.opacity(0.08)).frame(width: 1, height: 34) }
 
     private func cell(_ value: String, _ label: String) -> some View {
         VStack(spacing: 2) {
-            Text(value).font(.custom(AppFont.bodyBold, size: 18, relativeTo: .headline)).monospacedDigit()
+            Text(value).font(.custom(AppFont.storyDisplay, size: 19, relativeTo: .headline)).monospacedDigit()
                 .foregroundStyle(Theme.text)
             Text(label).font(.custom(AppFont.bodySemibold, size: 12.5, relativeTo: .caption)).foregroundStyle(Theme.muted)
                 .lineLimit(1).minimumScaleFactor(0.8)
@@ -174,40 +170,30 @@ struct RecipeFactsView: View {
         }
     }
 
-    @ViewBuilder private func allergens(_ allergens: [AllergenHit]?, _ diet: Diet) -> some View {
+    /// "pe porție · Alergeni: ouă, țelină" as one quiet line: allergens that clash with the
+    /// family's rules in orange, the rules the recipe keeps ("fără lactoză") in green.
+    private func allergenLine(_ allergens: [AllergenHit]?, _ diet: Diet) -> Text {
         let list = allergens ?? []
         let clash = RecipeFactsText.conflicts(allergens, diet)
-        if !list.isEmpty || !diet.avoid.isEmpty {
-            FlowLayout(spacing: 6) {
-                Text("Alergeni:").font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .subheadline)).foregroundStyle(Theme.muted)
-                    .frame(height: 28)
-                if list.isEmpty {
-                    chip("niciunul din cei 14", kind: .ok)
-                } else {
-                    ForEach(list, id: \.key) { a in
-                        let hit = clash.contains { $0.rule.key == a.key || $0.from.contains { a.from.contains($0) } }
-                        chip(RecipeFactsText.label(a.key), kind: hit ? .clash : .plain)
-                    }
-                }
-                ForEach(diet.avoid.filter { r in !clash.contains { $0.rule.key == r.key } }, id: \.key) { r in
-                    chip("fără \(RecipeFactsText.label(r.key))", kind: .ok)
-                }
-            }
+        let lead = "pe porție" + (recipe.servings.map { ", din \($0)" } ?? "")
+        var line = Text(lead).foregroundStyle(Theme.muted)
+        guard allergens != nil || !diet.avoid.isEmpty else { return line }
+        line = line + Text(" · Alergeni: ").foregroundStyle(Theme.muted)
+        if list.isEmpty {
+            line = line + Text("niciunul din cei 14").foregroundStyle(Color(hex: 0x9FD3B4))
         }
-    }
-
-    private enum ChipKind { case plain, clash, ok }
-
-    private func chip(_ text: String, kind: ChipKind) -> some View {
-        HStack(spacing: 4) {
-            if kind == .ok { Image(systemName: "checkmark").font(.system(size: 10, weight: .heavy)) }
-            Text(text)
+        for (i, a) in list.enumerated() {
+            let hit = clash.contains { $0.rule.key == a.key || $0.from.contains { a.from.contains($0) } }
+            if i > 0 { line = line + Text(", ").foregroundStyle(Theme.text) }
+            line = line + Text(RecipeFactsText.label(a.key))
+                .font(.custom(AppFont.bodySemibold, size: 12.5, relativeTo: .caption))
+                .foregroundStyle(hit ? Color(hex: 0xFFB08A) : Theme.text)
         }
-        .font(.custom(kind == .plain ? AppFont.bodySemibold : AppFont.bodyBold, size: 14, relativeTo: .subheadline))
-        .foregroundStyle(kind == .clash ? Color(hex: 0xFFB08A) : kind == .ok ? Color(hex: 0x9FD3B4) : Theme.text)
-        .padding(.horizontal, 10)
-        .frame(height: 28)
-        .background(Capsule().fill(kind == .clash ? Color(hex: 0xFF9B6E).opacity(0.16) : kind == .ok ? Color(hex: 0x8FC4A6).opacity(0.14) : Theme.surface2))
+        for r in diet.avoid where !clash.contains(where: { $0.rule.key == r.key }) {
+            let kept = " · fără " + RecipeFactsText.label(r.key)
+            line = line + Text(kept).foregroundStyle(Color(hex: 0x9FD3B4))
+        }
+        return line
     }
 }
 

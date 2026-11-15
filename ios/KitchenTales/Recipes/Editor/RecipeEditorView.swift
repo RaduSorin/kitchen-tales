@@ -128,7 +128,7 @@ struct RecipeEditorView: View {
                 } else if let demo = draft.recipe.demoPhoto, let image = DemoPhotos.image(demo) {
                     Color.clear.overlay { Image(uiImage: image).resizable().scaledToFill() }.clipped()
                 } else {
-                    PlateDrawing(seed: draft.recipe.title.isEmpty ? "rețetă" : draft.recipe.title)
+                    RecipeLabel(title: draft.recipe.title, category: draft.recipe.category)
                 }
             }
             .frame(height: 340)

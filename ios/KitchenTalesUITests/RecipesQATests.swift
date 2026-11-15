@@ -418,7 +418,7 @@ final class RecipesQATests: QABase {
         audit("recipes-grid")
         dumpTree("recipes-grid")
         unlabeledButtons("recipes-grid")
-        expect("Rețetele mele", .staticText)
+        expect("Rețete", .staticText)
 
         enter("cartofi")
         settle(1)
@@ -543,7 +543,7 @@ final class RecipesQATests: QABase {
         expect("Renunți la modificări?", .any, "leaving a changed draft asks first")
         tap("Renunță la modificări", .button)
         settle(1)
-        expect("Rețetele mele", .staticText, "back on the list after discarding")
+        expect("Rețete", .staticText, "back on the list after discarding")
 
         // Din link sau text (no server in demo: see what it says).
         tap("Rețetă nouă", .button)

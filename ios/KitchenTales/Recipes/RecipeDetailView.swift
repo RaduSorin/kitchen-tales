@@ -1,8 +1,10 @@
 import SwiftUI
 
-/// A recipe: the photo on top, the big title, then the web's buttons (Gătește pas cu pas,
-/// În săptămână, Pune în listă), ingredients that scale with − and + and tick off, the steps
-/// and the family's notes.
+/// A recipe, in the stories' style: the photo on top fading into the page (or, without a photo,
+/// the title right at the top on a warm glow in the category's colour and a line inviting a
+/// photo), the serif title, text tabs with a gold underline, ingredients that scale with − and +
+/// and tick off, the steps and the family's notes. At the bottom: the gold "Gătește pas cu pas"
+/// and two plain glyphs, În plan and Pe listă.
 struct RecipeDetailView: View {
     let recipeId: String
     @Environment(RecipeStore.self) private var store
@@ -32,19 +34,25 @@ struct RecipeDetailView: View {
     }
 
     private func content(_ r: Recipe) -> some View {
-        ScrollView {
+        let photo = r.hasPhoto
+        return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                RecipePhoto(recipe: r, cornerRadius: 0)
-                    .frame(height: 290)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
-                    .overlay(alignment: .bottom) {
-                        LinearGradient(colors: [.clear, Theme.background], startPoint: .top, endPoint: .bottom)
-                            .frame(height: 290 * 0.55)
-                    }
+                if photo {
+                    RecipePhoto(recipe: r, cornerRadius: 0)
+                        .frame(height: 330)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        .overlay(alignment: .bottom) {
+                            LinearGradient(colors: [.clear, Theme.background], startPoint: .top, endPoint: .bottom)
+                                .frame(height: 330 * 0.55)
+                        }
+                } else {
+                    Color.clear.frame(height: 124)
+                }
                 VStack(alignment: .leading, spacing: 18) {
-                    header(r)
-                    tabs
+                    header(r, photo: photo)
+                    UnderlineTabs(selection: $tab) { $0.label }
+                        .padding(.top, 4)
                     switch tab {
                     case .ingredients: ingredients(r)
                     case .steps: steps(r)
@@ -52,13 +60,28 @@ struct RecipeDetailView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, -96)
+                .padding(.top, photo ? -84 : 0)
             }
             .padding(.bottom, 120)
         }
         .ignoresSafeArea(edges: .top)
         .scrollIndicators(.hidden)
-        .background(Theme.background.ignoresSafeArea())
+        .background {
+            ZStack(alignment: .top) {
+                Theme.background
+                if !photo {
+                    // No photo: a warm glow in the category's colour instead of a big drawing.
+                    let tint = RecipeLabel.tint(RecipeLabel.kind(r.category))
+                    RadialGradient(colors: [Color(hex: tint.0).opacity(0.9), Color(hex: tint.1).opacity(0.5), .clear],
+                                   center: UnitPoint(x: 0.3, y: 0), startRadius: 0, endRadius: 460)
+                        .frame(height: 520)
+                    RadialGradient(colors: [Theme.accent.opacity(0.12), .clear], center: UnitPoint(x: 0.2, y: 0.05),
+                                   startRadius: 0, endRadius: 300)
+                        .frame(height: 420)
+                }
+            }
+            .ignoresSafeArea()
+        }
         .overlay(alignment: .top) { topButtons(r) }
         .safeAreaInset(edge: .bottom, spacing: 0) { foot(r).hiddenWhileTyping() }
         .keyboardDoneButton()
@@ -87,43 +110,45 @@ struct RecipeDetailView: View {
 
     // MARK: Over the photo and at the bottom
 
-    /// Back on the left, the heart and ⋯ on the right, as glass circles over the photo.
+    /// Back on the left, the heart and ⋯ on the right: plain glyphs, no circles (with a soft
+    /// shadow so they read on a photo).
     private func topButtons(_ r: Recipe) -> some View {
         let favorite = store.isFavorite(r.id)
-        return HStack(spacing: 10) {
-            Button { dismiss() } label: { glassCircle { Image(systemName: "chevron.left").font(.system(size: 18, weight: .bold)) } }
-                .accessibilityLabel("Înapoi")
+        return HStack(spacing: 4) {
+            Button { dismiss() } label: {
+                plainGlyph { Image(systemName: "chevron.left").font(.system(size: 21, weight: .semibold)).foregroundStyle(r.hasPhoto ? .white : Theme.accent) }
+            }
+            .accessibilityLabel("Înapoi")
             Spacer()
             Button {
                 Haptics.select()
                 Task { await store.toggleFavorite(r.id) }
                 kitchen.say(favorite ? "Scoasă din favorite" : "Pusă la favorite")
             } label: {
-                glassCircle {
-                    Image(systemName: favorite ? "heart.fill" : "heart").font(.system(size: 19, weight: .semibold))
+                plainGlyph {
+                    Image(systemName: favorite ? "heart.fill" : "heart").font(.system(size: 21, weight: .medium))
                         .foregroundStyle(favorite ? Theme.accent : .white)
+                        .contentTransition(.symbolEffect(.replace))
                 }
             }
             .accessibilityLabel(favorite ? "Scoate din favorite" : "Pune la favorite")
             moreMenu(r)
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 8)
         .padding(.top, 2)
     }
 
-    private func glassCircle<Icon: View>(@ViewBuilder _ icon: () -> Icon) -> some View {
+    private func plainGlyph<Icon: View>(@ViewBuilder _ icon: () -> Icon) -> some View {
         icon()
             .foregroundStyle(.white)
             .frame(width: 44, height: 44)
-            .background(.ultraThinMaterial, in: Circle())
-            .background(Circle().fill(Color(hex: 0x14100E).opacity(0.45)))
-            .overlay(Circle().strokeBorder(.white.opacity(0.35)))
-            .shadow(color: .black.opacity(0.25), radius: 7, y: 4)
-            .environment(\.colorScheme, .dark)
+            .contentShape(Rectangle())
+            .shadow(color: .black.opacity(0.55), radius: 6, y: 1)
     }
 
-    /// The web's bottom bar: "Începe să gătești", then round În săptămână and Pune în listă.
+    /// The bottom bar: the gold "Gătește pas cu pas", then În plan and Pe listă as plain glyphs
+    /// with their names under them.
     private func foot(_ r: Recipe) -> some View {
         let left = r.ingredients.enumerated().filter { !RecipeText.isHeading($0.element) && !ticked.contains($0.offset) }.count
         return HStack(spacing: 10) {
@@ -134,28 +159,28 @@ struct RecipeDetailView: View {
                             .frame(width: 22, height: 22)
                         Text(cookLabel(r)).lineLimit(1).minimumScaleFactor(0.8)
                     }
-                    .font(.custom(AppFont.bodyHeavy, size: 18, relativeTo: .headline))
+                    .font(.custom(AppFont.bodyHeavy, size: 17, relativeTo: .headline))
                     .foregroundStyle(Theme.onAccent)
                     .padding(.horizontal, 16)
-                    .frame(maxWidth: 420, minHeight: 56)
+                    .frame(maxWidth: 420, minHeight: 54)
                     .background(Capsule().fill(Theme.accent))
                     .shadow(color: Theme.accent.opacity(0.25), radius: 12, y: 8)
                 }
                 .buttonStyle(PressScale())
             }
-            Button { planning = true } label: { roundFoot("calendar", label: "În săptămână", wide: r.steps.isEmpty) }
+            Button { planning = true } label: { footGlyph("calendar", label: "În plan") }
                 .buttonStyle(PressScale())
                 .accessibilityLabel("Pune în săptămână")
             if !r.ingredients.isEmpty {
                 Button { addToList(r) } label: {
-                    roundFoot("cart", label: "Pune în listă", wide: r.steps.isEmpty)
+                    footGlyph("cart", label: "Pe listă")
                         .overlay(alignment: .topTrailing) {
                             if !ticked.isEmpty && left > 0 {
                                 Text("\(left)").font(.custom(AppFont.bodyHeavy, size: 11, relativeTo: .caption2))
                                     .foregroundStyle(Theme.onAccent)
                                     .padding(.horizontal, 5).frame(minWidth: 20, minHeight: 20)
                                     .background(Capsule().fill(Theme.accent))
-                                    .offset(x: 3, y: -3)
+                                    .offset(x: 2, y: -2)
                             }
                         }
                 }
@@ -171,23 +196,19 @@ struct RecipeDetailView: View {
                                    startPoint: .top, endPoint: .bottom).ignoresSafeArea())
     }
 
-    private func roundFoot(_ symbol: String, label: String, wide: Bool) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: symbol).font(.system(size: 19, weight: .semibold))
-            if wide { Text(label).font(.ktBodyEmphasis) }
+    private func footGlyph(_ symbol: String, label: String) -> some View {
+        VStack(spacing: 3) {
+            Image(systemName: symbol).font(.system(size: 20, weight: .regular))
+            Text(label).font(.custom(AppFont.bodySemibold, size: 11, relativeTo: .caption2))
         }
         .foregroundStyle(Theme.text)
-        .frame(width: wide ? nil : 56, height: 56)
-        .frame(maxWidth: wide ? 220 : nil)
-        .background(.ultraThinMaterial, in: Capsule())
-        .background(Capsule().fill(Color(hex: 0x28242C).opacity(0.7)))
-        .overlay(Capsule().strokeBorder(.white.opacity(0.14)))
-        .environment(\.colorScheme, .dark)
+        .frame(width: 58, height: 54)
+        .contentShape(Rectangle())
     }
 
     // MARK: Header and tabs
 
-    private func header(_ r: Recipe) -> some View {
+    private func header(_ r: Recipe, photo: Bool) -> some View {
         let kicker = [r.category.isEmpty ? nil : r.category,
                       !r.mine ? "de la \(r.spaceName ?? "alt cont")" : r.shared ? "partajată" : nil].compactMap { $0 }.joined(separator: " · ")
         return VStack(alignment: .leading, spacing: 6) {
@@ -202,7 +223,7 @@ struct RecipeDetailView: View {
                 .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
             }
             Text(r.title)
-                .font(.custom(AppFont.displaySemibold, size: 36, relativeTo: .largeTitle))
+                .font(.custom(AppFont.storyDisplay, size: photo ? 32 : 38, relativeTo: .largeTitle))
                 .foregroundStyle(Theme.text)
                 .lineSpacing(-2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -213,6 +234,23 @@ struct RecipeDetailView: View {
                 Text("Gătită \(cooked.count == 1 ? "o dată" : cooked.count < 20 ? "de \(cooked.count) ori" : "de \(cooked.count) de ori") · \(cooked.count == 1 ? "" : "ultima dată ")\(RecipeText.since(last))")
                     .font(.custom(AppFont.body, size: 14, relativeTo: .subheadline))
                     .foregroundStyle(Theme.muted)
+            }
+            if !photo && r.mine {
+                Button { editing = r } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "camera").font(.system(size: 14, weight: .semibold))
+                        Text("Adaugă o poză").font(.custom(AppFont.bodyBold, size: 14, relativeTo: .subheadline))
+                        Text("sau").font(.custom(AppFont.body, size: 14, relativeTo: .subheadline)).foregroundStyle(Theme.muted)
+                        Image(systemName: "sparkles").font(.system(size: 13, weight: .semibold))
+                        Text("fă una cu AI").font(.custom(AppFont.bodyBold, size: 14, relativeTo: .subheadline))
+                    }
+                    .foregroundStyle(Theme.accent)
+                    .frame(minHeight: 36)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Adaugă o poză sau fă una cu AI")
+                .padding(.top, 2)
             }
         }
     }
@@ -227,16 +265,16 @@ struct RecipeDetailView: View {
                 }
             }
             if r.servings != nil, let s = servings {
-                HStack(spacing: 6) {
-                    Text(s == 1 ? "1 porție" : "\(s) porții").contentTransition(.numericText()).monospacedDigit()
+                HStack(spacing: 4) {
                     servingsButton("−", label: "Mai puține porții", enabled: s > 1) { servings = s - 1; trackBadge(.servings) }
+                    Text(s == 1 ? "1 porție" : "\(s) porții").contentTransition(.numericText()).monospacedDigit()
                     servingsButton("+", label: "Mai multe porții", enabled: s < 50) { servings = s + 1; trackBadge(.servings) }
                 }
             }
             if !r.steps.isEmpty { Text(r.steps.count == 1 ? "1 pas" : "\(r.steps.count) pași") }
         }
-        .font(.custom(AppFont.bodyBold, size: 14, relativeTo: .subheadline))
-        .foregroundStyle(Theme.muted)
+        .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .subheadline))
+        .foregroundStyle(Theme.text.opacity(0.85))
     }
 
     private func servingsButton(_ sign: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
@@ -253,30 +291,6 @@ struct RecipeDetailView: View {
         .disabled(!enabled)
         .padding(.vertical, -6)
         .accessibilityLabel(label)
-    }
-
-    private var tabs: some View {
-        HStack(spacing: 0) {
-            ForEach(RecipeTab.allCases, id: \.self) { t in
-                Button {
-                    Haptics.select()
-                    withAnimation(.snappy(duration: 0.2)) { tab = t }
-                } label: {
-                    Text(t.label)
-                        .font(.custom(AppFont.bodyBold, size: 14, relativeTo: .subheadline))
-                        .foregroundStyle(tab == t ? Theme.text : Theme.muted)
-                        .frame(maxWidth: .infinity, minHeight: 38)
-                        .background {
-                            if tab == t { RoundedRectangle(cornerRadius: 11, style: .continuous).fill(.white.opacity(0.16)) }
-                        }
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(tab == t ? .isSelected : [])
-            }
-        }
-        .padding(3)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.08)))
     }
 
     private func cookLabel(_ r: Recipe) -> String {
@@ -309,7 +323,7 @@ struct RecipeDetailView: View {
                 }
             }
         } label: {
-            glassCircle { Image(systemName: "ellipsis").font(.system(size: 18, weight: .bold)) }
+            plainGlyph { Image(systemName: "ellipsis").font(.system(size: 20, weight: .semibold)).foregroundStyle(r.hasPhoto ? .white : Theme.text) }
         }
         .disabled(deleting)
         .accessibilityLabel("Mai multe")
@@ -400,10 +414,10 @@ struct RecipeDetailView: View {
                     } label: {
                         HStack(alignment: .top, spacing: 10) {
                             Text("\(i + 1)")
-                                .font(.custom(AppFont.bodySemibold, size: 14.5, relativeTo: .subheadline)).monospacedDigit()
-                                .foregroundStyle(isDone ? Theme.onAccent : Theme.text)
-                                .frame(width: 28, height: 28)
-                                .background(Circle().fill(isDone ? Theme.accent : Theme.surface2))
+                                .font(.custom(AppFont.storyDisplay, size: 20, relativeTo: .title3)).monospacedDigit()
+                                .foregroundStyle(isDone ? Theme.muted : Theme.accent)
+                                .strikethrough(isDone, color: Theme.muted)
+                                .frame(width: 28, alignment: .leading)
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(step).font(.ktBody).foregroundStyle(isDone ? Theme.muted : Theme.text)
                                     .lineSpacing(3)
@@ -433,14 +447,13 @@ struct RecipeDetailView: View {
                 Text(text).font(.ktBody).foregroundStyle(Theme.text).fixedSize(horizontal: false, vertical: true)
             }
             HStack {
-                Text("Notele noastre").font(.ktTitle2).foregroundStyle(Theme.text)
+                Text("Notele noastre").font(.custom(AppFont.storyDisplay, size: 22, relativeTo: .title2)).foregroundStyle(Theme.text)
                 Spacer()
                 if !writing {
                     Button("Adaugă o notă") { writing = true }
-                        .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .subheadline))
-                        .foregroundStyle(Theme.text)
-                        .padding(.horizontal, 12).frame(height: 34)
-                        .background(Capsule().fill(Theme.surface2))
+                        .font(.custom(AppFont.bodyBold, size: 14, relativeTo: .subheadline))
+                        .foregroundStyle(Theme.accent)
+                        .frame(minHeight: 44)
                         .buttonStyle(.plain)
                 }
             }
@@ -492,7 +505,7 @@ struct RecipeDetailView: View {
     }
 }
 
-enum RecipeTab: CaseIterable {
+enum RecipeTab: Hashable, CaseIterable {
     case ingredients, steps, notes
     var label: String {
         switch self {

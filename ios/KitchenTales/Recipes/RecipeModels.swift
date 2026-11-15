@@ -28,6 +28,9 @@ struct Recipe: Codable, Identifiable, Hashable, Sendable {
     /// "Recipe:<id>": the row the files belong to, for the `fileUrls` check.
     var fileRef: String { "Recipe:\(id)" }
 
+    /// Whether the recipe has a photo (else it shows its "Etichetă" label).
+    var hasPhoto: Bool { !(photoKey ?? "").isEmpty || demoPhoto != nil }
+
     /// "1 h 30 · Ciorbe și supe"
     var detailLine: String {
         [minutes.map(RecipeText.formatMinutes), category.isEmpty ? nil : category].compactMap { $0 }.joined(separator: " · ")

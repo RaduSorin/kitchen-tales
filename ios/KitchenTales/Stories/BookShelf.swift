@@ -133,10 +133,10 @@ struct BookShelfView: View {
     /// book down to the plank), the spine it is on or the one whose gap it is in.
     private func book(at p: CGPoint) -> String? {
         let half = Self.gap / 2
-        let hit = frames.first { (_, f: CGRect) -> Bool in
-            p.x >= f.minX - half && p.x <= f.maxX + half && p.y >= f.minY - 40 && p.y <= f.maxY + 13
+        for (id, f) in frames where p.x >= f.minX - half && p.x <= f.maxX + half && p.y >= f.minY - 40 && p.y <= f.maxY + 13 {
+            return id
         }
-        return hit?.key
+        return nil
     }
 
     private func choose(_ id: String) {

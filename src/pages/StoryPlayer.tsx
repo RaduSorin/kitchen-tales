@@ -15,7 +15,9 @@ import { getSettings, useSettings } from '../lib/settings'
 import NarratorPicker from '../components/NarratorPicker'
 import { builtinFolderOf, fmtTime, folderOf, sceneIndex, SOURCE_LABEL } from '../lib/stories'
 import StoryCover from '../components/StoryCover'
-import { type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
+import { type Origin, type QueueFrom, type Sleep, useNowPlaying } from '../lib/nowPlaying'
+import { KidQueueAsk, UpNextLine } from '../components/UpNext'
+import { queueMessage } from '../lib/upNext'
 import { useKid } from '../lib/kidMode'
 import { KidCorner } from '../components/KidMode'
 import { useGlow } from '../lib/glow'
@@ -76,19 +78,27 @@ function StoryPlayer() {
   useGlow(s ?? undefined)
   useEffect(() => { getStory(id!).then((x) => setS(x ?? null)).catch(() => setS(null)) }, [id])
   // The audio lives in the app-wide player, so it keeps going when you leave this page.
-  const navState = location.state as { autoplay?: boolean; from?: QueueFrom } | null
+  const navState = location.state as { autoplay?: boolean; from?: QueueFrom; origin?: Origin } | null
   const autoplay = !!navState?.autoplay
   const from = navState?.from
+  const origin = navState?.origin
   const { load } = player
+  // Kid mode: a story opened by hand while another one plays asks "Acum sau După?" first.
+  const [ask, setAsk] = useState<Story>()
+  const asked = useRef<string>(undefined)
+  const playingOther = !!player.story && player.playing && player.story.id !== s?.id
   // Autoplay only once per story opened: later updates (a new cover, a favourite) must not
   // start it again after it was paused.
   const autoplayed = useRef<string>(undefined)
   useEffect(() => {
     if (!s) return
+    if (kid && !origin && playingOther && asked.current !== s.id) { asked.current = s.id; setAsk(s); return }
+    if (ask) return
     const go = autoplay && autoplayed.current !== s.id
     if (go) autoplayed.current = s.id
-    load(s, { autoplay: go, from })
-  }, [s, load, autoplay, from])
+    load(s, { autoplay: go, from, origin })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s, load, autoplay, from, origin, ask])
   const toggleFavorite = async () => {
     if (!s) return
     const favorite = !s.favorite
@@ -114,9 +124,9 @@ function StoryPlayer() {
     if (current) { wasCurrent.current = true; return }
     if (wasCurrent.current && player.story) nav(`/povesti/${player.story.id}`, { replace: true, state: location.state })
   }, [current, player.story, nav, location.state])
-  const goTo = (to: Story) => {
+  const goTo = (to: Story, how: Origin) => {
     // Replace, so Back still returns to the folder rather than walking through every story.
-    nav(`/povesti/${to.id}`, { replace: true, state: { ...(location.state as object | null), autoplay: playing } })
+    nav(`/povesti/${to.id}`, { replace: true, state: { ...(location.state as object | null), autoplay: playing, origin: how } })
   }
 
   // On the good-night screen, dim further after a while so the room stays dark.
@@ -126,6 +136,17 @@ function StoryPlayer() {
     return () => clearTimeout(h)
   }, [ended])
 
+  if (ask && s) return (
+    <div className="night-player">
+      <KidQueueAsk story={ask}
+        onNow={() => { setAsk(undefined); load(ask, { autoplay: true }) }}
+        onLater={() => {
+          showToast(queueMessage(player.addToQueue(ask, true), true))
+          setAsk(undefined)
+          if (player.story) nav(`/povesti/${player.story.id}`, { replace: true, state: { ...(location.state as object | null), origin: 'queue' } })
+        }} />
+    </div>
+  )
   if (s === undefined) return <div className="night-player"><p className="loading" role="status"><span className="spinner" aria-hidden="true" /> Se încarcă…</p></div>
   // Full screen, no tab bar: a missing story still needs a way back.
   if (s === null) return (
@@ -170,6 +191,7 @@ function StoryPlayer() {
         <svg width="120" height="120" viewBox="0 0 110 110" aria-hidden="true"><circle cx="55" cy="55" r="40" fill="var(--moon)" /><circle cx="72" cy="42" r="36" fill="#2b2433" /></svg>
         <h1>Noapte bună{child.name ? `, ${child.name}` : ''}</h1>
         <p>Povestea s-a terminat.<br />Ne auzim data viitoare.</p>
+        {player.queued[0] && <p className="goodnight-next">Rămâne în coadă pentru data viitoare: <b>{player.queued[0].story.title}</b></p>}
         <div className="goodnight-actions">
           <button className="btn small" onClick={(e) => { e.stopPropagation(); back() }}>Înapoi la povești</button>
           <button className="link-btn" onClick={restart}>Ascultă din nou</button>
@@ -277,7 +299,7 @@ function StoryPlayer() {
       <div className="night-controls">
         {/* Like music apps: a few seconds into a story, "previous" first takes it back to the start. */}
         <button className="track" aria-label={t > 5 ? 'De la începutul poveștii' : prev ? `Povestea anterioară: ${prev.title}` : 'Povestea anterioară'}
-          disabled={!prev && !(current && t > 5)} onClick={() => { if (current && t > 5) player.seek(0); else if (prev) goTo(prev) }}>
+          disabled={!prev && !(current && t > 5)} onClick={() => { if (current && t > 5) player.seek(0); else if (prev) goTo(prev, 'back') }}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M20 5v14L8.5 12z" fill="currentColor" /></svg>
         </button>
         <button aria-label={`Înapoi ${SKIP} secunde`} onClick={() => skip(-SKIP)}>
@@ -291,10 +313,11 @@ function StoryPlayer() {
         <button aria-label={`Înainte ${SKIP_FWD} secunde`} onClick={() => skip(SKIP_FWD)}>
           <SkipIcon sec={SKIP_FWD} />
         </button>
-        <button className="track" aria-label={next ? `Povestea următoare: ${next.title}` : 'Povestea următoare'} disabled={!next} onClick={() => next && goTo(next)}>
+        <button className="track" aria-label={next ? `Povestea următoare: ${next.title}` : 'Povestea următoare'} disabled={!next} onClick={() => next && goTo(next, player.nextOrigin)}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="17.4" y="5" width="2.6" height="14" rx="1.2" fill="currentColor" /><path d="M4 5v14l11.5-7z" fill="currentColor" /></svg>
         </button>
       </div>
+      {current && <UpNextLine />}
       {/* Round buttons with a label: tap "Stop după" to cycle 1 → 2 → 3 → 5 stories, the other one to shuffle. */}
       <div className="play-opts">
         <button type="button" className="opt-chip" onClick={player.cycleRate} aria-label={`Viteză ${fmtRate(player.rate)}. Atinge ca să schimbi.`}>

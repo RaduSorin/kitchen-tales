@@ -24,6 +24,7 @@ struct PlayerView: View {
             .background { PlayerBackdrop(story: story) }
             .offset(y: drag)
             .environment(\.colorScheme, .dark)
+            .kidQueueChoice()
             .alert("Nu se poate reda", isPresented: .constant(player.failure != nil)) {
                 Button("OK") { player.close() }
             } message: {
@@ -50,6 +51,7 @@ struct PlayerView: View {
                     titleRow(story)
                     timeline
                     controls
+                    UpNextLine()
                 }
                 Spacer(minLength: 16)
                 options
@@ -159,7 +161,7 @@ struct PlayerView: View {
 
     private var controls: some View {
         let atStart = player.position <= 5
-        let hasPrev = !atStart || (player.queue.firstIndex { $0.id == player.current?.id } ?? 0) > 0
+        let hasPrev = player.hasPrevious
         return HStack {
             control("backward.end.fill", size: 20, frame: 44, label: atStart ? "Povestea anterioară" : "De la începutul poveștii") {
                 Task { await player.previous() }
@@ -261,6 +263,21 @@ struct PlayerView: View {
                 .font(.ktBody)
                 .foregroundStyle(Theme.Night.muted)
                 .multilineTextAlignment(.center)
+            if let waiting = player.queuedNext {
+                // The moon stopped the evening before the end of "Urmează": the rest waits for next time.
+                HStack(spacing: 10) {
+                    StoryCover(story: waiting, cornerRadius: 6).frame(width: 34, height: 34)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("RĂMÂNE ÎN COADĂ PENTRU DATA VIITOARE")
+                            .font(.custom(AppFont.bodyBold, size: 10, relativeTo: .caption2))
+                            .foregroundStyle(Theme.Night.muted)
+                        Text(waiting.title).font(.ktCallout).lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.08)))
+            }
             VStack(spacing: 12) {
                 Button("Înapoi la povești") { player.showsPlayer = false }
                     .font(.ktBodyEmphasis)

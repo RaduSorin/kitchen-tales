@@ -21,6 +21,7 @@ import { folderView, isBookView, newLabel, rememberShelfPick, renameFolderView, 
 import ViewSwitch from '../components/ViewSwitch'
 import FolderMenu from '../components/FolderMenu'
 import BookShelf from '../components/BookShelf'
+import { QueueBadge, QueueMenuButton } from '../components/UpNext'
 import CoverFlow from '../components/CoverFlow'
 
 const count = (n: number) => `${n} ${n === 1 ? 'poveste' : 'povești'}`
@@ -364,6 +365,8 @@ export default function StoryList() {
                   {view === 'list' && left(s) !== undefined && <span className="sa-progress row-progress"><i style={{ width: `${Math.round(Math.min(1, getPosition(s.id) / (s.durationSec || 1)) * 100)}%` }} /></span>}
                 </span>
               </Link>
+              <QueueBadge id={s.id} />
+              <QueueMenuButton story={s} className={view === 'list' ? 'in-row' : 'on-cover'} />
               {s.favorite && (
                 <span className="fav-dot" title="La favorite" aria-label="La favorite">
                   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" fill="currentColor" /></svg>

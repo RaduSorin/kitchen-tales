@@ -5,7 +5,8 @@ import { folderOf, getPosition, markPlayed, setPosition } from './stories'
 import { useOfflineIds, useOnline } from './useOffline'
 import { loadCoverBlob } from './useCoverUrl'
 import { storyArtwork } from './artwork'
-import { isKidLocked, isKidMode } from './kidMode'
+import { isKidLocked, isKidMode, kidAllowsFolder, useKid } from './kidMode'
+import { addLast, loadQueue, playNext as queueFirst, type QueuedStory, type QueueResult, removeFrom, moveTo, saveQueue } from './upNext'
 import { track } from './badges/store'
 
 /** How many stories to play in a row before stopping. */
@@ -48,7 +49,7 @@ function storyMetadata(s: Story, src?: string) {
     : { title: s.title, artist: 'Bucătăria cu povești' })
 }
 
-interface NowPlaying {
+export interface NowPlaying {
   story?: Story
   url?: string
   playing: boolean
@@ -59,11 +60,27 @@ interface NowPlaying {
   error?: string
   sleep: Sleep
   shuffle: boolean
-  /** The previous / next story in the current folder (next is random when shuffling). */
+  /** The story heard before this one (or the folder's previous) and what plays next: the first
+   * story in "Urmează", else the folder's next (random when shuffling). */
   prev?: Story
   next?: Story
-  /** Start (or keep) this story in the app-wide player. Loading the story already playing does nothing. */
-  load: (story: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom }) => void
+  /** Where `next` comes from, to pass on to `load`. */
+  nextOrigin: Origin
+  /** "Urmează": the stories the family chose, that can play here (kid mode: the child's folders). */
+  queued: { story: Story; byKid: boolean }[]
+  /** The raw list, with ids of stories not loaded yet. */
+  upNext: QueuedStory[]
+  /** What the folder plays by itself after "Urmează" (up to 5). */
+  folderUpcoming: Story[]
+  /** Stories finished in a row in this run (for the moon in "Urmează"). */
+  playedInRun: number
+  playNext: (story: Story) => QueueResult
+  addToQueue: (story: Story, byKid?: boolean) => QueueResult
+  removeFromQueue: (id: string) => void
+  moveInQueue: (from: number, to: number) => void
+  clearQueue: () => void
+  /** Start this story in the app-wide player. Loading the story already playing does nothing. */
+  load: (story: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom; origin?: Origin }) => void
   /** Update the current story's details (e.g. a new cover) without touching playback. */
   update: (story: Story) => void
   toggle: () => void
@@ -84,6 +101,8 @@ interface NowPlaying {
 
 /** Where "next" comes from: the story's folder, or the Favorite list when started from there. */
 export type QueueFrom = 'folder' | 'favorites'
+/** How a story was started: from "Urmează", by the folder going on, or with ⏮ (else picked by hand). */
+export type Origin = 'queue' | 'folder' | 'back'
 
 const NOT_REACHABLE = 'Povestea nu e salvată pe acest dispozitiv și nu o pot descărca acum. Verifică internetul.'
 const BROKEN_FILE = 'Nu pot reda povestea salvată pe acest dispozitiv. Șterge-o de pe dispozitiv și salveaz-o din nou.'
@@ -138,7 +157,20 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   const offlineIds = useOfflineIds()
   const [folder, setFolder] = useState<Story[]>([])
   const [from, setFrom] = useState<QueueFrom>('folder')
-  const folderName = story ? folderOf(story) : undefined
+  // "Urmează" (saved on this device), the stories heard before (for ⏮) and the story the folder goes
+  // on from (the last one not started from "Urmează").
+  const [upNext, setUpNextRaw] = useState<QueuedStory[]>(loadQueue)
+  const setUpNext = useCallback((f: (q: QueuedStory[]) => QueuedStory[]) => setUpNextRaw((q) => { const n = f(q); if (n !== q) saveQueue(n); return n }), [])
+  const upNextRef = useRef(upNext)
+  upNextRef.current = upNext
+  const [history, setHistory] = useState<string[]>([])
+  const [anchor, setAnchor] = useState<Story>()
+  const [playedInRun, setPlayedInRun] = useState(0)
+  const [all, setAll] = useState<Story[]>([])
+  useEffect(() => watchStories(setAll), [])
+  const kidState = useKid()
+  const base = anchor ?? story
+  const folderName = base ? folderOf(base) : undefined
   const isFav = !!story?.favorite
   // Every folder on the shelf (the rocket sticker: a story heard from each).
   const shelfFolders = useRef<string[]>([])
@@ -155,21 +187,32 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   }, [folderName, from, isFav])
   const queue = online ? folder : folder.filter((x) => offlineIds.has(x.id))
   const idx = story ? queue.findIndex((x) => x.id === story.id) : -1
-  const prev = idx > 0 ? queue[idx - 1] : undefined
+  const canPlay = (x: Story) => (online || offlineIds.has(x.id)) && (!kidState.active || kidAllowsFolder(folderOf(x)))
+  const byId = new Map(all.map((x) => [x.id, x]))
+  const queued = upNext.flatMap((q) => { const x = byId.get(q.id); return x && x.id !== story?.id && canPlay(x) ? [{ story: x, byKid: !!q.byKid }] : [] })
+  const inUpNext = new Set(upNext.map((q) => q.id))
+  // The folder goes on after the story it was at, skipping what was heard or waits in "Urmează".
+  const baseIdx = base ? queue.findIndex((x) => x.id === base.id) : -1
+  const folderRest = baseIdx >= 0 ? queue.slice(baseIdx + 1).filter((x) => x.id !== story?.id && !inUpNext.has(x.id) && !heard.current.has(x.id)) : []
+  const heardBefore = [...history].reverse().map((h) => byId.get(h) ?? queue.find((x) => x.id === h)).find((x) => x && x.id !== story?.id)
+  const prev = heardBefore ?? (idx > 0 ? queue[idx - 1] : undefined)
   // Shuffle picks one random unheard story; the pick stays fixed until the story changes.
   const [shufflePick, setShufflePick] = useState<{ for?: string; pick?: Story }>({})
   useEffect(() => {
     if (!shuffle || !story) return
-    const pool = queue.filter((x) => x.id !== story.id && !heard.current.has(x.id))
+    const pool = queue.filter((x) => x.id !== story.id && !heard.current.has(x.id) && !upNextRef.current.some((q) => q.id === x.id))
     const from = pool.length ? pool : queue.filter((x) => x.id !== story.id)
     setShufflePick({ for: story.id, pick: from[Math.floor(Math.random() * from.length)] })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shuffle, story?.id, queue.length])
-  const next = shuffle
-    ? (shufflePick.for === story?.id ? shufflePick.pick : undefined)
-    : idx >= 0 && idx < queue.length - 1 ? queue[idx + 1] : undefined
+  const folderNext = shuffle ? (shufflePick.for === story?.id ? shufflePick.pick : undefined) : folderRest[0]
+  const next = queued[0]?.story ?? folderNext
+  const nextOrigin: Origin = queued[0] ? 'queue' : 'folder'
+  const folderUpcoming = shuffle ? (folderNext ? [folderNext] : []) : folderRest.slice(0, 5)
   const nextRef = useRef<Story>(undefined)
   nextRef.current = next
+  const nextOriginRef = useRef<Origin>('folder')
+  nextOriginRef.current = nextOrigin
   const prevRef = useRef<Story>(undefined)
   prevRef.current = prev
   const sleepRef = useRef(sleep)
@@ -194,10 +237,11 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story?.id])
 
-  const load = useCallback((s: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom }) => {
+  const load = useCallback((s: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom; origin?: Origin }) => {
     const cur = storyRef.current
+    const origin = opts?.origin
     prepareArt(s)
-    if (!opts?.continued) setFrom(opts?.from ?? 'folder')
+    if (!opts?.continued && !origin) setFrom(opts?.from ?? 'folder')
     if (cur?.id === s.id) {
       setStory(s)
       // Already loaded but paused (e.g. "Continuă" on the story in the mini player): play it now.
@@ -205,8 +249,14 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
       if (opts?.autoplay && a && a.paused && a.src && !isKidLocked()) a.play().catch(() => {})
       return
     }
+    // ⏮ goes back through the stories heard before; anything else remembers the one it leaves.
+    if (origin === 'back') setHistory((h) => { const i = h.lastIndexOf(s.id); return i < 0 ? h : h.slice(0, i) })
+    else if (cur) setHistory((h) => [...h, cur.id].slice(-50))
+    // A story from "Urmează" leaves the list and the folder stays where it was; any other moves it.
+    setUpNext((q) => (q.some((x) => x.id === s.id) ? removeFrom(q, s.id) : q))
+    if (origin !== 'queue') setAnchor(s)
     // A story you pick yourself starts a new run; one that follows on its own continues it.
-    if (!opts?.continued) { played.current = 0; heard.current = new Set() }
+    if (!opts?.continued) { played.current = 0; heard.current = new Set(); setPlayedInRun(0) }
     heard.current.add(s.id)
     markPlayed(s.id)
     // A story that finished keeps no place (onEnded cleared it), so it isn't shown as half-heard.
@@ -214,12 +264,12 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     // A story that follows on its own (queue, next/previous buttons) starts from the beginning,
     // even if it was left halfway before: in a run of stories, jumping into the middle is confusing,
     // and with the phone locked there is then no seek before it starts.
-    if (opts?.continued) setPosition(s.id, undefined)
+    if (opts?.continued || origin === 'queue') setPosition(s.id, undefined)
     autoplay.current = !!opts?.autoplay
     starting.current = false
     setT(0); setDur(0); setEnded(false); setPlaying(false)
     setStory(s)
-  }, [])
+  }, [setUpNext])
 
   /**
    * Swaps in a freshly signed link for the current internet story, keeping the place
@@ -278,8 +328,27 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     // Unload the audio too: a paused element that still holds a source keeps the iPhone lock-screen player alive.
     if (a) { a.removeAttribute('src'); a.load() }
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none'
-    setStory(undefined); setEnded(false); played.current = 0
+    setStory(undefined); setEnded(false); played.current = 0; setPlayedInRun(0); setAnchor(undefined)
   }, [])
+
+  const playNext = (s: Story): QueueResult => {
+    if (s.id === storyRef.current?.id) return 'playingNow'
+    setUpNext((q) => queueFirst(q, s.id))
+    return 'first'
+  }
+  const addToQueue = (s: Story, byKid = false): QueueResult => {
+    if (s.id === storyRef.current?.id) return 'playingNow'
+    const q = upNextRef.current
+    if (q.some((x) => x.id === s.id)) return 'alreadyThere'
+    const n = addLast(q, s.id, byKid)
+    if (n === q) return 'kidFull'
+    upNextRef.current = n
+    setUpNext(() => n)
+    return 'added'
+  }
+  const removeFromQueue = (id: string) => setUpNext((q) => removeFrom(q, id))
+  const moveInQueue = (a: number, b: number) => setUpNext((q) => moveTo(q, a, b))
+  const clearQueue = () => setUpNext(() => [])
 
   // Lock-screen / headphone buttons: play, pause, next and previous story. None when nothing is loaded.
   const hasStory = !!story
@@ -297,13 +366,13 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     set('seekforward', null)
     set('seekto', (d) => { if (d.seekTime != null) seek(d.seekTime) })
     // Headphones (double / triple press) and car stereos: next and previous story of the folder.
-    set('nexttrack', () => { const n = nextRef.current; if (n && !isKidLocked()) load(n, { autoplay: true, continued: true }) })
+    set('nexttrack', () => { const n = nextRef.current; if (n && !isKidLocked()) load(n, { autoplay: true, continued: true, origin: nextOriginRef.current }) })
     set('previoustrack', () => {
       const a = audio.current
       // Like music apps: a few seconds in, "previous" starts the story again.
       if (a && a.currentTime > 5) { a.currentTime = 0; return }
       const p = prevRef.current
-      if (p && !isKidLocked()) load(p, { autoplay: true, continued: true })
+      if (p && !isKidLocked()) load(p, { autoplay: true, continued: true, origin: 'back' })
     })
     return () => actions.forEach((x) => set(x, null))
   }, [hasStory, seek, play, load])
@@ -338,14 +407,15 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     setPlaying(false)
     if (storyRef.current) setPosition(storyRef.current.id, undefined)
     played.current += 1
+    setPlayedInRun(played.current)
     const done = storyRef.current
     if (done) track({ t: 'story-finished', storyId: done.id, folder: folderOf(done), folders: shelfFolders.current, secs: done.durationSec, source: done.source, offline: fromDevice.current, kid: isKidMode() })
     const following = nextRef.current
-    if (following && played.current < sleepRef.current && !isKidLocked()) load(following, { autoplay: true, continued: true })
+    if (following && played.current < sleepRef.current && !isKidLocked()) load(following, { autoplay: true, continued: true, origin: nextOriginRef.current })
     else {
       // Several stories in a row, then the player stopped by itself: the little cloud.
       if (sleepRef.current > 1 && played.current >= sleepRef.current) track({ t: 'sleep-stop' })
-      played.current = 0; setEnded(true)
+      played.current = 0; setPlayedInRun(0); setEnded(true)
     }
   }
 
@@ -363,7 +433,8 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
     setError(fromDevice.current ? BROKEN_FILE : NOT_REACHABLE)
   }
 
-  const value: NowPlaying = { story, url, playing, t, dur, ended, error, sleep, shuffle, prev, next, load, update, toggle, skip, seek, restart, chooseSleep, toggleShuffle, rate, cycleRate, close, fadeOut }
+  const value: NowPlaying = { story, url, playing, t, dur, ended, error, sleep, shuffle, prev, next, nextOrigin, queued, upNext, folderUpcoming, playedInRun,
+    playNext, addToQueue, removeFromQueue, moveInQueue, clearQueue, load, update, toggle, skip, seek, restart, chooseSleep, toggleShuffle, rate, cycleRate, close, fadeOut }
   return (
     <Ctx.Provider value={value}>
       {children}

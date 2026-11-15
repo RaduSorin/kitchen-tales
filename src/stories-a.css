@@ -1562,3 +1562,66 @@
 .wd-acts .danger { color: #ff8f7a; }
 .wd-more a { display: flex; align-items: center; gap: 14px; padding: 12px 0 4px 17px; color: var(--accent); font-weight: 700; text-decoration: none; }
 .wd .home-links { margin-top: 14px; }
+
+/* "Urmează" (the story queue): the ⋯ menu on a story, the number on queued covers, the line and the
+   list in the player, the card on Acasă and the child's "Acum sau După?". */
+.queue-anchor { position: absolute; z-index: 3; }
+.queue-anchor.on-cover { top: 8px; right: 8px; }
+.cover-slot .saved-dot { right: 48px; }
+.queue-anchor.in-row { top: 50%; right: 52px; transform: translateY(-50%); }
+.row-slot .story-row { padding-right: 96px; }
+.queue-anchor.inline { position: relative; display: inline-flex; vertical-align: middle; margin-left: 6px; }
+.queue-anchor.inline .pop-menu { right: auto; left: 50%; translate: -50% 0; text-align: left; font-weight: 400; }
+.queue-anchor.inline .queue-dots { width: 30px; height: 30px; }
+.queue-dots { width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: rgb(23 26 69 / .72); color: #fff6d6; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); position: relative; }
+.queue-dots::after { content: ''; position: absolute; inset: -6px; }
+.queue-dots:focus-visible { outline: 3px solid var(--moon); outline-offset: 2px; }
+.queue-anchor .pop-menu { width: min(240px, calc(100vw - 32px)); }
+.queue-badge { position: absolute; z-index: 2; top: 46px; left: 8px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center;
+  background: var(--moon); color: var(--on-accent); font-weight: 800; font-size: var(--fs-2xs); pointer-events: none; }
+.row-slot .queue-badge { top: 2px; left: 48px; min-width: 20px; height: 20px; }
+.sh-slot { position: relative; display: block; scroll-snap-align: start; }
+.mini-next { color: var(--moon-ink); }
+
+.upnext-line { display: flex; align-items: center; gap: 10px; width: 100%; margin: 4px 0 2px; padding: 8px 12px; border: 0; border-radius: 16px; text-align: left;
+  background: rgb(255 255 255 / .08); color: var(--text); font: inherit; cursor: pointer; }
+.upnext-line:focus-visible { outline: 3px solid var(--moon); outline-offset: 2px; }
+.upnext-line .story-cover, .upnext-row .story-cover, .queue-home .story-cover { width: 40px; height: 40px; flex: none; border-radius: 8px; }
+.upnext-text { display: grid; min-width: 0; flex: 1; line-height: 1.25; }
+.upnext-text b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upnext-text small { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.upnext-moon { flex: none; width: 40px; text-align: center; color: var(--moon); font-size: 20px; }
+.upnext-row .upnext-moon { width: 24px; }
+.queue-count { flex: none; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--moon-ink); font-weight: 800; font-size: var(--fs-xs); }
+.upnext { display: grid; gap: 8px; }
+.upnext-head { display: flex; align-items: baseline; justify-content: space-between; margin-top: 8px; }
+.upnext-head h3 { margin: 0; font-size: var(--fs-xs); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.upnext-note { margin: 0; font-size: var(--fs-sm); color: var(--muted); }
+.upnext-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.upnext-list.dim { opacity: .55; }
+.upnext-row { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 4px 6px; border-radius: 12px; }
+.upnext-row.now { background: rgb(255 255 255 / .08); }
+.upnext-play { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.upnext-btn { flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgb(255 255 255 / .08); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
+.upnext-btn:disabled { opacity: .3; cursor: default; }
+.goodnight-next { font-size: var(--fs-sm); }
+
+.queue-home { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 14px; border-radius: 20px;
+  background: var(--accent-soft); box-shadow: inset 0 0 0 1px rgb(242 200 121 / .3); }
+.queue-home-open { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.queue-home .story-cover { width: 52px; height: 52px; }
+.queue-home .upnext-text small { color: var(--moon-ink); }
+.queue-home-play { flex: none; width: 46px; height: 46px; border: 0; border-radius: 50%; background: #fff; color: var(--on-accent); display: grid; place-items: center; cursor: pointer; }
+
+.kid-ask { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); background: rgb(0 0 0 / .55); }
+.kid-ask-card { width: min(360px, 100%); display: grid; gap: 12px; justify-items: center; text-align: center; padding: 20px; border-radius: 28px; background: #231f2a; color: var(--text); }
+.kid-ask-card .story-cover { width: 140px; height: 140px; border-radius: 18px; }
+.kid-ask-card b { font-size: var(--fs-xl, 22px); font-weight: 800; }
+.kid-ask-card > span { color: var(--muted); font-weight: 700; }
+.kid-ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.kid-ask-btns button { display: grid; gap: 4px; justify-items: center; min-height: 96px; border: 0; border-radius: 22px; font: inherit; font-size: 20px; font-weight: 800; color: var(--on-accent); cursor: pointer; }
+.kid-ask-btns button span { font-size: 28px; line-height: 1; }
+.kid-now { background: #fff; }
+.kid-later { background: var(--moon); }
+.kid-later:disabled { opacity: .4; cursor: default; }

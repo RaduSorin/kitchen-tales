@@ -7,7 +7,7 @@ const fmtLeft = (sec: number) => (sec >= 60 ? `${Math.round(sec / 60)} min` : `$
 
 /** A bar at the bottom of every other page while a story is loaded, so it can keep playing in the background. */
 export default function MiniPlayer() {
-  const { story, playing, t, dur, url, error, toggle, skip, close } = useNowPlaying()
+  const { story, playing, t, dur, url, error, toggle, skip, close, queued } = useNowPlaying()
   const { pathname } = useLocation()
   if (!story || pathname === `/povesti/${story.id}`) return null
   return (
@@ -18,7 +18,9 @@ export default function MiniPlayer() {
         <Link to={`/povesti/${story.id}`} className="mini-open">
           <StoryCover story={story} />
           <span className="mini-title">{story.title}
-            {error ? <small className="mini-error">Nu se poate reda acum</small> : dur > 0 && <small className="mini-left">mai sunt {fmtLeft(dur - t)}</small>}
+            {error ? <small className="mini-error">Nu se poate reda acum</small>
+              : queued[0] ? <small className="mini-left mini-next">Urmează: {queued[0].story.title}</small>
+              : dur > 0 && <small className="mini-left">mai sunt {fmtLeft(dur - t)}</small>}
           </span>
         </Link>
         <button type="button" className="mini-btn mini-play" onClick={toggle} disabled={!url} aria-label={playing ? 'Pauză' : 'Pornește'}>

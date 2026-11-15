@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { cachedFolders, listFolders, listRecipes, listStories, setStoryFavorite, watchRecipes, watchStories } from '../lib/db'
 import type { Recipe, Story, StoryFolder } from '../lib/types'
 import { useOfflineIds, useOnline } from '../lib/useOffline'
@@ -20,6 +20,7 @@ import { AlbumButton } from '../components/Badges'
 import Vitrine, { type VitrineSlide } from '../components/Vitrine'
 import HomeTabs from '../components/HomeTabs'
 import { newLabel, seenStories } from '../lib/shelf'
+import { QueueBadge, QueueHomeCard, QueueMenuButton } from '../components/UpNext'
 import { showToast } from '../lib/toast'
 
 /** Tonight's stories: a different set each day, starting with the story of the day, without the one to continue. */
@@ -40,15 +41,19 @@ function Row({ title, to, stories, from }: { title: string; to?: string; stories
       <div className="sh-sec-head"><h2>{title}</h2>{to && <Link to={to}>Toate</Link>}</div>
       <div className="sh-row">
         {stories.map((s) => (
-          <Link key={s.id} to={`/povesti/${s.id}`} state={from ? { fromFolder: true, from } : { fromFolder: true }} className="cover-card sh-card">
-            <span className="sa-cover">
-              <StoryCover story={s} />
-              {s.durationSec ? <span className="sa-dur">{minutes(s.durationSec)}</span> : null}
-              {isNewStory(s) && <span className="sa-new">Nou</span>}
-            </span>
-            <span className="cover-title">{s.title}</span>
-            <small className="cover-meta">{folderOf(s)}</small>
-          </Link>
+          <span key={s.id} className="sh-slot">
+            <Link to={`/povesti/${s.id}`} state={from ? { fromFolder: true, from } : { fromFolder: true }} className="cover-card sh-card">
+              <span className="sa-cover">
+                <StoryCover story={s} />
+                {s.durationSec ? <span className="sa-dur">{minutes(s.durationSec)}</span> : null}
+                {isNewStory(s) && <span className="sa-new">Nou</span>}
+              </span>
+              <span className="cover-title">{s.title}</span>
+              <small className="cover-meta">{folderOf(s)}</small>
+            </Link>
+            <QueueBadge id={s.id} />
+            <QueueMenuButton story={s} className="on-cover" />
+          </span>
         ))}
       </div>
     </section>
@@ -104,6 +109,7 @@ function RecipePeek({ r, label }: { r: Recipe; label: string }) {
  * kitchen), Colecții (the folders as collection cards) and Favorite.
  */
 export default function StoriesHome() {
+  const nav = useNavigate()
   const { child } = useSettings()
   const online = useOnline()
   const offline = useOfflineIds()
@@ -227,6 +233,7 @@ export default function StoriesHome() {
 
       <HomeTabs memory="kt-shome-tab" label="Povești" tabs={[
         { key: 'diseara', label: evening ? 'Diseară' : 'Azi', body: <>
+          <QueueHomeCard onPlay={(s) => nav(`/povesti/${s.id}`, { state: { fromFolder: true, autoplay: true, origin: 'queue' } })} />
           <Row title={evening ? 'Pentru diseară' : 'Pentru azi'} to="/povesti" stories={tonightRow} />
           <Row title="Adăugate recent" to="/povesti" stories={recent.filter((s) => !onTop.has(s.id))} />
           {!tonightRow.length && recent.every((s) => onTop.has(s.id)) && <Link to="/povesti" className="home-note">Toate poveștile <b>Bibliotecă</b></Link>}

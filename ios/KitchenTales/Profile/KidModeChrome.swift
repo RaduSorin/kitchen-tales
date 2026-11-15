@@ -13,6 +13,7 @@ private struct KidModeChrome: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .kidQueueChoice()
             .overlay(alignment: .topLeading) {
                 if kid.active {
                     Button { leaving = true } label: { KidBadge() }

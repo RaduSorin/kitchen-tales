@@ -3,6 +3,7 @@ import type { Story } from '../lib/types'
 import { useSpineArt } from '../lib/coverTint'
 import { useCoverUrl } from '../lib/useCoverUrl'
 import { bookMeta, bookVars, moonDust, NATIVE_SWITCH, nextFrame, primeClick, shelfClick, spineHeight, spineWidth, tickAllowed, wait } from '../lib/shelf'
+import { QueueMenuButton } from './UpNext'
 import { CoverPicture, SpineFace, TickButton, type BookViewProps } from './Spine'
 
 type Arrival = { id: string; phase: 'zero' | 'room' | 'drop' }
@@ -249,7 +250,7 @@ export default function BookShelf({ items, selId, onSelect, onOpen, arriving, on
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
         </TickButton>
         <div className="vit-text" aria-live="polite">
-          <b>{sel.title}</b>
+          <b>{sel.title} <QueueMenuButton story={sel} className="inline" /></b>
           <small>{now?.id === sel.id ? 'Nouă pe raft' : bookMeta(sel)}</small>
         </div>
       </div>

@@ -3,6 +3,7 @@ import type { Story } from '../lib/types'
 import { useCoverUrl } from '../lib/useCoverUrl'
 import { moonDust, NATIVE_SWITCH, nextFrame, primeClick, shelfClick, tickAllowed, wait } from '../lib/shelf'
 import { getPosition } from '../lib/stories'
+import { QueueMenuButton } from './UpNext'
 import { CoverPicture, type BookViewProps } from './Spine'
 
 /** Under the cover: time left (or the length) and how to browse. */
@@ -207,7 +208,7 @@ export default function CoverFlow({ items, selId, onSelect, onOpen, arriving, on
         <div className="dust-layer" aria-hidden="true" />
       </label>
       <div className={`flow-caption${fresh ? ' fresh' : ''}`} aria-live="polite">
-        <b>{fresh ? 'Poveste nouă!' : sel.title}</b>
+        <b>{fresh ? 'Poveste nouă!' : sel.title}{!fresh && <QueueMenuButton story={sel} className="inline" />}</b>
         <small>{fresh ? caption?.title : flowMeta(sel)}</small>
       </div>
       {!fresh && (

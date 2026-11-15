@@ -2,7 +2,9 @@ import SwiftUI
 
 /// "Raft cu vitrină" (the web's components/BookShelf.tsx): the folder's stories stand on wooden
 /// shelves with their spines out, and the chosen one's cover sits in the window above. Tap a
-/// spine to choose it, tap it again (or the cover) to listen; ‹ › step to the next book.
+/// spine to choose it, tap it again (or the cover) to listen; ‹ › step to the next book. Keep a
+/// finger on the spines and slide sideways: the book under the finger is chosen, with a tick for
+/// each one (an up-and-down slide still scrolls the page, like `touch-action: pan-y` on the web).
 struct BookShelfView: View {
     let stories: [Story]
     let folderName: String
@@ -11,6 +13,8 @@ struct BookShelfView: View {
     @AppStorage(PhoneSettings.shelfClickKey) private var shelfClick = true
     @State private var chosen: String?
     @State private var width: CGFloat = 0
+    /// Where each spine stands, in the shelves' own space, so a slide knows which book is under the finger.
+    @State private var frames: [String: CGRect] = [:]
 
     private static let gap: CGFloat = 3
     private static let full: CGFloat = 180
@@ -24,7 +28,9 @@ struct BookShelfView: View {
                     shelf(row, sel: sel)
                 }
             }
+            .coordinateSpace(.named(Self.space))
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+            .gesture(SidewaysSlide { p in if let id = book(at: p) { choose(id) } })
         }
         .padding(.horizontal, 16)
     }
@@ -96,6 +102,7 @@ struct BookShelfView: View {
                         Spine(story: s, on: on)
                             .frame(width: Self.spineWidth(s), height: Self.spineHeight(s.title))
                     }
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frames[s.id] = $0 }
                     .buttonStyle(.plain)
                     .offset(y: on ? -18 : 0)
                     .zIndex(on ? 1 : 0)
@@ -122,8 +129,18 @@ struct BookShelfView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: sel?.id)
     }
 
+    /// The book under the finger: on the shelf the finger is over (from a little above the tallest
+    /// book down to the plank), the spine it is on or the one whose gap it is in.
+    private func book(at p: CGPoint) -> String? {
+        let half = Self.gap / 2
+        let hit = frames.first { (_, f: CGRect) -> Bool in
+            p.x >= f.minX - half && p.x <= f.maxX + half && p.y >= f.minY - 40 && p.y <= f.maxY + 13
+        }
+        return hit?.key
+    }
+
     private func choose(_ id: String) {
-        guard id != chosen else { return }
+        guard id != (chosen ?? Self.pick(folderName) ?? stories.first?.id) else { return }
         chosen = id
         UserDefaults.standard.set(id, forKey: Self.pickKey(folderName))
         if shelfClick { Haptics.select() }
@@ -136,6 +153,8 @@ struct BookShelfView: View {
     }
 
     // MARK: Sizes (src/lib/shelf.ts)
+
+    private static let space = "shelfBooks"
 
     private static func pickKey(_ folder: String) -> String { "kt-shelf-pick-\(folder)" }
     static func pick(_ folder: String) -> String? { UserDefaults.standard.string(forKey: pickKey(folder)) }
@@ -235,5 +254,42 @@ private struct Spine: View {
             .padding(.horizontal, 4)
             .frame(maxWidth: .infinity)
             .scaleEffect(x: 0.7)
+    }
+}
+
+/// A one-finger slide that only starts when it goes more sideways than up or down, so the page
+/// still scrolls; the scroll view waits for it to give up first. Reports the finger's position in
+/// the view it is on, from the start of the slide until the finger lifts.
+private struct SidewaysSlide: UIGestureRecognizerRepresentable {
+    let moved: (CGPoint) -> Void
+
+    init(_ moved: @escaping (CGPoint) -> Void) { self.moved = moved }
+
+    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator { Coordinator() }
+
+    func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
+        let pan = UIPanGestureRecognizer()
+        pan.maximumNumberOfTouches = 1
+        pan.delegate = context.coordinator
+        return pan
+    }
+
+    func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        switch recognizer.state {
+        case .began, .changed: moved(context.converter.localLocation)
+        default: break
+        }
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        func gestureRecognizerShouldBegin(_ g: UIGestureRecognizer) -> Bool {
+            guard let pan = g as? UIPanGestureRecognizer else { return true }
+            let v = pan.velocity(in: pan.view)
+            return abs(v.x) > abs(v.y)
+        }
+
+        func gestureRecognizer(_ g: UIGestureRecognizer, shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
+            other.view is UIScrollView
+        }
     }
 }

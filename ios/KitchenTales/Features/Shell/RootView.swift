@@ -105,6 +105,7 @@ private struct SignedInRoot: View {
         guard LaunchOptions.demoAccount == nil, !PendingImports().load().isEmpty, let share = ShareKitchen.open() else { return }
         let titles = await share.collectPending()
         guard !titles.isEmpty else { return }
+        trackBadge(.fromShare)
         await recipes.refresh()
         kitchen.say(titles.count == 1 ? "Am salvat „\(titles[0])”" : "Am salvat \(titles.count) rețete trimise cu Share")
     }

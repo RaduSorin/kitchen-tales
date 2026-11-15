@@ -13,8 +13,8 @@ struct BadgeTests {
     }
 
     @Test func catalogMatchesTheWeb() {
-        #expect(BadgeCatalog.stamps.count == 33)
-        #expect(BadgeCatalog.stickers.count == 32)
+        #expect(BadgeCatalog.stamps.count == 38)
+        #expect(BadgeCatalog.stickers.count == 39)
         #expect(Set(BadgeCatalog.all.map(\.id)).count == BadgeCatalog.all.count)
     }
 
@@ -91,6 +91,44 @@ struct BadgeTests {
         #expect(s.counts["cook:abc"] == 2)
         #expect(s.epoch == 2)
         #expect(BadgeEngine.date(s.earned["scrisa"]!) != nil)
+    }
+
+    @Test func orthodoxEasterMatchesTheWeb() {
+        #expect(BadgeEngine.dayOf(BadgeEngine.orthodoxEaster(2025, calendar: cal), calendar: cal) == "2025-04-20")
+        #expect(BadgeEngine.dayOf(BadgeEngine.orthodoxEaster(2026, calendar: cal), calendar: cal) == "2026-04-12")
+        #expect(BadgeEngine.dayOf(BadgeEngine.orthodoxEaster(2027, calendar: cal), calendar: cal) == "2027-05-02")
+    }
+
+    @Test func feastDaysAndSeasons() {
+        #expect(BadgeEngine.isFeast(at(2026, 12, 24, 12), calendar: cal))
+        #expect(BadgeEngine.isFeast(at(2026, 4, 8, 12), calendar: cal))
+        #expect(BadgeEngine.isFeast(at(2026, 4, 12, 20), calendar: cal))
+        #expect(!BadgeEngine.isFeast(at(2026, 4, 13, 12), calendar: cal))
+        #expect(!BadgeEngine.isFeast(at(2026, 12, 25, 12), calendar: cal))
+        let seasons = [(1, "iarna"), (4, "primavara"), (7, "vara"), (10, "toamna"), (12, "iarna")]
+        for (m, name) in seasons { #expect(BadgeEngine.season(at(2026, m, 10, 12), calendar: cal) == name) }
+    }
+
+    @Test func newMedalsFromTheNativeApp() {
+        var s = BadgeState()
+        for e in [BadgeEvent.fromShare, .siri, .siriStory, .lockTimer] { s = BadgeEngine.apply(e, to: s, now: at(2026, 11, 10, 18), calendar: cal) }
+        let fresh = BadgeEngine.evaluate(s, now: at(2026, 11, 10, 18), calendar: cal).fresh
+        for id in ["safari", "siri", "ceas", "k-hedgehog"] { #expect(fresh.contains(id), "\(id)") }
+
+        var cooked = BadgeState()
+        for m in [1, 4, 7, 10] { cooked = BadgeEngine.apply(.cooked(recipeId: "a"), to: cooked, now: at(2026, m, 10, 12), calendar: cal) }
+        #expect(BadgeEngine.progress(BadgeCatalog.byId["anotimpuri"]!, cooked).done)
+
+        var bed = BadgeState()
+        for d in 1...4 { bed = BadgeEngine.apply(.bedtime, to: bed, now: at(2026, 11, d, 20), calendar: cal) }
+        #expect(!BadgeEngine.progress(BadgeCatalog.byId["k-firefly"]!, bed).done)
+        bed = BadgeEngine.apply(.bedtime, to: bed, now: at(2026, 11, 6, 1), calendar: cal)
+        #expect(BadgeEngine.progress(BadgeCatalog.byId["k-firefly"]!, bed).done)
+
+        let easter = BadgeEngine.apply(.storyFinished(storyId: "s", folder: "a", folders: ["a"], secs: nil, source: nil, offline: false, kid: false, speaker: true),
+                                       to: BadgeState(), now: at(2027, 5, 2, 19), calendar: cal)
+        #expect(easter.counts["easter"] == 1)
+        #expect(easter.counts["speaker"] == 1)
     }
 
     @Test func pagesAreSplitEvenly() {

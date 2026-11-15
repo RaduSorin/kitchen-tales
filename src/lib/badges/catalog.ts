@@ -64,6 +64,7 @@ export const BADGES: Badge[] = [
     { id: 'c100', art: 'toque', lvl: 100, cap: '100 REȚETE', name: 'Cartea casei', how: '100 de rețete adăugate.', goal: count('recipes', 100) },
     { id: 'categorii', art: 'salt', cap: '5 CATEGORII', name: 'Gust de toate', how: 'Rețete în 5 categorii diferite.', goal: size('categories', 5) },
     { id: 'foto', art: 'pie', lvl: 10, cap: 'CU POZĂ', name: 'Arată bine', how: '10 rețete cu poză.', goal: count('photos', 10) },
+    { id: 'safari', art: 'plane', cap: 'TRIMISĂ', name: 'Trimisă din Safari', how: 'Prima rețetă trimisă în aplicație din Safari, cu Partajează.', goal: count('shareExt') },
   ]),
   ...stamps('La gătit', 'cook', [
     { id: 'prima', art: 'plate', cap: 'AM GĂTIT', name: 'Prima la masă', how: 'Prima rețetă gătită până la capăt în modul de gătit.', goal: count('cooked') },
@@ -76,12 +77,15 @@ export const BADGES: Badge[] = [
     { id: 'jongler', art: 'timer', lvl: 3, cap: 'CRONOMETRE', name: 'Jongler', how: '3 cronometre pornite în același timp.', goal: count('timers', 3) },
     { id: 'nota', art: 'notepad', cap: 'NOTIȚĂ', name: 'Nota bucătarului', how: 'Prima notiță lăsată după ce ai gătit.', goal: count('notes') },
     { id: 'dubla', art: 'cup', cap: 'PORȚII', name: 'Porție dublă', how: 'Numărul de porții schimbat la o rețetă.', goal: count('servings') },
+    { id: 'siri', art: 'spoon', cap: 'CU SIRI', name: 'Hei, Siri', how: 'O rețetă deschisă cu Siri.', goal: count('siri') },
+    { id: 'ceas', art: 'phone', cap: 'PE ECRAN', name: 'Cu ochii pe ceas', how: 'Un cronometru urmărit de pe ecranul blocat, până a sunat.', goal: count('lockTimer') },
   ]),
   ...stamps('Plan și caiet', 'plan', [
     { id: 'saptamana', art: 'calendar', lvl: 7, cap: '7 ZILE', name: 'Săptămâna e gata', how: 'Cina planificată pentru toate cele 7 zile ale unei săptămâni.', goal: count('week') },
     { id: 'cos', art: 'basket', cap: 'COȘ PLIN', name: 'Coșul plin', how: 'Toată lista de cumpărături bifată.', goal: count('shopping') },
     { id: 'pdf', art: 'cookbook', cap: 'CAIET PDF', name: 'Caietul de rețete', how: 'Primul caiet de rețete PDF, făcut din Profil.', goal: count('cookbook') },
     { id: 'tipar', art: 'printer', cap: 'DE TIPAR', name: 'Ediție tipărită', how: 'Un caiet A4, de tipar, cu cel puțin 20 de rețete.', goal: count('print') },
+    { id: 'anotimpuri', art: 'leaf', cap: '4 ANOTIMPURI', name: 'Patru anotimpuri', how: 'Câte o rețetă gătită în fiecare anotimp al anului.', goal: size('seasons', 4) },
   ]),
   ...stamps('Familie', 'family', [
     { id: 'casa', art: 'envelope', cap: 'INVITAȚIE', name: 'Casa plină', how: 'Pe cineva invitat în aplicație.', goal: count('invited') },
@@ -93,6 +97,7 @@ export const BADGES: Badge[] = [
     { id: 'noapte', art: 'moon', cap: 'DUPĂ 23', secret: true, name: 'Bucătar de noapte', how: 'Modul de gătit deschis după ora 23.', goal: count('night') },
     { id: 'brunch', art: 'pancakes', cap: 'DUMINICĂ', secret: true, name: 'Brunch de duminică', how: 'Ceva gătit duminică înainte de ora 11.', goal: count('brunch') },
     { id: 'dulce', art: 'cupcake', lvl: 10, cap: 'DESERTURI', secret: true, name: 'Dinte dulce', how: '10 rețete de desert.', goal: count('desserts', 10) },
+    { id: 'sarbatori', art: 'cozonac', cap: 'SĂRBĂTOARE', secret: true, name: 'Masa de sărbători', how: 'Ceva gătit în Ajunul Crăciunului sau în săptămâna Paștelui.', goal: count('feast') },
   ]),
 
   ...stickers('La ascultat', [
@@ -114,9 +119,14 @@ export const BADGES: Badge[] = [
     { id: 'k-parrot', art: 'parrot', listen: true, name: 'Papagalul', how: 'O poveste înregistrată de voi, ascultată de 5 ori.', goal: most('rec:', 5) },
     { id: 'k-umbrella', art: 'umbrella', listen: true, name: 'Umbrela', how: 'O poveste ascultată fără internet, de pe telefon.', goal: count('offlineListen') },
     { id: 'k-comet', art: 'comet', listen: true, name: 'Cometa', how: '200 de povești ascultate până la capăt.', goal: count('listened', 200) },
+    { id: 'k-hedgehog', art: 'hedgehog', name: 'Ariciul', how: 'O poveste pornită cu vocea, prin Siri.', goal: count('siriStory') },
+    { id: 'k-frog', art: 'frog', listen: true, name: 'Broscuța', how: 'O poveste ascultată pe o boxă (AirPlay) sau în mașină.', goal: count('speaker') },
     // Surprises on the calendar: they come right away, not held for the evening's one sticker.
     { id: 'k-snow', art: 'snow', secret: true, name: 'Fulgul de nea', how: 'O poveste ascultată de Crăciun.', goal: count('xmas') },
     { id: 'k-pumpkin', art: 'pumpkin', secret: true, name: 'Dovlecelul', how: 'O poveste ascultată de Halloween.', goal: count('halloween') },
+    { id: 'k-snowdrop', art: 'snowdrop', secret: true, name: 'Ghiocelul', how: 'O poveste ascultată de 1 Martie.', goal: count('martisor') },
+    { id: 'k-egg', art: 'egg', secret: true, name: 'Oul roșu', how: 'O poveste ascultată de Paște.', goal: count('easter') },
+    { id: 'k-kite', art: 'kite', secret: true, name: 'Zmeul', how: 'O poveste ascultată de 1 Iunie, Ziua copilului.', goal: count('childday') },
   ]),
   ...stickers('La făcut povești', [
     { id: 'k-heart', art: 'heart', name: 'Inimioara', how: 'Prima poveste înregistrată cu vocea voastră.', goal: count('source:recording') },
@@ -134,6 +144,8 @@ export const BADGES: Badge[] = [
     { id: 'k-dragon', art: 'dragon', listen: true, name: 'Dragonul', how: 'Povești ascultate 7 seri la rând.', goal: (s) => [longestRun(s.sets.days ?? []), 7] },
     { id: 'k-key', art: 'key', name: 'Cheița', how: 'Prima poveste pusă la favorite.', goal: count('favorite') },
     { id: 'k-penguin', art: 'penguin', listen: true, name: 'Pinguinul', how: '10 povești ascultate în modul copil.', goal: count('kidListen', 10) },
+    { id: 'k-firefly', art: 'firefly', name: 'Licuriciul', how: 'Povestea de la Ora de culcare, pornită în 5 seri.', goal: size('bedtime', 5) },
+    { id: 'k-lighthouse', art: 'lighthouse', listen: true, name: 'Farul', how: 'Povești ascultate 30 de seri la rând.', goal: (s) => [longestRun(s.sets.days ?? []), 30] },
   ]),
 ]
 

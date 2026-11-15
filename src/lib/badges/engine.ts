@@ -56,12 +56,37 @@ export type BadgeEvent =
       t: 'story-finished'; storyId: string; folder: string; folders: string[]
       /** The story's length, how it was made, played from the phone's copy, in kid mode. */
       secs?: number; source?: 'upload' | 'recording' | 'generated'; offline?: boolean; kid?: boolean
+      /** Played on a speaker or in the car (AirPlay, CarPlay, Bluetooth): iOS only. */
+      speaker?: boolean
     }
   | { t: 'favorite' }
   | { t: 'sleep-stop' }
+  // Only the native iOS app sends these (Share extension, Siri, lock screen, Ora de culcare).
+  | { t: 'from-share' }
+  | { t: 'siri' }
+  | { t: 'siri-story' }
+  | { t: 'lock-timer' }
+  | { t: 'bedtime' }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 export const dayOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+/** Orthodox Easter Sunday of a year, as a local date (Meeus' Julian computus + 13 days). */
+export function orthodoxEaster(year: number) {
+  const a = year % 4, b = year % 7, c = year % 19
+  const d = (19 * c + 15) % 30, e = (2 * a + 4 * b - d + 34) % 7
+  const month = Math.floor((d + e + 114) / 31), day = ((d + e + 114) % 31) + 1
+  return new Date(year, month - 1, day + 13)
+}
+const sameDay = (a: Date, b: Date) => dayOf(a) === dayOf(b)
+/** The season of a date: winter, spring, summer, autumn. */
+export const seasonOf = (d: Date) => ['iarna', 'primavara', 'vara', 'toamna'][Math.floor(((d.getMonth() + 1) % 12) / 3)]
+/** Christmas Eve, or the week before Orthodox Easter (Palm Sunday to Easter Sunday). */
+export function isFeast(d: Date) {
+  if (d.getMonth() === 11 && d.getDate() === 24) return true
+  const easter = orthodoxEaster(d.getFullYear()).getTime()
+  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  return day <= easter && day >= easter - 7 * 86_400_000
+}
 export const isDessert = (category?: string) => !!category && /desert|dulc/i.test(category)
 
 const bump = (s: BadgeState, key: string, by = 1): BadgeState => ({ ...s, counts: { ...s.counts, [key]: (s.counts[key] ?? 0) + by } })
@@ -87,6 +112,8 @@ export function applyEvent(s: BadgeState, e: BadgeEvent, now: Date): BadgeState 
     case 'cooked':
       x = bump(bump(x, 'cooked'), `cook:${e.recipeId}`)
       if (now.getDay() === 0 && hour < 11) x = bump(x, 'brunch')
+      x = addTo(x, 'seasons', seasonOf(now))
+      if (isFeast(now)) x = bump(x, 'feast')
       return x
     case 'cook-opened': return hour >= 23 || hour < 4 ? bump(x, 'night') : x
     case 'cook-finished': return bump(x, 'cookmode')
@@ -122,9 +149,18 @@ export function applyEvent(s: BadgeState, e: BadgeEvent, now: Date): BadgeState 
       if (e.kid) x = bump(x, 'kidListen')
       if (now.getMonth() === 11 && now.getDate() >= 24 && now.getDate() <= 26) x = bump(x, 'xmas')
       if (now.getMonth() === 9 && now.getDate() === 31) x = bump(x, 'halloween')
+      if (now.getMonth() === 2 && now.getDate() === 1) x = bump(x, 'martisor')
+      if (now.getMonth() === 5 && now.getDate() === 1) x = bump(x, 'childday')
+      if (sameDay(now, orthodoxEaster(now.getFullYear()))) x = bump(x, 'easter')
+      if (e.speaker) x = bump(x, 'speaker')
       return x
     case 'favorite': return bump(x, 'favorite')
     case 'sleep-stop': return bump(x, 'sleepstop')
+    case 'from-share': return bump(x, 'shareExt')
+    case 'siri': return bump(x, 'siri')
+    case 'siri-story': return bump(x, 'siriStory')
+    case 'lock-timer': return bump(x, 'lockTimer')
+    case 'bedtime': return addTo(x, 'bedtime', dayOf(hour < 4 ? new Date(now.getTime() - 5 * 3_600_000) : now))
   }
 }
 

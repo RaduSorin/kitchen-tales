@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { BADGE, BADGES, longestRun, STAMPS, STICKERS } from '../src/lib/badges/catalog'
 import { backLabelFor } from '../src/lib/badges/backLabel'
-import { applyEvent, emptyState, EPOCH, evaluate, mergeStates, progressOf, type BadgeEvent, type BadgeState } from '../src/lib/badges/engine'
+import { applyEvent, emptyState, EPOCH, evaluate, isFeast, mergeStates, orthodoxEaster, progressOf, seasonOf, type BadgeEvent, type BadgeState } from '../src/lib/badges/engine'
 
 const at = (iso: string) => new Date(iso)
 const run = (events: BadgeEvent[], now = at('2026-11-10T18:00:00')) => events.reduce((s, e) => applyEvent(s, e, now), emptyState())
@@ -10,8 +10,8 @@ const finished = (storyId: string, folder = 'Basme', folders = ['Basme']): Badge
 describe('catalogue', () => {
   it('has unique ids, and stamps and stickers', () => {
     expect(new Set(BADGES.map((b) => b.id)).size).toBe(BADGES.length)
-    expect(STAMPS.length).toBe(33)
-    expect(STICKERS.length).toBe(32)
+    expect(STAMPS.length).toBe(38)
+    expect(STICKERS.length).toBe(39)
     expect(STAMPS.every((b) => b.cap && b.ink)).toBe(true)
   })
 })
@@ -146,6 +146,49 @@ describe('new story stickers', () => {
     expect(evaluate(run([finished('a')], at('2026-12-25T19:00:00')), at('2026-12-25T19:00:00')).fresh).toContain('k-snow')
     expect(evaluate(run([finished('a')], at('2026-12-27T19:00:00')), at('2026-12-27T19:00:00')).fresh).not.toContain('k-snow')
     expect(evaluate(run([finished('a')], at('2026-10-31T19:00:00')), at('2026-10-31T19:00:00')).fresh).toContain('k-pumpkin')
+  })
+})
+
+describe('medals added with the native app', () => {
+  const doneAt = (id: string, s: BadgeState, now: Date) => progressOf(BADGE.get(id)!, s, now).done
+  it('finds Orthodox Easter', () => {
+    expect(orthodoxEaster(2026).toDateString()).toBe(new Date(2026, 3, 12).toDateString())
+    expect(orthodoxEaster(2027).toDateString()).toBe(new Date(2027, 4, 2).toDateString())
+    expect(orthodoxEaster(2025).toDateString()).toBe(new Date(2025, 3, 20).toDateString())
+  })
+  it('knows the seasons and the feast days', () => {
+    expect(['2026-01-10', '2026-04-10', '2026-07-10', '2026-10-10', '2026-12-10'].map((d) => seasonOf(at(`${d}T12:00:00`)))).toEqual(['iarna', 'primavara', 'vara', 'toamna', 'iarna'])
+    expect(isFeast(at('2026-12-24T12:00:00'))).toBe(true)
+    expect(isFeast(at('2026-04-08T12:00:00'))).toBe(true)
+    expect(isFeast(at('2026-04-12T20:00:00'))).toBe(true)
+    expect(isFeast(at('2026-04-13T12:00:00'))).toBe(false)
+    expect(isFeast(at('2026-12-25T12:00:00'))).toBe(false)
+  })
+  it('gives the four seasons stamp after cooking in each season', () => {
+    let s = emptyState()
+    for (const d of ['2026-01-10', '2026-04-20', '2026-07-10']) s = applyEvent(s, { t: 'cooked', recipeId: 'a' }, at(`${d}T12:00:00`))
+    expect(doneAt('anotimpuri', s, at('2026-07-10T12:00:00'))).toBe(false)
+    s = applyEvent(s, { t: 'cooked', recipeId: 'a' }, at('2026-10-10T12:00:00'))
+    expect(doneAt('anotimpuri', s, at('2026-10-10T12:00:00'))).toBe(true)
+  })
+  it('counts the iOS-only events', () => {
+    const s = run([{ t: 'from-share' }, { t: 'siri' }, { t: 'siri-story' }, { t: 'lock-timer' }])
+    expect(evaluate(s, at('2026-11-10T18:00:00')).fresh).toEqual(expect.arrayContaining(['safari', 'siri', 'ceas', 'k-hedgehog']))
+  })
+  it('needs five different bedtime evenings for the firefly', () => {
+    let s = emptyState()
+    for (let i = 1; i <= 4; i++) s = applyEvent(applyEvent(s, { t: 'bedtime' }, at(`2026-11-0${i}T20:00:00`)), { t: 'bedtime' }, at(`2026-11-0${i}T20:30:00`))
+    expect(doneAt('k-firefly', s, at('2026-11-05T20:00:00'))).toBe(false)
+    s = applyEvent(s, { t: 'bedtime' }, at('2026-11-06T01:00:00'))
+    expect(doneAt('k-firefly', s, at('2026-11-06T01:00:00'))).toBe(true)
+  })
+  it('gives the holiday stickers and the speaker sticker', () => {
+    const on = (iso: string, e: BadgeEvent = finished('a')) => applyEvent(emptyState(), e, at(iso))
+    expect(doneAt('k-snowdrop', on('2027-03-01T19:00:00'), at('2027-03-01T19:00:00'))).toBe(true)
+    expect(doneAt('k-kite', on('2027-06-01T19:00:00'), at('2027-06-01T19:00:00'))).toBe(true)
+    expect(doneAt('k-egg', on('2027-05-02T19:00:00'), at('2027-05-02T19:00:00'))).toBe(true)
+    expect(doneAt('k-egg', on('2027-05-03T19:00:00'), at('2027-05-03T19:00:00'))).toBe(false)
+    expect(doneAt('k-frog', on('2026-11-10T19:00:00', { ...finished('a') as Extract<BadgeEvent, { t: 'story-finished' }>, speaker: true }), at('2026-11-10T19:00:00'))).toBe(true)
   })
 })
 

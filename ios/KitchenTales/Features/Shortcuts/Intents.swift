@@ -16,6 +16,7 @@ struct PlayStoryIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult {
         AppCommands.shared.pending = .playStory(story?.id)
+        trackBadge(.siriStory)
         return .result()
     }
 }
@@ -44,6 +45,7 @@ struct OpenRecipeIntent: OpenIntent {
     @MainActor
     func perform() async throws -> some IntentResult {
         AppCommands.shared.pending = .openRecipe(target.id)
+        trackBadge(.siri)
         return .result()
     }
 }

@@ -43,8 +43,12 @@ enum BadgeEvent: Sendable {
     case invited, shared
     case storyAdded(Source)
     case storyCover, folderMade, kidMode, offlineSaved
-    case storyFinished(storyId: String, folder: String, folders: [String], secs: Double?, source: Source?, offline: Bool, kid: Bool)
+    /// `speaker`: played over AirPlay, CarPlay or Bluetooth (not the phone or headphones).
+    case storyFinished(storyId: String, folder: String, folders: [String], secs: Double?, source: Source?, offline: Bool, kid: Bool, speaker: Bool = false)
     case favorite, sleepStop
+    /// A recipe saved from the Share sheet, opened with Siri, a timer followed on the lock screen,
+    /// a story started by Siri, the Ora de culcare story started.
+    case fromShare, siri, siriStory, lockTimer, bedtime
 }
 
 enum BadgeEngine {
@@ -69,6 +73,31 @@ enum BadgeEngine {
     static func isDessert(_ category: String?) -> Bool {
         guard let c = category?.lowercased() else { return false }
         return c.contains("desert") || c.contains("dulc")
+    }
+
+    /// Orthodox Easter Sunday of a year (Meeus' Julian computus, plus 13 days), as the web's orthodoxEaster.
+    static func orthodoxEaster(_ year: Int, calendar: Calendar = .current) -> Date {
+        let a = year % 4, b = year % 7, c = year % 19
+        let d = (19 * c + 15) % 30, e = (2 * a + 4 * b - d + 34) % 7
+        let month = (d + e + 114) / 31, day = (d + e + 114) % 31 + 1
+        let julian = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12)) ?? Date()
+        return calendar.date(byAdding: .day, value: 13, to: julian) ?? julian
+    }
+
+    /// The season of a date, with the web's names.
+    static func season(_ d: Date, calendar: Calendar = .current) -> String {
+        let m = calendar.component(.month, from: d)
+        return ["iarna", "primavara", "vara", "toamna"][(m % 12) / 3]
+    }
+
+    /// Christmas Eve, or the week before Orthodox Easter (Palm Sunday to Easter Sunday).
+    static func isFeast(_ d: Date, calendar: Calendar = .current) -> Bool {
+        let m = calendar.component(.month, from: d), day = calendar.component(.day, from: d)
+        if m == 12 && day == 24 { return true }
+        let easter = calendar.startOfDay(for: orthodoxEaster(calendar.component(.year, from: d), calendar: calendar))
+        let today = calendar.startOfDay(for: d)
+        guard let from = calendar.date(byAdding: .day, value: -7, to: easter) else { return false }
+        return today >= from && today <= easter
     }
 
     /// The longest run of consecutive days in a list of YYYY-MM-DD days.
@@ -133,6 +162,8 @@ enum BadgeEngine {
         case let .cooked(id):
             bump(&x, "cooked"); bump(&x, "cook:\(id)")
             if calendar.component(.weekday, from: now) == 1, hour < 11 { bump(&x, "brunch") }
+            add(&x, "seasons", [season(now, calendar: calendar)])
+            if isFeast(now, calendar: calendar) { bump(&x, "feast") }
         case .cookOpened:
             if hour >= 23 || hour < 4 { bump(&x, "night") } else { return state.since == nil ? x : state }
         case .cookFinished: bump(&x, "cookmode")
@@ -152,7 +183,7 @@ enum BadgeEngine {
         case .folderMade: bump(&x, "folders")
         case .kidMode: bump(&x, "kid")
         case .offlineSaved: bump(&x, "offline")
-        case let .storyFinished(id, folder, folders, secs, source, offline, kid):
+        case let .storyFinished(id, folder, folders, secs, source, offline, kid, speaker):
             bump(&x, "listened"); bump(&x, "listen:\(id)")
             add(&x, "folders", [folder])
             x.sets["allFolders"] = Array(NSOrderedSet(array: folders.filter { !$0.isEmpty })) as? [String] ?? []
@@ -169,8 +200,17 @@ enum BadgeEngine {
             let m = calendar.component(.month, from: now), d = calendar.component(.day, from: now)
             if m == 12 && (24...26).contains(d) { bump(&x, "xmas") }
             if m == 10 && d == 31 { bump(&x, "halloween") }
+            if m == 3 && d == 1 { bump(&x, "martisor") }
+            if m == 6 && d == 1 { bump(&x, "childday") }
+            if calendar.isDate(now, inSameDayAs: orthodoxEaster(calendar.component(.year, from: now), calendar: calendar)) { bump(&x, "easter") }
+            if speaker { bump(&x, "speaker") }
         case .favorite: bump(&x, "favorite")
         case .sleepStop: bump(&x, "sleepstop")
+        case .fromShare: bump(&x, "shareExt")
+        case .siri: bump(&x, "siri")
+        case .siriStory: bump(&x, "siriStory")
+        case .lockTimer: bump(&x, "lockTimer")
+        case .bedtime: add(&x, "bedtime", [dayOf(hour < 4 ? now.addingTimeInterval(-5 * 3600) : now, calendar: calendar)])
         }
         return x
     }

@@ -590,6 +590,8 @@ final class CookTimers {
         for (step, t) in timers {
             guard let end = t.endsAt, end <= now else { continue }
             timers[step] = Running(total: t.total, left: 0, endsAt: nil)
+            // It ran out while the phone was locked or the app was away: followed from the lock screen.
+            if now.timeIntervalSince(end) > 3 { trackBadge(.lockTimer) }
             // The app is open: ring here (the notification only shows when it is in the background).
             AudioServicesPlayAlertSound(SystemSoundID(1005))
             UINotificationFeedbackGenerator().notificationOccurred(.success)

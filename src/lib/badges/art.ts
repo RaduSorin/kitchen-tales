@@ -19,6 +19,18 @@ function star(cx: number, cy: number, R: number, r: number, n = 5) {
 }
 const rect = (x: number, y: number, w: number, h: number, r: number) => `M${x + r} ${y}H${x + w - r}Q${x + w} ${y} ${x + w} ${y + r}V${y + h - r}Q${x + w} ${y + h} ${x + w - r} ${y + h}H${x + r}Q${x} ${y + h} ${x} ${y + h - r}V${y + r}Q${x} ${y} ${x + r} ${y}Z`
 const circle = (cx: number, cy: number, r: number) => `M${cx} ${cy - r}a${r} ${r} 0 1 1 0 ${2 * r}a${r} ${r} 0 1 1 0 ${-2 * r}Z`
+const ell = (cx: number, cy: number, rx: number, ry: number) => `M${cx} ${cy - ry}a${rx} ${ry} 0 1 1 0 ${2 * ry}a${rx} ${ry} 0 1 1 0 ${-2 * ry}Z`
+/** The hedgehog's back: spikes on a half circle. */
+const spikes = (() => {
+  let d = 'M10 76'
+  for (let i = 0; i <= 14; i++) {
+    const a = Math.PI + (i / 14) * Math.PI
+    const R = i % 2 ? 44 : 34
+    d += `L${(52 + R * Math.cos(a)).toFixed(1)} ${(76 + R * Math.sin(a)).toFixed(1)}`
+  }
+  d += 'L94 80Q92 90 80 90H18Q8 90 10 76Z'
+  return d
+})()
 
 // ---- kitchen characters (stamps) ----
 const KITCHEN: Record<string, Art> = {
@@ -49,6 +61,12 @@ const KITCHEN: Record<string, Art> = {
   moon: { d: 'M60 12A39 39 0 1 0 88 66A31 31 0 0 1 60 12Z', col: '#ffe59a', det: `${face(42, 54, 0.9, true)}<path d="${star(78, 26, 8, 4)}" fill="#fff"/>` },
   pancakes: { d: 'M10 62Q10 52 50 52Q90 52 90 62V80Q90 90 50 90Q10 90 10 80ZM18 46Q18 36 50 36Q82 36 82 46V52H18Z', col: '#f6c97c', det: `<path d="M10 70Q50 78 90 70" stroke="#d98a3a" stroke-width="3" fill="none"/><path d="M30 34Q50 20 70 34Q72 44 50 42Q28 44 30 34Z" fill="#ffe59a"/><path d="M60 40Q66 50 62 58" stroke="#c96b2a" stroke-width="5" stroke-linecap="round" fill="none"/>${face(46, 64, 0.8)}` },
   cupcake: { d: 'M22 52C12 42 20 28 32 30C34 14 56 10 62 22C76 18 88 32 78 44C84 46 82 52 78 52L72 90L28 90Z', col: '#8fd3ff', det: `<path d="M22 52C12 42 20 28 32 30C34 14 56 10 62 22C76 18 88 32 78 44C84 46 82 52 78 52Z" fill="#ffb3c7"/><circle cx="48" cy="20" r="6" fill="#ff5f6d"/><path d="M38 56L40 88M50 56V88M62 56L60 88" stroke="#6fbdf0" stroke-width="2"/>${face(50, 70, 0.7)}` },
+  // Added 2026-11 with the native app (Share sheet, Siri, lock screen, seasons, holidays).
+  plane: { d: 'M6 46L94 12L72 86L50 64L36 84L34 58Z', col: '#9fd8ff', det: `<path d="M34 58L94 12L50 64Z" fill="#7cc4f5"/><path d="M36 84L34 58L50 64Z" fill="#6aa9da"/>${face(58, 40, 0.62)}` },
+  spoon: { d: `${ell(50, 34, 24, 28)}M44 58H56L59 94Q50 98 41 94Z`, col: '#e9b073', det: `<path d="M44 58H56L59 94Q50 98 41 94Z" fill="#c98a52"/><path d="M14 22q-6 12 0 24M6 16q-9 18 0 36M86 22q6 12 0 24M94 16q9 18 0 36" fill="none" stroke="#ffd24d" stroke-width="3" stroke-linecap="round"/>${face(50, 36, 0.85)}` },
+  phone: { d: rect(26, 6, 48, 88, 11), col: '#3a3f8c', det: `<rect x="31" y="12" width="38" height="76" rx="7" fill="#fff8ea"/><rect x="40" y="17" width="20" height="7" rx="3.5" fill="${INK_TEXT}"/><circle cx="56" cy="20.5" r="2" fill="#ffd24d"/><rect x="35" y="66" width="30" height="13" rx="4" fill="#ffd28a"/><path d="M40 72.5H60" stroke="#ff8f6b" stroke-width="3" stroke-linecap="round"/>${face(50, 44, 0.75)}` },
+  leaf: { d: 'M50 6C82 20 92 60 52 92L50 98L48 92C8 60 18 20 50 6Z', col: '#ff9f43', det: `<path d="M50 6C82 20 92 60 52 92L50 6Z" fill="#ffc247"/><path d="M50 20V94" stroke="#d9782a" stroke-width="2.4" stroke-linecap="round"/><path d="M50 50L34 38M50 66L36 56M50 50L66 38M50 66L64 56" stroke="#d9782a" stroke-width="2" stroke-linecap="round" opacity=".6"/>${face(50, 58, 0.7)}` },
+  cozonac: { d: 'M10 62Q10 30 50 30Q90 30 90 62V82Q90 90 82 90H18Q10 90 10 82Z', col: '#e9a45a', det: `<path d="M10 62Q10 30 50 30Q90 30 90 62Z" fill="#b8692c"/><path d="M22 52q10-14 28-8q18 6 28-6" fill="none" stroke="#f6c97c" stroke-width="5" stroke-linecap="round"/><g fill="#6b3a1c"><circle cx="24" cy="78" r="2.2"/><circle cx="76" cy="76" r="2.2"/><circle cx="68" cy="84" r="2"/></g>${face(50, 74, 0.8)}` },
 }
 
 // ---- story characters (stickers) ----
@@ -97,6 +115,14 @@ const STORY: Record<string, Art> = {
     det: `<path d="M50 14V86M19 32L81 68M19 68L81 32" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/><circle cx="50" cy="50" r="17" fill="#e8f5ff"/>${face(50, 50, 0.7)}` },
   pumpkin: { d: 'M50 24Q54 8 64 8L62 24Q90 24 92 54Q92 88 50 88Q8 88 8 54Q10 24 50 24Z', col: '#ff9f3a', r: -4,
     det: `<path d="M50 24Q54 8 64 8L62 24Z" fill="#6fae4f"/><path d="M34 26Q22 56 34 86M66 26Q78 56 66 86" fill="none" stroke="#e07a1f" stroke-width="3"/>${face(50, 58)}` },
+  // Added 2026-11: bedtime, Siri, speaker, 30 evenings, and three Romanian holidays.
+  firefly: { d: `${ell(50, 54, 22, 30)}M30 40C8 22 0 44 18 52ZM70 40C92 22 100 44 82 52ZM40 26L32 8M60 26L68 8`, col: '#7cc795', det: `<path d="M40 26L32 8M60 26L68 8" stroke="#5aa874" stroke-width="5" stroke-linecap="round"/><path d="M30 40C8 22 0 44 18 52ZM70 40C92 22 100 44 82 52Z" fill="#dff3ff"/><circle cx="50" cy="72" r="14" fill="#ffe066"/><circle cx="50" cy="72" r="20" fill="#ffe066" opacity=".35"/>${face(50, 44, 0.75)}`, r: -6 },
+  frog: { d: `${circle(32, 34, 15)}${circle(68, 34, 15)}${ell(50, 62, 40, 28)}`, col: '#7ed69a', det: `<circle cx="32" cy="33" r="9" fill="#fff"/><circle cx="68" cy="33" r="9" fill="#fff"/><circle cx="33" cy="34" r="4.4" fill="${INK_TEXT}"/><circle cx="67" cy="34" r="4.4" fill="${INK_TEXT}"/><circle cx="34.5" cy="32.5" r="1.4" fill="#fff"/><circle cx="68.5" cy="32.5" r="1.4" fill="#fff"/><path d="M34 62q16 12 32 0" fill="none" stroke="${INK_TEXT}" stroke-width="2.6" stroke-linecap="round"/><circle cx="24" cy="64" r="5" fill="#ff6f8f" opacity=".45"/><circle cx="76" cy="64" r="5" fill="#ff6f8f" opacity=".45"/><path d="M80 14v14a4 4 0 1 1-3-4V12l10-3v11a4 4 0 1 1-3-4" fill="none" stroke="#ffd24d" stroke-width="2.4" stroke-linecap="round"/>`, r: 4 },
+  snowdrop: { d: 'M50 22C72 22 80 46 76 66Q64 60 50 70Q36 60 24 66C20 46 28 22 50 22ZM46 6H54V24H46ZM34 66C18 74 16 88 24 96C32 86 38 80 42 68ZM66 66C82 74 84 88 76 96C68 86 62 80 58 68Z', col: '#fff8ea', det: `<path d="M34 66C18 74 16 88 24 96C32 86 38 80 42 68ZM66 66C82 74 84 88 76 96C68 86 62 80 58 68Z" fill="#7ed69a"/><path d="M46 6H54V24H46Z" fill="#5aa874"/><path d="M50 22C60 22 64 30 64 36Q56 32 50 36Q44 32 36 36C36 30 40 22 50 22Z" fill="#c6efd3"/><path d="M58 10q8 2 10 8q2 6 8 6" fill="none" stroke="#ff5f6d" stroke-width="2.4" stroke-linecap="round"/><path d="M60 12q8 2 10 8q2 6 8 6" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>${face(50, 50, 0.72)}`, r: -5 },
+  egg: { d: 'M50 6C74 6 88 44 88 62C88 82 72 94 50 94C28 94 12 82 12 62C12 44 26 6 50 6Z', col: '#e8444f', det: `<path d="M16 40H84M13 74H87" stroke="#fff8ea" stroke-width="3"/><path d="M20 34l6-6 6 6 6-6 6 6 6-6 6 6 6-6 6 6 6-6 6 6" fill="none" stroke="#ffd24d" stroke-width="2.6" stroke-linejoin="round"/><path d="M16 80l6 6 6-6 6 6 6-6 6 6 6-6 6 6 6-6 6 6 6-6 6 6 6-6" fill="none" stroke="#ffd24d" stroke-width="2.6" stroke-linejoin="round"/>${face(50, 56, 0.85)}`, r: 6 },
+  kite: { d: 'M50 4L86 40L50 84L14 40Z', col: '#ffd24d', det: `<path d="M50 4L86 40H50Z" fill="#ff7a8a"/><path d="M14 40L50 84V40Z" fill="#7fd0ff"/><path d="M50 4V84M14 40H86" stroke="#fff8ea" stroke-width="2"/><path d="M50 84q-6 6 0 10q6 4 0 8" fill="none" stroke="${INK_TEXT}" stroke-width="2" stroke-linecap="round"/><path d="M44 90l-6 2 4 4zM56 96l6 2-4 4z" fill="#ff7a8a"/>${face(50, 42, 0.62)}`, r: -8 },
+  hedgehog: { d: spikes, col: '#a8703f', det: `<path d="M44 90Q40 56 70 54Q94 56 94 80Q92 90 80 90Z" fill="#f6d6a8"/><circle cx="93" cy="78" r="4" fill="${INK_TEXT}"/><g transform="translate(70 70) scale(.62)"><circle cx="-8" cy="0" r="3.2" fill="${INK_TEXT}"/><circle cx="8" cy="0" r="3.2" fill="${INK_TEXT}"/><circle cx="-7" cy="-1.2" r="1" fill="#fff"/><circle cx="9" cy="-1.2" r="1" fill="#fff"/><path d="M-5 7q5 5 10 0" fill="none" stroke="${INK_TEXT}" stroke-width="2.4" stroke-linecap="round"/><circle cx="-15" cy="6" r="4" fill="#ff6f8f" opacity=".45"/><circle cx="15" cy="6" r="4" fill="#ff6f8f" opacity=".45"/></g>`, r: 0 },
+  lighthouse: { d: 'M38 34H62L70 92H30ZM34 18H66V34H34ZM30 20L50 4L70 20Z', col: '#fff8ea', det: `<path d="M30 20L50 4L70 20Z" fill="#ff5f6d"/><rect x="38" y="20" width="24" height="12" rx="2" fill="#ffe066"/><path d="M36.6 50H63.4L64.8 60H35.2ZM34 72H66L67.4 82H32.6Z" fill="#ff7a8a"/><path d="M62 24l26-8M62 28l26 8M38 24l-26-8M38 28l-26 8" stroke="#ffe066" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>${face(50, 43, 0.5)}`, r: 3 },
 }
 
 const INKS: Record<Ink, string> = { add: '#c9553a', cook: '#2d7470', plan: '#b07a1f', family: '#3a3f8c', secret: '#6b4a7c' }

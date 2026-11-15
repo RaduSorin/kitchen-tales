@@ -125,6 +125,11 @@ final class StoryPlayer {
         return stopChoices[(i + 1) % stopChoices.count]
     }
 
+    /// Playing on a speaker or in the car (AirPlay, CarPlay, car Bluetooth), for the frog sticker.
+    private static var onSpeaker: Bool {
+        AVAudioSession.sharedInstance().currentRoute.outputs.contains { [.airPlay, .carAudio].contains($0.portType) }
+    }
+
     private static func savedStopAfter() -> Int {
         let n = UserDefaults.standard.integer(forKey: stopKey)
         return stopChoices.contains(n) ? n : 1
@@ -428,7 +433,7 @@ final class StoryPlayer {
         let folders = (store?.allStories ?? []).map(StoryLibrary.folderOf)
         trackBadge(.storyFinished(storyId: finished.id, folder: StoryLibrary.folderOf(finished), folders: Array(NSOrderedSet(array: folders)) as? [String] ?? [],
                                   secs: finished.durationSec, source: BadgeEvent.Source(rawValue: finished.source.rawValue),
-                                  offline: fromDevice, kid: !(store?.kidFolders.isEmpty ?? true)))
+                                  offline: fromDevice, kid: !(store?.kidFolders.isEmpty ?? true), speaker: Self.onSpeaker))
         if let step = nextStep, played < stopAfter, let store {
             Task { await start(step.story, queue: nil, store: store, origin: step.origin, continued: true) }
         } else {

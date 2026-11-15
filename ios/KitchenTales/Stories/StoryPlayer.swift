@@ -524,7 +524,7 @@ final class StoryPlayer {
         guard let current else { return }
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: current.title,
-            MPMediaItemPropertyArtist: "Bucătăria",
+            MPMediaItemPropertyArtist: "Kitchen Tales",
             MPMediaItemPropertyAlbumTitle: StoryLibrary.folderOf(current),
             MPNowPlayingInfoPropertyElapsedPlaybackTime: position,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? Double(rate) : 0,

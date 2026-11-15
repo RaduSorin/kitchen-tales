@@ -8,13 +8,29 @@ const NICE: [number, string][] = [[0.25, '¼'], [0.5, '½'], [0.75, '¾'], [1 / 
 // Matches "1 1/2", "1/2", "1,5", "1.5", "2", "1½" or "½" at the start of the line.
 const LEAD = /^\s*(?:(\d+)\s+(\d+)\/(\d+)|(\d+)\/(\d+)|(\d+(?:[.,]\d+)?)\s*([¼½¾⅓⅔])?|([¼½¾⅓⅔]))/
 
+// Amounts written as words: "o lingură", "un ou", "două cepe". Only before another word, and not
+// "un pic" or "o jumătate de", which this does not scale.
+const WORDS: Record<string, number> = {
+  o: 1, un: 1, una: 1, doi: 2, două: 2, trei: 3, patru: 4, cinci: 5, șase: 6, șapte: 7, opt: 8, nouă: 9, zece: 10,
+}
+const NOT_AMOUNTS = new Set(['pic', 'picuț', 'sfert', 'jumătate'])
+const WORD_LEAD = /^\s*(\p{L}+)(?=\s+(\p{L}+))/u
+
+/** "ş"/"ţ" (cedilla, older keyboards) as "ș"/"ț", lower case. */
+const ro = (w: string) => w.toLowerCase().replace(/ş/g, 'ș').replace(/ţ/g, 'ț')
+
 // A range right after the first amount: "2-3", "2 – 3", "1,5-2".
 const RANGE = /^\s*[-–]\s*(\d+(?:[.,]\d+)?)/
 
 /** The amount at the start of a line; `max` is the upper end of a range like "2-3". */
 export function parseQuantity(line: string): { value: number; max?: number; rest: string } | undefined {
   const m = LEAD.exec(line)
-  if (!m) return undefined
+  if (!m) {
+    const w = WORD_LEAD.exec(line)
+    const value = w && WORDS[ro(w[1])]
+    if (!w || !value || NOT_AMOUNTS.has(ro(w[2]))) return undefined
+    return { value, rest: line.slice(w[0].length) }
+  }
   let value: number
   if (m[1]) value = +m[1] + +m[2] / +m[3]
   else if (m[4]) value = +m[4] / +m[5]
@@ -41,12 +57,16 @@ export function formatQuantity(n: number): string {
   return whole ? `${whole} ${best[1]}` : best[1]
 }
 
-// Units that change with the amount: one form up to 1 (and "1 ½ cană"), the plural from 2 and for ranges ("1-2 căni").
+// Units that change with the amount: one form up to 1 ("½ cană"), the plural above it ("1 ½ căni", "1-2 căni").
 const UNITS: [string, string][] = [
   ['cană', 'căni'], ['ceașcă', 'cești'], ['lingură', 'linguri'], ['linguriță', 'lingurițe'], ['pahar', 'pahare'],
   ['legătură', 'legături'], ['felie', 'felii'], ['bucată', 'bucăți'], ['cățel', 'căței'], ['conservă', 'conserve'],
   ['plic', 'plicuri'], ['pachet', 'pachete'], ['fir', 'fire'], ['frunză', 'frunze'], ['vârf', 'vârfuri'],
+  ['praf', 'prafuri'], ['mână', 'mâini'],
 ]
+
+// Units counted whole: a range of them is rounded out to whole pieces ("2-3 căței" × ½ → "1-2 căței").
+const WHOLE = new Set(['cățel', 'bucată', 'felie', 'conservă', 'plic', 'pachet', 'fir', 'frunză', 'legătură'])
 
 // Things counted by the piece follow the amount the same way: "1 ou", "2 ouă", "½ ceapă", "3 cepe".
 const NOUNS: [string, string][] = [
@@ -56,19 +76,19 @@ const NOUNS: [string, string][] = [
 ]
 
 /** "3 cană" → "3 căni", "1 linguri" → "1 lingură", "1 ouă" → "1 ou"; "1000 g" → "1 kg", "1500 ml" → "1,5 l". */
-function tidyUnit(amount: number, rest: string, range = false): { amount?: string; rest: string } {
+function tidyUnit(amount: number, rest: string): { amount?: string; rest: string } {
   const m = /^(\s*)(\p{L}+)/u.exec(rest)
   if (!m) return { rest }
   const word = m[2]
   const after = rest.slice(m[0].length)
-  const lower = word.toLowerCase()
+  const lower = ro(word)
   if ((lower === 'g' || lower === 'ml') && amount >= 1000) {
     const big = Math.round((amount / 1000) * 100) / 100
     return { amount: String(big).replace('.', ','), rest: `${m[1]}${lower === 'g' ? 'kg' : 'l'}${after}` }
   }
   for (const [one, many] of UNITS) {
     if (lower !== one && lower !== many) continue
-    const want = amount >= 2 || (range && amount > 1) ? many : one
+    const want = amount > 1 ? many : one
     return { rest: `${m[1]}${want}${after}` }
   }
   // Pieces: one up to 1 ("½ ceapă mare"), more above it ("1 ½ cepe mari"), with "mare"/"mari" after them too.
@@ -82,14 +102,28 @@ function tidyUnit(amount: number, rest: string, range = false): { amount?: strin
   return { rest }
 }
 
+/** Whether the line's unit (or the thing itself, "ou", "ceapă") is counted in whole pieces. */
+function countedWhole(rest: string) {
+  const w = /^\s*(\p{L}+)/u.exec(rest)
+  if (!w) return false
+  const word = ro(w[1])
+  const is = ([one, many]: [string, string]) => word === one || word === many
+  return UNITS.some((u) => WHOLE.has(u[0]) && is(u)) || NOUNS.some(is)
+}
+
 export function scaleIngredient(line: string, factor: number): string {
   if (factor === 1) return line
   const q = parseQuantity(line)
   if (!q) return line
   let rest = q.rest.startsWith(' ') || q.rest === '' ? q.rest : ' ' + q.rest
-  const lo = q.value * factor
-  const hi = q.max ? q.max * factor : undefined
-  const t = tidyUnit(hi ?? lo, rest, !!hi)
+  let lo = q.value * factor
+  let hi = q.max ? q.max * factor : undefined
+  if (hi !== undefined && countedWhole(rest)) {
+    lo = Math.max(1, Math.floor(lo + 1e-9))
+    hi = Math.max(lo, Math.ceil(hi - 1e-9))
+    if (hi === lo) hi = undefined
+  }
+  const t = tidyUnit(hi ?? lo, rest)
   rest = t.rest
   if (t.amount && !hi) return t.amount + rest
   if (t.amount && hi) return `${String(Math.round(lo / 10) / 100).replace('.', ',')}-${t.amount}` + rest

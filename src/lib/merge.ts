@@ -52,7 +52,8 @@ function parse(text: string): Parsed {
     const u = UNITS.find(([re]) => re.test(plain(first).replace(/\.$/, '')))
     if (u) { unit = u[1]; rest = rest.slice(first.length).trim() }
   }
-  const core = plain(rest).replace(/\(.*?\)/g, ' ').split(/[,;]/)[0]
+  // "sare după gust" asks for the same thing as "sare".
+  const core = plain(rest).replace(/\(.*?\)/g, ' ').split(/[,;]/)[0].replace(/\b(dupa gust|optional|la nevoie)\b/g, ' ')
   const words = core.split(/[^a-z0-9-]+/).filter((w) => w && !SKIP.has(w))
   return { name: rest, nameKey: words.map(stem).join(' '), unit, amount: q?.value, range: !!q?.max }
 }

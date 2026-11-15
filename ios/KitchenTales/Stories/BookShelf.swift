@@ -50,6 +50,7 @@ struct BookShelfView: View {
                         .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 }
                 .buttonStyle(PressableStyle())
+                .storyContextMenu(s)
                 .accessibilityLabel("Ascultă „\(s.title)”")
                 arrow("chevron.right", enabled: i < stories.count - 1) { choose(stories[i + 1].id) }
             }
@@ -101,6 +102,7 @@ struct BookShelfView: View {
                     } label: {
                         Spine(story: s, on: on)
                             .frame(width: Self.spineWidth(s), height: Self.spineHeight(s.title))
+                            .overlay(alignment: .top) { QueuePlaceBadge(id: s.id).offset(y: -22) }
                     }
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frames[s.id] = $0 }
                     .buttonStyle(.plain)

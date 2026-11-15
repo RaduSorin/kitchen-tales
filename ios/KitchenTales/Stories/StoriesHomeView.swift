@@ -126,6 +126,7 @@ struct StoriesHomeView: View {
         let tonightRow = StoryHomePlan.tonight(store.stories).filter { !onTop.contains($0.id) }
         let recent = store.recent.filter { !onTop.contains($0.id) }
         VStack(alignment: .leading, spacing: 22) {
+            QueueTonightCard()
             StoryCoverRow(title: StoryHomePlan.evening ? "Pentru diseară" : "Pentru azi", stories: tonightRow, openAll: openLibrary)
             StoryCoverRow(title: "Adăugate recent", stories: recent, openAll: openLibrary)
             if tonightRow.isEmpty && recent.isEmpty {
@@ -530,7 +531,7 @@ struct PressableStyle: ButtonStyle {
 }
 
 extension View {
-    /// Long press on a story: play, favourite.
+    /// Long press on a story: play next, add to the queue, play, favourite.
     func storyContextMenu(_ story: Story) -> some View { modifier(StoryContextMenu(story: story)) }
 }
 
@@ -541,7 +542,8 @@ private struct StoryContextMenu: ViewModifier {
 
     func body(content: Content) -> some View {
         content.contextMenu {
-            Button { Task { await player.play(story, store: store) } } label: { Label("Ascultă", systemImage: "play.fill") }
+            Section { QueueMenuItems(story: story) }
+            Button { Task { await player.play(story, store: store) } } label: { Label("Ascultă acum", systemImage: "play.fill") }
             let favorite = store.story(story.id)?.favorite ?? story.favorite
             Button { Task { await store.toggleFavorite(story.id) } } label: {
                 Label(favorite ? "Scoate de la favorite" : "Adaugă la favorite", systemImage: favorite ? "heart.slash" : "heart")

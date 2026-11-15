@@ -4,8 +4,9 @@ import Observation
 import UIKit
 
 /// Plays stories with AVPlayer: keeps going with the screen off, shows on the Lock Screen and in
-/// the Dynamic Island with real controls, plays a queue (the folder it was started from), skips
-/// 15 seconds and, at bedtime, lowers the volume before it stops.
+/// the Dynamic Island with real controls, plays what the family put in "Urmează" and then goes on
+/// through the folder it was started from, skips 15 seconds and, at bedtime, lowers the volume
+/// before it stops.
 @MainActor @Observable
 final class StoryPlayer {
     /// "După N povești" (the web's cycle): the player stops by itself after this many stories.
@@ -14,7 +15,18 @@ final class StoryPlayer {
     private static let shuffleKey = "kt-shuffle"
 
     private(set) var current: Story?
+    /// The folder (or list) the story was started from: it goes on from here after "Urmează".
     private(set) var queue: [Story] = []
+    /// "Urmează": the stories the family chose to hear next, before the folder goes on by itself.
+    private(set) var upNext = UpNext.saved() { didSet { upNext.save(); pickShuffle() } }
+    /// The folder goes on after this story (the last one not started from "Urmează").
+    private var anchor: String?
+    /// Stories heard before this one, newest last, for ⏮ (also the car's and the headphones').
+    private var history: [String] = []
+    /// Kid mode: tapping another story while one plays asks "Acum sau După?" instead of switching.
+    var asksBeforeSwitching = false
+    /// The story the child tapped while another one played, waiting for "Acum" or "După".
+    var pendingChoice: PendingChoice?
     /// The story playing comes from the phone's copy (for the offline sticker).
     @ObservationIgnored private var fromDevice = false
     private(set) var isPlaying = false
@@ -63,11 +75,49 @@ final class StoryPlayer {
 
     var remaining: Double { max(0, duration - position) }
     var hasNext: Bool { following != nil }
-    /// What plays after this story: the next one in the folder, or the shuffle pick.
-    var following: Story? {
-        if shuffle { return shufflePick }
-        guard let current, let i = queue.firstIndex(where: { $0.id == current.id }), i + 1 < queue.count else { return nil }
-        return queue[i + 1]
+    /// ⏮ has somewhere to go: an earlier story, or the start of this one.
+    var hasPrevious: Bool {
+        guard let current else { return false }
+        return position > 5 || !history.isEmpty || (queue.firstIndex { $0.id == current.id } ?? 0) > 0
+    }
+    /// Stories finished in a row in this run (for the moon line in "Urmează").
+    var playedInRun: Int { played }
+    /// What plays after this story: the first one in "Urmează", else the folder's next (or the shuffle pick).
+    var following: Story? { nextStep?.story }
+
+    private var nextStep: (story: Story, origin: Origin)? {
+        if let s = queuedNext { return (s, .upNext) }
+        if let s = folderNext { return (s, .folder) }
+        return nil
+    }
+
+    /// The first story in "Urmează" this phone can play (kid mode sees only the child's folders).
+    var queuedNext: Story? {
+        for item in upNext.items where item.id != current?.id {
+            if let s = visible(item.id) { return s }
+        }
+        return nil
+    }
+
+    /// The stories in "Urmează" that can be played, with whether the child chose them.
+    var queuedStories: [QueuedEntry] {
+        upNext.items.compactMap { item in visible(item.id).map { QueuedEntry(story: $0, byKid: item.byKid) } }
+    }
+
+    /// The folder's next story, after "Urmează" is done.
+    var folderNext: Story? { folderAfter(limit: 1).first }
+
+    /// What the folder plays by itself after "Urmează": the next stories after the one it was at,
+    /// not the ones already heard in this run or waiting in "Urmează" (the shuffle pick when mixed).
+    func folderAfter(limit: Int) -> [Story] {
+        if shuffle { return shufflePick.map { [$0] } ?? [] }
+        guard let from = anchor ?? current?.id, let i = queue.firstIndex(where: { $0.id == from }) else { return [] }
+        let rest = queue[(i + 1)...].filter { $0.id != current?.id && !upNext.contains($0.id) && !heard.contains($0.id) }
+        return Array(rest.prefix(limit))
+    }
+
+    private func visible(_ id: String) -> Story? {
+        store?.stories.first { $0.id == id }
     }
 
     nonisolated static func cycled(_ n: Int) -> Int {
@@ -82,7 +132,7 @@ final class StoryPlayer {
 
     private func pickShuffle() {
         guard shuffle, let current else { shufflePick = nil; return }
-        let pool = queue.filter { $0.id != current.id && !heard.contains($0.id) }
+        let pool = queue.filter { $0.id != current.id && !heard.contains($0.id) && !upNext.contains($0.id) }
         shufflePick = pool.randomElement()
     }
 
@@ -94,24 +144,52 @@ final class StoryPlayer {
 
     // MARK: Playing
 
-    /// Starts `story` (from where it was paused), with `queue` to continue through.
+    /// Where a story that starts came from.
+    private enum Origin { case chosen, upNext, folder, back }
+
+    /// Starts `story` (from where it was paused), with `queue` to continue through after "Urmează".
     /// `continued` is true when the previous story just ended, so "După N povești" keeps counting.
+    /// In kid mode, while another story plays, the child is asked "Acum sau După?" first.
     func play(_ story: Story, queue: [Story]? = nil, store: StoryStore, continued: Bool = false) async {
+        if asksBeforeSwitching, !continued, let current, current.id != story.id, isPlaying || isLoading {
+            Haptics.tap()
+            pendingChoice = PendingChoice(story: story, queue: queue ?? [story])
+            return
+        }
+        await start(story, queue: queue, store: store, origin: .chosen, continued: continued)
+    }
+
+    private func start(_ story: Story, queue: [Story]?, store: StoryStore, origin: Origin, continued: Bool) async {
         guard !lockedByKidMode else { return }
         self.store = store
-        self.queue = queue ?? [story]
+        switch origin {
+        case .chosen:
+            if queue != nil || current?.id != story.id {
+                self.queue = queue ?? [story]
+                anchor = story.id
+            }
+        case .folder: anchor = story.id
+        case .back: if self.queue.contains(where: { $0.id == story.id }) { anchor = story.id }
+        case .upNext: break
+        }
         ended = false
         if current?.id == story.id {
             resume()
             return
         }
+        if origin != .back, let current {
+            history.append(current.id)
+            if history.count > 50 { history.removeFirst() }
+        }
+        upNext.remove(story.id)
         savePosition()
         if !continued { played = 0; heard = [] }
         heard.insert(story.id)
         PlaybackMemory.markPlayed(story.id)
         current = story
         pickShuffle()
-        position = PlaybackMemory.position(story.id)
+        // A story from "Urmează" starts from the beginning, like one the folder plays by itself.
+        position = origin == .upNext ? 0 : PlaybackMemory.position(story.id)
         duration = story.durationSec ?? 0
         failure = nil
         artwork = nil
@@ -132,6 +210,11 @@ final class StoryPlayer {
         var remote: URL?
         if local == nil, let links = store.links { remote = await links.url(for: story.audioKey, ref: story.fileRef) }
         guard let url = local ?? remote else {
+            // Going on by itself without internet: skip the story that is not on the phone.
+            if continued, let step = nextStep {
+                await start(step.story, queue: nil, store: store, origin: step.origin, continued: true)
+                return
+            }
             isLoading = false
             failure = "Povestea nu se poate deschide acum. Verifică internetul."
             updateNowPlaying()
@@ -188,20 +271,109 @@ final class StoryPlayer {
     }
 
     func next() async {
-        guard let story = following, let store else { return }
-        await play(story, queue: queue, store: store)
+        guard let step = nextStep, let store else { return }
+        await start(step.story, queue: nil, store: store, origin: step.origin, continued: false)
     }
 
     /// "Ascultă din nou" on the goodnight screen.
     func restart() { resume() }
 
+    /// ⏮: the start of this story, or (in its first 5 seconds) the story heard before it.
     func previous() async {
         guard let current, let store else { return }
         if position > 5 { seek(to: 0); return }
+        while let id = history.popLast() {
+            if id != current.id, let s = visible(id) ?? queue.first(where: { $0.id == id }) {
+                await start(s, queue: nil, store: store, origin: .back, continued: false)
+                return
+            }
+        }
         if let i = queue.firstIndex(where: { $0.id == current.id }), i > 0 {
-            await play(queue[i - 1], queue: queue, store: store)
+            await start(queue[i - 1], queue: nil, store: store, origin: .back, continued: false)
         } else {
             seek(to: 0)
+        }
+    }
+
+    // MARK: "Urmează"
+
+    struct QueuedEntry: Identifiable {
+        let story: Story
+        let byKid: Bool
+        var id: String { story.id }
+    }
+
+    struct PendingChoice: Identifiable {
+        let story: Story
+        let queue: [Story]
+        var id: String { story.id }
+    }
+
+    enum QueueResult: Equatable { case first, added, alreadyThere, playingNow, kidFull }
+
+    /// "Redă următoarea": right after the story playing now.
+    @discardableResult
+    func playNext(_ story: Story) -> QueueResult {
+        guard story.id != current?.id else { return .playingNow }
+        upNext.playNext(story.id)
+        Haptics.success()
+        return .first
+    }
+
+    /// "Adaugă la coadă": at the end of "Urmează".
+    @discardableResult
+    func addToQueue(_ story: Story, byKid: Bool = false) -> QueueResult {
+        guard story.id != current?.id else { return .playingNow }
+        if upNext.contains(story.id) { return .alreadyThere }
+        guard upNext.add(story.id, byKid: byKid) else { return .kidFull }
+        Haptics.success()
+        return .added
+    }
+
+    func removeFromQueue(_ id: String) { upNext.remove(id) }
+    func moveInQueue(from offsets: IndexSet, to destination: Int) { upNext.move(from: offsets, to: destination) }
+    func clearQueue() { upNext.clear() }
+    /// Drops the stories that no longer exist (only once the library has loaded).
+    func forgetMissing(_ known: Set<String>) {
+        guard !known.isEmpty else { return }
+        upNext.keep(only: known)
+    }
+
+    /// Nothing is playing: starts the first story in "Urmează" (the folder does not go on after it).
+    func playQueue(store: StoryStore) async {
+        self.store = store
+        guard let first = queuedNext else { return }
+        queue = []
+        anchor = nil
+        await start(first, queue: nil, store: store, origin: .upNext, continued: false)
+        showsPlayer = true
+    }
+
+    /// A story tapped in "Urmează": it plays now, and the folder still goes on after the list.
+    func playFromQueue(_ story: Story) async {
+        guard let store else { return }
+        await start(story, queue: nil, store: store, origin: .upNext, continued: false)
+    }
+
+    /// The child's answer to "Acum sau După?".
+    func answer(_ choice: PendingChoice, now: Bool) async -> QueueResult? {
+        pendingChoice = nil
+        guard let store else { return nil }
+        if now {
+            await start(choice.story, queue: choice.queue, store: store, origin: .chosen, continued: false)
+            return nil
+        }
+        return addToQueue(choice.story, byKid: true)
+    }
+
+    /// The short message after adding a story ("Urmează după povestea asta").
+    nonisolated static func message(_ result: QueueResult, playing: Bool) -> String {
+        switch result {
+        case .first: playing ? "Urmează după povestea asta" : "Prima în coadă. O găsești pe Acasă."
+        case .added: playing ? "Adăugată la coadă" : "Adăugată la coadă. O găsești pe Acasă."
+        case .alreadyThere: "E deja în coadă"
+        case .playingNow: "Se ascultă acum"
+        case .kidFull: "Ai ales deja \(UpNext.kidLimit) povești"
         }
     }
 
@@ -257,8 +429,8 @@ final class StoryPlayer {
         trackBadge(.storyFinished(storyId: finished.id, folder: StoryLibrary.folderOf(finished), folders: Array(NSOrderedSet(array: folders)) as? [String] ?? [],
                                   secs: finished.durationSec, source: BadgeEvent.Source(rawValue: finished.source.rawValue),
                                   offline: fromDevice, kid: !(store?.kidFolders.isEmpty ?? true)))
-        if let next = following, played < stopAfter, let store {
-            Task { await play(next, queue: queue, store: store, continued: true) }
+        if let step = nextStep, played < stopAfter, let store {
+            Task { await start(step.story, queue: nil, store: store, origin: step.origin, continued: true) }
         } else {
             isPlaying = false
             player.volume = 1
@@ -363,6 +535,7 @@ final class StoryPlayer {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
         let commands = MPRemoteCommandCenter.shared()
         commands.nextTrackCommand.isEnabled = hasNext
+        commands.previousTrackCommand.isEnabled = true
     }
 
     private func setUpRemoteCommands() {
@@ -384,7 +557,11 @@ final class StoryPlayer {
             MainActor.assumeIsolated { Task { await self?.next() } }
             return .success
         }
-        c.previousTrackCommand.isEnabled = false
+        // ⏮ in the car and on headphones: the start of the story, or the one heard before it.
+        c.previousTrackCommand.addTarget { [weak self] _ in
+            MainActor.assumeIsolated { Task { await self?.previous() } }
+            return .success
+        }
     }
 }
 

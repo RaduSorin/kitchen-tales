@@ -180,6 +180,14 @@ private struct PlayerSheet: ViewModifier {
 struct MiniPlayer: View {
     @Environment(StoryPlayer.self) private var player
 
+    /// "Se deschide…", "Urmează: Punguța cu doi bani" when something waits in the queue, or the time left.
+    static func subtitle(_ player: StoryPlayer, _ story: Story) -> String {
+        if player.isLoading { return "Se deschide…" }
+        if let next = player.queuedNext { return "Urmează: \(next.title)" }
+        if player.duration > 0 { return "\(clockTime(player.remaining)) rămase" }
+        return StoryLibrary.folderOf(story)
+    }
+
     var body: some View {
         if let story = player.current {
             HStack(spacing: 12) {
@@ -190,9 +198,9 @@ struct MiniPlayer: View {
                         .font(.custom(AppFont.bodySemibold, size: 15, relativeTo: .subheadline))
                         .foregroundStyle(Theme.text)
                         .lineLimit(1)
-                    Text(player.isLoading ? "Se deschide…" : player.duration > 0 ? "\(clockTime(player.remaining)) rămase" : StoryLibrary.folderOf(story))
+                    Text(Self.subtitle(player, story))
                         .font(.ktCaption)
-                        .foregroundStyle(Theme.Night.muted)
+                        .foregroundStyle(player.queuedNext != nil && !player.isLoading ? Theme.Night.moon : Theme.Night.muted)
                         .monospacedDigit()
                         .lineLimit(1)
                 }

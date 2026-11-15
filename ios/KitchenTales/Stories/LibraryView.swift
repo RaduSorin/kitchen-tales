@@ -127,6 +127,7 @@ struct StoryRow: View {
                 HStack(spacing: 14) {
                     StoryCover(story: story, cornerRadius: 10)
                         .frame(width: 60, height: 60)
+                        .overlay(alignment: .topLeading) { QueuePlaceBadge(id: story.id).offset(x: -4, y: -4) }
                         .overlay(alignment: .bottomTrailing) {
                             if player.current?.id == story.id {
                                 Image(systemName: player.isPlaying ? "speaker.wave.2.fill" : "pause.fill")
@@ -314,7 +315,9 @@ struct FolderView: View {
         case .squares:
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], alignment: .leading, spacing: 16) {
                 ForEach(items) { story in
-                    Button { play(items, from: story) } label: { SquareTile(story: story) }
+                    Button { play(items, from: story) } label: {
+                        SquareTile(story: story).overlay(alignment: .topLeading) { QueuePlaceBadge(id: story.id).padding(8) }
+                    }
                         .buttonStyle(PressableStyle())
                         .storyContextMenu(story)
                 }
@@ -546,6 +549,7 @@ private struct CoverFlowItem: View {
                 .shadow(color: .black.opacity(0.5), radius: 12, y: 8)
         }
         .buttonStyle(PressableStyle())
+        .storyContextMenu(story)
         .scrollTransition(.interactive, axis: .horizontal) { content, phase in
             content.coverFlowTurn(phase.value)
         }

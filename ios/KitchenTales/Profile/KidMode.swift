@@ -21,6 +21,7 @@ final class KidMode {
             persist()
             // Play (the player page, the lock screen, headphones) must not start a story while locked.
             StoryPlayer.shared.lockedByKidMode = locked
+            StoryPlayer.shared.asksBeforeSwitching = state.active
         }
     }
     private var timer: Task<Void, Never>?
@@ -42,6 +43,7 @@ final class KidMode {
             state = State()
         }
         StoryPlayer.shared.lockedByKidMode = locked
+        StoryPlayer.shared.asksBeforeSwitching = state.active
         schedule()
     }
 

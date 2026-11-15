@@ -116,14 +116,17 @@ final class StoryPlayer {
         failure = nil
         artwork = nil
         isLoading = true
-        updateNowPlaying()
         if LaunchOptions.demoAccount != nil {
+            updateNowPlaying()
             // Screenshots: no server, so show the story a third of the way in, paused.
             position = duration * 0.34
             isLoading = false
             ended = LaunchOptions.screen == "player-goodnight"
             return
         }
+        // The picture is made while the audio link is fetched. The title goes out only together with
+        // it: a car reads the picture once, with the first title it gets for a track.
+        let picture = Task { await NowPlayingArt.image(for: story, links: store.links) }
         let local = store.offline.localFile(story.id)
         fromDevice = local != nil
         var remote: URL?
@@ -131,9 +134,12 @@ final class StoryPlayer {
         guard let url = local ?? remote else {
             isLoading = false
             failure = "Povestea nu se poate deschide acum. Verifică internetul."
+            updateNowPlaying()
             return
         }
+        let art = await picture.value
         guard current?.id == story.id else { return }
+        artwork = Self.artwork(art.image)
         activateSession()
         let item = AVPlayerItem(url: url)
         player.replaceCurrentItem(with: item)
@@ -146,7 +152,9 @@ final class StoryPlayer {
         player.playImmediately(atRate: rate)
         isPlaying = true
         isLoading = false
-        Task { [weak self] in await self?.loadDetails(item: item, story: story) }
+        updateNowPlaying()
+        if let next = following { NowPlayingArt.prepare(next, links: store.links) }
+        Task { [weak self] in await self?.loadDetails(item: item, story: story, hasCover: art.isCover) }
     }
 
     /// Kid mode's time ran out: nothing plays until a parent unlocks.
@@ -268,16 +276,20 @@ final class StoryPlayer {
         PlaybackMemory.setPosition(current.id, nearEnd ? nil : position)
     }
 
-    private func loadDetails(item: AVPlayerItem, story: Story) async {
+    private func loadDetails(item: AVPlayerItem, story: Story, hasCover: Bool) async {
         if let seconds = try? await item.asset.load(.duration).seconds, seconds.isFinite, seconds > 0, current?.id == story.id {
             duration = seconds
             updateNowPlaying()
         }
-        guard let key = story.coverKey, let links = store?.links, let url = await links.url(for: key, ref: story.fileRef),
-              let loaded = try? await URLSession.shared.data(from: url), let image = UIImage(data: loaded.0),
-              current?.id == story.id else { return }
-        artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+        // The cover was too slow and the drawn one went out: the Lock Screen still gets the cover.
+        guard !hasCover, let image = await NowPlayingArt.later(story, links: store?.links), current?.id == story.id else { return }
+        artwork = Self.artwork(image)
         updateNowPlaying()
+    }
+
+    /// iOS asks for the picture on a background thread, so the handler must not be tied to the main actor.
+    nonisolated private static func artwork(_ image: UIImage) -> MPMediaItemArtwork {
+        MPMediaItemArtwork(boundsSize: image.size) { @Sendable _ in image }
     }
 
     // MARK: Calls, alarms and headphones

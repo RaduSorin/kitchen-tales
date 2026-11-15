@@ -3,7 +3,7 @@ import type { Story } from './types'
 import { fileUrl, getOfflineAudio, watchStories } from './db'
 import { folderOf, getPosition, markPlayed, setPosition } from './stories'
 import { useOfflineIds, useOnline } from './useOffline'
-import { useCoverUrl } from './useCoverUrl'
+import { loadCoverBlob } from './useCoverUrl'
 import { storyArtwork } from './artwork'
 import { isKidLocked, isKidMode } from './kidMode'
 import { track } from './badges/store'
@@ -17,6 +17,36 @@ const RATE_KEY = 'kt-play-rate'
 const RATES = [1, 1.25, 1.5, 0.75] as const
 const readNum = (k: string, d: number) => { try { return +(localStorage.getItem(k) ?? d) || d } catch { return d } }
 const store = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* storage unavailable */ } }
+
+/*
+ * The Now Playing picture (lock screen, and over Bluetooth the car's screen). Car stereos often
+ * read the picture only once, when the track starts, so it is made as early as possible: when a
+ * story is picked, and the next one's while the current one plays. The metadata then goes out
+ * with its picture before play() is called.
+ */
+const artKeyOf = (s: Story) => `${s.id}|${s.title}|${s.emoji ?? ''}|${s.scene ?? ''}|${s.coverKey ?? ''}`
+const artMaking = new Map<string, Promise<string | undefined>>()
+/** Finished pictures (a data: URL, or undefined when none could be made), for a synchronous look. */
+const artMade = new Map<string, string | undefined>()
+function prepareArt(s: Story): Promise<string | undefined> {
+  const key = artKeyOf(s)
+  const running = artMaking.get(key)
+  if (running) return running
+  if (artMaking.size > 12) { artMaking.clear(); artMade.clear() }
+  const made = (async () => {
+    const blob = s.coverKey ? await loadCoverBlob(s.coverKey).catch(() => undefined) : undefined
+    const url = blob ? URL.createObjectURL(blob) : undefined
+    try { return await storyArtwork(s, url) } finally { if (url) URL.revokeObjectURL(url) }
+  })().catch(() => undefined)
+  made.then((src) => artMade.set(key, src))
+  artMaking.set(key, made)
+  return made
+}
+function storyMetadata(s: Story, src?: string) {
+  return new MediaMetadata(src
+    ? { title: s.title, artist: 'Bucătăria cu povești', artwork: [{ src, sizes: '512x512', type: 'image/jpeg' }] }
+    : { title: s.title, artist: 'Bucătăria cu povești' })
+}
 
 interface NowPlaying {
   story?: Story
@@ -166,6 +196,7 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
 
   const load = useCallback((s: Story, opts?: { autoplay?: boolean; continued?: boolean; from?: QueueFrom }) => {
     const cur = storyRef.current
+    prepareArt(s)
     if (!opts?.continued) setFrom(opts?.from ?? 'folder')
     if (cur?.id === s.id) {
       setStory(s)
@@ -278,12 +309,10 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
   }, [hasStory, seek, play, load])
 
   // Lock-screen / headphone controls, with the story's cover as the Now Playing artwork.
-  const coverUrl = useCoverUrl(story?.coverKey)
   // Car stereos (Bluetooth) often read the cover only once, with the first title they get, so the
-  // metadata is set once with its artwork: we wait for the cover (at most ~1.5 s) instead of sending
-  // a title without a picture first and the picture later.
-  const artKey = story ? `${story.id}|${story.title}|${story.emoji ?? ''}|${story.scene ?? ''}` : ''
-  const waitCover = !!story?.coverKey && !coverUrl
+  // metadata is set once with its artwork: we wait for the picture (at most ~1.5 s) instead of
+  // sending a title without a picture first and the picture later.
+  const artKey = story ? artKeyOf(story) : ''
   useEffect(() => {
     if (!('mediaSession' in navigator)) return
     const ms = navigator.mediaSession
@@ -296,19 +325,13 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
       return
     }
     let live = true
-    const plain = () => { if (live && ms.metadata?.title !== s.title) ms.metadata = new MediaMetadata({ title: s.title, artist: 'Bucătăria cu povești' }) }
-    const show = (cover?: string) => storyArtwork(s, cover).then((src) => {
-      if (!live) return
-      if (!src) { plain(); return }
-      ms.metadata = new MediaMetadata({
-        title: s.title, artist: 'Bucătăria cu povești', artwork: [{ src, sizes: '512x512', type: 'image/jpeg' }],
-      })
-    }).catch(plain)
-    // Cover still loading (or failing): after a moment, show the emoji tile rather than nothing.
-    const fallback = waitCover ? setTimeout(() => { if (ms.metadata?.title !== s.title) show() }, 1500) : undefined
-    if (!waitCover) show(coverUrl)
+    const show = (src?: string) => { if (live) ms.metadata = storyMetadata(s, src) }
+    if (artMade.has(artKey)) { show(artMade.get(artKey)); return }
+    // Cover still loading (or failing): after a moment, show the drawn tile rather than nothing.
+    const fallback = setTimeout(() => { storyArtwork(s).then((src) => { if (!artMade.has(artKey)) show(src) }, () => show()) }, 1500)
+    prepareArt(s).then((src) => { clearTimeout(fallback); show(src) })
     return () => { live = false; clearTimeout(fallback) }
-  }, [artKey, coverUrl, waitCover])
+  }, [artKey])
 
   // When a story ends: play the next one until the chosen number of stories is reached.
   const onEnded = () => {
@@ -351,6 +374,8 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
           if (isKidLocked()) { e.currentTarget.pause(); return }
           starting.current = false
           setPlaying(true); setEnded(false); setError(undefined); resigned.current = false
+          // Ready the next story's picture, so it goes out with its title when that story starts.
+          if (nextRef.current) prepareArt(nextRef.current)
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing' }}
         onPause={(e) => { setPlaying(false); if ('mediaSession' in navigator && e.currentTarget.src) navigator.mediaSession.playbackState = 'paused'; if (storyRef.current) setPosition(storyRef.current.id, audio.current?.currentTime) }}
         onEnded={onEnded}
@@ -368,6 +393,8 @@ export function NowPlayingProvider({ children }: { children: React.ReactNode }) 
             // audio for a paused element, so seeking a story that was left halfway before playing it
             // left the queue stuck on that story: the seek waited for data and play() never started.
             starting.current = true
+            // The car reads the picture when the track starts: send it before play() if it is ready.
+            if (cur && 'mediaSession' in navigator && artMade.get(artKeyOf(cur))) navigator.mediaSession.metadata = storyMetadata(cur, artMade.get(artKeyOf(cur)))
             a.play().catch(() => {})
             if (resume) a.currentTime = pos
             // If it still has not started after a few seconds, ask once more.

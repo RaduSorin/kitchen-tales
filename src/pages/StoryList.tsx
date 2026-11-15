@@ -21,7 +21,9 @@ import { folderView, isBookView, newLabel, rememberShelfPick, renameFolderView, 
 import ViewSwitch from '../components/ViewSwitch'
 import FolderMenu from '../components/FolderMenu'
 import BookShelf from '../components/BookShelf'
-import { QueueBadge, QueueMenuButton } from '../components/UpNext'
+import { QueueBadge, QueueSlot } from '../components/UpNext'
+import { isPicking, togglePicked } from '../lib/queueUi'
+import { useNowPlaying } from '../lib/nowPlaying'
 import CoverFlow from '../components/CoverFlow'
 
 const count = (n: number) => `${n} ${n === 1 ? 'poveste' : 'povești'}`
@@ -44,6 +46,7 @@ function Ring({ part }: { part: number }) {
   )
 }
 export default function StoryList() {
+  const player = useNowPlaying()
   const [stories, setStories] = useState<Story[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -149,7 +152,11 @@ export default function StoryList() {
   const pickView = (v: typeof view) => { if (open) setFolderView(open.name, v, landscape) }
   // The chosen book, remembered per folder so it is still chosen after opening a story and coming back.
   const pick = (id: string) => { setSelId(id); if (open) rememberShelfPick(open.name, id) }
-  const openStory = (s: Story) => { pick(s.id); nav(`/povesti/${s.id}`, { state: { fromFolder: true } }) }
+  // Shelf and Cover Flow open a book from their own gestures: while picking for "Urmează", the book goes into the queue instead.
+  const openStory = (s: Story) => {
+    if (isPicking()) { togglePicked(player, s); return }
+    pick(s.id); nav(`/povesti/${s.id}`, { state: { fromFolder: true } })
+  }
   // Searching looks through every story (or only the open folder), ignoring diacritics.
   const query = norm(q.trim())
   const searching = !!query
@@ -347,7 +354,7 @@ export default function StoryList() {
       ) : (
         <div className={view === 'list' ? 'story-rows' : 'covers'}>
           {shown.map((s) => (
-            <div key={s.id} className={`${view === 'list' ? 'row-slot' : 'cover-slot'}${popping && arriving.includes(s.id) ? ' pop-in' : ''}`}>
+            <QueueSlot key={s.id} story={s} className={`${view === 'list' ? 'row-slot' : 'cover-slot'}${popping && arriving.includes(s.id) ? ' pop-in' : ''}`}>
               <Link to={`/povesti/${s.id}`} state={{ fromFolder: true }} className={view === 'list' ? 'story-row' : 'cover-card'} onClick={() => pick(s.id)}>
                 <span className="sa-cover">
                   <StoryCover story={s} />
@@ -366,7 +373,6 @@ export default function StoryList() {
                 </span>
               </Link>
               <QueueBadge id={s.id} />
-              <QueueMenuButton story={s} className={view === 'list' ? 'in-row' : 'on-cover'} />
               {s.favorite && (
                 <span className="fav-dot" title="La favorite" aria-label="La favorite">
                   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z" fill="currentColor" /></svg>
@@ -384,7 +390,7 @@ export default function StoryList() {
                     )}
                   </button>
                 )}
-            </div>
+            </QueueSlot>
           ))}
         </div>
       )}

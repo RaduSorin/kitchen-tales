@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { closeQueueMenu, startPicking, stopPicking, useQueuePress, useQueueUi } from '../lib/queueUi'
 import { useNowPlaying, type NowPlaying } from '../lib/nowPlaying'
 import { useKid } from '../lib/kidMode'
 import { showToast } from '../lib/toast'
 import { KID_LIMIT, kidCount, placeOf, queueMessage, untilStop } from '../lib/upNext'
 import type { Story } from '../lib/types'
-import PopMenu, { MenuRow } from './PopMenu'
+import { MenuRow } from './PopMenu'
 import Sheet from './Sheet'
 import StoryCover from './StoryCover'
 
-// "Urmează" (the story queue) on the web: the ⋯ menu on a story, the line and the list in the
+// "Urmează" (the story queue) on the web: the long-press menu on a story, picking several, the line and the list in the
 // player, the queue card on Acasă and the child's "Acum sau După?". Same rules as the iOS app.
 
 const ICON = {
@@ -16,7 +18,6 @@ const ICON = {
   last: 'M4 6h16M4 12h16M4 18h8M15 18h6M18 15v6',
   play: 'M7 4.5v15l12.5-7.5z',
 }
-const DOTS = <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
 
 /** "Redă următoarea" and "Adaugă la coadă" for one story (in kid mode only "Adaugă la coadă"). */
 function QueueRows({ story, done }: { story: Story; done: () => void }) {
@@ -32,30 +33,42 @@ function QueueRows({ story, done }: { story: Story; done: () => void }) {
   )
 }
 
-const OPEN_EVENT = 'kt-queue-menu'
+/** A story's place in a list: long press or right click opens its queue menu; while picking, a tap
+ * adds it to the queue. */
+export function QueueSlot({ story, className, children }: { story: Story; className?: string; children: ReactNode }) {
+  const press = useQueuePress(story)
+  const { picking } = useQueueUi()
+  return <div className={`${className ?? ''} queue-press${picking ? ' picking' : ''}`} {...press}>{children}</div>
+}
 
-/** The ⋯ button on a story (long press is unreliable in Safari, so the web has a button). */
-export function QueueMenuButton({ story, className }: { story: Story; className?: string }) {
-  const [open, setOpen] = useState(false)
-  const close = useCallback(() => setOpen(false), [])
-  // Only one story's menu at a time: opening another closes this one (a tap on another ⋯ is not
-  // "outside" for PopMenu, since it is inside a menu-anchor too).
-  useEffect(() => {
-    if (!open) return
-    const other = (e: Event) => { if ((e as CustomEvent<string>).detail !== story.id) setOpen(false) }
-    window.addEventListener(OPEN_EVENT, other)
-    return () => window.removeEventListener(OPEN_EVENT, other)
-  }, [open, story.id])
-  const toggle = () => {
-    if (!open) window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: story.id }))
-    setOpen(!open)
-  }
+/** The menu a long press (or a right click) on a story opens: one for the whole app. */
+export function QueueMenuHost() {
+  const { menu } = useQueueUi()
+  if (!menu) return null
   return (
-    <span className={`menu-anchor queue-anchor${className ? ` ${className}` : ''}`}>
-      <button type="button" className="queue-dots" aria-label={`Mai multe pentru „${story.title}”`} aria-haspopup="menu" aria-expanded={open}
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle() }}>{DOTS}</button>
-      {open && <PopMenu label={`Coada pentru „${story.title}”`} onClose={close}><QueueRows story={story} done={close} /></PopMenu>}
-    </span>
+    <Sheet title={menu.title} onClose={closeQueueMenu} grab>
+      <div className="queue-menu">
+        <div className="queue-menu-head">
+          <StoryCover story={menu} />
+          <b>{menu.title}</b>
+        </div>
+        <QueueRows story={menu} done={closeQueueMenu} />
+      </div>
+    </Sheet>
+  )
+}
+
+/** While picking stories for "Urmează": a bar at the top with how many wait and "Gata". */
+export function PickBar() {
+  const { picking } = useQueueUi()
+  const { queued } = useNowPlaying()
+  if (!picking) return null
+  const n = queued.length
+  return (
+    <div className="pick-bar" role="status">
+      <span><b>Atinge poveștile pentru coadă</b><small>{n === 0 ? 'Nicio poveste încă' : n === 1 ? '1 poveste în coadă' : `${n} povești în coadă`}</small></span>
+      <button type="button" onClick={() => { stopPicking(); if (n) showToast(n === 1 ? '1 poveste în coadă' : `${n} povești în coadă`) }}>Gata</button>
+    </div>
   )
 }
 
@@ -93,6 +106,7 @@ export function UpNextLine() {
 /** "Urmează": the story playing, the chosen ones (move up / down, take out), then the folder's. */
 export function UpNextSheet({ onClose }: { onClose: () => void }) {
   const p = useNowPlaying()
+  const nav = useNavigate()
   const kid = useKid().active
   const n = untilStop(p.sleep, p.playedInRun)
   const upcoming = [...p.queued.map((q) => q.story), ...p.folderUpcoming]
@@ -115,7 +129,7 @@ export function UpNextSheet({ onClose }: { onClose: () => void }) {
           <h3>{kid ? 'Alese' : 'Alese de tine'}</h3>
           {!kid && p.queued.length > 0 && <button type="button" className="link-btn" onClick={p.clearQueue}>Golește</button>}
         </div>
-        {!p.queued.length && <p className="upnext-note">Apasă ⋯ pe o poveste și alege „Adaugă la coadă”.</p>}
+        {!p.queued.length && <p className="upnext-note">Ține apăsat pe o poveste și alege „Adaugă la coadă”, sau alege mai multe deodată.</p>}
         <ol className="upnext-list">
           {p.queued.map(({ story, byKid }, i) => (
             <li key={story.id} className="upnext-row">
@@ -134,6 +148,11 @@ export function UpNextSheet({ onClose }: { onClose: () => void }) {
             </li>
           ))}
         </ol>
+        {!kid && (
+          <button type="button" className="btn small upnext-add" onClick={() => { startPicking(); onClose(); nav('/povesti') }}>
+            + Adaugă povești
+          </button>
+        )}
         {kid && <p className="upnext-note">{left === 0 ? 'Ai ales toate poveștile pentru acum.' : left === 1 ? 'Mai poți alege o poveste.' : `Mai poți alege ${left} povești.`}</p>}
         {p.folderUpcoming.length > 0 && (
           <>

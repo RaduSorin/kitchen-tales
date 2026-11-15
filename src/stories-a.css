@@ -1565,25 +1565,22 @@
 
 /* "Urmează" (the story queue): the ⋯ menu on a story, the number on queued covers, the line and the
    list in the player, the card on Acasă and the child's "Acum sau După?". */
-.queue-anchor { position: absolute; z-index: 3; }
-.queue-anchor.on-cover { top: 8px; right: 8px; }
-.cover-slot .saved-dot { right: 48px; }
-.queue-anchor.in-row { top: 50%; right: 52px; transform: translateY(-50%); }
-.row-slot .story-row { padding-right: 96px; }
-.queue-anchor.inline { position: relative; display: inline-flex; vertical-align: middle; margin-left: 6px; }
-.queue-anchor.inline .pop-menu { right: auto; left: 50%; translate: -50% 0; text-align: left; font-weight: 400; }
-.queue-anchor.inline .queue-dots { width: 30px; height: 30px; }
-.queue-dots { width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
-  background: rgb(23 26 69 / .72); color: #fff6d6; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); position: relative; }
-.queue-dots::after { content: ''; position: absolute; inset: -6px; }
-.queue-dots:focus-visible { outline: 3px solid var(--moon); outline-offset: 2px; }
-.queue-anchor .pop-menu { width: min(240px, calc(100vw - 32px)); }
-/* On a cover the menu opens over that cover, as wide as it, so it never leaves the screen on the
-   left column: the anchor gives way to the cover's slot, the ⋯ button keeps its corner. */
-.cover-slot .queue-anchor.on-cover, .sh-slot .queue-anchor.on-cover { position: static; }
-.queue-anchor.on-cover .queue-dots { position: absolute; z-index: 3; top: 8px; right: 8px; }
-.queue-anchor.on-cover .pop-menu { left: 6px; right: 6px; top: 46px; width: auto; padding: 8px; }
-.queue-anchor.on-cover .menu-row { font-size: var(--fs-sm); }
+/* Long press on a story opens its queue menu: no iOS callout or text selection on the way. */
+.queue-press { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.queue-press.picking .sa-cover, .queue-press.picking .story-cover { outline: 2px dashed rgb(242 200 121 / .55); outline-offset: 3px; border-radius: inherit; }
+.flow-play-slot { display: flex; justify-content: center; }
+.queue-menu { display: grid; gap: 10px; }
+.queue-menu-head { display: flex; align-items: center; gap: 12px; }
+.queue-menu-head .story-cover { width: 56px; height: 56px; flex: none; border-radius: 10px; }
+.queue-menu-head b { font-size: var(--fs-lg); line-height: 1.2; }
+.upnext-add { justify-self: start; margin-top: 4px; }
+.pick-bar { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top, 0px)); width: min(calc(100% - 24px), 480px);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 18px;
+  background: rgb(36 33 44 / .94); color: var(--text); box-shadow: 0 8px 26px rgb(0 0 0 / .4), inset 0 0 0 1px rgb(242 200 121 / .35);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.pick-bar span { display: grid; min-width: 0; line-height: 1.25; }
+.pick-bar small { color: var(--moon-ink); font-weight: 700; }
+.pick-bar button { flex: none; min-height: 44px; padding: 0 18px; border: 0; border-radius: 14px; background: var(--moon); color: var(--on-accent); font: inherit; font-weight: 800; cursor: pointer; }
 .queue-badge { position: absolute; z-index: 2; top: 46px; left: 8px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center;
   background: var(--moon); color: var(--on-accent); font-weight: 800; font-size: var(--fs-2xs); pointer-events: none; }
 .row-slot .queue-badge { top: 2px; left: 48px; min-width: 20px; height: 20px; }

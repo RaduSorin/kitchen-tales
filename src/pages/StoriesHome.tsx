@@ -20,7 +20,7 @@ import { AlbumButton } from '../components/Badges'
 import Vitrine, { type VitrineSlide } from '../components/Vitrine'
 import HomeTabs from '../components/HomeTabs'
 import { newLabel, seenStories } from '../lib/shelf'
-import { QueueBadge, QueueHomeCard, QueueMenuButton } from '../components/UpNext'
+import { QueueBadge, QueueHomeCard, QueueSlot } from '../components/UpNext'
 import { showToast } from '../lib/toast'
 
 /** Tonight's stories: a different set each day, starting with the story of the day, without the one to continue. */
@@ -41,7 +41,7 @@ function Row({ title, to, stories, from }: { title: string; to?: string; stories
       <div className="sh-sec-head"><h2>{title}</h2>{to && <Link to={to}>Toate</Link>}</div>
       <div className="sh-row">
         {stories.map((s) => (
-          <span key={s.id} className="sh-slot">
+          <QueueSlot key={s.id} story={s} className="sh-slot">
             <Link to={`/povesti/${s.id}`} state={from ? { fromFolder: true, from } : { fromFolder: true }} className="cover-card sh-card">
               <span className="sa-cover">
                 <StoryCover story={s} />
@@ -52,8 +52,7 @@ function Row({ title, to, stories, from }: { title: string; to?: string; stories
               <small className="cover-meta">{folderOf(s)}</small>
             </Link>
             <QueueBadge id={s.id} />
-            <QueueMenuButton story={s} className="on-cover" />
-          </span>
+          </QueueSlot>
         ))}
       </div>
     </section>

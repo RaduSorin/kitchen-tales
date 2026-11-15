@@ -109,17 +109,26 @@ struct CoverTile: View {
                     }
                 }
                 .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+            if let p = StoryProgress.of(story) {
+                StoryProgressLine(value: p).padding(.top, 7)
+            }
             Text(story.title)
                 .font(.custom(AppFont.bodyBold, size: 15, relativeTo: .subheadline))
                 .foregroundStyle(Theme.text)
                 .lineLimit(1)
                 .padding(.top, 6)
-            if let line = showsFolder ? Optional(StoryLibrary.folderOf(story)) : story.minutesLabel {
+            if let line = Self.line(story, showsFolder: showsFolder) {
                 Text(line).font(.custom(AppFont.body, size: 14, relativeTo: .footnote)).foregroundStyle(Theme.Night.muted).lineLimit(1)
             }
         }
         .frame(width: width, alignment: .leading)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+    }
+
+    /// "mai sunt 6 min" once started, else the folder (Acasă) or the length (inside a folder).
+    static func line(_ story: Story, showsFolder: Bool) -> String? {
+        if let left = StoryProgress.left(story) { return left }
+        return showsFolder ? StoryLibrary.folderOf(story) : story.minutesLabel
     }
 }

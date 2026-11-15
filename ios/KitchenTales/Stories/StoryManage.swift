@@ -57,10 +57,10 @@ struct StoryMoreMenu: View {
             }
         } label: {
             Image(systemName: "ellipsis")
-                .font(.system(size: 17, weight: .bold))
+                .font(.system(size: 20, weight: .bold))
                 .foregroundStyle(Theme.text)
                 .frame(width: 40, height: 40)
-                .background(Circle().fill(.white.opacity(0.12)))
+                .contentShape(Rectangle())
         }
         .accessibilityLabel("Mai multe")
         .disabled(busy)

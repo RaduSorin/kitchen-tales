@@ -1,24 +1,32 @@
 import SwiftUI
 
-/// Acasă on the stories side, like the web's src/pages/StoriesHome.tsx (design A1 "Topit în
-/// poză"): the cover fills the top (swipe between the story to continue, tonight's story and the
-/// newest) and fades into the night, where three tabs hold the rest: Diseară (tonight's stories,
-/// the newest, a peek at the kitchen), Colecții (the folders as wide cards) and Favorite.
+/// Acasă on the stories side, redesign "Seară de lux, curățat" (design-polish/ios-stories-redesign/):
+/// the "Povești  Rețete" switch, the cover in the middle with a glow from its colours (swipe
+/// between the story to continue, tonight's story and the newest, with dots under it), then three
+/// text tabs with a gold line: Diseară, În curs and Colecții. Favorite has its own tab at the bottom.
 struct StoriesHomeView: View {
-    enum HomeTab: String, CaseIterable { case diseara, colectii, favorite }
+    enum HomeTab: String, CaseIterable { case diseara, incurs, colectii }
 
     let openLibrary: () -> Void
     @Environment(StoryStore.self) private var store
     @Environment(KidMode.self) private var kid
     @Environment(ProfileStore.self) private var profile
     @State private var heroPage: String?
-    @SceneStorage("kt-shome-tab") private var tab: HomeTab = Self.launchTab
+    @SceneStorage("kt-shome-tab2") private var tab: HomeTab = Self.launchTab
 
     private static var launchTab: HomeTab {
         switch LaunchOptions.screen {
         case "stories-colectii": .colectii
-        case "stories-favorite": .favorite
+        case "stories-incurs", "stories-favorite": .incurs
         default: .diseara
+        }
+    }
+
+    static func tabLabel(_ t: HomeTab) -> String {
+        switch t {
+        case .diseara: StoryHomePlan.evening ? "Diseară" : "Azi"
+        case .incurs: "În curs"
+        case .colectii: "Colecții"
         }
     }
 
@@ -31,25 +39,19 @@ struct StoriesHomeView: View {
                     } else {
                         let slides = StoryHomePlan.slides(store.stories, child: profile.settings.childName)
                         hero(slides)
-                        VStack(alignment: .leading, spacing: 16) {
-                            HomeSegTabs(selection: $tab) { t in
-                                switch t {
-                                case .diseara: StoryHomePlan.evening ? "Diseară" : "Azi"
-                                case .colectii: "Colecții"
-                                case .favorite: "Favorite"
-                                }
-                            }
+                        VStack(alignment: .leading, spacing: 18) {
+                            UnderlineTabs(selection: $tab, label: Self.tabLabel)
                             Group {
                                 switch tab {
                                 case .diseara: tonight(onTop: Set(slides.map(\.story.id)))
+                                case .incurs: started
                                 case .colectii: collections
-                                case .favorite: favorites
                                 }
                             }
                             .frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
                         }
                         .padding(.horizontal, 20)
-                        .padding(.top, 6)
+                        .padding(.top, 4)
                     }
                 }
                 .padding(.bottom, 24)
@@ -61,6 +63,7 @@ struct StoriesHomeView: View {
             .toolbar(.hidden, for: .navigationBar)
             .overlay(alignment: .top) { topBar }
             .navigationDestination(for: StoryFolder.self) { FolderView(folderName: $0.name) }
+            .storyDetailDestination()
         }
         .onAppear {
             // Screenshots pick the tab; a tab kept from an earlier run must not win.
@@ -69,22 +72,22 @@ struct StoriesHomeView: View {
     }
 
     private var topBar: some View {
-        HStack {
+        HStack(spacing: 14) {
             AreaPicker(current: .stories)
             Spacer()
             AlbumButton()
             Button(action: openLibrary) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(Theme.text)
-                    .frame(width: 38, height: 38)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay(Circle().strokeBorder(.white.opacity(0.12)))
+                    .frame(width: 40, height: 40)
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Caută povești")
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 4)
+        .padding(.leading, 20)
+        .padding(.trailing, 12)
+        .padding(.top, 2)
         .environment(\.colorScheme, .dark)
     }
 
@@ -92,17 +95,24 @@ struct StoriesHomeView: View {
 
     private func hero(_ slides: [StoryHomePlan.Slide]) -> some View {
         let queue = slides.map(\.story)
+        let current = slides.first { $0.id == heroPage } ?? slides.first
         return GeometryReader { geo in
-            TabView(selection: $heroPage) {
-                ForEach(slides) { slide in
-                    HeroCard(slide: slide, queue: queue, topInset: geo.safeAreaInsets.top)
-                        .tag(Optional(slide.id))
+            let top = geo.safeAreaInsets.top + 58
+            ZStack(alignment: .top) {
+                if let current { HomeCoverGlow(story: current.story).id(current.id) }
+                TabView(selection: $heroPage) {
+                    ForEach(slides) { slide in
+                        HeroCard(slide: slide, queue: queue, top: top)
+                            .tag(Optional(slide.id))
+                    }
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                pageDots(slides)
+                    .padding(.top, top + HeroCard.coverSide + 12)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .overlay(alignment: .bottom) { pageDots(slides) }
         }
-        .frame(height: 560)
+        .frame(height: 500)
+        .animation(.easeInOut(duration: 0.35), value: heroPage)
     }
 
     private func pageDots(_ slides: [StoryHomePlan.Slide]) -> some View {
@@ -110,13 +120,12 @@ struct StoriesHomeView: View {
         return HStack(spacing: 5) {
             ForEach(slides) { slide in
                 Capsule()
-                    .fill(slide.id == current ? Theme.Night.moon : Color.white.opacity(0.35))
-                    .frame(width: slide.id == current ? 18 : 6, height: 6)
+                    .fill(slide.id == current ? Theme.Night.moon : Color.white.opacity(0.3))
+                    .frame(width: slide.id == current ? 16 : 5, height: 5)
             }
         }
         .opacity(slides.count > 1 ? 1 : 0)
         .animation(.snappy, value: current)
-        .padding(.bottom, 6)
         .accessibilityHidden(true)
     }
 
@@ -136,29 +145,29 @@ struct StoriesHomeView: View {
         }
     }
 
+    @ViewBuilder private var started: some View {
+        let list = StoryProgress.started(store.stories)
+        if list.isEmpty {
+            Text("Nimic început. Poveștile oprite la jumătate apar aici, cu cât a mai rămas.")
+                .font(.custom(AppFont.body, size: 14, relativeTo: .subheadline))
+                .foregroundStyle(Theme.Night.muted)
+        } else {
+            StoryCoverRow(title: "Începute", stories: list, openAll: openLibrary)
+        }
+    }
+
     @ViewBuilder private var collections: some View {
         let folders = store.folders.filter { !$0.items.isEmpty }
         if folders.isEmpty {
             NoteLink(text: "Nicio colecție încă.", link: "Bibliotecă", action: openLibrary)
         } else {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 ForEach(folders) { folder in
                     NavigationLink(value: folder) { CollectionCard(folder: folder) }
                         .buttonStyle(PressableStyle())
                 }
                 NoteLink(text: "Toată biblioteca", link: "Bibliotecă", action: openLibrary)
             }
-        }
-    }
-
-    @ViewBuilder private var favorites: some View {
-        let list = Array(store.favorites.prefix(10))
-        if list.isEmpty {
-            Text("Apasă inima de la o poveste ca să apară aici.")
-                .font(.custom(AppFont.body, size: 14, relativeTo: .subheadline))
-                .foregroundStyle(Theme.Night.muted)
-        } else {
-            StoryCoverRow(title: "Favorite", stories: list, openAll: openLibrary)
         }
     }
 
@@ -179,6 +188,58 @@ struct StoriesHomeView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
+    }
+}
+
+/// Text tabs with a thin gold line under the chosen one, on a faint rule.
+struct UnderlineTabs<T: Hashable & CaseIterable>: View where T.AllCases: RandomAccessCollection {
+    @Binding var selection: T
+    let label: (T) -> String
+
+    var body: some View {
+        HStack(spacing: 26) {
+            ForEach(Array(T.allCases), id: \.self) { t in
+                let on = t == selection
+                Button {
+                    Haptics.select()
+                    withAnimation(.easeOut(duration: 0.2)) { selection = t }
+                } label: {
+                    VStack(spacing: 9) {
+                        Text(label(t))
+                            .font(.custom(AppFont.bodySemibold, size: 16, relativeTo: .subheadline))
+                            .foregroundStyle(on ? Theme.text : Theme.Night.muted)
+                        Capsule().fill(on ? Theme.Night.moon : .clear).frame(height: 2)
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+            Spacer(minLength: 0)
+        }
+        .overlay(alignment: .bottom) { Rectangle().fill(.white.opacity(0.1)).frame(height: 1) }
+    }
+}
+
+/// The hero's cover, blurred, as a coloured light behind the top of Acasă.
+private struct HomeCoverGlow: View {
+    let story: Story
+
+    var body: some View {
+        StoryCover(story: story, cornerRadius: 0, showsEmoji: false)
+            .frame(width: 300, height: 300)
+            .scaleEffect(1.7)
+            .blur(radius: 70)
+            .saturation(1.4)
+            .opacity(0.6)
+            .frame(maxWidth: .infinity)
+            .frame(height: 520, alignment: .top)
+            .padding(.top, 40)
+            .mask(LinearGradient(colors: [.black, .black.opacity(0.7), .clear], startPoint: .top, endPoint: .bottom))
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .transition(.opacity)
     }
 }
 
@@ -244,8 +305,9 @@ enum StoryHomePlan {
     }
 }
 
-/// A section of covers: the title with "Toate", then a row of 124-point covers with the length
-/// and "Nou" on them and the folder under the title.
+/// A section of covers: the title with "Toate", then a row of 132-point covers with the length,
+/// "Nou" and a gold progress line, the folder (or what is left) under the title. A tap opens the
+/// story's page.
 struct StoryCoverRow: View {
     let title: String
     let stories: [Story]
@@ -268,11 +330,8 @@ struct StoryCoverRow: View {
                 ScrollView(.horizontal) {
                     LazyHStack(alignment: .top, spacing: 12) {
                         ForEach(stories) { story in
-                            Button {
-                                Task { await player.play(story, queue: stories, store: store) }
-                                player.showsPlayer = true
-                            } label: {
-                                CoverTile(story: story, width: 124)
+                            StoryOpenLink(story: story, queue: stories) {
+                                CoverTile(story: story, width: 132)
                             }
                             .buttonStyle(PressableStyle())
                             .storyContextMenu(story)
@@ -349,158 +408,131 @@ private struct FromTheKitchen: View {
     }
 }
 
-/// A folder as the web's collection card: tinted from its covers (blurred), the name with its
-/// icon, "4 povești · 36 min", the Nou / în curs tags, and three covers fanned on the right.
+/// A folder as a calm collection card: a faint neutral card, the name in serif, "4 povești ·
+/// 36 min" with "2 noi" or "1 în curs" in gold text, and three covers fanned on the right.
 struct CollectionCard: View {
     let folder: StoryFolder
-    /// 132 points at the default text size, taller with bigger text so the title fits.
-    @ScaledMetric(relativeTo: .headline) private var height: CGFloat = 132
+    /// 104 points at the default text size, taller with bigger text so the title fits.
+    @ScaledMetric(relativeTo: .headline) private var height: CGFloat = 104
 
     var body: some View {
         let art = folder.items.filter { $0.coverKey != nil } + folder.items.filter { $0.coverKey == nil }
-        let fresh = folder.items.filter { PlaybackMemory.isNew($0) }.count
-        let started = folder.items.filter { PlaybackMemory.position($0.id) > 5 }.count
-        ZStack(alignment: .topLeading) {
-            Group {
-                if let first = art.first {
-                    StoryCover(story: first, cornerRadius: 0, showsEmoji: false)
-                        .scaleEffect(1.6)
-                        .blur(radius: 24)
-                        .saturation(1.5)
-                        .brightness(-0.25)
-                } else {
-                    Color.white.opacity(0.06)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
-            // The cover is drawn 1.6× and blurred: clipping only hides the overflow, it still
-            // takes touches and widens the card for VoiceOver, so it would steal taps from the
-            // card above (the library cards did not open on tap).
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text([folder.icon, folder.name].compactMap { $0 }.joined(separator: " "))
-                    .font(.custom(AppFont.storyDisplay, size: 19, relativeTo: .headline))
-                    .foregroundStyle(.white)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Self.title(folder))
+                    .font(.custom(AppFont.storyDisplay, size: 20, relativeTo: .headline))
+                    .foregroundStyle(Theme.text)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                Text(folder.items.isEmpty ? "gol" : folder.subtitle)
-                    .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .footnote))
-                    .foregroundStyle(.white.opacity(0.78))
-                Spacer(minLength: 0)
-                if fresh > 0 || started > 0 {
-                    HStack(spacing: 6) {
-                        if fresh > 0 { tag(fresh == 1 ? "1 nouă" : "\(fresh) noi", gold: true) }
-                        if started > 0 { tag("\(started) în curs", gold: false) }
+                (Text(folder.items.isEmpty ? "gol" : folder.subtitle).foregroundStyle(Theme.Night.muted)
+                    + Text(Self.tags(folder)).foregroundStyle(Theme.Night.moon).bold())
+                    .font(.custom(AppFont.body, size: 13, relativeTo: .footnote))
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if art.isEmpty {
+                Text(folder.icon ?? "📁").font(.system(size: 40))
+                    .frame(width: 76, height: 76)
+            } else {
+                HStack(spacing: -50) {
+                    ForEach(Array(art.prefix(3).reversed().enumerated()), id: \.offset) { _, s in
+                        StoryCover(story: s, cornerRadius: 9)
+                            .frame(width: 76, height: 76)
+                            .shadow(color: .black.opacity(0.5), radius: 8, x: -6, y: 6)
                     }
                 }
             }
-            .padding(.leading, 16)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(.trailing, 170)
-
-            if art.isEmpty {
-                Text(folder.icon ?? "📁").font(.system(size: 44))
-                    .frame(width: 86, height: 86)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.08)))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-                    .padding(.trailing, 14)
-            }
-            HStack(spacing: -54) {
-                ForEach(Array(art.prefix(3).reversed().enumerated()), id: \.offset) { _, s in
-                    StoryCover(story: s, cornerRadius: 9)
-                        .frame(width: 86, height: 86)
-                        .shadow(color: .black.opacity(0.5), radius: 9, x: -6, y: 8)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-            .padding(.trailing, 14)
         }
-        .frame(height: height)
-        .background(Color.white.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: .black.opacity(0.4), radius: 14, y: 12)
+        .padding(.leading, 16)
+        .padding(.trailing, 14)
+        .frame(minHeight: height)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.white.opacity(0.055)))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.07)))
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(folder.name), \(folder.subtitle)")
     }
 
-    private func tag(_ text: String, gold: Bool) -> some View {
-        Text(text)
-            .font(.custom(AppFont.bodyHeavy, size: 11.5, relativeTo: .caption2))
-            .foregroundStyle(gold ? Theme.Night.ink : .white)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 3)
-            .background(Capsule().fill(gold ? Theme.Night.gold : .white.opacity(0.18)))
+    static func title(_ folder: StoryFolder) -> String {
+        [folder.icon, folder.name].compactMap { $0 }.joined(separator: " ")
+    }
+
+    /// " · 2 noi · 1 în curs" (empty when there is nothing new or started).
+    static func tags(_ folder: StoryFolder) -> String {
+        let fresh = folder.items.filter { PlaybackMemory.isNew($0) }.count
+        let started = folder.items.filter { PlaybackMemory.position($0.id) > 5 }.count
+        var out = ""
+        if fresh > 0 { out += fresh == 1 ? " · 1 nouă" : " · \(fresh) noi" }
+        if started > 0 { out += " · \(started) în curs" }
+        return out
     }
 }
 
-/// One page of the hero: the cover to the edges, fading into the night sky, with the title and buttons.
+/// One page of the hero: the whole cover in the middle (tap it for the story's page), the kicker,
+/// the title in serif, the folder and length, then the gold Ascultă / Continuă and a plain heart.
 private struct HeroCard: View {
     let slide: StoryHomePlan.Slide
     let queue: [Story]
-    let topInset: CGFloat
+    let top: CGFloat
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
+
+    static let coverSide: CGFloat = 188
 
     var body: some View {
         let story = slide.story
         let isCurrent = player.current?.id == story.id
-        ZStack(alignment: .bottomLeading) {
-            StoryCover(story: story, cornerRadius: 0)
-            LinearGradient(stops: [
-                .init(color: .clear, location: 0.35),
-                .init(color: Theme.Night.top.opacity(0.75), location: 0.7),
-                .init(color: Theme.Night.top, location: 1),
-            ], startPoint: .top, endPoint: .bottom)
-            VStack(alignment: .leading, spacing: 8) {
-                Text(slide.kicker.uppercased(with: Locale(identifier: "ro")))
-                    .font(.ktLabel).tracking(1.2)
-                    .foregroundStyle(Theme.Night.moon)
-                    .lineLimit(1)
-                Text(story.title)
-                    .font(.custom(AppFont.storyDisplay, size: 34, relativeTo: .largeTitle))
-                    .foregroundStyle(Theme.text)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.7)
-                Text(story.detailLine)
-                    .font(.ktCallout)
-                    .foregroundStyle(Theme.text.opacity(0.8))
-                if let p = slide.progress {
-                    Capsule().fill(.white.opacity(0.2)).frame(width: 160, height: 4)
-                        .overlay(alignment: .leading) { Capsule().fill(Theme.Night.moon).frame(width: 160 * p, height: 4) }
-                        .padding(.top, 2)
-                }
-                HStack(spacing: 12) {
-                    Button {
-                        Haptics.tap()
-                        if isCurrent { player.togglePlay() } else {
-                            Task { await player.play(story, queue: queue, store: store) }
-                            player.showsPlayer = true
-                        }
-                    } label: {
-                        Label(isCurrent && player.isPlaying ? "Pauză" : slide.action,
-                              systemImage: isCurrent && player.isPlaying ? "pause.fill" : "play.fill")
-                    }
-                    .buttonStyle(.ktPrimary)
-                    FavoriteButton(story: story)
-                }
-                .padding(.top, 6)
+        let playing = isCurrent && player.isPlaying
+        VStack(spacing: 0) {
+            StoryOpenLink(story: story, queue: queue) {
+                StoryCover(story: story, cornerRadius: 14)
+                    .frame(width: Self.coverSide, height: Self.coverSide)
+                    .shadow(color: .black.opacity(0.55), radius: 26, y: 20)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 34)
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel(story.title)
+            Text(slide.kicker.uppercased(with: Locale(identifier: "ro")))
+                .font(.custom(AppFont.bodyBold, size: 11, relativeTo: .caption2)).tracking(1.5)
+                .foregroundStyle(Theme.Night.moon)
+                .lineLimit(1)
+                .padding(.top, 30)
+            Text(story.title)
+                .font(.custom(AppFont.storyDisplay, size: 30, relativeTo: .largeTitle))
+                .foregroundStyle(Theme.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(.top, 6)
+            Text(story.detailLine)
+                .font(.custom(AppFont.body, size: 14.5, relativeTo: .subheadline))
+                .foregroundStyle(Theme.Night.muted)
+                .padding(.top, 3)
+            HStack(spacing: 22) {
+                Button {
+                    Haptics.tap()
+                    if isCurrent { player.togglePlay() } else {
+                        Task { await player.play(story, queue: queue, store: store) }
+                        player.showsPlayer = true
+                    }
+                } label: {
+                    Label(playing ? "Pauză" : slide.action, systemImage: playing ? "pause.fill" : "play.fill")
+                }
+                .buttonStyle(.ktPrimary)
+                FavoriteButton(story: story, size: 44)
+            }
+            .padding(.top, 18)
+            .padding(.leading, 44)
+            Spacer(minLength: 0)
         }
-        .clipped()
+        .padding(.top, top)
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity)
     }
 }
 
-/// The round heart button, gold when the story is a favourite.
+/// A plain heart (no circle), gold when the story is a favourite.
 struct FavoriteButton: View {
     let story: Story
-    var size: CGFloat = 48
+    var size: CGFloat = 44
     @Environment(StoryStore.self) private var store
 
     var body: some View {
@@ -510,13 +542,13 @@ struct FavoriteButton: View {
             Task { await store.toggleFavorite(story.id) }
         } label: {
             Image(systemName: favorite ? "heart.fill" : "heart")
-                .font(.system(size: size * 0.4, weight: .semibold))
+                .font(.system(size: size * 0.56, weight: .medium))
                 .foregroundStyle(favorite ? Theme.Night.moon : Theme.text)
                 .frame(width: size, height: size)
-                .background(.ultraThinMaterial, in: Circle())
-                .overlay(Circle().strokeBorder(.white.opacity(0.14)))
+                .contentShape(Rectangle())
                 .contentTransition(.symbolEffect(.replace))
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(favorite ? "Scoate de la favorite" : "Adaugă la favorite")
     }
 }

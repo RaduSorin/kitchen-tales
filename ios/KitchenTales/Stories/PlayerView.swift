@@ -2,10 +2,10 @@ import AVKit
 import MediaPlayer
 import SwiftUI
 
-/// The player as a full page, like the web's StoryPlayer: ⌄ to close (or drag down), "Din
-/// <folder>" on top, the cover, the title with the heart, a thin timeline, the big white play
-/// button, and Viteză, După N povești, La rând / Amestecat and AirPlay at the bottom. When the
-/// chosen number of stories has played, "Noapte bună".
+/// The player as a full page, redesign "Seară de lux, curățat": ⌄ to close (or drag down), "Din
+/// <folder>" on top, the cover, the title with the gold heart, a thin gold timeline, the gold play
+/// button, then Viteză, După N, Text, AirPlay and Coadă as plain symbols (no circles), and what
+/// plays next at the very bottom. When the chosen number of stories has played, "Noapte bună".
 struct PlayerView: View {
     @Environment(StoryStore.self) private var store
     @Environment(StoryPlayer.self) private var player
@@ -14,6 +14,8 @@ struct PlayerView: View {
     @AppStorage("kt-player-remaining") private var showsRemaining = true
     @State private var scrubbing: Double?
     @State private var drag: CGFloat = 0
+    @State private var reading = false
+    @State private var queueOpen = false
 
     var body: some View {
         if let story = player.current {
@@ -35,7 +37,7 @@ struct PlayerView: View {
 
     private func page(_ story: Story) -> some View {
         GeometryReader { geo in
-            let side = min(geo.size.width - 48, 340, geo.size.height * 0.4)
+            let side = min(geo.size.width - 72, 330, geo.size.height * 0.4)
             VStack(spacing: 0) {
                 VStack(spacing: 0) {
                     header(story)
@@ -51,15 +53,18 @@ struct PlayerView: View {
                     titleRow(story)
                     timeline
                     controls
-                    UpNextLine()
                 }
                 Spacer(minLength: 16)
                 options
-                    .padding(.bottom, 8)
+                PlayerNextLine { queueOpen = true }
+                    .padding(.top, 16)
+                    .padding(.bottom, 6)
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 28)
             .frame(maxWidth: .infinity)
         }
+        .sheet(isPresented: $reading) { StoryTextSheet(story: story) }
+        .sheet(isPresented: $queueOpen) { UpNextSheet() }
     }
 
     // MARK: Closing
@@ -81,18 +86,16 @@ struct PlayerView: View {
         HStack(spacing: 8) {
             Button { Haptics.tap(); player.showsPlayer = false } label: {
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.system(size: 20, weight: .semibold))
                     .frame(width: 40, height: 40)
-                    .background(Circle().fill(.black.opacity(0.18)))
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Înapoi la \(StoryLibrary.folderOf(story))")
             VStack(spacing: 1) {
                 Text("Din \(StoryLibrary.folderOf(story))".uppercased())
                     .font(.custom(AppFont.bodyBold, size: 11, relativeTo: .caption2))
-                    .tracking(1.1)
-                    .opacity(0.72)
-                Text(story.title)
-                    .font(.custom(AppFont.bodyBold, size: 15, relativeTo: .subheadline))
+                    .tracking(1.3)
+                    .foregroundStyle(Theme.Night.muted)
             }
             .lineLimit(1)
             .frame(maxWidth: .infinity)
@@ -118,8 +121,8 @@ struct PlayerView: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.7)
                 Text(Self.subtitle(s))
-                    .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .footnote))
-                    .foregroundStyle(Theme.text.opacity(0.72))
+                    .font(.custom(AppFont.body, size: 15, relativeTo: .footnote))
+                    .foregroundStyle(Theme.Night.muted)
             }
             Spacer()
             HeartButton(story: s, locked: kid.active)
@@ -163,17 +166,17 @@ struct PlayerView: View {
         let atStart = player.position <= 5
         let hasPrev = player.hasPrevious
         return HStack {
-            control("backward.end.fill", size: 20, frame: 44, label: atStart ? "Povestea anterioară" : "De la începutul poveștii") {
+            control("backward.end.fill", size: 18, frame: 44, label: atStart ? "Povestea anterioară" : "De la începutul poveștii") {
                 Task { await player.previous() }
             }
             .disabled(!hasPrev)
-            .opacity(hasPrev ? 1 : 0.3)
+            .opacity(hasPrev ? 0.6 : 0.2)
             Spacer()
-            control("gobackward.15", size: 30, frame: 60, label: "Înapoi 15 secunde") { player.skip(-15) }
+            control("gobackward.15", size: 28, frame: 56, label: "Înapoi 15 secunde") { player.skip(-15) }
             Spacer()
             Button { Haptics.tap(); player.togglePlay() } label: {
                 ZStack {
-                    Circle().fill(.white).shadow(color: .black.opacity(0.35), radius: 13, y: 10)
+                    Circle().fill(Theme.Night.moon).shadow(color: Theme.Night.moon.opacity(0.25), radius: 16, y: 8)
                     if player.isLoading {
                         ProgressView().tint(Theme.Night.ink)
                     } else {
@@ -184,17 +187,17 @@ struct PlayerView: View {
                             .contentTransition(.symbolEffect(.replace))
                     }
                 }
-                .frame(width: 84, height: 84)
+                .frame(width: 76, height: 76)
             }
             .accessibilityLabel(player.isPlaying ? "Pauză" : "Pornește")
             Spacer()
-            control("goforward.15", size: 30, frame: 60, label: "Înainte 15 secunde") { player.skip(15) }
+            control("goforward.15", size: 28, frame: 56, label: "Înainte 15 secunde") { player.skip(15) }
             Spacer()
-            control("forward.end.fill", size: 20, frame: 44, label: player.following.map { "Povestea următoare: \($0.title)" } ?? "Povestea următoare") {
+            control("forward.end.fill", size: 18, frame: 44, label: player.following.map { "Povestea următoare: \($0.title)" } ?? "Povestea următoare") {
                 Task { await player.next() }
             }
             .disabled(!player.hasNext)
-            .opacity(player.hasNext ? 1 : 0.3)
+            .opacity(player.hasNext ? 0.6 : 0.2)
         }
         .foregroundStyle(.white)
     }
@@ -208,7 +211,8 @@ struct PlayerView: View {
 
     // MARK: Options
 
-    /// Round buttons with a caption: tap Viteză or "După" to cycle, the third to shuffle.
+    /// Plain symbols with a word under them: tap Viteză or "După" to cycle, Text for the story's
+    /// text, AirPlay, and Coadă for "Urmează" (where La rând / Amestecat now lives).
     private var options: some View {
         let n = player.stopAfter
         return HStack(alignment: .top, spacing: 0) {
@@ -218,26 +222,35 @@ struct PlayerView: View {
             .frame(maxWidth: .infinity)
             .accessibilityLabel("Viteză \(Self.rateLabel(player.rate)). Atinge ca să schimbi.")
             Button { Haptics.select(); player.stopAfter = StoryPlayer.cycled(n) } label: {
-                OptionLabel(symbol: "moon", caption: n == 1 ? "După 1 poveste" : "După \(n) povești")
+                OptionLabel(symbol: "moon", caption: "După \(n)", active: true)
             }
             .frame(maxWidth: .infinity)
-            .accessibilityLabel("Oprește după \(n == 1 ? "o poveste" : "\(n) povești"). Atinge ca să schimbi.")
-            Button { Haptics.select(); player.shuffle.toggle() } label: {
-                OptionLabel(symbol: "shuffle", caption: player.shuffle ? "Amestecat" : "La rând", active: player.shuffle)
+            .accessibilityLabel(Self.stopLabel(n))
+            Button { Haptics.tap(); reading = true } label: {
+                OptionLabel(symbol: "text.bubble", caption: "Text")
             }
             .frame(maxWidth: .infinity)
-            .accessibilityLabel(player.shuffle ? "Amestecat. Atinge pentru una după alta." : "Una după alta. Atinge ca să amesteci.")
+            .accessibilityLabel("Textul poveștii")
             VStack(spacing: 6) {
                 AirPlayButton()
-                    .frame(width: 46, height: 46)
-                    .background(Circle().fill(.white.opacity(0.12)))
+                    .frame(width: 40, height: 30)
                 Text("AirPlay")
-                    .font(.custom(AppFont.bodyBold, size: 12, relativeTo: .caption))
+                    .font(.custom(AppFont.bodySemibold, size: 11.5, relativeTo: .caption))
                     .foregroundStyle(Theme.text.opacity(0.85))
             }
             .frame(maxWidth: .infinity)
+            Button { Haptics.tap(); queueOpen = true } label: {
+                OptionLabel(symbol: "list.bullet", caption: player.shuffle ? "Amestecat" : "Coadă", active: player.shuffle)
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel(player.shuffle ? "Coada, amestecat" : "Coada")
         }
         .buttonStyle(.plain)
+    }
+
+    static func stopLabel(_ n: Int) -> String {
+        let what = n == 1 ? "o poveste" : "\(n) povești"
+        return "Oprește după \(what). Atinge ca să schimbi."
     }
 
     static func rateLabel(_ rate: Float) -> String {
@@ -320,7 +333,7 @@ private struct PlayerBackdrop: View {
     }
 }
 
-/// The pink heart, without a circle. In kid mode it only shows.
+/// The gold heart, without a circle. In kid mode it only shows.
 private struct HeartButton: View {
     let story: Story
     let locked: Bool
@@ -334,7 +347,7 @@ private struct HeartButton: View {
         } label: {
             Image(systemName: on ? "heart.fill" : "heart")
                 .font(.system(size: 24, weight: .semibold))
-                .foregroundStyle(on ? Color(hex: 0xFF8FA3) : Theme.text)
+                .foregroundStyle(on ? Theme.Night.moon : Theme.text)
                 .frame(width: 44, height: 44)
                 .contentTransition(.symbolEffect(.replace))
         }
@@ -344,7 +357,7 @@ private struct HeartButton: View {
     }
 }
 
-/// A thin white timeline (5 pt) with a 16 pt knob; drag anywhere on it.
+/// A thin gold timeline (4 pt) with a 14 pt knob; drag anywhere on it.
 private struct SeekBar: View {
     let value: Double
     let total: Double
@@ -360,9 +373,9 @@ private struct SeekBar: View {
             let w = max(1, g.size.width - 16)
             let p = total > 0 ? min(1, max(0, value / total)) : 0
             ZStack(alignment: .leading) {
-                Capsule().fill(.white.opacity(0.25)).frame(height: 5).padding(.horizontal, 8)
-                Capsule().fill(.white).frame(width: 8 + w * p, height: 5)
-                Circle().fill(.white).frame(width: 16, height: 16).offset(x: w * p)
+                Capsule().fill(.white.opacity(0.2)).frame(height: 4).padding(.horizontal, 8)
+                Capsule().fill(Theme.Night.moon).frame(width: 8 + w * p, height: 4)
+                Circle().fill(Theme.Night.moon).frame(width: 14, height: 14).offset(x: w * p + 1)
             }
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
@@ -394,17 +407,17 @@ private struct OptionLabel: View {
     var body: some View {
         VStack(spacing: 6) {
             Group {
-                if let symbol { Image(systemName: symbol).font(.system(size: 18, weight: .semibold)) }
-                else if let text { Text(text).font(.custom(AppFont.bodyBold, size: 14, relativeTo: .footnote)) }
+                if let symbol { Image(systemName: symbol).font(.system(size: 20, weight: .medium)) }
+                else if let text { Text(text).font(.custom(AppFont.bodyBold, size: 17, relativeTo: .body)) }
             }
-            .foregroundStyle(active ? Theme.Night.ink : Theme.text)
-            .frame(width: 46, height: 46)
-            .background(Circle().fill(active ? Theme.accent : .white.opacity(0.12)))
+            .frame(width: 40, height: 30)
             Text(caption)
-                .font(.custom(AppFont.bodyBold, size: 12, relativeTo: .caption))
-                .foregroundStyle(active ? Theme.accent : Theme.text.opacity(0.85))
-                .multilineTextAlignment(.center).lineLimit(2)
+                .font(.custom(AppFont.bodySemibold, size: 11.5, relativeTo: .caption))
+                .multilineTextAlignment(.center).lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
+        .foregroundStyle(active ? Theme.Night.moon : Theme.text.opacity(0.85))
+        .contentShape(Rectangle())
     }
 }
 

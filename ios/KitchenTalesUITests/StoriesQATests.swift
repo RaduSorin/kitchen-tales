@@ -54,9 +54,9 @@ final class StoriesQATests: QABase {
         expect("Povești", .button)
         tap("Colecții", .button, pick: .highest)
         shot("stories-colectii")
-        tap("Favorite", .button, pick: .highest)
-        shot("stories-favorite")
-        log("Favorite on Acasă shows: " + screenTexts(limit: 25))
+        tap("În curs", .button, pick: .highest)
+        shot("stories-incurs")
+        log("În curs on Acasă shows: " + screenTexts(limit: 25))
         _ = tap("Diseară", .button, optional: true, pick: .highest) || tap("Azi", .button, optional: true, pick: .highest)
         shot("stories-tonight")
 
@@ -113,9 +113,11 @@ final class StoriesQATests: QABase {
         let stop = el("Oprește după", .button, exact: false).label
         tap("Oprește după", .button, exact: false)
         log("stop-after: \(stop) → \(el("Oprește după", .button, exact: false).label)")
-        // Shuffle
+        // Shuffle now sits in Coadă ("Urmează").
+        tap("Coada", .button, exact: false, optional: true)
         tap("Una după alta", .button, exact: false, optional: true)
         expect("Amestecat", .button, exact: false, "shuffle on")
+        tap("Gata", .button, optional: true)
         shot("player-options")
         // Remaining / total
         tap("Arată timpul rămas", .button, optional: true)

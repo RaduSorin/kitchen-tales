@@ -32,6 +32,21 @@ struct EditorTests {
         #expect(EditorText.parseRecipe("T\nPașii sunt simpli").steps == ["Pașii sunt simpli"])
     }
 
+    @Test func readsServingsAndTimeFromPastedText() {
+        let p = EditorText.parseRecipe("Tocăniță\nPorții: 4\nTimp: 30 min\nIngrediente:\n2 cepe\nMod de preparare:\nCălește ceapa.")
+        #expect(p.ingredients == ["2 cepe"])
+        #expect(p.steps == ["Călește ceapa."])
+        #expect(p.servings == 4)
+        #expect(p.minutes == 30)
+        #expect(EditorText.servingsOf("Pentru 6 persoane") == 6)
+        #expect(EditorText.servingsOf("Porţii 2") == 2)
+        #expect(EditorText.servingsOf("Porții de legume") == nil)
+        #expect(EditorText.minutesOf("Timp total: 1 h 30 min") == 90)
+        #expect(EditorText.minutesOf("Timp de preparare: 1 oră") == 60)
+        #expect(EditorText.minutesOf("Total time: 45 minutes") == 45)
+        #expect(EditorText.minutesOf("Timpul e scurt") == nil)
+    }
+
     @Test func cleansDictatedIngredients() {
         #expect(EditorText.spokenIngredientLines(["Cinci sute de grame de făină, două ouă și apoi o lingură de zahăr."])
                 == ["500 g făină", "2 ouă", "1 lingură zahăr"])

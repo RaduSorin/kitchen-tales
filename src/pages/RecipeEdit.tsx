@@ -407,7 +407,7 @@ export default function RecipeEdit() {
     if (link) { importLink(link); return }
     const p = parseRecipeText(text)
     // Clear "Ingrediente / Mod de preparare" text is split on the phone; anything looser is read by the AI.
-    if (!dictated && p.ingredients.length && p.steps.length) { fill(p.title, p.ingredients, p.steps); way.current = 'text' }
+    if (!dictated && p.ingredients.length && p.steps.length) { fill(p.title, p.ingredients, p.steps, { servings: p.servings ?? r.servings, minutes: p.minutes ?? r.minutes }); way.current = 'text' }
     else doImport('Citesc rețeta…', dictated ? 'dictation' : 'text', () => importRecipeFromText(text))
   }
 

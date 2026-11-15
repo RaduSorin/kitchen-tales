@@ -20,6 +20,14 @@ describe('mergeShopping', () => {
     expect(mergeShopping([item('1', '2-3 căței usturoi'), item('2', '2 căței usturoi')])).toHaveLength(2)
   })
 
+  it('puts "sare după gust" with "sare"', () => {
+    expect(mergeShopping([item('1', 'sare', 'A'), item('2', 'sare după gust', 'B')])).toHaveLength(1)
+  })
+
+  it('adds an amount written in words', () => {
+    expect(mergeShopping([item('1', 'o ceapă', 'A'), item('2', '2 cepe', 'B')]).map((r) => r.text)).toEqual(['3 cepe'])
+  })
+
   it('shows lines without amounts once', () => {
     expect(mergeShopping([item('1', 'sare', 'A'), item('2', 'sare', 'B')]).map((r) => r.text)).toEqual(['sare'])
   })

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The pages Profil opens.
 enum ProfileRoute: Hashable {
-    case child, family, people, sharing, prefs, phone, catalog, passport, album, bedtime
+    case child, family, people, sharing, prefs, phone, catalog, insigne, bedtime
 }
 
 /// Profil, as on the web: you at the top, small cards of what the family made, then the child
@@ -30,8 +30,7 @@ struct ProfileView: View {
         case "profile-family", "profile-invite": [.family]
         case "profile-people": [.family, .people]
         case "profile-prefs": [.prefs]
-        case "passport": [.passport]
-        case "album": [.album]
+        case "passport", "album", "insigne": [.insigne]
         default: []
         }
     }
@@ -41,7 +40,7 @@ struct ProfileView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     hero
-                    BadgeCards { path.append($0) }
+                    InsigneCard { path.append(.insigne) }
                         .padding(.top, 22)
                     rows
                     // The whole row takes the tap, not only the words.
@@ -71,8 +70,7 @@ struct ProfileView: View {
                     case .prefs: PrefsView()
                     case .phone: PhoneView()
                     case .catalog: DesignCatalogView()
-                    case .passport: PassportView()
-                    case .album: AlbumView()
+                    case .insigne: InsigneView()
                     }
                 }
                 .environment(\.profileNight, night)

@@ -13,9 +13,34 @@ func badgePages<T>(_ list: [T], max: Int) -> [[T]] {
     return out
 }
 
-/// Profil › "Pașaportul culinar", like the web: the recipe stamps as visas in a passport turned
-/// page by page. A leather cover, the holder's page, then four visas a page, chapter by chapter,
-/// each chapter in its own ink.
+/// A passport page of visas: one chapter's stamps, four at most, numbered through the passport.
+struct PassportVisa: Sendable {
+    let group: String
+    let badges: [Badge]
+    /// The number of the first visa on the page, from 0.
+    let first: Int
+
+    static let all: [PassportVisa] = {
+        var out: [PassportVisa] = []
+        var no = 0
+        for g in BadgeCatalog.stampGroups {
+            for part in badgePages(BadgeCatalog.stamps.filter { $0.group == g }, max: 4) {
+                out.append(PassportVisa(group: g, badges: part, first: no))
+                no += part.count
+            }
+        }
+        return out
+    }()
+
+    /// The book page (cover 0, holder 1, visas from 2) that holds a stamp.
+    static func pageNumber(of id: String) -> Int? {
+        all.firstIndex { $0.badges.contains { $0.id == id } }.map { $0 + 2 }
+    }
+}
+
+/// "Pașaportul culinar", like the web: the recipe stamps as visas in a passport turned page by
+/// page, full screen. A leather cover, the holder's page, then four visas a page, chapter by
+/// chapter, each chapter in its own ink.
 struct PassportView: View {
     /// A stamp just earned: the passport turns to its page.
     var focus: String? = nil
@@ -28,55 +53,77 @@ struct PassportView: View {
         "Adăugare": Color(hex: 0xA8424F), "La gătit": Color(hex: 0x2F7A6D), "Plan și caiet": Color(hex: 0x3F5F9E),
         "Familie": Color(hex: 0xA8742A), "Surprize": Color(hex: 0x6D4C9A),
     ]
-
-    private struct Visa { let group: String; let badges: [Badge]; let first: Int }
-
-    private var visas: [Visa] {
-        var out: [Visa] = []
-        var no = 0
-        for g in BadgeCatalog.stampGroups {
-            for part in badgePages(BadgeCatalog.stamps.filter { $0.group == g }, max: 4) {
-                out.append(Visa(group: g, badges: part, first: no))
-                no += part.count
-            }
-        }
-        return out
-    }
+    static let leather = Color(hex: 0x5A1C29)
 
     var body: some View {
-        let visas = self.visas
+        let visas = PassportVisa.all
         let count = visas.count + 3
-        VStack(spacing: 12) {
-            KTPageHeader(title: "Pașaportul culinar")
-                .padding(.horizontal, 20)
-            GeometryReader { geo in
-                let w = min(geo.size.width - 48, (geo.size.height) * 282 / 470, 380)
-                PageCurl(count: count, index: $page) { i in
-                    Group {
-                        if i == 0 { cover }
-                        else if i == 1 { holder }
-                        else if i - 2 < visas.count { visaPage(visas[i - 2], number: i) }
-                        else { endPage(number: i) }
-                    }
-                    .frame(width: w, height: w * 470 / 282)
-                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: w * 0.018, bottomLeadingRadius: w * 0.018, bottomTrailingRadius: w * 0.05, topTrailingRadius: w * 0.05))
+        let have = badges.count(BadgeCatalog.stamps)
+        BadgeBookFrame(title: "Pașaportul culinar", count: "\(have) din \(BadgeCatalog.stamps.count) timbre", glow: Color(hex: 0x9A3346),
+                       pages: count, page: $page, caption: { Self.caption($0, visas: visas) }) { w in
+            let h = w * 470 / 282
+            PageCurl(count: count, index: $page) { i in
+                pageView(i, visas: visas)
+                    .frame(width: w, height: h)
+                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: w * 0.012, bottomLeadingRadius: w * 0.012, bottomTrailingRadius: w * 0.03, topTrailingRadius: w * 0.03))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .frame(width: w, height: w * 470 / 282)
-                .shadow(color: .black.opacity(0.45), radius: 18, y: 10)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } back: { i in
+                backView(i, visas: visas)
+                    .frame(width: w, height: h)
+                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: w * 0.03, bottomLeadingRadius: w * 0.03, bottomTrailingRadius: w * 0.012, topTrailingRadius: w * 0.012))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            Text("Glisează sau atinge marginea paginii ca să răsfoiești.")
-                .font(.ktFootnote).foregroundStyle(Theme.muted)
-                .padding(.bottom, KTTabBarMetrics.height + 16)
+            .frame(width: w, height: h)
+            .background(alignment: .topLeading) {
+                PageStackEdge(paper: Color(hex: 0xE9E1CD), corner: w * 0.03)
+                    .frame(width: w, height: h)
+            }
+            // The leather of the cover, around the pages.
+            .background {
+                RoundedRectangle(cornerRadius: w * 0.04, style: .continuous)
+                    .fill(Self.leather)
+                    .overlay(RoundedRectangle(cornerRadius: w * 0.04, style: .continuous).strokeBorder(.black.opacity(0.35), lineWidth: 1))
+                    .padding(.horizontal, -w * 0.025).padding(.vertical, -w * 0.025)
+                    .padding(.trailing, -4)
+                    .shadow(color: .black.opacity(0.55), radius: 22, y: 12)
+            }
         }
-        .background(ProfileBackdrop())
-        .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $open) { BadgeSheet(badge: $0) }
         .task {
-            guard let focus, let i = visas.firstIndex(where: { $0.badges.contains { $0.id == focus } }) else { return }
+            guard let focus, let i = PassportVisa.pageNumber(of: focus) else { return }
             try? await Task.sleep(for: .milliseconds(450))
-            page = i + 2
+            page = i
+        }
+    }
+
+    static func caption(_ i: Int, visas: [PassportVisa]) -> String {
+        let n = visas.count + 3
+        let what: String
+        if i == 0 { what = "Coperta" } else if i == 1 { what = "Titular" } else if i - 2 < visas.count { what = visas[i - 2].group } else { what = "Pagini libere" }
+        return "Pagina \(i + 1) din \(n) · \(what)"
+    }
+
+    @ViewBuilder
+    private func pageView(_ i: Int, visas: [PassportVisa]) -> some View {
+        if i == 0 { cover }
+        else if i == 1 { holder }
+        else if i - 2 < visas.count {
+            PassportVisaPage(visa: visas[i - 2], number: i, ymd: ymd) { open = $0 }
+        } else { endPage(number: i) }
+    }
+
+    /// The back of a sheet: the cover's lining, or plain visa paper in the next page's ink.
+    @ViewBuilder
+    private func backView(_ i: Int, visas: [PassportVisa]) -> some View {
+        if i == 0 {
+            ZStack {
+                Color(hex: 0xE4D7BC)
+                Image.badgeArt("guilloche").resizable().renderingMode(.template).foregroundStyle(Self.leather.opacity(0.5))
+            }
+        } else {
+            let next = i - 1 < visas.count ? visas[max(0, i - 1)].group : "Plan și caiet"
+            VisaPaper(ink: Self.inks[next] ?? .brown, watermark: false)
+                .overlay(Color.black.opacity(0.04))
         }
     }
 
@@ -89,7 +136,10 @@ struct PassportView: View {
 
     private var since: Date { badges.state.since.flatMap(BadgeEngine.date) ?? Date() }
 
-    private var ymd: String {
+    private var ymd: String { Self.ymd(since) }
+
+    /// The day the collection started, as the passport prints it (YYMMDD).
+    static func ymd(_ since: Date) -> String {
         let c = Calendar.current.dateComponents([.year, .month, .day], from: since)
         return String(format: "%02d%02d%02d", (c.year ?? 0) % 100, c.month ?? 0, c.day ?? 0)
     }
@@ -97,7 +147,7 @@ struct PassportView: View {
     private var cover: some View {
         PageBox { u in
             ZStack {
-                Color(hex: 0x5A1C29)
+                Self.leather
                 LinearGradient(stops: [.init(color: .black.opacity(0.35), location: 0), .init(color: .clear, location: 0.05),
                                        .init(color: .clear, location: 0.06), .init(color: .black.opacity(0.18), location: 0.064), .init(color: .clear, location: 0.07)],
                                startPoint: .leading, endPoint: .trailing)
@@ -112,13 +162,6 @@ struct PassportView: View {
                         .font(.custom(AppFont.bodySemibold, fixedSize: 3.5 * u)).tracking(1.2 * u)
                         .foregroundStyle(Self.foil)
                     Image(systemName: "cpu").font(.system(size: 6 * u, weight: .light)).foregroundStyle(Self.foil).padding(.top, 6 * u)
-                }
-                VStack {
-                    Spacer()
-                    Text("Glisează ca să deschizi")
-                        .font(.custom(AppFont.bodySemibold, fixedSize: 3.9 * u))
-                        .foregroundStyle(Color(hex: 0xDFBD6C).opacity(0.6))
-                        .padding(.bottom, 6.4 * u)
                 }
             }
         }
@@ -223,78 +266,6 @@ struct PassportView: View {
         }
     }
 
-    private func visaPage(_ visa: Visa, number: Int) -> some View {
-        let ink = Self.inks[visa.group] ?? .brown
-        return PageBox { u in
-            ZStack(alignment: .topLeading) {
-                VisaPaper(ink: ink, watermark: true)
-                VisaHead(title: "Vize · \(visa.group)", number: String(format: "%02d", number), ink: ink, u: u)
-                let cols = [GridItem(.flexible(), spacing: 2.8 * u), GridItem(.flexible(), spacing: 2.8 * u)]
-                LazyVGrid(columns: cols, spacing: 2.8 * u) {
-                    ForEach(Array(visa.badges.enumerated()), id: \.element.id) { k, b in
-                        cell(b, no: visa.first + k + 1, tilt: [-4, 3, 2.5, -3][k], ink: ink, u: u)
-                    }
-                }
-                .frame(width: 89.3 * u)
-                .offset(x: 6.4 * u, y: 15.6 * u)
-                folio(number: number, ink: ink, u: u)
-            }
-        }
-    }
-
-    private func cell(_ b: Badge, no: Int, tilt: Double, ink: Color, u: CGFloat) -> some View {
-        let earned = badges.earnedDate(b)
-        let hidden = b.secret && earned == nil
-        return Button { open = b } label: {
-            VStack(spacing: 0) {
-                BadgeArt(badge: b, earned: earned, onPaper: true)
-                    .frame(width: 37 * u)
-                    .rotationEffect(.degrees(earned != nil ? tilt : 0))
-                    .padding(.leading, 4.3 * u)
-                    .blendMode(earned != nil ? .multiply : .normal)
-                if earned != nil {
-                    Text(b.name)
-                        .font(.custom(AppFont.hand, fixedSize: 6 * u)).foregroundStyle(Color(hex: 0x2B3A67))
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                        .rotationEffect(.degrees(-2))
-                        .padding(.top, 0.7 * u)
-                } else {
-                    Text((hidden ? "Surpriză" : b.name).uppercased(with: Locale(identifier: "ro")))
-                        .font(.custom(AppFont.bodySemibold, fixedSize: 3 * u)).tracking(0.42 * u)
-                        .foregroundStyle(ink.opacity(0.7))
-                        .lineLimit(1)
-                        .padding(.top, 2.1 * u)
-                }
-            }
-            .padding(.horizontal, 1.4 * u)
-            .frame(maxWidth: .infinity)
-            .frame(height: 56 * u)
-            .overlay(alignment: .topLeading) {
-                Text(String(format: "VIZA %02d", no))
-                    .font(.system(size: 2.8 * u, weight: .semibold, design: .monospaced)).tracking(0.34 * u)
-                    .foregroundStyle(ink.opacity(0.8))
-                    .padding(.leading, 2.1 * u).padding(.top, 1.4 * u)
-            }
-            .background(RoundedRectangle(cornerRadius: 1 * u).strokeBorder(ink, style: StrokeStyle(lineWidth: 1, dash: [1, 2])))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(hidden ? "Surpriză" : "\(b.name)\(earned == nil ? ", lipsă" : "")")
-    }
-
-    private func folio(number: Int, ink: Color, u: CGFloat, left: String? = nil) -> some View {
-        VStack {
-            Spacer()
-            HStack {
-                Text(left ?? "KT·\(ymd.prefix(4))").opacity(0.7)
-                Spacer()
-                Text(String(format: "%02d", number))
-            }
-            .font(.system(size: 3.5 * u, weight: .semibold, design: .monospaced)).tracking(0.5 * u)
-            .foregroundStyle(ink)
-            .padding(.leading, 7 * u).padding(.trailing, 5.7 * u).padding(.bottom, 3.2 * u)
-        }
-    }
-
     private func endPage(number: Int) -> some View {
         let ink = Self.inks["Plan și caiet"]!
         return PageBox { u in
@@ -372,5 +343,125 @@ private struct VisaHead: View {
             }
         }
         .padding(.leading, 7 * u).padding(.trailing, 5.7 * u).padding(.top, 5 * u)
+    }
+}
+
+/// The coordinate space of the earn moment, where a page reports where its empty place is.
+enum BadgeEarnSpace {
+    static let name = "badge-earn"
+}
+
+/// One visa page of the passport: the chapter's head, four visas in a grid, the folio. Used by
+/// the passport and by the earn moment, where `hiding` keeps a just-earned stamp's visa empty
+/// until the stamp lands, and `target` reports where that visa is.
+struct PassportVisaPage: View {
+    let visa: PassportVisa
+    let number: Int
+    let ymd: String
+    var hiding: String? = nil
+    /// The stamp has landed on its visa: its name is written by hand next.
+    var landed = false
+    var target: ((CGRect) -> Void)? = nil
+    let onTap: (Badge) -> Void
+    @Environment(BadgeStore.self) private var badges
+
+    var body: some View {
+        let ink = PassportView.inks[visa.group] ?? .brown
+        PageBox { u in
+            ZStack(alignment: .topLeading) {
+                VisaPaper(ink: ink, watermark: true)
+                VisaHead(title: "Vize · \(visa.group)", number: String(format: "%02d", number), ink: ink, u: u)
+                let cols = [GridItem(.flexible(), spacing: 2.8 * u), GridItem(.flexible(), spacing: 2.8 * u)]
+                LazyVGrid(columns: cols, spacing: 2.8 * u) {
+                    ForEach(Array(visa.badges.enumerated()), id: \.element.id) { k, b in
+                        cell(b, no: visa.first + k + 1, tilt: Self.tilts[k], ink: ink, u: u)
+                    }
+                }
+                .frame(width: 89.3 * u)
+                .offset(x: 6.4 * u, y: 15.6 * u)
+                folio(ink: ink, u: u)
+            }
+        }
+    }
+
+    static let tilts: [Double] = [-4, 3, 2.5, -3]
+
+    private func cell(_ b: Badge, no: Int, tilt: Double, ink: Color, u: CGFloat) -> some View {
+        let isTarget = b.id == hiding
+        let earned = isTarget ? nil : badges.earnedDate(b)
+        let hidden = b.secret && earned == nil && !isTarget
+        let written = earned != nil || (isTarget && landed)
+        return Button { onTap(b) } label: {
+            VStack(spacing: 0) {
+                BadgeArt(badge: b, earned: earned, onPaper: true)
+                    .frame(width: 37 * u)
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(BadgeEarnSpace.name)) } action: { frame in
+                        if isTarget { target?(frame) }
+                    }
+                    .rotationEffect(.degrees(earned != nil ? tilt : 0))
+                    .padding(.leading, 4.3 * u)
+                    .blendMode(earned != nil ? .multiply : .normal)
+                    .opacity(isTarget ? (landed ? 0 : 0.35) : 1)
+                if written {
+                    Text(b.name)
+                        .font(.custom(AppFont.hand, fixedSize: 6 * u)).foregroundStyle(Color(hex: 0x2B3A67))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .modifier(HandwrittenReveal(animated: isTarget))
+                        .rotationEffect(.degrees(-2))
+                        .padding(.top, 0.7 * u)
+                } else {
+                    Text((hidden ? "Surpriză" : b.name).uppercased(with: Locale(identifier: "ro")))
+                        .font(.custom(AppFont.bodySemibold, fixedSize: 3 * u)).tracking(0.42 * u)
+                        .foregroundStyle(ink.opacity(0.7))
+                        .lineLimit(1)
+                        .padding(.top, 2.1 * u)
+                        .opacity(isTarget ? 0 : 1)
+                }
+            }
+            .padding(.horizontal, 1.4 * u)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56 * u)
+            .overlay(alignment: .topLeading) {
+                Text(String(format: "VIZA %02d", no))
+                    .font(.system(size: 2.8 * u, weight: .semibold, design: .monospaced)).tracking(0.34 * u)
+                    .foregroundStyle(ink.opacity(0.8))
+                    .padding(.leading, 2.1 * u).padding(.top, 1.4 * u)
+            }
+            .background(RoundedRectangle(cornerRadius: 1 * u).strokeBorder(ink, style: StrokeStyle(lineWidth: 1, dash: [1, 2])))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(hidden ? "Surpriză" : "\(b.name)\(earned == nil ? ", lipsă" : "")")
+    }
+
+    private func folio(ink: Color, u: CGFloat) -> some View {
+        VStack {
+            Spacer()
+            HStack {
+                Text("KT·\(ymd.prefix(4))").opacity(0.7)
+                Spacer()
+                Text(String(format: "%02d", number))
+            }
+            .font(.system(size: 3.5 * u, weight: .semibold, design: .monospaced)).tracking(0.5 * u)
+            .foregroundStyle(ink)
+            .padding(.leading, 7 * u).padding(.trailing, 5.7 * u).padding(.bottom, 3.2 * u)
+        }
+    }
+}
+
+/// Writes a line in from the left, as by hand, when it first appears (`animated`).
+struct HandwrittenReveal: ViewModifier {
+    let animated: Bool
+    @State private var shown = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .mask(alignment: .leading) {
+                Rectangle().scaleEffect(x: !animated || shown ? 1 : 0, anchor: .leading)
+            }
+            .onAppear {
+                guard animated, !shown else { return }
+                if reduceMotion { shown = true } else { withAnimation(.easeOut(duration: 0.8)) { shown = true } }
+            }
     }
 }

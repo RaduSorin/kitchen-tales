@@ -232,6 +232,7 @@ struct BedtimeNightView: View {
         area.current = .stories
         bedtime.showsNight = false
         Task {
+            trackBadge(.bedtime)
             await player.play(first, queue: list, store: stories)
             // Let the night screen go away before the player opens over it.
             try? await Task.sleep(for: .milliseconds(600))

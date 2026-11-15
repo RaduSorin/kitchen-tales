@@ -45,8 +45,8 @@ function prepareArt(s: Story): Promise<string | undefined> {
 }
 function storyMetadata(s: Story, src?: string) {
   return new MediaMetadata(src
-    ? { title: s.title, artist: 'Bucătăria cu povești', artwork: [{ src, sizes: '512x512', type: 'image/jpeg' }] }
-    : { title: s.title, artist: 'Bucătăria cu povești' })
+    ? { title: s.title, artist: 'Kitchen Tales', artwork: [{ src, sizes: '512x512', type: 'image/jpeg' }] }
+    : { title: s.title, artist: 'Kitchen Tales' })
 }
 
 export interface NowPlaying {

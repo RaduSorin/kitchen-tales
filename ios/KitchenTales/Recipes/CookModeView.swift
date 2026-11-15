@@ -3,10 +3,12 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// "Gătește pas cu pas", like the web's CookMode: the step's photo (or the recipe photo, dimmed,
-/// with the big step number) fills the screen; thin progress bars and the title on top, with the
-/// microphone for hands-free cooking; the step in a card at the bottom with its timer inside; tap
-/// the left or right of the screen (or swipe) to move, swipe up or tap "Ingrediente" for the list.
+/// "Gătește pas cu pas": the recipe photo, blurred and dimmed, fills the screen (or the step's own
+/// photo; without any photo, a warm glow in the category's colour); gold progress segments and the
+/// title on top, with the microphone for hands-free cooking; the step written big in the serif
+/// straight on the photo, with no card, and "Îți trebuie: …" under it; "‹ Înapoi" as text and
+/// one gold button for the next step; "Pune un timer" and "Ingrediente" as text at the bottom.
+/// Tapping the left or right of the screen (or swiping) also moves; swipe up for the list.
 /// The screen stays on; a timer rings even when the phone is locked.
 struct CookModeView: View {
     let session: CookSession
@@ -88,17 +90,9 @@ struct CookModeView: View {
                 top
                 Spacer(minLength: 20)
                 panel(forStep)
-                Button { showsIngredients = true } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chevron.up").font(.system(size: 12, weight: .bold))
-                        Text("Ingrediente")
-                    }
-                    .font(.custom(AppFont.bodySemibold, size: 16, relativeTo: .callout))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 6)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                Spacer(minLength: 20)
+                stepButtons
+                bottomLinks
             }
         }
         .gesture(DragGesture(minimumDistance: 30).onEnded { value in
@@ -115,7 +109,7 @@ struct CookModeView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 4) {
                 ForEach(0..<recipe.steps.count, id: \.self) { i in
-                    Capsule().fill(i <= step ? Color.white : Color.white.opacity(0.35)).frame(height: 3)
+                    Capsule().fill(i <= step ? Theme.accent : Color.white.opacity(0.2)).frame(height: 3)
                 }
             }
             .animation(.snappy, value: step)
@@ -124,11 +118,11 @@ struct CookModeView: View {
             HStack(spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(recipe.title)
-                        .font(.custom(AppFont.display, size: 19, relativeTo: .headline))
+                        .font(.custom(AppFont.storyDisplay, size: 18, relativeTo: .headline))
                         .lineLimit(1)
                     Text("\(step + 1) din \(recipe.steps.count)")
-                        .font(.custom(AppFont.body, size: 15, relativeTo: .subheadline))
-                        .opacity(0.8)
+                        .font(.custom(AppFont.body, size: 13.5, relativeTo: .subheadline))
+                        .opacity(0.7)
                         .fixedSize()
                 }
                 Spacer(minLength: 4)
@@ -165,10 +159,10 @@ struct CookModeView: View {
     private var micButton: some View {
         Button { toggleHandsFree() } label: {
             Image(systemName: handsFree.on ? "mic.fill" : "mic")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(handsFree.on ? Theme.Night.ink : .white)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(handsFree.on ? Theme.accent : .white)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(handsFree.on ? Theme.accent : .black.opacity(0.25)))
+                .contentShape(Rectangle())
                 .symbolEffect(.pulse, isActive: handsFree.listening)
         }
         .buttonStyle(.plain)
@@ -178,38 +172,109 @@ struct CookModeView: View {
     private var closeButton: some View {
         Button { close() } label: {
             Image(systemName: "xmark")
-                .font(.system(size: 16, weight: .bold))
+                .font(.system(size: 19, weight: .medium))
                 .foregroundStyle(.white)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(.black.opacity(0.25)))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Închide modul de gătit")
     }
 
+    /// The step, big, straight on the photo: "PASUL 1", the text in the serif, what it needs.
     private func panel(_ forStep: [String]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             if handsFree.on || handsFree.error != nil { listenBox }
             Text("Pasul \(step + 1)".uppercased(with: Locale(identifier: "ro")))
                 .font(.custom(AppFont.bodyBold, size: 12, relativeTo: .caption))
-                .tracking(1.2)
+                .tracking(1.6)
                 .foregroundStyle(Theme.accent)
             Text(recipe.steps[step])
-                .font(.custom(AppFont.bodySemibold, size: 21, relativeTo: .title3))
+                .font(.custom(AppFont.storyDisplay, size: Self.stepSize(recipe.steps[step]), relativeTo: .largeTitle))
                 .foregroundStyle(Theme.text)
-                .lineSpacing(2)
+                .lineSpacing(1)
+                .minimumScaleFactor(0.6)
                 .fixedSize(horizontal: false, vertical: true)
                 .id(step)
                 .transition(.opacity)
             if !forStep.isEmpty {
-                FlowChips(items: forStep.map { RecipeText.scaleIngredient($0, factor: factor) })
+                let needs = Self.needs(forStep, factor: factor)
+                (Text("Îți trebuie: ").foregroundStyle(Theme.text.opacity(0.75))
+                 + Text(needs)
+                    .font(.custom(AppFont.bodySemibold, size: 15, relativeTo: .subheadline)).foregroundStyle(Theme.text))
+                    .font(.custom(AppFont.body, size: 15, relativeTo: .subheadline))
+                    .fixedSize(horizontal: false, vertical: true)
             }
             TimerBox(timers: timers, step: step)
         }
-        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Theme.background))
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 24)
+        .shadow(color: .black.opacity(0.35), radius: 8)
+    }
+
+    /// "2 cepe, 1 morcov": what the step uses, scaled to the portions.
+    static func needs(_ lines: [String], factor: Double) -> String {
+        lines.map { RecipeText.scaleIngredient($0, factor: factor) }.joined(separator: ", ")
+    }
+
+    /// Short steps big (34), long ones smaller, so a step still fits without scrolling.
+    static func stepSize(_ text: String) -> CGFloat {
+        switch text.count {
+        case ..<90: 34
+        case ..<180: 28
+        case ..<300: 23
+        default: 20
+        }
+    }
+
+    /// "‹ Înapoi" as text and the gold "Pasul 2 ›" (or "Gata ›" on the last step).
+    private var stepButtons: some View {
+        let last = step == recipe.steps.count - 1
+        return HStack {
+            if step > 0 {
+                Button { go(-1) } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left").font(.system(size: 14, weight: .semibold))
+                        Text("Înapoi")
+                    }
+                    .font(.custom(AppFont.bodySemibold, size: 16, relativeTo: .callout))
+                    .foregroundStyle(.white)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+            Button { go(1) } label: {
+                HStack(spacing: 8) {
+                    Text(last ? "Gata" : "Pasul \(step + 2)")
+                    Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold))
+                }
+            }
+            .buttonStyle(.ktPrimary)
+            .accessibilityLabel(last ? "Am terminat" : "Pasul următor")
+        }
+        .padding(.horizontal, 24)
+    }
+
+    /// "Pune un timer" (when the step has one that is not set yet) and "Ingrediente", as text.
+    private var bottomLinks: some View {
+        HStack(spacing: 34) {
+            if timers.duration(step) > 0, timers.timers[step] == nil {
+                Button { timers.start(step) } label: {
+                    Label("Pune un timer", systemImage: "timer")
+                }
+            }
+            Button { showsIngredients = true } label: {
+                Label("Ingrediente", systemImage: "line.3.horizontal.decrease")
+            }
+        }
+        .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .footnote))
+        .foregroundStyle(.white.opacity(0.85))
+        .buttonStyle(.plain)
+        .frame(minHeight: 44)
+        .padding(.top, 18)
+        .padding(.bottom, 6)
     }
 
     private var listenBox: some View {
@@ -242,7 +307,7 @@ struct CookModeView: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 4) {
                 Text(session.servings.map { "Ingrediente · \($0) porții" } ?? "Ingrediente")
-                    .font(.custom(AppFont.display, size: 26, relativeTo: .title2))
+                    .font(.custom(AppFont.storyDisplay, size: 26, relativeTo: .title2))
                     .foregroundStyle(Theme.text)
                     .padding(.bottom, 8)
                 if !first.isEmpty {
@@ -308,11 +373,15 @@ struct CookModeView: View {
         VStack(spacing: 18) {
             HStack { Spacer(); closeButton }.padding(.top, 10)
             Spacer()
-            PlateDrawing(seed: recipe.title)
-                .frame(width: 150, height: 150)
-                .clipShape(Circle())
-                .accessibilityHidden(true)
-            Text("Poftă bună!").font(.custom(AppFont.display, size: 36, relativeTo: .largeTitle)).foregroundStyle(Theme.text)
+            Group {
+                if recipe.hasPhoto {
+                    RecipePhoto(recipe: recipe, cornerRadius: 0).frame(width: 150, height: 150).clipShape(Circle())
+                } else {
+                    RecipeLabelDrawing(kind: RecipeLabel.kind(recipe.category)).frame(width: 110, height: 110)
+                }
+            }
+            .accessibilityHidden(true)
+            Text("Poftă bună!").font(.custom(AppFont.storyDisplay, size: 36, relativeTo: .largeTitle)).foregroundStyle(Theme.text)
             Text("Ai terminat \(recipe.title).").font(.ktCallout).foregroundStyle(Theme.muted).multilineTextAlignment(.center)
             VStack(alignment: .leading, spacing: 8) {
                 Text("O notă pentru data viitoare? (opțional)").font(.ktFootnote).foregroundStyle(Theme.muted)
@@ -423,63 +492,35 @@ struct CookModeView: View {
     }
 }
 
-/// The step's own photo fills the screen; otherwise the recipe photo, dimmed, with the big step
-/// number; a recipe without any photo keeps the drawn plate on green.
+/// The step's own photo fills the screen, dimmed at the bottom where the text sits; otherwise the
+/// recipe photo, blurred and dimmed; without any photo, a warm glow in the category's colour.
 private struct StepBackground: View {
     let recipe: Recipe
     let step: Int
 
     var body: some View {
         let own = recipe.stepPhoto(step)
-        let hasRecipePhoto = recipe.photoKey != nil || recipe.demoPhoto != nil
         ZStack {
             if let own {
                 RecipePhoto(recipe: recipe, key: own, cornerRadius: 0)
-            } else if hasRecipePhoto {
+                LinearGradient(stops: [.init(color: .black.opacity(0.5), location: 0), .init(color: .clear, location: 0.2),
+                                       .init(color: .black.opacity(0.55), location: 0.45), .init(color: .black.opacity(0.85), location: 1)],
+                               startPoint: .top, endPoint: .bottom)
+            } else if recipe.hasPhoto {
                 RecipePhoto(recipe: recipe, cornerRadius: 0)
-                    .brightness(-0.2)
-                    .saturation(1.05)
-                    .overlay(Color.black.opacity(0.3))
+                    .scaleEffect(1.15)
+                    .blur(radius: 28)
+                    .overlay(Color.black.opacity(0.55))
             } else {
-                Color(hex: 0x3E6A51)
-                PlateDrawing(seed: recipe.title)
-                    .frame(width: 300, height: 300)
-                    .clipShape(Circle())
-                    .opacity(0.32)
-                    .offset(y: -80)
+                let tint = RecipeLabel.tint(RecipeLabel.kind(recipe.category))
+                Theme.background
+                RadialGradient(colors: [Color(hex: tint.0), Color(hex: tint.1).opacity(0.6), .clear],
+                               center: UnitPoint(x: 0.3, y: 0.1), startRadius: 0, endRadius: 520)
             }
-            if own == nil {
-                GeometryReader { g in
-                    Text("\(step + 1)")
-                        .font(.custom(AppFont.display, size: min(g.size.width * 0.6, 340)))
-                        .foregroundStyle(.white.opacity(0.16))
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, g.size.height * 0.12)
-                }
-            }
-            // Keeps the title readable on a bright photo.
-            LinearGradient(colors: [.black.opacity(0.45), .clear], startPoint: .top, endPoint: .center)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-    }
-}
-
-/// The ingredients a step uses, as small pills that wrap.
-private struct FlowChips: View {
-    let items: [String]
-
-    var body: some View {
-        WrapLayout(spacing: 6) {
-            ForEach(items, id: \.self) { item in
-                Text(item)
-                    .font(.custom(AppFont.body, size: 15, relativeTo: .subheadline))
-                    .foregroundStyle(Theme.text)
-                    .padding(.horizontal, 12).padding(.vertical, 4)
-                    .background(Capsule().fill(Theme.surface2))
-            }
-        }
     }
 }
 
@@ -632,39 +673,37 @@ private struct TimerBox: View {
 
     var body: some View {
         let total = timers.duration(step)
-        if total > 0 {
+        // Shown once the timer is set ("Pune un timer" at the bottom sets it).
+        if total > 0, timers.timers[step] != nil {
             let left = timers.left(step)
             let running = timers.isRunning(step)
-            let done = timers.timers[step] != nil && left == 0
-            let action = running ? "Pauză" : done ? "Din nou" : (timers.timers[step] != nil && left < total) ? "Continuă" : "Pornește"
-            VStack(alignment: .leading, spacing: 8) {
-                Button {
-                    if running { timers.pause(step) } else if done { timers.reset(step) } else { timers.start(step) }
-                } label: {
-                    HStack(spacing: 12) {
-                        Text(done ? "Gata!" : RecipeText.clock(left))
-                            .font(.custom(AppFont.bodyBold, size: 30, relativeTo: .title).monospacedDigit())
-                            .contentTransition(.numericText(countsDown: true))
-                        Spacer()
+            let done = left == 0
+            let action = running ? "Pauză" : done ? "Din nou" : left < total ? "Continuă" : "Pornește"
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 16) {
+                    Text(done ? "Gata!" : RecipeText.clock(left))
+                        .font(.custom(AppFont.storyDisplay, size: 34, relativeTo: .title).monospacedDigit())
+                        .foregroundStyle(Theme.accent)
+                        .contentTransition(.numericText(countsDown: true))
+                        .phaseAnimator(done ? [false, true] : [false]) { view, on in
+                            view.scaleEffect(on ? 1.06 : 1, anchor: .leading)
+                        } animation: { _ in .easeInOut(duration: 0.5) }
+                    Button {
+                        if running { timers.pause(step) } else if done { timers.reset(step) } else { timers.start(step) }
+                    } label: {
                         Text(action)
-                            .font(.custom(AppFont.bodyBold, size: 16, relativeTo: .callout))
-                            .foregroundStyle(Color(hex: 0x1F2A24))
-                            .padding(.horizontal, 16).frame(height: 40)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Theme.accent))
+                            .font(.custom(AppFont.bodyBold, size: 15, relativeTo: .callout))
+                            .foregroundStyle(.white)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
                     }
-                    .foregroundStyle(Theme.background)
-                    .padding(.leading, 16).padding(.trailing, 10).padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Theme.text))
-                    .phaseAnimator(done ? [false, true] : [false]) { view, on in
-                        view.scaleEffect(on ? 1.03 : 1)
-                    } animation: { _ in .easeInOut(duration: 0.5) }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(running ? "Timer, mai sunt \(RecipeText.clock(left)). \(action)" : "Timer de \(RecipeText.clock(total)). \(action)")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(running ? "Timer, mai sunt \(RecipeText.clock(left)). \(action)" : "Timer de \(RecipeText.clock(total)). \(action)")
                 if running {
                     Text("Sună și cu telefonul blocat, chiar dacă ieși din aplicație.")
                         .font(.custom(AppFont.body, size: 13, relativeTo: .caption))
-                        .foregroundStyle(Theme.muted)
+                        .foregroundStyle(.white.opacity(0.6))
                 }
             }
             .animation(.snappy, value: left)

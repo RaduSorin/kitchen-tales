@@ -29,9 +29,9 @@ enum RecipeSort: String, CaseIterable {
     var label: String { switch self { case .az: "Alfabetic"; case .new: "Cele mai noi"; case .fast: "Cele mai rapide"; case .cooked: "Gătite des" } }
 }
 
-/// "Rețetele mele", like the web: the big serif title with the gold +, the search box with the
-/// view button beside it (Listă, Grilă, Revistă, Categorii and the order), underlined category
-/// tabs, then the photo grid. Opened from a "Caietul meu" card it starts on that category.
+/// "Rețete", in the stories' style: the big serif title with a plain gold +, the search box with
+/// the view glyph beside it (Listă, Grilă, Revistă, Categorii and the order), category chips,
+/// then the grid with each name under its photo, so cards with and without a photo look alike. Opened from a "Caietul meu" card it starts on that category.
 struct RecipeListView: View {
     var category: String?
     @Environment(RecipeStore.self) private var store
@@ -108,7 +108,10 @@ struct RecipeListView: View {
                                 ForEach(list) { r in RecipeMagazineCard(recipe: r) { opened = r.id } }
                             }
                         default:
-                            RecipeMasonry(recipes: list) { r in link(r) { RecipeTile(recipe: r, height: recipeTileHeight(r)) } }
+                            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12, alignment: .top), GridItem(.flexible(), spacing: 12, alignment: .top)],
+                                      alignment: .leading, spacing: 18) {
+                                ForEach(list) { r in link(r) { RecipeTile(recipe: r) } }
+                            }
                         }
                     }
                 }
@@ -153,17 +156,17 @@ struct RecipeListView: View {
             KTPageHeader(title: category)
         } else {
             HStack(alignment: .center) {
-                Text("Rețetele mele")
-                    .font(.custom(AppFont.displaySemibold, size: 34, relativeTo: .largeTitle))
+                Text("Rețete")
+                    .font(.custom(AppFont.storyDisplay, size: 34, relativeTo: .largeTitle))
                     .foregroundStyle(Theme.text)
                     .accessibilityAddTraits(.isHeader)
                 Spacer()
                 Button { showsNew = true } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Theme.onAccent)
-                        .frame(width: 46, height: 46)
-                        .background(Circle().fill(Theme.accent))
+                        .font(.system(size: 24, weight: .medium))
+                        .foregroundStyle(Theme.accent)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(PressableStyle())
                 .accessibilityLabel("Rețetă nouă")
@@ -226,15 +229,16 @@ struct RecipeListView: View {
             } else {
                 Button { switchOpen = true } label: {
                     Image(systemName: mode.symbol)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: 19, weight: .regular))
                         .foregroundStyle(Theme.text)
-                        .frame(width: 38, height: 38)
+                        .frame(width: 40, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .accessibilityLabel("Vizualizare: \(mode.label)")
             }
         }
-        .padding(4)
-        .background(Capsule().fill(.white.opacity(0.07)))
+        .padding(switchOpen ? 4 : 0)
+        .background(Capsule().fill(.white.opacity(switchOpen ? 0.07 : 0)))
         .task(id: switchOpen) {
             guard switchOpen else { return }
             try? await Task.sleep(for: .seconds(4))
@@ -242,10 +246,10 @@ struct RecipeListView: View {
         }
     }
 
-    /// The web's underlined category tabs: Toate, Favorite, then each category.
+    /// The category chips: Toate, Favorite, then each category; the chosen one is gold.
     private var tabs: some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 18) {
+            HStack(spacing: 8) {
                 tab("Toate", nil)
                 if anyFavorite { tab("Favorite", Self.favorites) }
                 ForEach(categories, id: \.self) { tab($0, $0) }
@@ -262,10 +266,14 @@ struct RecipeListView: View {
             withAnimation(.snappy) { chosen = value }
         } label: {
             Text(title)
-                .font(.custom(on ? AppFont.bodySemibold : AppFont.body, size: 16, relativeTo: .callout))
-                .foregroundStyle(on ? Theme.text : Theme.muted)
+                .font(.custom(AppFont.bodySemibold, size: 14, relativeTo: .subheadline))
+                .foregroundStyle(on ? Theme.onAccent : Theme.text.opacity(0.85))
+                .padding(.horizontal, 14)
+                .frame(height: 34)
+                .background(Capsule().fill(on ? Theme.accent : .clear))
+                .overlay(Capsule().strokeBorder(.white.opacity(on ? 0 : 0.16)))
                 .frame(minHeight: 44)
-                .overlay(alignment: .bottom) { if on { Rectangle().fill(Theme.accent).frame(height: 2) } }
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])
@@ -291,7 +299,7 @@ struct RecipeListView: View {
     private func row(_ title: String, _ xs: [Recipe], more: String?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(title).font(.ktTitle3).foregroundStyle(Theme.text)
+                Text(title).font(.custom(AppFont.storyDisplay, size: 20, relativeTo: .title3)).foregroundStyle(Theme.text)
                 Spacer()
                 if let more {
                     Button("\(xs.count) ›") { withAnimation(.snappy) { chosen = more } }
@@ -326,57 +334,49 @@ struct RecipeListView: View {
     }
 }
 
-/// The web's photo grid: two columns of tiles of three heights, each tile going to the shorter column.
-/// The masonry tile height for a recipe: one of three, fixed by its id.
-func recipeTileHeight(_ r: Recipe) -> CGFloat {
-    [200, 170, 230][r.id.unicodeScalars.reduce(0) { $0 + Int($1.value) } % 3]
-}
-
-struct RecipeMasonry<Tile: View>: View {
-    let recipes: [Recipe]
-    @ViewBuilder let tile: (Recipe) -> Tile
-
-    var body: some View {
-        var cols: [[Recipe]] = [[], []]
-        var tall: [CGFloat] = [0, 0]
-        for r in recipes {
-            let c = tall[0] <= tall[1] ? 0 : 1
-            cols[c].append(r)
-            tall[c] += recipeTileHeight(r)
-        }
-        return HStack(alignment: .top, spacing: 10) {
-            ForEach(0..<2, id: \.self) { i in
-                LazyVStack(spacing: 10) { ForEach(cols[i]) { tile($0) } }
-            }
-        }
-    }
-}
-
-/// A photo tile with the title and "45 min · 4 porții" on a dark fade.
+/// A grid tile: the photo (or its label) in a 4:4.1 card, a gold heart on favourites, and the
+/// name with "45 min · 4 porții" under it.
 struct RecipeTile: View {
     let recipe: Recipe
-    let height: CGFloat
+    @Environment(RecipeStore.self) private var store
 
     var body: some View {
-        RecipePhoto(recipe: recipe, cornerRadius: 0)
-            .frame(maxWidth: .infinity)
-            .frame(height: height)
-            .overlay { LinearGradient(stops: [.init(color: .clear, location: 0.4), .init(color: .black.opacity(0.75), location: 1)], startPoint: .top, endPoint: .bottom) }
-            .overlay(alignment: .bottomLeading) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(recipe.title)
-                        .font(.custom(AppFont.bodySemibold, size: 16, relativeTo: .callout))
-                        .lineLimit(3)
-                    let meta = [recipe.minutes.map(RecipeText.formatMinutes), recipe.servings.map { "\($0) porții" }].compactMap { $0 }.joined(separator: " · ")
-                    if !meta.isEmpty { Text(meta).font(.custom(AppFont.bodySemibold, size: 12, relativeTo: .caption)).opacity(0.85) }
+        VStack(alignment: .leading, spacing: 7) {
+            Color.clear
+                .aspectRatio(1, contentMode: .fit)
+                .overlay { RecipePhoto(recipe: recipe, cornerRadius: 14) }
+                .overlay(alignment: .topLeading) {
+                    if store.isFavorite(recipe.id) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.accent)
+                            .shadow(color: .black.opacity(0.5), radius: 3)
+                            .padding(10)
+                    }
                 }
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.leading)
-                .padding(.leading, 12).padding(.trailing, 10).padding(.bottom, 10)
+                .shadow(color: .black.opacity(0.35), radius: 10, y: 8)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(recipe.title)
+                    .font(.custom(AppFont.bodySemibold, size: 15, relativeTo: .subheadline))
+                    .foregroundStyle(Theme.text)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                let meta = Self.meta(recipe)
+                if !meta.isEmpty {
+                    Text(meta).font(.custom(AppFont.body, size: 12.5, relativeTo: .caption)).foregroundStyle(Theme.muted).lineLimit(1)
+                }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .shadow(color: .black.opacity(0.4), radius: 10, y: 8)
-            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+
+    /// "45 min · 4 porții", or "45 min · de la Ana" for a recipe someone shared.
+    static func meta(_ r: Recipe) -> String {
+        var parts = [r.minutes.map(RecipeText.formatMinutes)].compactMap { $0 }
+        if !r.mine, let name = r.spaceName { parts.append("de la \(name)") }
+        else if let n = r.servings { parts.append("\(n) porții") }
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -412,7 +412,7 @@ struct RecipeMagazineCard: View {
                 Button(action: open) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(recipe.title)
-                            .font(.custom(AppFont.displaySemibold, size: 22, relativeTo: .title2))
+                            .font(.custom(AppFont.storyDisplay, size: 22, relativeTo: .title2))
                             .foregroundStyle(Theme.text)
                             .multilineTextAlignment(.leading)
                         let meta = [recipe.minutes.map(RecipeText.formatMinutes), recipe.servings.map { "\($0) porții" }].compactMap { $0 }.joined(separator: " · ")

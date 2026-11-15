@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Acasă on the recipes side, like the web's src/pages/Home.tsx (design A1 "Topit în poză"): the
-/// dish photo fills the top (swipe between the recipe being cooked, today's plan and the newest)
-/// and fades into the page, where three tabs hold the rest: Azi (today's menu, or three ideas,
+/// Acasă on the recipes side, laid out like the stories Acasă ("Seară de lux"): the dish photo
+/// whole in the middle with a glow from its colours (swipe between the recipe being cooked,
+/// today's plan and the newest), page dots, the title, a gold button and "Rețeta" as text, then
+/// three text tabs with a gold underline hold the rest: Azi (today's menu, or three ideas,
 /// and tonight's story), Săptămâna (seven round plates that pick a day shown below) and Caiet
 /// (Recente and one collection card per category). The open tab is remembered.
 struct RecipesHomeView: View {
@@ -33,7 +34,7 @@ struct RecipesHomeView: View {
                     } else {
                         hero
                         VStack(alignment: .leading, spacing: 16) {
-                            HomeSegTabs(selection: $tab) { $0.label }
+                            UnderlineTabs(selection: $tab) { $0.label }
                             Group {
                                 switch tab {
                                 case .azi: AziPanel()
@@ -44,7 +45,7 @@ struct RecipesHomeView: View {
                             .frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
                         }
                         .padding(.horizontal, 20)
-                        .padding(.top, 6)
+                        .padding(.top, 4)
                     }
                 }
                 .padding(.bottom, 24)
@@ -70,21 +71,21 @@ struct RecipesHomeView: View {
     }
 
     private var topBar: some View {
-        HStack {
+        HStack(spacing: 14) {
             AreaPicker(current: .recipes)
             Spacer()
             Button { path.append(.search) } label: {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(Theme.text)
-                    .frame(width: 38, height: 38)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay(Circle().strokeBorder(.white.opacity(0.12)))
+                    .frame(width: 40, height: 40)
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Caută rețete")
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 4)
+        .padding(.leading, 20)
+        .padding(.trailing, 12)
+        .padding(.top, 2)
         .environment(\.colorScheme, .dark)
     }
 
@@ -92,15 +93,24 @@ struct RecipesHomeView: View {
 
     private var hero: some View {
         let slides = store.heroSlides
-        return TabView(selection: $heroPage) {
-            ForEach(slides) { slide in
-                HeroDish(slide: slide, open: { path.append(.recipe(slide.recipe.id)) })
-                    .tag(Optional(slide.id))
+        let current = slides.first { $0.id == heroPage } ?? slides.first
+        return GeometryReader { geo in
+            let top = geo.safeAreaInsets.top + 58
+            ZStack(alignment: .top) {
+                if let current { DishGlow(recipe: current.recipe).id(current.id) }
+                TabView(selection: $heroPage) {
+                    ForEach(slides) { slide in
+                        HeroDish(slide: slide, top: top, open: { path.append(.recipe(slide.recipe.id)) })
+                            .tag(Optional(slide.id))
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                pageDots(slides)
+                    .padding(.top, top + HeroDish.photoSize.height + 12)
             }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .overlay(alignment: .bottom) { pageDots(slides) }
-        .frame(height: 540)
+        .frame(height: 500)
+        .animation(.easeInOut(duration: 0.35), value: heroPage)
     }
 
     private func pageDots(_ slides: [HeroSlide]) -> some View {
@@ -108,13 +118,12 @@ struct RecipesHomeView: View {
         return HStack(spacing: 5) {
             ForEach(slides) { slide in
                 Capsule()
-                    .fill(slide.id == current ? Theme.accent : Color.white.opacity(0.35))
-                    .frame(width: slide.id == current ? 18 : 6, height: 6)
+                    .fill(slide.id == current ? Theme.accent : Color.white.opacity(0.3))
+                    .frame(width: slide.id == current ? 16 : 5, height: 5)
             }
         }
         .opacity(slides.count > 1 ? 1 : 0)
         .animation(.snappy, value: current)
-        .padding(.bottom, 4)
         .accessibilityHidden(true)
     }
 
@@ -186,35 +195,6 @@ struct RecipesHomeView: View {
 
 // MARK: - Pieces shared by the tabs
 
-/// The web's `.seg-tabs`: the recipe page's segmented control, on the dark end of the photo.
-struct HomeSegTabs<T: Hashable & CaseIterable>: View where T.AllCases: RandomAccessCollection {
-    @Binding var selection: T
-    let label: (T) -> String
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(T.allCases), id: \.self) { t in
-                let on = t == selection
-                Button {
-                    withAnimation(.easeOut(duration: 0.2)) { selection = t }
-                } label: {
-                    Text(label(t))
-                        .font(.custom(AppFont.bodyBold, size: 14, relativeTo: .subheadline))
-                        .foregroundStyle(on ? Theme.text : Theme.muted)
-                        .frame(maxWidth: .infinity, minHeight: 38)
-                        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(on ? .white.opacity(0.16) : .clear))
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(on ? .isSelected : [])
-            }
-        }
-        .padding(3)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.08)))
-    }
-
-}
-
 /// A section title in a tab: "Recente" with a gold "Toate" on the right.
 struct HomeSecHead: View {
     let title: String
@@ -223,7 +203,7 @@ struct HomeSecHead: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(title).font(.custom(AppFont.displaySemibold, size: 22, relativeTo: .title2)).foregroundStyle(Theme.text)
+            Text(title).font(.custom(AppFont.storyDisplay, size: 22, relativeTo: .title2)).foregroundStyle(Theme.text)
             Spacer()
             if let link {
                 Button(link, action: action)
@@ -427,7 +407,7 @@ private struct TonightStory: View {
                             .foregroundStyle(Theme.accent)
                             .lineLimit(1)
                         Text(pick.story.title)
-                            .font(.custom(AppFont.displaySemibold, size: 19, relativeTo: .title3))
+                            .font(.custom(AppFont.storyDisplay, size: 19, relativeTo: .title3))
                             .foregroundStyle(Theme.text)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
@@ -437,26 +417,23 @@ private struct TonightStory: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     Image(systemName: "play.fill")
-                        .font(.system(size: 15))
-                        .foregroundStyle(Theme.onAccent)
+                        .font(.system(size: 20))
+                        .foregroundStyle(Theme.accent)
                         .frame(width: 44, height: 44)
-                        .background(Circle().fill(Theme.accent))
                 }
-                .padding(12)
-                .background(LinearGradient(colors: [Color(hex: 0x241D33), Color(hex: 0x171320)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
             }
             .buttonStyle(PressScale())
         } else if !stories.stories.isEmpty || stories.phase == .loaded {
             Button { area.current = .stories } label: {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("POVEȘTI PENTRU \(child.uppercased(with: Locale(identifier: "ro")))").font(.ktLabel).tracking(1.2).foregroundStyle(Theme.accent)
-                    Text("Adaugă prima poveste").font(.custom(AppFont.displaySemibold, size: 19, relativeTo: .title3)).foregroundStyle(Theme.text)
+                    Text("Adaugă prima poveste").font(.custom(AppFont.storyDisplay, size: 19, relativeTo: .title3)).foregroundStyle(Theme.text)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(12)
-                .background(LinearGradient(colors: [Color(hex: 0x241D33), Color(hex: 0x171320)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
             }
             .buttonStyle(PressScale())
         }
@@ -509,7 +486,7 @@ private struct WeekDayPanel: View {
 
             HStack(alignment: .firstTextBaseline) {
                 Text(Self.title(day, label: label, isToday: isToday, empty: entries.isEmpty, date: date))
-                    .font(.custom(AppFont.displaySemibold, size: 22, relativeTo: .title2))
+                    .font(.custom(AppFont.storyDisplay, size: 22, relativeTo: .title2))
                     .foregroundStyle(Theme.text)
                 Spacer()
                 Text(entries.isEmpty ? date : (entries.count == 1 ? "1 fel" : "\(entries.count) feluri"))
@@ -756,7 +733,7 @@ private struct MoveDaySheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Pe ce zi o muți?")
-                .font(.custom(AppFont.displaySemibold, size: 22, relativeTo: .title2))
+                .font(.custom(AppFont.storyDisplay, size: 22, relativeTo: .title2))
                 .foregroundStyle(Theme.text)
                 .padding(.bottom, 6)
             ForEach(days, id: \.self) { d in
@@ -795,52 +772,90 @@ private enum WeekDayPanelDate {
 
 // MARK: - Hero
 
-/// One page of the hero: the photo to the edges, fading into the page, with the title and buttons.
+/// One page of the hero: the dish photo whole in the middle, the eyebrow in gold capitals, the
+/// serif title, a muted line, then the gold button and "Rețeta" as gold text.
 private struct HeroDish: View {
     let slide: HeroSlide
+    let top: CGFloat
     let open: () -> Void
     @Environment(KitchenModel.self) private var kitchen
 
+    static let photoSize = CGSize(width: 285, height: 190)
+
     var body: some View {
         let r = slide.recipe
-        ZStack(alignment: .bottomLeading) {
-            RecipePhoto(recipe: r, cornerRadius: 0)
-            LinearGradient(stops: [
-                .init(color: Theme.background.opacity(0.15), location: 0),
-                .init(color: .clear, location: 0.28),
-                .init(color: Theme.background.opacity(0.82), location: 0.74),
-                .init(color: Theme.background, location: 1),
-            ], startPoint: .top, endPoint: .bottom)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(slide.eyebrow.uppercased(with: Locale(identifier: "ro")))
-                    .font(.ktLabel).tracking(1.2)
-                    .foregroundStyle(Theme.accent)
-                Text(r.title)
-                    .font(.custom(AppFont.displaySemibold, size: 34, relativeTo: .largeTitle))
-                    .foregroundStyle(Theme.text)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.7)
-                Text([r.category.isEmpty ? nil : r.category, r.servings.map { "\($0) porții" }].compactMap { $0 }.joined(separator: " · "))
-                    .font(.ktCallout)
-                    .foregroundStyle(Theme.text.opacity(0.85))
-                HStack(spacing: 10) {
-                    Button { kitchen.cook(r) } label: {
-                        HStack(spacing: 8) {
-                            ChefHat().stroke(style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round)).frame(width: 18, height: 18)
-                            Text(slide.primary)
-                        }
-                    }
-                    .buttonStyle(.ktPrimary)
-                    Button("Rețeta", action: open)
-                        .buttonStyle(GlassCapsuleStyle())
-                }
-                .padding(.top, 10)
+        VStack(spacing: 0) {
+            Button(action: open) {
+                RecipePhoto(recipe: r, cornerRadius: 16)
+                    .frame(width: Self.photoSize.width, height: Self.photoSize.height)
+                    .shadow(color: .black.opacity(0.55), radius: 26, y: 20)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 30)
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel(r.title)
+            Text(slide.eyebrow.uppercased(with: Locale(identifier: "ro")))
+                .font(.custom(AppFont.bodyBold, size: 11, relativeTo: .caption2)).tracking(1.5)
+                .foregroundStyle(Theme.accent)
+                .lineLimit(1)
+                .padding(.top, 30)
+            Text(r.title)
+                .font(.custom(AppFont.storyDisplay, size: 30, relativeTo: .largeTitle))
+                .foregroundStyle(Theme.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(.top, 6)
+            Text(Self.line(r))
+                .font(.custom(AppFont.body, size: 14.5, relativeTo: .subheadline))
+                .foregroundStyle(Theme.muted)
+                .padding(.top, 3)
+            HStack(spacing: 22) {
+                Button { kitchen.cook(r) } label: {
+                    HStack(spacing: 8) {
+                        ChefHat().stroke(style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round)).frame(width: 18, height: 18)
+                        Text(slide.primary)
+                    }
+                }
+                .buttonStyle(.ktPrimary)
+                Button(action: open) {
+                    Text("Rețeta")
+                        .font(.custom(AppFont.bodyBold, size: 16, relativeTo: .body))
+                        .foregroundStyle(Theme.accent)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.top, 18)
+            Spacer(minLength: 0)
         }
-        .clipped()
-        .contentShape(Rectangle())
+        .padding(.top, top)
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity)
+    }
+
+    /// "Ciorbe și supe · 4 porții".
+    static func line(_ r: Recipe) -> String {
+        [r.category.isEmpty ? nil : r.category, r.servings.map { "\($0) porții" }].compactMap { $0 }.joined(separator: " · ")
+    }
+}
+
+/// The hero's dish, blurred, as a warm coloured light behind the top of Acasă.
+private struct DishGlow: View {
+    let recipe: Recipe
+
+    var body: some View {
+        RecipePhoto(recipe: recipe, cornerRadius: 0)
+            .frame(width: 300, height: 300)
+            .scaleEffect(1.7)
+            .blur(radius: 70)
+            .saturation(1.3)
+            .opacity(0.55)
+            .frame(maxWidth: .infinity)
+            .frame(height: 520, alignment: .top)
+            .padding(.top, 40)
+            .mask(LinearGradient(colors: [.black, .black.opacity(0.7), .clear], startPoint: .top, endPoint: .bottom))
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .transition(.opacity)
     }
 }
 
@@ -888,26 +903,23 @@ struct RecipeCaption: View {
     }
 }
 
-/// A category of "Caietul meu": tinted from its name, with three overlapping dishes.
+/// A category of "Caietul meu": a quiet card with the serif name, the count in gold and three
+/// overlapping dishes (like the collection cards on the stories side).
 struct CategoryCard: View {
     let name: String
     let recipes: [Recipe]
     var newCount = 0
 
-    private static let tints: [(UInt32, UInt32)] = [(0x7A4A22, 0x3A2412), (0x3E5A2E, 0x1E2C16), (0x6A2A3C, 0x32141C),
-                                                    (0x2E4A6A, 0x162434), (0x6A5A22, 0x322A10)]
-
     var body: some View {
-        let tint = Self.tints[CoverScene.index(name) % Self.tints.count]
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
-                    .font(.custom(AppFont.display, size: 22, relativeTo: .title2))
+                    .font(.custom(AppFont.storyDisplay, size: 22, relativeTo: .title2))
                     .foregroundStyle(Theme.text)
                     .multilineTextAlignment(.leading)
                 Text(count)
-                    .font(.ktFootnote)
-                    .foregroundStyle(Theme.text.opacity(0.75))
+                    .font(.custom(AppFont.bodySemibold, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Theme.accent)
             }
             Spacer(minLength: 8)
             ZStack {
@@ -923,8 +935,7 @@ struct CategoryCard: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, minHeight: 124, alignment: .topLeading)
-        .background(LinearGradient(colors: [Color(hex: tint.0), Color(hex: tint.1)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.08)))
         .accessibilityElement(children: .combine)
     }

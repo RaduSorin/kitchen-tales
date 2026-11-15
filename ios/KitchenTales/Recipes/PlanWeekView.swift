@@ -270,7 +270,7 @@ struct PlanWeekView: View {
         } else if let r {
             RecipePhoto(recipe: r, cornerRadius: 12).frame(width: 56, height: 56)
         } else {
-            PlateDrawing(seed: x.title).frame(width: 56, height: 56).clipShape(RoundedRectangle(cornerRadius: 12))
+            RecipeLabel(title: x.title, category: x.recipe?.category ?? "").frame(width: 56, height: 56).clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 

@@ -127,61 +127,6 @@ struct BadgeBar: View {
     }
 }
 
-/// Profil: the two collections side by side, each with how many and the newest three.
-struct BadgeCards: View {
-    let open: (ProfileRoute) -> Void
-    @Environment(BadgeStore.self) private var badges
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            card(title: "Pașaportul culinar", list: BadgeCatalog.stamps, empty: "Primul timbru vine cu prima rețetă.", night: false) { open(.passport) }
-            card(title: "Albumul de povești", list: BadgeCatalog.stickers, empty: "Primul abțibild vine la finalul unei povești.", night: true) { open(.album) }
-        }
-    }
-
-    private func card(title: String, list: [Badge], empty: String, night: Bool, action: @escaping () -> Void) -> some View {
-        let have = badges.count(list)
-        let latest = badges.latest(list, 3)
-        let muted = night ? Color(hex: 0xFFF6D6).opacity(0.7) : Theme.muted
-        return Button(action: action) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(title)
-                        .font(night ? .custom(AppFont.kidsHeavy, size: 15, relativeTo: .subheadline) : .custom(AppFont.bodyBold, size: 15, relativeTo: .subheadline))
-                        .foregroundStyle(night ? Color(hex: 0xFFF6D6) : Theme.text)
-                        .multilineTextAlignment(.leading)
-                    Spacer(minLength: 0)
-                    Text("\(have) din \(list.count)").font(.custom(AppFont.body, size: 12, relativeTo: .caption)).foregroundStyle(muted)
-                        .fixedSize()
-                }
-                BadgeBar(value: Double(have) / Double(list.count), tint: night ? Color(hex: 0xFFD76A) : Theme.accent)
-                HStack(spacing: 4) {
-                    if latest.isEmpty {
-                        Text(empty).font(.custom(AppFont.body, size: 12, relativeTo: .caption)).foregroundStyle(muted)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                    } else {
-                        ForEach(latest) { b in
-                            BadgeArt(badge: b, earned: badges.earnedDate(b), plain: true)
-                                .frame(maxWidth: 52)
-                        }
-                    }
-                }
-                .frame(minHeight: 52, alignment: .leading)
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(night ? AnyShapeStyle(LinearGradient(colors: [Color(hex: 0x262A66), Color(hex: 0x3A2F86)], startPoint: .topLeading, endPoint: .bottomTrailing)) : AnyShapeStyle(Color.white.opacity(0.06)))
-            }
-            .overlay { if !night { RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.08)) } }
-        }
-        .buttonStyle(PressableStyle())
-        .accessibilityLabel("\(title), \(have) din \(list.count)")
-    }
-}
-
 /// One badge's page: big, what earns it, the date or how far along it is, and its series.
 struct BadgeSheet: View {
     let badge: Badge
@@ -206,7 +151,7 @@ struct BadgeSheet: View {
                 .frame(width: kid ? 170 : 220)
                 .padding(.top, 26)
             Text(hidden ? "Surpriză" : badge.name)
-                .font(kid ? .custom(AppFont.kidsHeavy, size: 24, relativeTo: .title2) : .custom(AppFont.displaySemibold, size: 24, relativeTo: .title2))
+                .font(kid ? .custom(AppFont.storyDisplay, size: 24, relativeTo: .title2) : .custom(AppFont.displaySemibold, size: 24, relativeTo: .title2))
                 .foregroundStyle(Theme.text)
             Text(hidden ? "O descoperi făcând ce faci de obicei în aplicație, doar puțin altfel." : badge.how)
                 .font(.ktCallout).foregroundStyle(Theme.muted)

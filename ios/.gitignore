@@ -7,3 +7,5 @@ DerivedData/
 ShareExtension/Info.plist
 KitchenTales/KitchenTales.entitlements
 ShareExtension/Share.entitlements
+Widgets/Info.plist
+Widgets/Widgets.entitlements

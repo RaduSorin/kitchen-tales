@@ -53,6 +53,7 @@ struct CookModeView: View {
             UIApplication.shared.isIdleTimerDisabled = true
             trackBadge(.cookOpened)
             if LaunchOptions.screen == "cook" { timers.startDemo(step: step) }
+            CookTimers.live = timers
             handsFree.onCommand = { command($0) }
         }
         .onDisappear {
@@ -60,6 +61,14 @@ struct CookModeView: View {
             handsFree.stop()
         }
         .onChange(of: step) { if handsFree.on { handsFree.say(stepSpeech(step)) } }
+        // "Pasul 4" on the Lock Screen when a timer has rung.
+        .onChange(of: timers.requestedStep) {
+            guard let asked = timers.requestedStep else { return }
+            timers.requestedStep = nil
+            guard asked >= 0, asked < recipe.steps.count else { return }
+            withAnimation(.snappy) { finished = false; step = asked }
+            CookProgress.set(recipe.id, step: asked)
+        }
         .onChange(of: finished) { if handsFree.on, finished { handsFree.say("Poftă bună! Ai terminat \(recipe.title).") } }
         .environment(\.colorScheme, .dark)
         .statusBarHidden()
@@ -564,6 +573,12 @@ final class CookTimers {
     @ObservationIgnored private let recipe: Recipe
     @ObservationIgnored private var ticker: Timer?
 
+    /// The session on screen, for the Lock Screen buttons (Pauză, +1 min) of its Live Activity.
+    static weak var live: CookTimers?
+
+    /// A step asked for from the Lock Screen ("Pasul 4"), for the screen to move to.
+    var requestedStep: Int?
+
     init(recipe: Recipe) { self.recipe = recipe }
 
     func duration(_ step: Int) -> Int {
@@ -589,6 +604,27 @@ final class CookTimers {
         tick()
         schedule(step, at: end)
         Haptics.tap()
+        syncActivity()
+    }
+
+    /// "+1 min" (from the Lock Screen too): a minute more on a running or paused timer, or a new
+    /// minute on one that has rung.
+    func addMinute(_ step: Int) {
+        guard let t = timers[step] else { return }
+        if let end = t.endsAt {
+            let later = end.addingTimeInterval(60)
+            timers[step] = Running(total: t.total + 60, left: t.left, endsAt: later)
+            cancel(step)
+            schedule(step, at: later)
+        } else if t.left > 0 {
+            timers[step] = Running(total: t.total + 60, left: t.left + 60, endsAt: nil)
+        } else {
+            let end = Date().addingTimeInterval(60)
+            timers[step] = Running(total: 60, left: 60, endsAt: end)
+            schedule(step, at: end)
+            tick()
+        }
+        syncActivity()
     }
 
     func pause(_ step: Int) {
@@ -598,17 +634,20 @@ final class CookTimers {
         timers[step] = t
         cancel(step)
         Haptics.tap()
+        syncActivity()
     }
 
     func reset(_ step: Int) {
         timers[step] = nil
         cancel(step)
+        syncActivity()
     }
 
     func cancelAll() {
         for step in timers.keys { cancel(step) }
         timers = [:]
         ticker?.invalidate()
+        CookLiveActivity.end()
     }
 
     /// Screenshots: the step's timer running with a few minutes gone.
@@ -636,11 +675,22 @@ final class CookTimers {
             // The app is open: ring here (the notification only shows when it is in the background).
             AudioServicesPlayAlertSound(SystemSoundID(1005))
             UINotificationFeedbackGenerator().notificationOccurred(.success)
+            syncActivity()
         }
         if !timers.values.contains(where: { $0.endsAt != nil }) { ticker?.invalidate() }
     }
 
     private func id(_ step: Int) -> String { "cook-\(recipe.id)-\(step)" }
+
+    /// The Lock Screen and Dynamic Island copy of the timers.
+    private func syncActivity() {
+        guard LaunchOptions.demoAccount == nil else { return }
+        CookLiveActivity.sync(recipe: recipe, clocks: timers.map { step, t in
+            let text = step < recipe.steps.count ? CookActivityText.split(recipe.steps[step]) : (title: "Pasul \(step + 1)", detail: "")
+            return CookTimerAttributes.Clock(step: step, title: text.title, detail: text.detail,
+                                             total: max(t.total, 1), endsAt: t.endsAt, left: t.endsAt == nil ? t.left : left(step))
+        })
+    }
 
     private func schedule(_ step: Int, at end: Date) {
         let center = UNUserNotificationCenter.current()

@@ -27,12 +27,17 @@ targets:
     dependencies:
       # "Salvează în Bucătăria" in the Share sheet.
       - target: KitchenTalesShare
+      # The widgets and the cooking timers' Live Activity.
+      - target: KitchenTalesWidgets
     entitlements:
       path: KitchenTales/KitchenTales.entitlements
       properties:
         # The sign-in is shared with the Share extension through this Keychain group.
         keychain-access-groups:
           - $(AppIdentifierPrefix)app.kitchentales.shared
+        # The widgets read the app's copy (Features/Widgets) from this App Group.
+        com.apple.security.application-groups:
+          - group.app.kitchentales
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.kitchentales.ios
@@ -66,6 +71,8 @@ targets:
         # Stories keep playing with the screen off and show on the Lock Screen.
         UIBackgroundModes:
           - audio
+        # The cooking timers on the Lock Screen and in the Dynamic Island.
+        NSSupportsLiveActivities: true
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations:
@@ -153,6 +160,54 @@ targets:
               NSExtensionActivationSupportsWebURLWithMaxCount: 1
               NSExtensionActivationSupportsText: true
               NSExtensionActivationSupportsImageWithMaxCount: 1
+  # The widgets ("Povestea de diseară", "Ce gătim azi", the list count) and the cooking timers'
+  # Live Activity. They show the copy the app writes into the App Group (Features/Widgets/Shared)
+  # and never talk to the server; their buttons run in the app (see WidgetIntents.swift).
+  KitchenTalesWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+        excludes:
+          - Widgets.entitlements
+      - path: KitchenTales/Features/Widgets/Shared
+      - path: KitchenTales/Design/Theme.swift
+      - path: KitchenTales/Design/AppFont.swift
+      - path: KitchenTales/Resources/Fonts/Figtree-400.ttf
+        buildPhase: resources
+      - path: KitchenTales/Resources/Fonts/Figtree-600.ttf
+        buildPhase: resources
+      - path: KitchenTales/Resources/Fonts/Figtree-700.ttf
+        buildPhase: resources
+      - path: KitchenTales/Resources/Fonts/YoungSerif-400.ttf
+        buildPhase: resources
+    entitlements:
+      path: Widgets/Widgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.kitchentales
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.kitchentales.ios.widgets
+        PRODUCT_NAME: KitchenTalesWidgets
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Widgets/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        APPLICATION_EXTENSION_API_ONLY: YES
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Bucătăria
+        CFBundleDevelopmentRegion: ro
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts:
+          - Figtree-400.ttf
+          - Figtree-600.ttf
+          - Figtree-700.ttf
+          - YoungSerif-400.ttf
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
   KitchenTalesTests:
     type: bundle.unit-test
     platform: iOS

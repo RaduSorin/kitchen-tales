@@ -31,6 +31,8 @@ The native iPhone app, built next to the web app in the same repo and on the sam
 | `KitchenTales/Design` | Style A "Seară iOS": colors (`Theme`), fonts (`AppFont`), shared components |
 | `KitchenTales/Features` | Screens, one folder per area |
 | `KitchenTales/Resources` | Asset catalog (icon, accent color) and the bundled fonts |
+| `ShareExtension` | "Salvează în Bucătăria" in the Share sheet |
+| `Widgets` | Widget extension: home and Lock Screen widgets, the cooking timers' Live Activity |
 | `KitchenTalesTests` | Unit tests (Swift Testing) |
 | `scripts` | Simulator picking and the Linux precheck for CI |
 
@@ -158,3 +160,32 @@ notifications with "Începe acum" / "Peste 10 min" (`NotificationRouter`), the n
 (`BedtimeNightView`: steps, tonight's stories, kid mode, dimmed screen), the Siri intent and a
 Sleep Focus filter (`BedtimeFocusFilter`). Story jobs ask for background time and post "Povestea
 e gata" when they finish while the app is in the background.
+
+## Widgets and Live Activity
+
+`Widgets/` is the widget extension (target `KitchenTalesWidgets`, concept
+`design-polish/ios-widgets`):
+
+- **Povestea de diseară** (small, medium, Lock Screen): tonight's story as `Bedtime.tonight` picks
+  it; "Ascultă" starts it without opening the app.
+- **Ce gătim azi** (small, medium, Lock Screen): today's plan and tomorrow's dish, or an idea from
+  `TodayIdeas` with "Pune azi în plan" and "Altă idee".
+- **Lista de cumpărături** (round, Lock Screen): how many lines are left.
+- **Cooking timers** (Live Activity, Lock Screen and Dynamic Island): started by `CookTimers` in
+  Modul de gătit, with Pauză / Continuă, +1 min and "Pasul N" once a timer has rung. The content
+  goes stale at the first end time, which is how the card turns to "Gata" with the app asleep.
+
+The widgets never call the server. The app writes `WidgetSnapshot` and small JPEG copies of the
+covers and photos into the App Group `group.app.kitchentales` (`Features/Widgets/WidgetSync.swift`)
+whenever the stories, the plan, the list or the bedtime change, and when it goes to the
+background; the timelines also refresh after midnight and every hour. The files in
+`Features/Widgets/Shared` are compiled into both targets. The buttons' intents are
+`AudioPlaybackIntent` or `LiveActivityIntent`, which iOS runs in the app's process (starting it in
+the background if needed), where `WidgetBridge` carries them out; "Altă idee" only bumps a counter
+in the App Group and runs in the widget. In an unsigned simulator build there is no App Group, so
+the app keeps the copy in its own Application Support folder.
+
+Signing: the App Group and the new bundle ID `app.kitchentales.ios.widgets` are registered by
+Xcode's automatic signing in the TestFlight job (`-allowProvisioningUpdates` with the Admin API
+key). If that ever fails, add the App Group under developer.apple.com › Identifiers and enable it
+for `app.kitchentales.ios` and `app.kitchentales.ios.widgets`.

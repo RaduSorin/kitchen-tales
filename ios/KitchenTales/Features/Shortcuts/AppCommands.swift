@@ -21,6 +21,8 @@ final class AppCommands {
     /// The recipes of the running app, so a Shortcut run in the background changes the same list
     /// the screen shows. Nil when the app is not running.
     @ObservationIgnored weak var recipes: RecipeStore?
+    /// The stories of the running app, for "Ascultă" on the "Povestea de diseară" widget.
+    @ObservationIgnored weak var stories: StoryStore?
 
     private init() {}
 }

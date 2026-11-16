@@ -76,7 +76,9 @@ private struct SignedInRoot: View {
         .task { await badges.start() }
         .onAppear { Bedtime.shared.restoreBrightnessIfLeftDim() }
         // Siri, Shortcuts and Spotlight.
-        .onAppear { commands.recipes = recipes }
+        .onAppear { commands.recipes = recipes; commands.stories = stories }
+        // The widgets' copy of tonight's stories, the plan and the list.
+        .modifier(WidgetSyncing(recipes: recipes, stories: stories))
         .onChange(of: commands.pending, initial: true) { Task { await runCommand() } }
         .task(id: stories.allStories.count &+ recipes.recipes.count &* 7919) {
             guard LaunchOptions.demoAccount == nil else { return }

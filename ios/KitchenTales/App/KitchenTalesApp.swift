@@ -7,6 +7,7 @@ struct KitchenTalesApp: App {
     init() {
         Theme.applyAppearance()
         NotificationRouter.shared.install()
+        WidgetBridge.install()
     }
 
     var body: some Scene {
@@ -20,6 +21,11 @@ struct KitchenTalesApp: App {
                 .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .environment(\.locale, Locale(identifier: "ro_RO"))
                 .onOpenURL { url in
+                    // kitchentales://cook/<step>: "Pasul 4" on the cooking timer's Live Activity.
+                    if url.host == "cook", let step = Int(url.lastPathComponent) {
+                        CookTimers.live?.requestedStep = step
+                        return
+                    }
                     if let command = AppCommands.command(for: url) { AppCommands.shared.pending = command }
                 }
         }
@@ -48,6 +54,7 @@ struct AppRoot: View {
             }
         }
         .animation(.easeInOut(duration: 0.35), value: auth.state)
+        .onChange(of: auth.state) { if auth.state == .signedOut { WidgetSync.clear() } }
         .task { await auth.start() }
     }
 }

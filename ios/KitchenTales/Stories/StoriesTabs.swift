@@ -172,6 +172,7 @@ private struct PlayerSheet: ViewModifier {
         // A full page, like the web; the page itself handles drag-down to close.
         content.fullScreenCover(isPresented: $player.showsPlayer) {
             PlayerView()
+                .volumeCapNotice()
                 .presentationBackground(.clear)
         }
     }

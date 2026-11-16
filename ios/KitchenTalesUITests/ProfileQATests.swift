@@ -133,7 +133,7 @@ final class ProfileQATests: QABase {
         log("texts: " + screenTexts())
         app.swipeUp(); shot("child-2")
         app.swipeUp(); shot("child-3")
-        if tap("PIN pentru ieșire", .any, exact: false, optional: true) {
+        if tap("Schimbă PIN-ul", .any, exact: false, optional: true) {
             settle(1)
             shot("child-pin")
             dumpTree("child-pin")

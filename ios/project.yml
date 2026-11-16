@@ -63,6 +63,7 @@ targets:
         NSMicrophoneUsageDescription: Ca să înregistrezi povești citite cu vocea ta și să dictezi rețete.
         NSSpeechRecognitionUsageDescription: Ca să dictezi rețete, ingrediente și pași.
         NSCameraUsageDescription: Ca să fotografiezi o rețetă din carte sau poza unui fel de mâncare.
+        NSFaceIDUsageDescription: Ca să ieși din modul copil doar cu fața ta, fără să scrii PIN-ul.
         # Stories keep playing with the screen off and show on the Lock Screen.
         UIBackgroundModes:
           - audio

@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// "Despre copil" and "Modul copil" on one page: what the stories know about the child, the
-/// PIN that ends kid mode, how long the child may listen and which folders they see.
+/// "Despre copil" and "Modul copil" on one page, in cards like the web: what the stories know
+/// about the child, then kid mode (the button that starts it, time, folders, volume ceiling,
+/// Face ID or PIN to leave), Seara, and two tips that open in place.
 struct ChildView: View {
     @Environment(ProfileStore.self) private var profile
     @Environment(StoryStore.self) private var stories
@@ -10,7 +11,6 @@ struct ChildView: View {
     @Environment(\.profileNight) private var night
     @State private var name = ""
     @State private var settingPin = false
-    @State private var showsGuide = false
 
     private static let minuteChoices = [10, 15, 20, 30, 45, 60, 90, 0]
 
@@ -41,38 +41,7 @@ struct ChildView: View {
             }
             .profileRows(night)
 
-            Section {
-                Button { settingPin = true } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("PIN pentru ieșire").font(.ktBody).foregroundStyle(Theme.text)
-                            if s.hasPin {
-                                HStack(spacing: 10) { ForEach(0..<4, id: \.self) { _ in Circle().fill(Theme.accent).frame(width: 12, height: 12) } }
-                            } else {
-                                Text("Alege un PIN ca să pornești modul copil.").font(.ktFootnote).foregroundStyle(Theme.muted)
-                            }
-                        }
-                        Spacer()
-                        Text(s.hasPin ? "Schimbă" : "Alege").font(.ktBody).foregroundStyle(Theme.accent)
-                    }
-                }
-                Picker("Timp de ascultare", selection: Binding(get: { s.kidMinutes }, set: { v in profile.update { $0.kidMinutes = v } })) {
-                    ForEach(Self.minuteChoices, id: \.self) { m in Text(m.kidMinutesLabel).tag(m) }
-                }
-                NavigationLink {
-                    KidFoldersView()
-                } label: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Ce foldere vede").font(.ktBody)
-                        Text(s.kidFolders.isEmpty ? "toate folderele" : s.kidFolders.joined(separator: ", "))
-                            .font(.ktFootnote).foregroundStyle(Theme.muted).lineLimit(1)
-                    }
-                }
-                Toggle("Vibrație la răsfoit", isOn: shelfClick)
-            } header: {
-                header("Modul copil")
-            }
-            .profileRows(night)
+            kidModeSection
 
             Section {
                 NavigationLink(value: ProfileRoute.bedtime) {
@@ -87,23 +56,94 @@ struct ChildView: View {
             .profileRows(night)
 
             Section {
-                Button { showsGuide = true } label: {
-                    Label("Sfat: Acces ghidat ține copilul în aplicație", systemImage: "lightbulb")
-                        .font(.ktFootnote).foregroundStyle(Theme.muted)
+                DisclosureGroup("Cum funcționează") {
+                    KidTips(lines: Self.howItWorks)
                 }
-                if s.hasPin {
-                    Button { give() } label: {
-                        Label(s.childName.isEmpty ? "Dă-i telefonul copilului" : "Dă-i telefonul \(dative(s.childName))", systemImage: "lock.fill")
-                    }
-                    .buttonStyle(.ktPrimaryWide)
+                DisclosureGroup("Ca să nu poată ieși deloc din aplicație") {
+                    KidTips(lines: Self.guidedAccess, numbered: true)
                 }
             }
+            .font(.ktCallout)
+            .tint(Theme.muted)
             .listRowBackground(Color.clear)
         }
         .onAppear { name = profile.settings.childName }
         .sheet(isPresented: $settingPin) { NewPinSheet { profile.setPin($0) } }
-        .sheet(isPresented: $showsGuide) { GuidedAccessGuide() }
     }
+
+    // MARK: Kid mode rows
+
+    /// The "Modul copil" card, as on the web: what it does and the gold button first, then its
+    /// settings (only once there is a PIN).
+    @ViewBuilder private var kidModeSection: some View {
+        let s = profile.settings
+        Section {
+            KidModeIntro(hasPin: s.hasPin, startLabel: startLabel, choosePin: { settingPin = true }, start: give)
+            if s.hasPin {
+                Picker("Timp", selection: Binding(get: { s.kidMinutes }, set: { v in profile.update { $0.kidMinutes = v } })) {
+                    ForEach(Self.minuteChoices, id: \.self) { m in Text(m.kidMinutesLabel).tag(m) }
+                }
+                .font(.ktBody)
+                NavigationLink {
+                    KidFoldersView()
+                } label: {
+                    LabeledContent("Foldere", value: foldersSummary)
+                }
+                NavigationLink {
+                    KidVolumeView()
+                } label: {
+                    LabeledContent("Volum maxim", value: volumeSummary)
+                }
+                if let biometry = ParentCheck.biometryName {
+                    Picker("Ieșire", selection: $faceID) {
+                        Text("\(biometry) sau PIN").tag(true)
+                        Text("Doar PIN").tag(false)
+                    }
+                }
+                Button { settingPin = true } label: {
+                    LabeledContent("Schimbă PIN-ul", value: "••••").foregroundStyle(Theme.text)
+                }
+            }
+            Toggle("Vibrație la răsfoit", isOn: shelfClick)
+        } header: {
+            header("Modul copil")
+        }
+        .profileRows(night)
+    }
+
+    @AppStorage(KidSafety.faceIDKey) private var faceID = true
+    @AppStorage(KidSafety.volumeKey) private var volume = KidSafety.defaultVolume
+    @AppStorage(KidSafety.volumeAlwaysKey) private var volumeAlways = false
+
+    private var startLabel: String {
+        let name = profile.settings.childName
+        return name.isEmpty ? "Dă-i telefonul copilului" : "Dă-i telefonul \(Self.dative(name))"
+    }
+
+    private var foldersSummary: String {
+        let all = stories.allFolders
+        let picked = profile.settings.kidFolders.filter { all.contains($0) }
+        if picked.isEmpty { return "toate" }
+        return picked.count == 1 ? picked[0] : "\(picked.count) din \(all.count)"
+    }
+
+    private var volumeSummary: String {
+        KidSafety.volumeSummary(cap: volume >= 0.995 ? nil : volume, onlyInHeadphones: !volumeAlways)
+    }
+
+    static let howItWorks = [
+        "Copilul vede doar poveștile, fără ștergere, mutare sau rețete.",
+        "La final, povestea începută se termină dacă mai are cel mult 5 minute, apoi aplicația se blochează.",
+        "Ca să ieși: apasă lacătul de sus și uită-te la telefon (Face ID) sau scrie PIN-ul.",
+        "PIN-ul și alegerile se salvează în cont; modul copil, Face ID și volumul sunt doar pe acest telefon.",
+    ]
+
+    static let guidedAccess = [
+        "Configurări › Accesibilitate › Acces ghidat: pornește-l și alege un cod.",
+        "Deschide aplicația, pornește modul copil, apoi apasă de 3 ori butonul lateral și alege Pornește.",
+        "Ca să ieși: apasă de 3 ori butonul lateral și scrie codul.",
+        "Tot acolo, la Opțiuni, poți opri butoanele de volum.",
+    ]
 
     private var bedtimeSummary: String {
         let s = Bedtime.shared.settings
@@ -133,7 +173,7 @@ struct ChildView: View {
     }
 
     /// "Anei", "lui Matei": good enough for the button; other names keep "copilului".
-    private func dative(_ name: String) -> String {
+    static func dative(_ name: String) -> String {
         if name.hasSuffix("a") { return String(name.dropLast()) + "ei" }
         return "lui \(name)"
     }
@@ -219,6 +259,8 @@ struct PinPad: View {
     let title: String
     var message: String?
     var disabled = false
+    /// Kid mode: the empty key bottom left tries Face ID again.
+    var faceAction: (() -> Void)?
     let onPin: (String) -> Void
     @State private var digits = ""
 
@@ -237,7 +279,16 @@ struct PinPad: View {
             Text(message ?? " ").font(.ktFootnote).foregroundStyle(Theme.muted).multilineTextAlignment(.center).frame(minHeight: 34)
             LazyVGrid(columns: Array(repeating: GridItem(.fixed(84), spacing: 22), count: 3), spacing: 16) {
                 ForEach(["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"], id: \.self) { key in
-                    if key.isEmpty {
+                    if key.isEmpty, let faceAction {
+                        Button { Haptics.tap(); faceAction() } label: {
+                            Image(systemName: ParentCheck.symbol)
+                                .font(.system(size: 30, weight: .regular))
+                                .foregroundStyle(Theme.accent)
+                                .frame(width: 76, height: 76)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(ParentCheck.biometryName ?? "Face ID")
+                    } else if key.isEmpty {
                         Color.clear.frame(width: 76, height: 76)
                     } else {
                         Button { press(key) } label: {
@@ -272,40 +323,5 @@ struct PinPad: View {
                 onPin(pin)
             }
         }
-    }
-}
-
-/// How to turn on Guided Access, so the child cannot leave the app.
-private struct GuidedAccessGuide: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    step(1, "Deschide Configurări → Accesibilitate → Acces ghidat și pornește-l. Alege un cod.")
-                    step(2, "Intră în aplicație și apasă „Dă-i telefonul copilului”.")
-                    step(3, "Apasă de 3 ori butonul lateral și alege Pornește.")
-                    step(4, "Ca să ieși: din nou de 3 ori butonul lateral și codul tău.")
-                } footer: {
-                    Text("Modul copil ascunde ce nu e pentru copii; Acces ghidat îl ține și în aplicație.")
-                }
-                .listRowBackground(Theme.surface)
-            }
-            .scrollContentBackground(.hidden)
-            .background(Theme.background.ignoresSafeArea())
-            .navigationTitle("Acces ghidat")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Gata") { dismiss() } } }
-        }
-        .presentationDetents([.medium, .large])
-    }
-
-    private func step(_ n: Int, _ text: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text("\(n)").font(.ktBodyEmphasis).foregroundStyle(Theme.accent)
-            Text(text).font(.ktCallout).foregroundStyle(Theme.text)
-        }
-        .padding(.vertical, 2)
     }
 }

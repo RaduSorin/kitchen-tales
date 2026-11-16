@@ -22,6 +22,7 @@ final class KidMode {
             // Play (the player page, the lock screen, headphones) must not start a story while locked.
             StoryPlayer.shared.lockedByKidMode = locked
             StoryPlayer.shared.asksBeforeSwitching = state.active
+            applyVolumeCap()
         }
     }
     private var timer: Task<Void, Never>?
@@ -44,7 +45,14 @@ final class KidMode {
         }
         StoryPlayer.shared.lockedByKidMode = locked
         StoryPlayer.shared.asksBeforeSwitching = state.active
+        applyVolumeCap()
         schedule()
+    }
+
+    /// Stories stay under the volume ceiling the parent chose while kid mode is on (KidSafety).
+    func applyVolumeCap() {
+        StoryPlayer.shared.capOnlyInHeadphones = KidSafety.onlyInHeadphones(defaults)
+        StoryPlayer.shared.volumeCap = state.active ? KidSafety.cap(defaults) : nil
     }
 
     /// Turns kid mode on for `minutes` (0 = no limit).

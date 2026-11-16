@@ -236,7 +236,7 @@ final class StoryPlayer {
         if start > 5, duration == 0 || start < duration - 5 {
             _ = await player.seek(to: CMTime(seconds: start, preferredTimescale: 600))
         }
-        player.volume = 1
+        setFade(1)
         player.playImmediately(atRate: rate)
         isPlaying = true
         isLoading = false
@@ -247,6 +247,49 @@ final class StoryPlayer {
 
     /// Kid mode's time ran out: nothing plays until a parent unlocks.
     var lockedByKidMode = false
+
+    // MARK: Kid mode's volume ceiling
+
+    /// Kid mode's ceiling for stories (KidSafety.cap), nil when kid mode is off or has no limit.
+    /// The app cannot move the phone's volume, so it lowers its own sound instead: the phone's
+    /// volume times the player's stays at the ceiling.
+    var volumeCap: Double? { didSet { applyVolume() } }
+    /// The ceiling applies only when the sound goes to headphones (wired, AirPods, Bluetooth).
+    var capOnlyInHeadphones = true { didSet { applyVolume() } }
+    /// Grows each time the child turns the phone up past the ceiling, for the little capsule.
+    private(set) var capNotices = 0
+    /// The bedtime fade (1 = none), multiplied with the ceiling.
+    @ObservationIgnored private var fade: Double = 1
+    @ObservationIgnored private var volumeWatch: NSKeyValueObservation?
+    @ObservationIgnored private var systemVolume = Double(AVAudioSession.sharedInstance().outputVolume)
+    @ObservationIgnored private var lastCapNotice = Date.distantPast
+
+    /// The ceiling is in force right now (kid mode with a limit, and headphones if so chosen).
+    var capInForce: Bool {
+        guard volumeCap != nil else { return false }
+        return !capOnlyInHeadphones || KidSafety.isHeadphones(AVAudioSession.sharedInstance().currentRoute.outputs.map(\.portType))
+    }
+
+    private func applyVolume() {
+        let system = Double(AVAudioSession.sharedInstance().outputVolume)
+        let gain = capInForce ? KidSafety.gain(system: system, cap: volumeCap) : 1
+        player.volume = Float(fade * gain)
+    }
+
+    private func setFade(_ value: Double) {
+        fade = value
+        applyVolume()
+    }
+
+    private func systemVolumeChanged(_ value: Double) {
+        let louder = value > systemVolume + 0.001
+        systemVolume = value
+        applyVolume()
+        guard louder, isPlaying, capInForce, let cap = volumeCap, value > cap + 0.001,
+              Date().timeIntervalSince(lastCapNotice) > 6 else { return }
+        lastCapNotice = Date()
+        capNotices += 1
+    }
 
     func resume() {
         guard current != nil, !lockedByKidMode else { return }
@@ -407,7 +450,7 @@ final class StoryPlayer {
     private func applySleepFade() {
         guard isPlaying, duration > 0 else { return }
         let last = played + 1 >= stopAfter || following == nil
-        player.volume = last ? Float(StoryPlayer.fadeVolume(secondsLeft: remaining)) : 1
+        setFade(last ? StoryPlayer.fadeVolume(secondsLeft: remaining) : 1)
     }
 
     /// 1 until the last `fadeSeconds`, then down to 0, eased so the drop is gentle.
@@ -438,7 +481,7 @@ final class StoryPlayer {
             Task { await start(step.story, queue: nil, store: store, origin: step.origin, continued: true) }
         } else {
             isPlaying = false
-            player.volume = 1
+            setFade(1)
             // Several stories in a row, then the player stopped by itself: the little cloud.
             if stopAfter > 1 && played >= stopAfter { trackBadge(.sleepStop) }
             played = 0
@@ -483,7 +526,16 @@ final class StoryPlayer {
         }
         center.addObserver(forName: AVAudioSession.routeChangeNotification, object: session, queue: .main) { [weak self] note in
             let unplugged = StoryPlayer.deviceRemoved(note.userInfo)
-            MainActor.assumeIsolated { if unplugged, self?.isPlaying == true { self?.pause() } }
+            MainActor.assumeIsolated {
+                if unplugged, self?.isPlaying == true { self?.pause() }
+                // Headphones in or out: the ceiling may now apply, or not.
+                self?.applyVolume()
+            }
+        }
+        // The phone's volume buttons: keep stories under kid mode's ceiling.
+        volumeWatch = session.observe(\.outputVolume, options: [.new]) { @Sendable _, change in
+            guard let value = change.newValue else { return }
+            Task { @MainActor in StoryPlayer.shared.systemVolumeChanged(Double(value)) }
         }
     }
 

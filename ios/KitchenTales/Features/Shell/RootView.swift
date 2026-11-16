@@ -78,10 +78,7 @@ private struct SignedInRoot: View {
         // Siri, Shortcuts and Spotlight.
         .onAppear { commands.recipes = recipes; commands.stories = stories }
         // The widgets' copy of tonight's stories, the plan and the list.
-        .task(id: widgetSignature) { WidgetSync.update(recipes: recipes, stories: stories) }
-        .onChange(of: scenePhase) {
-            if scenePhase == .background { WidgetSync.update(recipes: recipes, stories: stories) }
-        }
+        .modifier(WidgetSyncing(recipes: recipes, stories: stories))
         .onChange(of: commands.pending, initial: true) { Task { await runCommand() } }
         .task(id: stories.allStories.count &+ recipes.recipes.count &* 7919) {
             guard LaunchOptions.demoAccount == nil else { return }
@@ -104,19 +101,6 @@ private struct SignedInRoot: View {
             if LaunchOptions.screen == "bedtime-night" { area.current = .stories; bedtime.open() }
             await bedtime.schedule()
         }
-    }
-
-    /// Changes when anything the widgets show changes.
-    private var widgetSignature: Int {
-        var h = Hasher()
-        h.combine(stories.stories.map(\.id))
-        h.combine(recipes.recipes.count)
-        h.combine(recipes.plan)
-        h.combine(recipes.shopping.filter { !$0.checked }.count)
-        h.combine(bedtime.settings.enabled)
-        h.combine(bedtime.settings.hour &* 60 &+ bedtime.settings.minute)
-        h.combine(bedtime.settings.folder)
-        return h.finalize()
     }
 
     private func collectShared() async {

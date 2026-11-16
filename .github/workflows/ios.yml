@@ -114,7 +114,7 @@ jobs:
             CURRENT_PROJECT_VERSION=1 \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|\*\* (TEST |)BUILD" || true
+            | tee build/xcodebuild.log | grep -E "error:|warning: .*\.swift|\*\* (TEST )?BUILD" || true
           # What the build did (a warm run compiles only the changed files) and where the time went.
           grep -oE "^[A-Z][A-Za-z]+ " build/xcodebuild.log | sort | uniq -c | sort -rn | head -12
           sed -n "/Build Timing Summary/,/^\*\*/p" build/xcodebuild.log | head -25
